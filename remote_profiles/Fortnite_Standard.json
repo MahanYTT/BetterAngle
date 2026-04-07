@@ -1,0 +1,9 @@
+{
+  "name": "Fortnite_Standard",
+  "scale_normal": 0.0031415,
+  "scale_diving": 0.0052358,
+  "roi_x": 710,
+  "roi_y": 799,
+  "roi_w": 500,
+  "roi_h": 65
+}

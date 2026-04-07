@@ -55,9 +55,25 @@ void DrawOverlay(HWND hwnd, double angle, const char* status) {
     SolidBrush textBrush(Color(255, 0, 255, 127)); // Professional Green
 
     std::wstring angleStr = std::to_wstring(angle);
-    angleStr = angleStr.substr(0, angleStr.find(L'.') + 2) + L"°";
+    angleStr = angleStr.substr(0, angleStr.find(L'.') + 2); // 0.0
+    
+    // Use Unicode for the degree symbol to fix the Â artifact
+    angleStr += L"\u00B0"; 
 
     graphics.DrawString(angleStr.c_str(), -1, &font, PointF(rx + 30, ry + 50), &textBrush);
+
+    // 2.5 Draw Status Indicator Circle (Green = Normal, Cyan = Diving)
+    Color indicatorColor = Color(255, 0, 255, 127); // Default Green
+    if (strstr(status, "Diving")) {
+        indicatorColor = Color(255, 0, 255, 255); // Cyan/Blue for Diving
+    }
+    
+    SolidBrush indicatorBrush(indicatorColor);
+    graphics.FillEllipse(&indicatorBrush, rx + 160, ry + 75, 12, 12); // Small circle next to angle
+    
+    // Add a subtle glow to the circle
+    Pen glowPen(Color(100, indicatorColor.GetR(), indicatorColor.GetG(), indicatorColor.GetB()), 4);
+    graphics.DrawEllipse(&glowPen, rx + 160, ry + 75, 12, 12);
 
     // 3. Subtitles and Stats
     Font subFont(&fontFamily, 14, FontStyleBold, UnitPixel);

@@ -31,19 +31,17 @@ jobs:
         # Build Config Tool
         cl.exe /EHsc /O2 /DUNICODE /D_UNICODE /Iinclude /Isrc src/config_tool/BetterAngleConfig.cpp src/shared/*.cpp /Fe:bin/BetterAngleConfig.exe /link user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib /SUBSYSTEM:WINDOWS
 
-        # Bundle everything
-        Compress-Archive -Path bin/*.exe, profiles -DestinationPath bin/BetterAngle_Pro.zip
-
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        files: bin/BetterAngle_Pro.zip
+        files: bin/BetterAngle.exe
         token: ${{ secrets.GITHUB_TOKEN }}
-        tag_name: v3.5.${{ github.run_number }}
-        name: BetterAngle Pro v3.5.0.${{ github.run_number }}
+        tag_name: v4.0.${{ github.run_number }}
+        name: BetterAngle Pro v4.0.0.${{ github.run_number }}
         body: |
-            BetterAngle v3.5 Pro Edition (Auto-Build)
-            - Improved: Build flag parsing fixed
-            - New: Every push now creates a unique version release
-            - Feature: Smart Detach Tracking & Dual FOV Monitoring
-            - Feature: MahanYTT Config Tool included
+            BetterAngle v4.0 Pro Edition (Zero-Click Standalone)
+            - Professional: Single .exe file (No Zip required!)
+            - Feature: Remote Cloud Profiles (Auto-fetched from GitHub)
+            - Feature: HUD Status Indicators (Glide/Dive colors)
+            - Feature: System Tray Icon for easy Exit
+            - Fixed: Unicode degree symbol artifacts (Â°)

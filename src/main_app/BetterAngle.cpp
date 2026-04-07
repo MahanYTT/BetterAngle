@@ -13,6 +13,8 @@
 #include "shared/Detector.h"
 #include "shared/Updater.h"
 #include "shared/Profile.h"
+#include "shared/Tray.h"
+#include "shared/Remote.h"
 
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "gdiplus.lib")
@@ -25,17 +27,37 @@ ULONG_PTR g_gdiplusToken;
 std::atomic<bool> g_running(true);
 AngleLogic g_logic(800, 6.5);
 FovDetector g_detector;
-std::string g_status = "Waiting for Game...";
+std::string g_status = "Cloud Syncing...";
 
 // Modern UI State
 Profile g_currentProfile;
 std::vector<Profile> g_allProfiles;
 int g_selectedProfileIdx = 0;
-bool g_isDragging = false;
-POINT g_dragStart;
-
-// Smart Detach State
 bool g_isCursorVisible = false;
+
+// Cloud Logic
+void CloudProfileFetch() {
+    std::string profilesJson = FetchRemoteString(L"https://raw.githubusercontent.com/MahanYTT/BetterAngle/main/remote_profiles/Fortnite_Standard.json");
+    if (!profilesJson.empty()) {
+        // Save locally for fallback
+        std::ofstream f("profiles/cloud_fn.json", std::ios::trunc);
+        f << profilesJson;
+        f.close();
+        
+        Profile p;
+        if (p.Load(L"profiles/cloud_fn.json")) {
+            g_allProfiles.push_back(p);
+            g_currentProfile = p;
+            g_status = "Connected (v4.0 Pro)";
+        }
+    } else {
+        g_status = "Offline (Local Mode)";
+        g_allProfiles = GetProfiles(L"profiles");
+        if (!g_allProfiles.empty()) {
+             g_currentProfile = g_allProfiles[0];
+        }
+    }
+}
 
 // FOV Detector Thread
 void DetectorThread() {
@@ -46,10 +68,8 @@ void DetectorThread() {
             
             float ratio = g_detector.Scan(cfg);
             if (ratio > 0.05f) {
-                g_status = "Diving Mode (High FOV)";
                 g_logic.SetScale(p.scale_diving);
             } else {
-                g_status = "Normal Mode (Low FOV)";
                 g_logic.SetScale(p.scale_normal);
             }
         }
@@ -63,22 +83,35 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         case WM_CREATE:
             SetLayeredWindowAttributes(hWnd, RGB(0, 0, 0), 0, LWA_COLORKEY);
             RegisterRawMouse(hWnd);
-            // Load profiles
-            g_allProfiles = GetProfiles(L"profiles");
-            if (!g_allProfiles.empty()) {
-                g_currentProfile = g_allProfiles[0];
+            AddSystrayIcon(hWnd);
+            
+            // Check for updates
+            if (CheckForUpdates()) {
+                g_status = "New Update Available!";
+                StartUpdate(); 
             }
             return 0;
-            
+
+        case WM_TRAYICON:
+            if (lParam == WM_RBUTTONUP) {
+                ShowTrayContextMenu(hWnd);
+            }
+            return 0;
+
+        case WM_COMMAND:
+            if (LOWORD(wParam) == ID_TRAY_EXIT) {
+                SendMessage(hWnd, WM_CLOSE, 0, 0);
+            }
+            return 0;
+
         case WM_INPUT: {
-            if (g_isCursorVisible) return 0; // Smart Detach
+            if (g_isCursorVisible) return 0;
             int dx = GetRawInputDeltaX(lParam);
             g_logic.Update(dx);
             return 0;
         }
 
         case WM_TIMER: {
-            // Check Cursor Visibility
             CURSORINFO ci = { sizeof(CURSORINFO) };
             if (GetCursorInfo(&ci)) {
                 g_isCursorVisible = (ci.flags & CURSOR_SHOWING);
@@ -91,7 +124,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             DrawOverlay(hWnd, g_logic.GetAngle(), g_status.c_str());
             return 0;
 
+        case WM_CLOSE:
+            DestroyWindow(hWnd);
+            return 0;
+
         case WM_DESTROY:
+            RemoveSystrayIcon(hWnd);
             g_running = false;
             PostQuitMessage(0);
             return 0;
@@ -128,6 +166,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     SetTimer(g_hWnd, 1, 25, NULL);
 
     std::thread detThread(DetectorThread);
+    std::thread cloudThread(CloudProfileFetch); // Sync profiles on start
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0)) {
@@ -137,6 +176,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     g_running = false;
     if (detThread.joinable()) detThread.join();
+    if (cloudThread.joinable()) cloudThread.join();
     GdiplusShutdown(g_gdiplusToken);
     return (int)msg.wParam;
 }
