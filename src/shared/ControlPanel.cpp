@@ -136,14 +136,19 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 g_pRenderTarget->DrawText(L"Precision Crosshair: F10\nVisual ROI Selector: Ctrl + R\nToggle ROI Box: F9", 66, pVerFormat, D2D1::RectF(40, 170, 380, 240), pGrey);
             } else if (g_currentTab == 1) {
                 g_pRenderTarget->DrawText(L"SOFTWARE DASHBOARD", 18, pHeaderFormat, D2D1::RectF(40, 140, 380, 170), pWhite);
-                std::wstring curVer = L"Current Version: v4.8.2 (Release Reliability)";
-                std::wstring latestVer = L"Latest Found: v" + std::to_wstring(g_latestVersion).substr(0, 4) + L" (" + g_latestName + L")";
+                std::wstring curVer = L"Current Version: v4.9.3 (Flagship Visuals)";
                 
+                // Fix the "missing dot" float issue by manually formatting known versions
+                std::wstring latestVerStr = L"4.9.3";
+                if (g_latestVersion < 4.85f) latestVerStr = L"4.8.2";
+                std::wstring latestVer = L"Latest Found: v" + latestVerStr + L" (" + g_latestName + L")";
+
                 g_pRenderTarget->DrawText(curVer.c_str(), (UINT32)curVer.length(), pVerFormat, D2D1::RectF(40, 170, 380, 190), pGrey);
                 g_pRenderTarget->DrawText(latestVer.c_str(), (UINT32)latestVer.length(), pVerFormat, D2D1::RectF(40, 195, 380, 215), pGrey);
 
-                if (g_latestVersion > 4.82f) {
-                    std::wstring changelog = L"Critical issues fixed. Features added and minor bugs fixed.";
+                // Ensure it requires a version higher than 4.9.2 to trigger future updates
+                if (g_latestVersion > 4.92f) {
+                    std::wstring changelog = L"Critical stability fixes. Added dynamic 60FPS ROI UI.";
                     g_pRenderTarget->DrawText(changelog.c_str(), (UINT32)changelog.length(), pVerFormat, D2D1::RectF(40, 230, 380, 260), pWhite);
                     std::wstring viewFull = L"View Full Changelog ->";
                     g_pRenderTarget->DrawText(viewFull.c_str(), (UINT32)viewFull.length(), pVerFormat, D2D1::RectF(40, 270, 380, 290), pBlue);
