@@ -93,7 +93,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
         }
 
         case WM_CLOSE:
-            ShowWindow(hWnd, SW_HIDE); // v4.6.1: Hide instead of close
+            ShowWindow(hWnd, SW_MINIMIZE); // v4.6.1: Minimize to keep taskbar icon visible
             return 0;
 
         default:

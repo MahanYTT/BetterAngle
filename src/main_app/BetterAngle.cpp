@@ -69,10 +69,11 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
             return 0;
 
         case WM_HOTKEY:
-            if (wParam == 1) {
-                if (IsWindowVisible(g_hPanel)) ShowWindow(g_hPanel, SW_HIDE);
+            if (wParam == 1) { // Toggle Panel
+                if (IsIconic(g_hPanel)) ShowWindow(g_hPanel, SW_RESTORE);
+                else if (IsWindowVisible(g_hPanel)) ShowWindow(g_hPanel, SW_MINIMIZE);
                 else ShowWindow(g_hPanel, SW_SHOW);
-            } else if (wParam == 2) {
+            } else if (wParam == 2) { // ROI Select
                 g_isSelectionMode = !g_isSelectionMode;
                 // If starting selection, remove TRANSPARENT so we can catch mouse
                 long exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
