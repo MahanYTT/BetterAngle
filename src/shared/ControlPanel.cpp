@@ -136,12 +136,11 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 g_pRenderTarget->DrawText(L"Precision Crosshair: F10\nVisual ROI Selector: Ctrl + R\nToggle ROI Box: F9", 66, pVerFormat, D2D1::RectF(40, 170, 380, 240), pGrey);
             } else if (g_currentTab == 1) {
                 g_pRenderTarget->DrawText(L"SOFTWARE DASHBOARD", 18, pHeaderFormat, D2D1::RectF(40, 140, 380, 170), pWhite);
-                std::wstring curVer = L"Current Version: v4.9.3 (Flagship Visuals)";
+                std::wstring curVer = L"Current Version: v4.9.4 (Flagship Visuals)";
                 
-                // Fix the "missing dot" float issue by manually formatting known versions
-                std::wstring latestVerStr = L"4.9.3";
-                if (g_latestVersion < 4.85f) latestVerStr = L"4.8.2";
-                std::wstring latestVer = L"Latest Found: v" + latestVerStr + L" (" + g_latestName + L")";
+                // Use the real version string fetched from GitHub
+                std::wstring latestVerStr = std::wstring(g_latestVersionOnline.begin(), g_latestVersionOnline.end());
+                std::wstring latestVer = L"Latest Found: " + latestVerStr + L" (" + g_latestName + L")";
 
                 g_pRenderTarget->DrawText(curVer.c_str(), (UINT32)curVer.length(), pVerFormat, D2D1::RectF(40, 170, 380, 190), pGrey);
                 g_pRenderTarget->DrawText(latestVer.c_str(), (UINT32)latestVer.length(), pVerFormat, D2D1::RectF(40, 195, 380, 215), pGrey);

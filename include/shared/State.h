@@ -21,5 +21,6 @@ extern RECT g_selectionRect;
 extern POINT g_startPoint;
 extern std::string g_status;
 extern float g_currentAngle;
+extern std::string g_latestVersionOnline;
 
 #endif // STATE_H

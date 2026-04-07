@@ -14,3 +14,4 @@ RECT g_selectionRect = { 0 };
 POINT g_startPoint = { 0 };
 std::string g_status = "Connected (v4.8.2 Pro)";
 float g_currentAngle = 0.0f;
+std::string g_latestVersionOnline = "v4.8.2";
