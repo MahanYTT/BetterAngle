@@ -29,12 +29,12 @@ jobs:
         # Build Config Tool
         cl.exe /EHsc /O2 /DUNICODE /D_UNICODE /Iinclude /Isrc src/config_tool/BetterAngleConfig.cpp src/shared/*.cpp /Fe:bin/BetterAngleConfig.exe /link user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib shell32.lib /SUBSYSTEM:WINDOWS
 
-    - name: Create Release (Pro v4.6.1)
+    - name: Create Release (Pro v4.7.3)
       uses: softprops/action-gh-release@v2
       with:
         files: bin/BetterAngle.exe
         token: ${{ secrets.GITHUB_TOKEN }}
-        tag_name: v4.6.1
-        name: BetterAngle Pro v4.6.1 (Precision & Custom)
+        tag_name: v4.7.3
+        name: BetterAngle Pro v4.7.3 (Flagship Overhaul)
         body_path: RELEASE_NOTES.md
         make_latest: true

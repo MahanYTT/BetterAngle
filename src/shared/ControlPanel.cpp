@@ -13,26 +13,22 @@ HWND CreateControlPanel(HINSTANCE hInst) {
     wc.lpfnWndProc = ControlPanelWndProc;
     wc.hInstance = hInst;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = CreateSolidBrush(RGB(10, 12, 15)); // Deeper Dark
+    wc.hbrBackground = CreateSolidBrush(RGB(10, 12, 15)); 
     wc.lpszClassName = L"BetterAngleControlPanel";
     RegisterClass(&wc);
 
-    int w = 400, h = 540;
+    int w = 400, h = 640; 
     HWND hPanel = CreateWindowEx(
         WS_EX_TOPMOST | WS_EX_APPWINDOW,
         L"BetterAngleControlPanel", L"BetterAngle Pro | Command Center",
-        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, 
         100, 100, w, h,
         NULL, NULL, hInst, NULL
     );
 
-    // v4.6.1: Keybind Buttons
-    CreateWindow(L"BUTTON", L"Change Panel Key", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 
-                20, 240, 150, 30, hPanel, (HMENU)101, hInst, NULL);
-    CreateWindow(L"BUTTON", L"Change ROI Key", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 
-                20, 280, 150, 30, hPanel, (HMENU)102, hInst, NULL);
-    CreateWindow(L"BUTTON", L"Change Crosshair", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 
-                20, 320, 150, 30, hPanel, (HMENU)103, hInst, NULL);
+    // v4.7.3: Quit Button Logic (Owner Draw for Glass Effect)
+    CreateWindow(L"BUTTON", L"QUIT", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, 
+                20, 530, 345, 45, hPanel, (HMENU)105, hInst, NULL);
 
     ShowWindow(hPanel, SW_SHOW);
     UpdateWindow(hPanel);
@@ -42,13 +38,60 @@ HWND CreateControlPanel(HINSTANCE hInst) {
 LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
         case WM_CREATE:
-            SetTimer(hWnd, 1, 100, NULL); // Refresh stats
+            SetTimer(hWnd, 1, 100, NULL); 
             return 0;
 
+        case WM_DRAWITEM: {
+            LPDRAWITEMSTRUCT pdis = (LPDRAWITEMSTRUCT)lParam;
+            if (pdis->CtlID == 105) { // Glossy QUIT Button
+                Graphics g(pdis->hDC);
+                g.SetSmoothingMode(SmoothingModeAntiAlias);
+                
+                Rect r(0, 0, pdis->rcItem.right, pdis->rcItem.bottom);
+                
+                // Rounded path
+                GraphicsPath path;
+                int corner = 12;
+                path.AddArc(r.X, r.Y, corner, corner, 180, 90);
+                path.AddArc(r.X + r.Width - corner, r.Y, corner, corner, 270, 90);
+                path.AddArc(r.X + r.Width - corner, r.Y + r.Height - corner, corner, corner, 0, 90);
+                path.AddArc(r.X, r.Y + r.Height - corner, corner, corner, 90, 90);
+                path.CloseFigure();
+
+                // Premium Red Glass Gradient
+                Color c1 = Color(255, 180, 20, 30);
+                Color c2 = Color(255, 100, 5, 10);
+                if (pdis->itemState & ODS_SELECTED) { c1 = Color(255, 140, 10, 15); c2 = Color(255, 60, 2, 5); }
+                
+                LinearGradientBrush brush(r, c1, c2, LinearGradientModeVertical);
+                g.FillPath(&brush, &path);
+
+                // Glossy Sheen Overlay
+                RectF sheenRect((float)r.X, (float)r.Y, (float)r.Width, (float)r.Height / 2.0f);
+                LinearGradientBrush sheenBrush(sheenRect, Color(100, 255, 255, 255), Color(0, 255, 255, 255), LinearGradientModeVertical);
+                g.FillRectangle(&sheenBrush, sheenRect);
+
+                Pen borderPen(Color(120, 255, 255, 255), 1);
+                g.DrawPath(&borderPen, &path);
+
+                FontFamily ff(L"Segoe UI");
+                Font font(&ff, 14, FontStyleBold, UnitPixel);
+                SolidBrush white(Color(255, 255, 255, 255));
+                
+                StringFormat format;
+                format.SetAlignment(StringAlignmentCenter);
+                format.SetLineAlignment(StringAlignmentCenter);
+                
+                g.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
+                g.DrawString(L"QUIT SUITE", -1, &font, RectF(0, 0, (float)r.Width, (float)r.Height), &format, &white);
+                return TRUE;
+            }
+            return 0;
+        }
+
         case WM_COMMAND:
-            if (LOWORD(wParam) >= 101 && LOWORD(wParam) <= 103) {
-                 MessageBox(hWnd, L"Press the new key after closing this message (UI development in progress)", L"Key Recorder", MB_OK);
-                 // Future: Wait for VK code to rebind g_config
+            if (LOWORD(wParam) == 105) { // QUIT button clicked
+                PostQuitMessage(0);
             }
             return 0;
 
@@ -61,7 +104,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             HDC hdc = BeginPaint(hWnd, &ps);
             Graphics graphics(hdc);
             graphics.SetSmoothingMode(SmoothingModeAntiAlias);
-            graphics.SetTextRenderingHint(TextRenderingHintAntiAlias);
+            graphics.SetTextRenderingHint(TextRenderingHintClearTypeGridFit); 
 
             // Draw Professional Dashboard
             FontFamily fontFamily(L"Segoe UI");
@@ -74,26 +117,22 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 
             // Live Analytics
             Font detailFont(&fontFamily, 14, FontStyleRegular, UnitPixel);
-            SolidBrush greyBrush(Color(255, 180, 180, 180));
             int matchPct = (int)(g_detectionRatio * 100);
             std::wstring matchStr = L"Live Target Match: " + std::to_wstring(matchPct) + L"%";
             graphics.DrawString(matchStr.c_str(), -1, &detailFont, PointF(20, 80), &whiteBrush);
 
-            // Settings Header
-            Font subHeader(&fontFamily, 16, FontStyleBold, UnitPixel);
-            graphics.DrawString(L"CUSTOM KEYBINDS", -1, &subHeader, PointF(20, 200), &whiteBrush);
-
-            // Instructions
+            // Version Info
             Font smallFont(&fontFamily, 11, FontStyleItalic, UnitPixel);
-            graphics.DrawString(L"Closing this window will hide it to the taskbar.", -1, &smallFont, PointF(20, 460), &greyBrush);
-            graphics.DrawString(L"Press F10 for crosshair | Ctrl+R for ROI selection.", -1, &smallFont, PointF(20, 480), &greyBrush);
+            SolidBrush greyBrush(Color(255, 180, 180, 180));
+            graphics.DrawString(L"Version: 4.7.3 Flagship Overhaul", -1, &smallFont, PointF(20, 470), &greyBrush);
+            graphics.DrawString(L"Build Date: April 2026", -1, &smallFont, PointF(20, 490), &greyBrush);
 
             EndPaint(hWnd, &ps);
             return 0;
         }
 
         case WM_CLOSE:
-            ShowWindow(hWnd, SW_MINIMIZE); // v4.6.1: Minimize to keep taskbar icon visible
+            ShowWindow(hWnd, SW_MINIMIZE); 
             return 0;
 
         default:

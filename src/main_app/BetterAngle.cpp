@@ -73,12 +73,17 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                 if (IsIconic(g_hPanel)) ShowWindow(g_hPanel, SW_RESTORE);
                 else if (IsWindowVisible(g_hPanel)) ShowWindow(g_hPanel, SW_MINIMIZE);
                 else ShowWindow(g_hPanel, SW_SHOW);
-            } else if (wParam == 2) { // ROI Select
+            } else if (wParam == 2) { // ROI Select Toggle
                 g_isSelectionMode = !g_isSelectionMode;
-                // If starting selection, remove TRANSPARENT so we can catch mouse
+                g_selectionStep = 0; // Reset to Step 1: Area
+                
                 long exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
-                if (g_isSelectionMode) exStyle &= ~WS_EX_TRANSPARENT;
-                else exStyle |= WS_EX_TRANSPARENT;
+                if (g_isSelectionMode) {
+                    exStyle &= ~WS_EX_TRANSPARENT;
+                    SetForegroundWindow(hWnd);
+                } else {
+                    exStyle |= WS_EX_TRANSPARENT;
+                }
                 SetWindowLong(hWnd, GWL_EXSTYLE, exStyle);
             } else if (wParam == 3) {
                 g_showCrosshair = !g_showCrosshair;
@@ -87,34 +92,47 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 
         case WM_LBUTTONDOWN:
             if (g_isSelectionMode) {
-                g_startPoint.x = LOWORD(lParam);
-                g_startPoint.y = HIWORD(lParam);
-                g_selectionRect = { g_startPoint.x, g_startPoint.y, g_startPoint.x, g_startPoint.y };
+                if (g_selectionStep == 0) {
+                    g_startPoint.x = LOWORD(lParam);
+                    g_startPoint.y = HIWORD(lParam);
+                    g_selectionRect = { g_startPoint.x, g_startPoint.y, g_startPoint.x, g_startPoint.y };
+                } else {
+                    // STEP 2: PICK COLOR
+                    HDC hdcScreen = GetDC(NULL);
+                    POINT cur; GetCursorPos(&cur);
+                    g_pickedColor = GetPixel(hdcScreen, cur.x, cur.y);
+                    ReleaseDC(NULL, hdcScreen);
+
+                    // Finish Calibration
+                    g_isSelectionMode = false;
+                    SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
+
+                    if (!g_allProfiles.empty()) {
+                        Profile& p = g_allProfiles[g_selectedProfileIdx];
+                        p.target_color = g_pickedColor;
+                        p.roi_x = min(g_selectionRect.left, g_selectionRect.right);
+                        p.roi_y = min(g_selectionRect.top, g_selectionRect.bottom);
+                        p.roi_w = abs(g_selectionRect.right - g_selectionRect.left);
+                        p.roi_h = abs(g_selectionRect.bottom - g_selectionRect.top);
+                        p.Save(L"profiles/last_calibrated.json");
+                    }
+                }
             }
             return 0;
 
         case WM_MOUSEMOVE:
-            if (g_isSelectionMode && (wParam & MK_LBUTTON)) {
-                g_selectionRect.right = LOWORD(lParam);
-                g_selectionRect.bottom = HIWORD(lParam);
+            if (g_isSelectionMode) {
+                if (g_selectionStep == 0 && (wParam & MK_LBUTTON)) {
+                    g_selectionRect.right = LOWORD(lParam);
+                    g_selectionRect.bottom = HIWORD(lParam);
+                }
+                InvalidateRect(hWnd, NULL, FALSE);
             }
             return 0;
 
         case WM_LBUTTONUP:
-            if (g_isSelectionMode) {
-                g_isSelectionMode = false;
-                // Finish selection, restore TRANSPARENT
-                SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
-                
-                // Save to profile
-                if (!g_allProfiles.empty()) {
-                    Profile& p = g_allProfiles[g_selectedProfileIdx];
-                    p.roi_x = min(g_startPoint.x, (long)LOWORD(lParam));
-                    p.roi_y = min(g_startPoint.y, (long)HIWORD(lParam));
-                    p.roi_w = abs((long)LOWORD(lParam) - g_startPoint.x);
-                    p.roi_h = abs((long)HIWORD(lParam) - g_startPoint.y);
-                    p.Save(L"profiles/last_calibrated.json");
-                }
+            if (g_isSelectionMode && g_selectionStep == 0) {
+                g_selectionStep = 1; // Move to Step 2: Color
             }
             return 0;
 
