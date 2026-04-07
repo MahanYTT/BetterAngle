@@ -11,6 +11,9 @@ extern bool g_isDiving;
 extern bool g_showROIBox;
 extern int g_currentTab;
 extern float g_detectionRatio;
+extern bool g_isCheckingForUpdates;
+extern float g_updateSpinAngle;
+extern bool g_updateAvailable;
 extern bool g_showCrosshair;
 extern bool g_isSelectionMode;
 extern int g_selectionStep; // 0 = ROI, 1 = Color
@@ -21,7 +24,7 @@ extern std::wstring g_latestName;
 extern RECT g_selectionRect;
 extern POINT g_startPoint;
 extern std::string g_status;
-extern float g_currentAngle;
 extern std::string g_latestVersionOnline;
+extern float g_currentAngle;
 
 #endif // STATE_H

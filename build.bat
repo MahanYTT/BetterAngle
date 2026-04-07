@@ -1,5 +1,5 @@
 @echo off
-echo Building BetterAngle v4.9.5 Pro Edition...
+echo Building BetterAngle v4.9.6 Pro Edition...
 
 :: Check for MSVC
 where cl >nul 2>nul
@@ -25,7 +25,7 @@ echo Building BetterAngleConfig.exe (Wizard)...
 cl.exe %FLAGS% src/config_tool/BetterAngleConfig.cpp src/shared/*.cpp /Fe:bin/BetterAngleConfig.exe /link %LIBS%
 
 if %errorlevel% equ 0 (
-    echo [SUCCESS] BetterAngle v4.9.5 Pro binaries created in bin/
+    echo [SUCCESS] BetterAngle v4.9.6 Pro binaries created in bin/
 ) else (
     echo [ERROR] Build failed.
 )

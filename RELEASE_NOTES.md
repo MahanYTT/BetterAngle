@@ -1,5 +1,5 @@
-### BetterAngle Pro v4.9.5: "Flagship Visuals & Performance"
-💎 v4.9.5: Fixed Full-Screen ROI capture logic. Restored Color Picker utility. Updated coordinate system for multi-monitor support.
+### BetterAngle Pro v4.9.6: "Flagship Visuals & Performance"
+💎 v4.9.6: Implemented dynamic update checking with rotating UI indicator. Added version comparison and direct download link for updates.
 💎 **[NEW] Dynamic Live ROI Visualizer:** Persistent visual box that dynamically shifts from GREEN (Gliding) to RED (Diving).
 🤖 **[NEW] 60FPS UI Engine:** Control panel rendering boosted to 60 FPS (16ms) for buttery-smooth window interaction.
 🔴 **[NEW] Professional Tabbed Dashboard:** Separated General/Binds and Software/Updates for a cleaner, modern workspace.

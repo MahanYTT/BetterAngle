@@ -3,6 +3,7 @@
 #include "shared/Config.h"
 #include "shared/ControlPanel.h"
 #include "shared/Updater.h"
+#include <thread>
 #include <d2d1.h>
 #include <dwrite.h>
 #include <string>
@@ -19,7 +20,7 @@ IDWriteFactory* g_pDWriteFactory = NULL;
 ID2D1HwndRenderTarget* g_pRenderTarget = NULL;
 
 // UI State
-bool g_isCheckingUpdate = false;
+// extern declared in State.h
 
 void InitD2D(HWND hWnd) {
     if (!g_pD2DFactory) {
@@ -106,14 +107,14 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             }
             if (g_currentTab == 1) { 
                 if (x >= 40 && x <= 380 && y >= 320 && y <= 370) {
-                    extern bool g_isCheckingUpdate;
-                    g_isCheckingUpdate = true;
-                    CheckForUpdates();
+                    g_isCheckingForUpdates = true;
+                    // Run CheckForUpdates in a thread if needed, or synchronously for now
+                    std::thread(CheckForUpdates).detach(); 
                 }
-                if (g_latestVersion > 4.82f && x >= 40 && x <= 380 && y >= 380 && y <= 430) {
-                    ApplyUpdateAndRestart();
+                if (g_updateAvailable && x >= 40 && x <= 380 && y >= 380 && y <= 430) {
+                    ShellExecuteW(0, L"open", L"https://github.com/MahanYTT/BetterAngle/releases/latest", 0, 0, SW_SHOW);
                 }
-                if (g_latestVersion > 4.82f && x >= 40 && x <= 380 && y >= 270 && y <= 290) {
+                if (g_latestVersion > 4.92f && x >= 40 && x <= 380 && y >= 270 && y <= 290) {
                     ShellExecuteW(0, L"open", L"https://github.com/MahanYTT/BetterAngle/releases", 0, 0, SW_SHOW);
                 }
             }
@@ -152,7 +153,15 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 250, 380, 290), L"PICK TARGET COLOR", D2D1::ColorF(0.15f, 0.45f, 0.25f));
             } else if (g_currentTab == 1) {
                 g_pRenderTarget->DrawText(L"SOFTWARE DASHBOARD", 18, pHeaderFormat, D2D1::RectF(40, 140, 380, 170), pWhite);
-                std::wstring curVer = L"Current Version: v4.9.5 (Flagship Visuals)";
+                
+                if (g_isCheckingForUpdates) {
+                    D2D1_POINT_2F center = D2D1::Point2F(365.0f, 155.0f);
+                    g_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Rotation(g_updateSpinAngle, center));
+                    g_pRenderTarget->DrawEllipse(D2D1::Ellipse(center, 6.0f, 6.0f), pBlue, 2.0f);
+                    g_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+                }
+
+                std::wstring curVer = L"Current Version: v4.9.6 (Flagship Visuals)";
                 
                 // Use the real version string fetched from GitHub
                 std::wstring latestVerStr = std::wstring(g_latestVersionOnline.begin(), g_latestVersionOnline.end());
@@ -162,12 +171,12 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 g_pRenderTarget->DrawText(latestVer.c_str(), (UINT32)latestVer.length(), pVerFormat, D2D1::RectF(40, 195, 380, 215), pGrey);
 
                 // Ensure it requires a version higher than 4.9.2 to trigger future updates
-                if (g_latestVersion > 4.92f) {
-                    std::wstring changelog = L"Critical stability fixes. Added dynamic 60FPS ROI UI.";
+                if (g_updateAvailable) {
+                    std::wstring changelog = L"BetterAngle v4.9.6 is now available online!\nNew UI experience and bug fixes.";
                     g_pRenderTarget->DrawText(changelog.c_str(), (UINT32)changelog.length(), pVerFormat, D2D1::RectF(40, 230, 380, 260), pWhite);
                     std::wstring viewFull = L"View Full Changelog ->";
                     g_pRenderTarget->DrawText(viewFull.c_str(), (UINT32)viewFull.length(), pVerFormat, D2D1::RectF(40, 270, 380, 290), pBlue);
-                    DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 380, 380, 430), L"UPDATE NOW", D2D1::ColorF(0.0f, 0.5f, 0.8f));
+                    DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 380, 380, 430), L"DOWNLOAD UPDATE", D2D1::ColorF(0.0f, 0.5f, 0.8f));
                 }
                 DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 320, 380, 370), L"CHECK FOR UPDATES", D2D1::ColorF(0.15f, 0.17f, 0.2f));
             }
@@ -185,6 +194,10 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             return 0;
         }
         case WM_TIMER:
+            if (g_isCheckingForUpdates) {
+                g_updateSpinAngle += 10.0f;
+                if (g_updateSpinAngle >= 360.0f) g_updateSpinAngle = 0.0f;
+            }
             InvalidateRect(hWnd, NULL, FALSE);
             return 0;
         case WM_CLOSE:
