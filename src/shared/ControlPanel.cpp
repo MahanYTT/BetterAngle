@@ -7,6 +7,8 @@
 #include <dwrite.h>
 #include <string>
 
+#include <commdlg.h>
+#pragma comment(lib, "comdlg32.lib")
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dwrite.lib")
 
@@ -89,6 +91,19 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 if (x >= 40 && x <= 200) g_currentTab = 0; 
                 else if (x >= 210 && x <= 380) g_currentTab = 1; 
             }
+            if (g_currentTab == 0) {
+                if (x >= 40 && x <= 380 && y >= 250 && y <= 290) {
+                    CHOOSECOLOR cc;
+                    static COLORREF acrCustClr[16]; 
+                    ZeroMemory(&cc, sizeof(cc));
+                    cc.lStructSize = sizeof(cc);
+                    cc.hwndOwner = hWnd;
+                    cc.lpCustColors = (LPDWORD)acrCustClr;
+                    cc.rgbResult = g_targetColor;
+                    cc.Flags = CC_FULLOPEN | CC_RGBINIT;
+                    if (ChooseColor(&cc)) { g_targetColor = cc.rgbResult; }
+                }
+            }
             if (g_currentTab == 1) { 
                 if (x >= 40 && x <= 380 && y >= 320 && y <= 370) {
                     extern bool g_isCheckingUpdate;
@@ -134,9 +149,10 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             if (g_currentTab == 0) {
                 g_pRenderTarget->DrawText(L"CURRENT KEYBINDS", 16, pHeaderFormat, D2D1::RectF(40, 140, 380, 170), pWhite);
                 g_pRenderTarget->DrawText(L"Precision Crosshair: F10\nVisual ROI Selector: Ctrl + R\nToggle ROI Box: F9", 66, pVerFormat, D2D1::RectF(40, 170, 380, 240), pGrey);
+                DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 250, 380, 290), L"PICK TARGET COLOR", D2D1::ColorF(0.15f, 0.45f, 0.25f));
             } else if (g_currentTab == 1) {
                 g_pRenderTarget->DrawText(L"SOFTWARE DASHBOARD", 18, pHeaderFormat, D2D1::RectF(40, 140, 380, 170), pWhite);
-                std::wstring curVer = L"Current Version: v4.9.4 (Flagship Visuals)";
+                std::wstring curVer = L"Current Version: v4.9.5 (Flagship Visuals)";
                 
                 // Use the real version string fetched from GitHub
                 std::wstring latestVerStr = std::wstring(g_latestVersionOnline.begin(), g_latestVersionOnline.end());

@@ -93,11 +93,11 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
         case WM_LBUTTONDOWN:
             if (g_isSelectionMode) {
                 if (g_selectionStep == 0) {
-                    g_startPoint.x = LOWORD(lParam);
-                    g_startPoint.y = HIWORD(lParam);
-                    g_selectionRect = { g_startPoint.x, g_startPoint.y, g_startPoint.x, g_startPoint.y };
+                    POINT cur; GetCursorPos(&cur);
+                    g_startPoint = cur;
+                    g_selectionRect = { cur.x, cur.y, cur.x, cur.y };
                 } else {
-                    // STEP 2: PICK COLOR
+                    // STEP 2: PICK COLOR manually from screen
                     HDC hdcScreen = GetDC(NULL);
                     POINT cur; GetCursorPos(&cur);
                     g_pickedColor = GetPixel(hdcScreen, cur.x, cur.y);
@@ -123,8 +123,9 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
         case WM_MOUSEMOVE:
             if (g_isSelectionMode) {
                 if (g_selectionStep == 0 && (wParam & MK_LBUTTON)) {
-                    g_selectionRect.right = LOWORD(lParam);
-                    g_selectionRect.bottom = HIWORD(lParam);
+                    POINT cur; GetCursorPos(&cur);
+                    g_selectionRect.right = cur.x;
+                    g_selectionRect.bottom = cur.y;
                 }
                 InvalidateRect(hWnd, NULL, FALSE);
             }

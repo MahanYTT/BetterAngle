@@ -8,7 +8,7 @@
 #pragma comment(lib, "wininet.lib")
 
 bool CheckForUpdates() {
-    HINTERNET hInternet = InternetOpenA("BetterAngle/4.9.4", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    HINTERNET hInternet = InternetOpenA("BetterAngle/4.9.5", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
     if (!hInternet) return false;
 
     HINTERNET hUrl = InternetOpenUrlA(hInternet, "https://api.github.com/repos/MahanYTT/BetterAngle/releases/latest", NULL, 0, INTERNET_FLAG_RELOAD, 0);
