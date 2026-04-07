@@ -1,5 +1,5 @@
 @echo off
-echo Building BetterAngle v3.5 Pro Edition...
+echo Building BetterAngle v4.6.1 Pro Edition...
 
 :: Check for MSVC
 where cl >nul 2>nul
@@ -18,14 +18,14 @@ set LIBS=user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib shell32.lib /SU
 
 :: 1. Build Main Application
 echo Building BetterAngle.exe (Main)...
-cl.exe /EHsc /O2 /DUNICODE /D_UNICODE /Iinclude /Isrc src/main_app/BetterAngle.cpp src/shared/*.cpp /Fe:bin/BetterAngle.exe /link user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib /SUBSYSTEM:WINDOWS
+cl.exe %FLAGS% src/main_app/BetterAngle.cpp src/shared/*.cpp /Fe:bin/BetterAngle.exe /link %LIBS%
 
 :: 2. Build Calibration Tool
 echo Building BetterAngleConfig.exe (Wizard)...
-cl.exe /EHsc /O2 /DUNICODE /D_UNICODE /Iinclude /Isrc src/config_tool/BetterAngleConfig.cpp src/shared/*.cpp /Fe:bin/BetterAngleConfig.exe /link user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib /SUBSYSTEM:WINDOWS
+cl.exe %FLAGS% src/config_tool/BetterAngleConfig.cpp src/shared/*.cpp /Fe:bin/BetterAngleConfig.exe /link %LIBS%
 
 if %errorlevel% equ 0 (
-    echo [SUCCESS] BetterAngle v3.5 Pro binaries created in bin/
+    echo [SUCCESS] BetterAngle v4.6.1 Pro binaries created in bin/
 ) else (
     echo [ERROR] Build failed.
 )
