@@ -26,3 +26,6 @@ angle_profiles.json
 # System
 Thumbs.db
 .DS_Store
+
+# Local only
+legacy_python/
