@@ -7,11 +7,11 @@
 #include <dwmapi.h>
 #include <gdiplus.h>
 
-#include "include/Input.h"
-#include "include/Overlay.h"
-#include "include/Logic.h"
-#include "include/Detector.h"
-#include "include/Updater.h"
+#include "Input.h"
+#include "Overlay.h"
+#include "Logic.h"
+#include "Detector.h"
+#include "Updater.h"
 
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "gdiplus.lib")
