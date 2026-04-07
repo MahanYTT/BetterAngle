@@ -9,34 +9,29 @@ jobs:
   build:
     runs-on: windows-latest
 
+    permissions:
+      contents: write # Required for creating releases
+
     steps:
     - uses: actions/checkout@v4
 
-    - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v2
+    - name: Set up MSVC
+      uses: ilammy/msvc-dev-cmd@v1
 
     - name: Build BetterAngle
       run: |
+        if (Test-Path bin) { Remove-Item -Recycle -Force bin }
         mkdir bin
         cl.exe /EHsc /O2 /I include src\*.cpp /Fe:bin\BetterAngle.exe /link user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib /SUBSYSTEM:WINDOWS
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
-
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./bin/BetterAngle.exe
-        asset_name: BetterAngle.exe
-        asset_content_type: application/vnd.microsoft.portable-executable
+        files: bin/BetterAngle.exe
+        token: ${{ secrets.GITHUB_TOKEN }}
+        body: |
+            BetterAngle C++ Release
+            - High-performance angle tracking
+            - Minimal RAM and CPU footprint
+            - Automated GitHub updates
