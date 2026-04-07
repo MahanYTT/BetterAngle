@@ -97,10 +97,11 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                     g_startPoint = cur;
                     g_selectionRect = { cur.x, cur.y, cur.x, cur.y };
                 } else {
-                    // STEP 2: PICK COLOR manually from screen
+                    // STEP 2: PRECISION COLOR PICK (Color Scope)
                     HDC hdcScreen = GetDC(NULL);
                     POINT cur; GetCursorPos(&cur);
                     g_pickedColor = GetPixel(hdcScreen, cur.x, cur.y);
+                    g_targetColor = g_pickedColor;
                     ReleaseDC(NULL, hdcScreen);
 
                     // Finish Calibration
@@ -109,7 +110,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 
                     if (!g_allProfiles.empty()) {
                         Profile& p = g_allProfiles[g_selectedProfileIdx];
-                        p.target_color = g_pickedColor;
+                        p.target_color = g_targetColor;
                         p.roi_x = min(g_selectionRect.left, g_selectionRect.right);
                         p.roi_y = min(g_selectionRect.top, g_selectionRect.bottom);
                         p.roi_w = abs(g_selectionRect.right - g_selectionRect.left);
@@ -168,6 +169,15 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    // Phase 0: Silent Update & Relaunch Sequence
+    if (CheckForUpdates()) {
+        std::wstring verStr = std::wstring(g_latestVersionOnline.begin(), g_latestVersionOnline.end());
+        std::wstring downloadUrl = L"https://github.com/MahanYTT/BetterAngle/releases/latest/download/BetterAngle_" + verStr + L".exe";
+        if (DownloadUpdate(downloadUrl, L"update_tmp.exe")) {
+            ApplyUpdateAndRestart();
+        }
+    }
+
     GdiplusStartupInput gdiplusStartupInput;
     GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, NULL);
 

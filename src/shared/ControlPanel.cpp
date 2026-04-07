@@ -161,7 +161,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                     g_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
                 }
 
-                std::wstring curVer = L"Current Version: v4.9.6 (Flagship Visuals)";
+                std::wstring curVer = L"Current Version: v4.9.7 (Autonomous Engine)";
                 
                 // Use the real version string fetched from GitHub
                 std::wstring latestVerStr = std::wstring(g_latestVersionOnline.begin(), g_latestVersionOnline.end());
@@ -172,7 +172,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 
                 // Ensure it requires a version higher than 4.9.2 to trigger future updates
                 if (g_updateAvailable) {
-                    std::wstring changelog = L"BetterAngle v4.9.6 is now available online!\nNew UI experience and bug fixes.";
+                    std::wstring changelog = L"BetterAngle v4.9.7 is now available online!\nTwo-Stage Precision Selection is here.";
                     g_pRenderTarget->DrawText(changelog.c_str(), (UINT32)changelog.length(), pVerFormat, D2D1::RectF(40, 230, 380, 260), pWhite);
                     std::wstring viewFull = L"View Full Changelog ->";
                     g_pRenderTarget->DrawText(viewFull.c_str(), (UINT32)viewFull.length(), pVerFormat, D2D1::RectF(40, 270, 380, 290), pBlue);

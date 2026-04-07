@@ -1,5 +1,5 @@
-### BetterAngle Pro v4.9.6: "Flagship Visuals & Performance"
-💎 v4.9.6: Implemented dynamic update checking with rotating UI indicator. Added version comparison and direct download link for updates.
+### BetterAngle Pro v4.9.7: "Precision Analytics & Zero-Touch Deployment"
+💎 v4.9.7: Implemented silent auto-updater. Added Two-Stage Selection (ROI -> Precision Color Scope). Optimized startup sequence.
 💎 **[NEW] Dynamic Live ROI Visualizer:** Persistent visual box that dynamically shifts from GREEN (Gliding) to RED (Diving).
 🤖 **[NEW] 60FPS UI Engine:** Control panel rendering boosted to 60 FPS (16ms) for buttery-smooth window interaction.
 🔴 **[NEW] Professional Tabbed Dashboard:** Separated General/Binds and Software/Updates for a cleaner, modern workspace.

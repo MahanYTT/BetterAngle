@@ -23,15 +23,42 @@ void DrawOverlay(HWND hwnd, double angle, const char* status, float detectionRat
     graphics.SetTextRenderingHint(Gdiplus::TextRenderingHintClearTypeGridFit);
     graphics.Clear(Gdiplus::Color(0, 0, 0, 0));
 
-    // Cinematic Dimming
+    // Cinematic Dimming & Two-Stage Selection
     if (g_isSelectionMode) {
         Gdiplus::SolidBrush dimBrush(Gdiplus::Color(180, 0, 0, 0)); 
-        graphics.FillRectangle(&dimBrush, 0, 0, 9999, 9999);
+        graphics.FillRectangle(&dimBrush, 0, 0, sw, sh);
         
         Gdiplus::FontFamily fontFamily(L"Segoe UI");
         Gdiplus::Font font(&fontFamily, 32, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
         Gdiplus::SolidBrush whiteBrush(Gdiplus::Color(255, 255, 255, 255));
-        graphics.DrawString(L"STEP 1: DRAG TO SELECT PROMPT AREA", -1, &font, Gdiplus::PointF(50.0f, 50.0f), &whiteBrush);
+        
+        if (g_selectionStep == 0) {
+            graphics.DrawString(L"STEP 1: DRAG TO SELECT PROMPT AREA", -1, &font, Gdiplus::PointF(50.0f, 50.0f), &whiteBrush);
+        } else {
+            graphics.DrawString(L"STEP 2: CLICK TO PICK TARGET COLOR", -1, &font, Gdiplus::PointF(50.0f, 50.0f), &whiteBrush);
+            
+            // Precision Color Scope (Magnifier)
+            POINT cur; GetCursorPos(&cur);
+            int scopeSize = 250;
+            int scopeX = cur.x - scopeSize / 2;
+            int scopeY = cur.y - scopeSize / 2;
+
+            GraphicsPath scopePath;
+            scopePath.AddEllipse(scopeX, scopeY, scopeSize, scopeSize);
+            graphics.SetClip(&scopePath);
+
+            HDC hdcScreen = GetDC(NULL);
+            StretchBlt(hdcMem, scopeX, scopeY, scopeSize, scopeSize, 
+                       hdcScreen, cur.x - 12, cur.y - 12, 25, 25, SRCCOPY);
+            ReleaseDC(NULL, hdcScreen);
+
+            Pen redPen(Color(255, 255, 0, 0), 2.0f);
+            graphics.DrawLine(&redPen, cur.x - 10, cur.y, cur.x + 10, cur.y);
+            graphics.DrawLine(&redPen, cur.x, cur.y - 10, cur.x, cur.y + 10);
+            
+            graphics.ResetClip();
+            graphics.DrawEllipse(&Pen(Color(255, 255, 255, 255), 3.0f), scopeX, scopeY, scopeSize, scopeSize);
+        }
     }
 
     // Dynamic Live ROI Box
@@ -99,7 +126,7 @@ void DrawOverlay(HWND hwnd, double angle, const char* status, float detectionRat
     graphics.DrawString(L"CURRENT ANGLE (LIVE)", -1, &subFont, PointF(rx + 30, ry + 25), &greyBrush);
 
     Font miniFont(&fontFamily, 10, FontStyleRegular, UnitPixel);
-    graphics.DrawString(L"Reliability Suite v4.8.2 | Pro HD Engine", -1, &miniFont, PointF(rx + 30, ry + 150), &greyBrush);
+    graphics.DrawString(L"Reliability Suite v4.9.7 | Autonomous Engine", -1, &miniFont, PointF(rx + 30, ry + 150), &greyBrush);
 
     BitBlt(hdc, 0, 0, sw, sh, hdcMem, 0, 0, SRCCOPY);
     SelectObject(hdcMem, hOld);

@@ -2,14 +2,16 @@
 #include "shared/State.h"
 #include <windows.h>
 #include <wininet.h>
+#include <urlmon.h>
 #include <fstream>
 #include <string>
 
 #pragma comment(lib, "wininet.lib")
+#pragma comment(lib, "urlmon.lib")
 
 bool CheckForUpdates() {
     g_isCheckingForUpdates = true;
-    HINTERNET hInternet = InternetOpenA("BetterAngle/4.9.6", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    HINTERNET hInternet = InternetOpenA("BetterAngle/4.9.7", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
     if (!hInternet) return false;
 
     HINTERNET hUrl = InternetOpenUrlA(hInternet, "https://api.github.com/repos/MahanYTT/BetterAngle/releases/latest", NULL, 0, INTERNET_FLAG_RELOAD, 0);
@@ -47,14 +49,14 @@ bool CheckForUpdates() {
             
             g_latestName = L"GitHub Production Release";
             
-            if (g_latestVersionOnline != "v4.9.6") {
+            if (g_latestVersionOnline != "v4.9.7") {
                 g_updateAvailable = true;
             } else {
                 g_updateAvailable = false;
             }
             
             g_isCheckingForUpdates = false;
-            return (g_latestVersion > 4.92f); 
+            return g_updateAvailable; 
         }
     }
 
@@ -63,8 +65,10 @@ bool CheckForUpdates() {
 }
 
 bool DownloadUpdate(const std::wstring& url, const std::wstring& dest) {
-    // Basic placeholder for download logic
-    return true; 
+    if (URLDownloadToFileW(NULL, url.c_str(), dest.c_str(), 0, NULL) == S_OK) {
+        return true;
+    }
+    return false;
 }
 
 void ApplyUpdateAndRestart() {
@@ -74,20 +78,17 @@ void ApplyUpdateAndRestart() {
     size_t lastBackslash = currentFullPath.find_last_of(L"\\");
     std::wstring currentExe = (lastBackslash != std::wstring::npos) ? currentFullPath.substr(lastBackslash + 1) : L"BetterAngle.exe";
 
-    std::wofstream bat(L"update_swap.bat");
+    std::wofstream bat(L"update.bat");
     bat << L"@echo off\n";
-    bat << L"timeout /t 2 /nobreak > nul\n";
-    bat << L"if not exist BetterAngle_new.exe (\n";
-    bat << L"  echo [ERROR] New version not found. Restarting current binary...\n";
-    bat << L"  start \"\" \"" << currentExe << L"\"\n";
-    bat << L"  exit\n";
-    bat << L")\n";
+    bat << L":loop\n";
+    bat << L"taskkill /F /IM \"" << currentExe << L"\" >nul 2>&1\n";
+    bat << L"if %errorlevel%==0 goto loop\n";
     bat << L"del \"" << currentExe << L"\"\n";
-    bat << L"move /y BetterAngle_new.exe \"" << currentExe << L"\"\n"; 
+    bat << L"rename update_tmp.exe \"" << currentExe << L"\"\n"; 
     bat << L"start \"\" \"" << currentExe << L"\"\n";
     bat << L"del %0\n";
     bat.close();
 
-    ShellExecute(NULL, L"open", L"update_swap.bat", NULL, NULL, SW_HIDE);
-    PostQuitMessage(0);
+    ShellExecute(NULL, L"open", L"update.bat", NULL, NULL, SW_HIDE);
+    exit(0);
 }
