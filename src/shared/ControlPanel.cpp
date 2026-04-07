@@ -123,7 +123,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             g_pDWriteFactory->CreateTextFormat(L"Segoe UI Variable Display", NULL, DWRITE_FONT_WEIGHT_BOLD, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 16.0f, L"en-us", &pHeaderFormat);
             g_pRenderTarget->DrawText(L"SOFTWARE & UPDATES", 18, pHeaderFormat, D2D1::RectF(40, 120, 380, 150), pWhite);
 
-            std::wstring curVer = L"Current Version: v4.8.1 (Direct-Readability)";
+            std::wstring curVer = L"Current Version: v4.8.2 (Release Reliability)";
             std::wstring latestVer = L"Latest Found: v" + std::to_wstring(g_latestVersion).substr(0, 4) + L" (" + g_latestName + L")";
             
             IDWriteTextFormat* pVerFormat = NULL;
@@ -135,7 +135,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             // Buttons
             DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 320, 380, 370), L"CHECK FOR UPDATES", D2D1::ColorF(0.15f, 0.17f, 0.2f));
             
-            if (g_latestVersion > 4.81f) {
+            if (g_latestVersion > 4.82f) {
                 DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 380, 380, 430), L"UPDATE NOW", D2D1::ColorF(0.0f, 0.5f, 0.8f));
             }
 
