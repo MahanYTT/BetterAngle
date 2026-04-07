@@ -14,7 +14,7 @@ double AngleLogic::GetAngle() const {
     if (m_scalePerDx == 0.0) return 0.0;
     double angle = Norm360(m_baseAngle + (m_accumDx - m_baseDx) * m_scalePerDx);
     
-    // Heuristic Check (v4.9.13)
+    // Heuristic Check (v4.9.14)
     g_currentAngle = (float)angle;
     if (g_currentSelection == NONE) {
         if (g_currentAngle > 50.0f || g_currentAngle < -50.0f) {

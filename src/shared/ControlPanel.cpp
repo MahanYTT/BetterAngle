@@ -107,9 +107,20 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             }
             if (g_currentTab == 1) { 
                 if (x >= 40 && x <= 380 && y >= 320 && y <= 370) {
-                    g_isCheckingForUpdates = true;
-                    // Run CheckForUpdates in a thread if needed, or synchronously for now
-                    std::thread(CheckForUpdates).detach(); 
+                    if (g_updateAvailable) {
+                        // If update is available, start the silent install sequence
+                        std::thread([]() {
+                            std::wstring verStr = std::wstring(g_latestVersionOnline.begin(), g_latestVersionOnline.end());
+                            // Using a more generic download URL if parsing fails or as a primary method
+                            std::wstring downloadUrl = L"https://github.com/MahanYTT/BetterAngle/releases/latest/download/BetterAngle.exe";
+                            if (DownloadUpdate(downloadUrl, L"update_tmp.exe")) {
+                                ApplyUpdateAndRestart();
+                            }
+                        }).detach();
+                    } else {
+                        g_isCheckingForUpdates = true;
+                        std::thread(CheckForUpdates).detach(); 
+                    }
                 }
                 if (g_updateAvailable && x >= 40 && x <= 380 && y >= 380 && y <= 430) {
                     ShellExecuteW(0, L"open", L"https://github.com/MahanYTT/BetterAngle/releases/latest", 0, 0, SW_SHOW);
@@ -149,6 +160,14 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 
             if (g_currentTab == 0) {
                 g_pRenderTarget->DrawText(L"CURRENT KEYBINDS", 16, pHeaderFormat, D2D1::RectF(40, 140, 380, 170), pWhite);
+                
+                // Target Color Preview Circle (Linked to g_targetColor)
+                ID2D1SolidColorBrush* pTargetBrush = NULL;
+                g_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(GetRValue(g_targetColor)/255.0f, GetGValue(g_targetColor)/255.0f, GetBValue(g_targetColor)/255.0f), &pTargetBrush);
+                g_pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(360.0f, 155.0f), 12.0f, 12.0f), pTargetBrush);
+                g_pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(360.0f, 155.0f), 12.0f, 12.0f), pGrey, 1.0f);
+                if (pTargetBrush) pTargetBrush->Release();
+
                 g_pRenderTarget->DrawText(L"Precision Crosshair: F10\nVisual ROI Selector: Ctrl + R\nToggle ROI Box: F9", 66, pVerFormat, D2D1::RectF(40, 170, 380, 240), pGrey);
                 // Quick Guide for Workspace selection
                 g_pRenderTarget->DrawText(L"Press CTRL+R to begin full-screen selection.", 45, pVerFormat, D2D1::RectF(40, 250, 380, 290), pWhite);
@@ -162,7 +181,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                     g_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
                 }
 
-                std::wstring curVer = L"Current Version: v4.9.13 (Snapshot Engine)";
+                std::wstring curVer = L"Current Version: v4.9.14 (Reliability Suite)";
                 
                 // Use the real version string fetched from GitHub
                 std::wstring latestVerStr = std::wstring(g_latestVersionOnline.begin(), g_latestVersionOnline.end());
@@ -179,7 +198,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                     g_pRenderTarget->DrawText(viewFull.c_str(), (UINT32)viewFull.length(), pVerFormat, D2D1::RectF(40, 270, 380, 290), pBlue);
                     DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 380, 380, 430), L"DOWNLOAD UPDATE", D2D1::ColorF(0.0f, 0.5f, 0.8f));
                 }
-                DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 320, 380, 370), L"CHECK FOR UPDATES", D2D1::ColorF(0.15f, 0.17f, 0.2f));
+                DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 320, 380, 370), g_updateAvailable ? L"INSTALL UPDATE NOW" : L"DOWNLOAD AND INSTALL NOW", D2D1::ColorF(0.15f, 0.17f, 0.2f));
             }
 
             DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 580, 380, 630), L"QUIT SUITE", D2D1::ColorF(0.7f, 0.1f, 0.15f));

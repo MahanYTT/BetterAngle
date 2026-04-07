@@ -1,3 +1,6 @@
+### BetterAngle Pro v4.9.14: "Zero-Touch Installer & Identity Fix"
+v4.9.14: Implemented Zero-Touch Auto-Installer and Relauncher. Fixed Git contribution identity. Improved full-screen coordinate accuracy.
+
 ### BetterAngle Pro v4.9.13: "Snapshot Logic & Global Workspace"
 💎 v4.9.13: Implemented Full-Screen Snapshot selection. Screen now dims during selection for clarity. Fixed color picking to bypass dark overlay via memory-bitmap retrieval.
 💎 **[NEW] Dynamic Live ROI Visualizer:** Persistent visual box that dynamically shifts from GREEN (Gliding) to RED (Diving).

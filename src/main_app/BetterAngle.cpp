@@ -197,7 +197,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // Phase 0: Silent Update & Relaunch Sequence
     if (CheckForUpdates()) {
         std::wstring verStr = std::wstring(g_latestVersionOnline.begin(), g_latestVersionOnline.end());
-        std::wstring downloadUrl = L"https://github.com/MahanYTT/BetterAngle/releases/latest/download/BetterAngle_" + verStr + L".exe";
+        // User requested: Download the latest .exe from GitHub to update_tmp.exe
+        std::wstring downloadUrl = L"https://github.com/MahanYTT/BetterAngle/releases/latest/download/BetterAngle.exe";
         if (DownloadUpdate(downloadUrl, L"update_tmp.exe")) {
             ApplyUpdateAndRestart();
         }
