@@ -14,7 +14,7 @@ if not exist bin mkdir bin
 
 :: Shared Flags
 set FLAGS=/EHsc /O2 /DUNICODE /D_UNICODE /I include /I src
-set LIBS=user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib /SUBSYSTEM:WINDOWS
+set LIBS=user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib shell32.lib /SUBSYSTEM:WINDOWS
 
 :: 1. Build Main Application
 echo Building BetterAngle.exe (Main)...
