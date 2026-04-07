@@ -14,7 +14,7 @@ if %errorlevel% neq 0 (
 if not exist bin mkdir bin
 
 :: Compile
-cl.exe /EHsc /O2 /I include src\*.cpp /Fe:bin\BetterAngle.exe /link user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib /SUBSYSTEM:WINDOWS
+cl.exe /EHsc /O2 /DUNICODE /D_UNICODE /I include src\*.cpp /Fe:bin\BetterAngle.exe /link user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib /SUBSYSTEM:WINDOWS
 
 if %errorlevel% equ 0 (
     echo [SUCCESS] BetterAngle.exe created in bin/

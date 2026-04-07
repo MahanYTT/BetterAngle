@@ -22,7 +22,7 @@ jobs:
       run: |
         if (Test-Path bin) { Remove-Item -Recycle -Force bin }
         mkdir bin
-        cl.exe /EHsc /O2 /I include src\*.cpp /Fe:bin\BetterAngle.exe /link user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib /SUBSYSTEM:WINDOWS
+        cl.exe /EHsc /O2 /DUNICODE /D_UNICODE /I include src\*.cpp /Fe:bin\BetterAngle.exe /link user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib /SUBSYSTEM:WINDOWS
 
     - name: Release
       uses: softprops/action-gh-release@v2
