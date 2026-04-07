@@ -7,9 +7,9 @@
 #include <string>
 
 // HUD & Global Shared State
-enum AppState { IDLE, SELECTING_ROI, SELECTING_COLOR };
-extern AppState g_appState;
-extern bool g_isSelectionMode;
+enum SelectionState { NONE, SELECTING_ROI, SELECTING_COLOR };
+extern SelectionState g_currentSelection;
+extern bool g_isSelectionActive;
 extern bool g_isDiving;
 extern bool g_showROIBox;
 extern int g_currentTab;

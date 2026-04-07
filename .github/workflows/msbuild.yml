@@ -31,14 +31,14 @@ jobs:
         cl.exe /EHsc /O2 /DUNICODE /D_UNICODE /Iinclude /Isrc src/config_tool/BetterAngleConfig.cpp src/shared/*.cpp /Fe:bin/BetterAngleConfig.exe /link user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib shell32.lib d2d1.lib dwrite.lib windowscodecs.lib /SUBSYSTEM:WINDOWS
 
         # Rename to versioned EXE
-        move bin/BetterAngle.exe bin/BetterAngle_v4.9.11.exe
+        move bin/BetterAngle.exe bin/BetterAngle_v4.9.12.exe
 
-    - name: Create Release (Pro v4.9.11)
+    - name: Create Release (Pro v4.9.12)
       uses: softprops/action-gh-release@v2
       with:
-        files: bin/BetterAngle_v4.9.11.exe
+        files: bin/BetterAngle_v4.9.12.exe
         token: ${{ secrets.GITHUB_TOKEN }}
-        tag_name: v4.9.11
-        name: BetterAngle Pro v4.9.11 (Flagship Visuals & Performance)
+        tag_name: v4.9.12
+        name: BetterAngle Pro v4.9.12 (Flagship Visuals & Performance)
         body_path: RELEASE_NOTES.md
         make_latest: true

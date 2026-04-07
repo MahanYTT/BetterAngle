@@ -24,7 +24,7 @@ void DrawOverlay(HWND hwnd, double angle, const char* status, float detectionRat
     graphics.Clear(Gdiplus::Color(0, 0, 0, 0));
 
     // Cinematic Dimming & Two-Stage Selection
-    if (g_appState != IDLE) {
+    if (g_currentSelection != NONE) {
         Gdiplus::SolidBrush dimBrush(Gdiplus::Color(180, 0, 0, 0)); 
         graphics.FillRectangle(&dimBrush, 0, 0, sw, sh);
         
@@ -32,9 +32,9 @@ void DrawOverlay(HWND hwnd, double angle, const char* status, float detectionRat
         Gdiplus::Font font(&fontFamily, 32, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
         Gdiplus::SolidBrush whiteBrush(Gdiplus::Color(255, 255, 255, 255));
         
-        if (g_appState == SELECTING_ROI) {
+        if (g_currentSelection == SELECTING_ROI) {
             graphics.DrawString(L"STAGE 1: DRAG TO SELECT PROMPT AREA", -1, &font, Gdiplus::PointF(50.0f, 50.0f), &whiteBrush);
-        } else if (g_appState == SELECTING_COLOR) {
+        } else if (g_currentSelection == SELECTING_COLOR) {
             graphics.DrawString(L"STAGE 2: CLICK TO PICK PRECISE COLOR", -1, &font, Gdiplus::PointF(50.0f, 50.0f), &whiteBrush);
             
             // Follow-Mouse Magnifier Scope (+20x, +20y offset)
@@ -135,7 +135,7 @@ void DrawOverlay(HWND hwnd, double angle, const char* status, float detectionRat
     graphics.DrawString(L"CURRENT ANGLE (LIVE)", -1, &subFont, PointF(rx + 30, ry + 25), &greyBrush);
 
     Font miniFont(&fontFamily, 10, FontStyleRegular, UnitPixel);
-    graphics.DrawString(L"Reliability Suite v4.9.11 | Build Fix Engine", -1, &miniFont, PointF(rx + 30, ry + 150), &greyBrush);
+    graphics.DrawString(L"Reliability Suite v4.9.12 | Workspace Engine", -1, &miniFont, PointF(rx + 30, ry + 150), &greyBrush);
 
     BitBlt(hdc, 0, 0, sw, sh, hdcMem, 0, 0, SRCCOPY);
     SelectObject(hdcMem, hOld);

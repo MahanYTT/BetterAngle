@@ -53,9 +53,13 @@ void PollInputKeys() {
     static bool rPressed = false;
     if ((GetAsyncKeyState(VK_CONTROL) & 0x8000) && (GetAsyncKeyState('R') & 0x8000)) {
         if (!rPressed) {
-            g_isSelectionMode = !g_isSelectionMode;
-            if (g_isSelectionMode) g_appState = SELECTING_ROI;
-            else g_appState = IDLE;
+            if (g_currentSelection == NONE) {
+                g_currentSelection = SELECTING_ROI;
+                g_isSelectionActive = true;
+            } else {
+                g_currentSelection = NONE;
+                g_isSelectionActive = false;
+            }
             rPressed = true;
         }
     } else {
