@@ -41,7 +41,8 @@ bool Profile::Save(const std::wstring& path) {
     std::ofstream f(path, std::ios::trunc);
     if (!f.is_open()) return false;
 
-    std::string n(name.begin(), name.end());
+    std::string n;
+    for (wchar_t c : name) n += (char)c;
     f << "{\n";
     f << "  \"name\": \"" << n << "\",\n";
     f << "  \"scale_normal\": " << scale_normal << ",\n";

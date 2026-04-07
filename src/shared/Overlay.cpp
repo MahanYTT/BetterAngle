@@ -41,10 +41,14 @@ void DrawOverlay(HWND hwnd, double angle, const char* status, float detectionRat
                               (int)(g_selectionRect.bottom - g_selectionRect.top));
     }
 
-    // 3. Draw Clean Glass HUD
-    int rx = 40, ry = 40, rw = 320, rh = 180;
+    // 3. Draw Clean Glass HUD (Manually rounded because Gdiplus lacks AddRoundRect)
+    int rx = 40, ry = 40, rw = 320, rh = 180, r = 20;
     GraphicsPath path;
-    path.AddRoundRect(Rect(rx, ry, rw, rh), 20);
+    path.AddArc(rx, ry, r, r, 180, 90);
+    path.AddArc(rx + rw - r, ry, r, r, 270, 90);
+    path.AddArc(rx + rw - r, ry + rh - r, r, r, 0, 90);
+    path.AddArc(rx, ry + rh - r, r, r, 90, 90);
+    path.CloseFigure();
 
     LinearGradientBrush brush(Point(rx, ry), Point(rx, ry + rh), 
                              Color(180, 15, 18, 22), Color(180, 5, 6, 8));
@@ -79,11 +83,6 @@ void DrawOverlay(HWND hwnd, double angle, const char* status, float detectionRat
     graphics.DrawString(L"Pro v4.6.1 | F10: Crosshair | Ctrl+R: ROI", -1, &miniFont, PointF(rx + 30, ry + 150), &greyBrush);
 
     BitBlt(hdc, 0, 0, sw, sh, hdcMem, 0, 0, SRCCOPY);
-    SelectObject(hdcMem, hOld);
-    DeleteObject(hbmMem);
-    DeleteDC(hdcMem);
-    EndPaint(hwnd, &ps);
-}
     SelectObject(hdcMem, hOld);
     DeleteObject(hbmMem);
     DeleteDC(hdcMem);
