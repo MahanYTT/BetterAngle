@@ -11,7 +11,7 @@
 
 bool CheckForUpdates() {
     g_isCheckingForUpdates = true;
-    HINTERNET hInternet = InternetOpenA("BetterAngle/4.9.7", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    HINTERNET hInternet = InternetOpenA("BetterAngle/4.9.8", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
     if (!hInternet) return false;
 
     HINTERNET hUrl = InternetOpenUrlA(hInternet, "https://api.github.com/repos/MahanYTT/BetterAngle/releases/latest", NULL, 0, INTERNET_FLAG_RELOAD, 0);
@@ -49,7 +49,7 @@ bool CheckForUpdates() {
             
             g_latestName = L"GitHub Production Release";
             
-            if (g_latestVersionOnline != "v4.9.7") {
+            if (g_latestVersionOnline != "v4.9.8") {
                 g_updateAvailable = true;
             } else {
                 g_updateAvailable = false;

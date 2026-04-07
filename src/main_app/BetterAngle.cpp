@@ -42,7 +42,7 @@ bool g_isCursorVisible = false;
 // FOV Detector Thread
 void DetectorThread() {
     while (g_running) {
-        if (!g_allProfiles.empty()) {
+        if (!g_allProfiles.empty() && g_appState == IDLE) {
             Profile& p = g_allProfiles[g_selectedProfileIdx];
             RoiConfig cfg = { p.roi_x, p.roi_y, p.roi_w, p.roi_h, p.target_color, p.tolerance };
             
@@ -74,72 +74,69 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                 else if (IsWindowVisible(g_hPanel)) ShowWindow(g_hPanel, SW_MINIMIZE);
                 else ShowWindow(g_hPanel, SW_SHOW);
             } else if (wParam == 2) { // ROI Select Toggle
-                g_isSelectionMode = !g_isSelectionMode;
-                g_selectionStep = 0; // Reset to Step 1: Area
-                
-                long exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
-                if (g_isSelectionMode) {
+                if (g_appState == IDLE) {
+                    g_appState = SELECTING_ROI;
+                    long exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
                     exStyle &= ~WS_EX_TRANSPARENT;
+                    SetWindowLong(hWnd, GWL_EXSTYLE, exStyle);
                     SetForegroundWindow(hWnd);
                 } else {
-                    exStyle |= WS_EX_TRANSPARENT;
+                    g_appState = IDLE;
+                    SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
                 }
-                SetWindowLong(hWnd, GWL_EXSTYLE, exStyle);
             } else if (wParam == 3) {
                 g_showCrosshair = !g_showCrosshair;
             }
             return 0;
 
         case WM_LBUTTONDOWN:
-            if (g_isSelectionMode) {
-                if (g_selectionStep == 0) {
-                    POINT cur; GetCursorPos(&cur);
-                    g_startPoint = cur;
-                    g_selectionRect = { cur.x, cur.y, cur.x, cur.y };
-                } else {
-                    // STEP 2: PRECISION COLOR PICK (Color Scope)
-                    HDC hdcScreen = GetDC(NULL);
-                    POINT cur; GetCursorPos(&cur);
-                    g_pickedColor = GetPixel(hdcScreen, cur.x, cur.y);
-                    g_targetColor = g_pickedColor;
-                    ReleaseDC(NULL, hdcScreen);
+            if (g_appState == SELECTING_ROI) {
+                POINT cur; GetCursorPos(&cur);
+                g_startPoint = cur;
+                g_selectionRect = { cur.x, cur.y, cur.x, cur.y };
+            } else if (g_appState == SELECTING_COLOR) {
+                // STEP 2: PRECISION COLOR PICK (Color Scope)
+                HDC hdcScreen = GetDC(NULL);
+                POINT cur; GetCursorPos(&cur);
+                g_targetColor = GetPixel(hdcScreen, cur.x, cur.y);
+                g_pickedColor = g_targetColor;
+                ReleaseDC(NULL, hdcScreen);
 
-                    // Finish Calibration
-                    g_isSelectionMode = false;
-                    SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
+                // Finish Calibration
+                g_appState = IDLE;
+                SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
 
-                    if (!g_allProfiles.empty()) {
-                        Profile& p = g_allProfiles[g_selectedProfileIdx];
-                        p.target_color = g_targetColor;
-                        p.roi_x = min(g_selectionRect.left, g_selectionRect.right);
-                        p.roi_y = min(g_selectionRect.top, g_selectionRect.bottom);
-                        p.roi_w = abs(g_selectionRect.right - g_selectionRect.left);
-                        p.roi_h = abs(g_selectionRect.bottom - g_selectionRect.top);
-                        p.Save(L"profiles/last_calibrated.json");
-                    }
+                if (!g_allProfiles.empty() && g_appState == IDLE) {
+                    Profile& p = g_allProfiles[g_selectedProfileIdx];
+                    p.target_color = g_targetColor;
+                    p.roi_x = min(g_selectionRect.left, g_selectionRect.right);
+                    p.roi_y = min(g_selectionRect.top, g_selectionRect.bottom);
+                    p.roi_w = abs(g_selectionRect.right - g_selectionRect.left);
+                    p.roi_h = abs(g_selectionRect.bottom - g_selectionRect.top);
+                    p.Save(L"profiles/last_calibrated.json");
                 }
             }
             return 0;
 
         case WM_MOUSEMOVE:
-            if (g_isSelectionMode) {
-                if (g_selectionStep == 0 && (wParam & MK_LBUTTON)) {
-                    POINT cur; GetCursorPos(&cur);
-                    g_selectionRect.right = cur.x;
-                    g_selectionRect.bottom = cur.y;
-                }
+            if (g_appState == SELECTING_ROI && (wParam & MK_LBUTTON)) {
+                POINT cur; GetCursorPos(&cur);
+                g_selectionRect.right = cur.x;
+                g_selectionRect.bottom = cur.y;
+                InvalidateRect(hWnd, NULL, FALSE);
+            } else if (g_appState == SELECTING_COLOR) {
                 InvalidateRect(hWnd, NULL, FALSE);
             }
             return 0;
 
         case WM_LBUTTONUP:
-            if (g_isSelectionMode && g_selectionStep == 0) {
-                g_selectionStep = 1; // Move to Step 2: Color
+            if (g_appState == SELECTING_ROI) {
+                g_appState = SELECTING_COLOR; // Move to Step 2: Color
             }
             return 0;
 
         case WM_INPUT: {
-            if (g_isCursorVisible || g_isSelectionMode) return 0;
+            if (g_isCursorVisible || g_appState != IDLE) return 0;
             int dx = GetRawInputDeltaX(lParam);
             g_logic.Update(dx);
             return 0;

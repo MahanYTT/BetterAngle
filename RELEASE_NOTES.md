@@ -1,5 +1,5 @@
-### BetterAngle Pro v4.9.7: "Precision Analytics & Zero-Touch Deployment"
-💎 v4.9.7: Implemented silent auto-updater. Added Two-Stage Selection (ROI -> Precision Color Scope). Optimized startup sequence.
+### BetterAngle Pro v4.9.8: "Global Screen-Space Overhaul"
+💎 v4.9.8: Overhauled Overlay to Full-Screen Transparent Layer. Implemented Absolute Screen-Space coordinates for ROI. Added Precision Magnifier for Color Picking. Fixed BGR/RGB color circle sync.
 💎 **[NEW] Dynamic Live ROI Visualizer:** Persistent visual box that dynamically shifts from GREEN (Gliding) to RED (Diving).
 🤖 **[NEW] 60FPS UI Engine:** Control panel rendering boosted to 60 FPS (16ms) for buttery-smooth window interaction.
 🔴 **[NEW] Professional Tabbed Dashboard:** Separated General/Binds and Software/Updates for a cleaner, modern workspace.

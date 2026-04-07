@@ -7,6 +7,8 @@
 #include <string>
 
 // HUD & Global Shared State
+enum AppState { IDLE, SELECTING_ROI, SELECTING_COLOR };
+extern AppState g_appState;
 extern bool g_isDiving;
 extern bool g_showROIBox;
 extern int g_currentTab;
@@ -15,8 +17,6 @@ extern bool g_isCheckingForUpdates;
 extern float g_updateSpinAngle;
 extern bool g_updateAvailable;
 extern bool g_showCrosshair;
-extern bool g_isSelectionMode;
-extern int g_selectionStep; // 0 = ROI, 1 = Color
 extern COLORREF g_pickedColor;
 extern COLORREF g_targetColor;
 extern float g_latestVersion;
