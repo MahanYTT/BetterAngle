@@ -1,0 +1,10 @@
+# Standardize line endings for C++ and shared files
+* text=auto eol=crlf
+
+# Ensure scripts and workflows use LF
+*.yml text eol=lf
+*.sh text eol=lf
+.gitignore text eol=lf
+
+# Batch files must use CRLF for Windows
+*.bat text eol=crlf
