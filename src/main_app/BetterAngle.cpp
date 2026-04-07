@@ -31,7 +31,14 @@ ULONG_PTR g_gdiplusToken;
 std::atomic<bool> g_running(true);
 AngleLogic g_logic(800, 6.5);
 FovDetector g_detector;
-std::string g_status = "Connected (v4.5.1 Pro)";
+std::string g_status = "Connected (v4.6.1 Pro)";
+float g_detectionRatio = 0.0f;
+bool g_showCrosshair = false;
+
+// Selection State
+bool g_isSelectionMode = false;
+RECT g_selectionRect = { 0 };
+POINT g_startPoint = { 0 };
 
 Profile g_currentProfile;
 std::vector<Profile> g_allProfiles;
@@ -45,8 +52,8 @@ void DetectorThread() {
             Profile& p = g_allProfiles[g_selectedProfileIdx];
             RoiConfig cfg = { p.roi_x, p.roi_y, p.roi_w, p.roi_h, p.target_color, p.tolerance };
             
-            float ratio = g_detector.Scan(cfg);
-            if (ratio > 0.05f) {
+            g_detectionRatio = g_detector.Scan(cfg);
+            if (g_detectionRatio > 0.05f) {
                 g_logic.SetScale(p.scale_diving);
             } else {
                 g_logic.SetScale(p.scale_normal);
@@ -62,18 +69,62 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
         case WM_CREATE:
             SetLayeredWindowAttributes(hWnd, RGB(0, 0, 0), 0, LWA_COLORKEY);
             RegisterRawMouse(hWnd);
-            RegisterHotKey(hWnd, 1, MOD_CONTROL, 'U'); // CTRL+U to toggle Panel
+            RegisterHotKey(hWnd, 1, MOD_CONTROL, 'U'); // Toggle Panel
+            RegisterHotKey(hWnd, 2, MOD_CONTROL, 'R'); // ROI Select
+            RegisterHotKey(hWnd, 3, 0, VK_F10);        // Crosshair
             return 0;
 
         case WM_HOTKEY:
             if (wParam == 1) {
                 if (IsWindowVisible(g_hPanel)) ShowWindow(g_hPanel, SW_HIDE);
                 else ShowWindow(g_hPanel, SW_SHOW);
+            } else if (wParam == 2) {
+                g_isSelectionMode = !g_isSelectionMode;
+                // If starting selection, remove TRANSPARENT so we can catch mouse
+                long exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+                if (g_isSelectionMode) exStyle &= ~WS_EX_TRANSPARENT;
+                else exStyle |= WS_EX_TRANSPARENT;
+                SetWindowLong(hWnd, GWL_EXSTYLE, exStyle);
+            } else if (wParam == 3) {
+                g_showCrosshair = !g_showCrosshair;
+            }
+            return 0;
+
+        case WM_LBUTTONDOWN:
+            if (g_isSelectionMode) {
+                g_startPoint.x = LOWORD(lParam);
+                g_startPoint.y = HIWORD(lParam);
+                g_selectionRect = { g_startPoint.x, g_startPoint.y, g_startPoint.x, g_startPoint.y };
+            }
+            return 0;
+
+        case WM_MOUSEMOVE:
+            if (g_isSelectionMode && (wParam & MK_LBUTTON)) {
+                g_selectionRect.right = LOWORD(lParam);
+                g_selectionRect.bottom = HIWORD(lParam);
+            }
+            return 0;
+
+        case WM_LBUTTONUP:
+            if (g_isSelectionMode) {
+                g_isSelectionMode = false;
+                // Finish selection, restore TRANSPARENT
+                SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
+                
+                // Save to profile
+                if (!g_allProfiles.empty()) {
+                    Profile& p = g_allProfiles[g_selectedProfileIdx];
+                    p.roi_x = min(g_startPoint.x, (long)LOWORD(lParam));
+                    p.roi_y = min(g_startPoint.y, (long)HIWORD(lParam));
+                    p.roi_w = abs((long)LOWORD(lParam) - g_startPoint.x);
+                    p.roi_h = abs((long)HIWORD(lParam) - g_startPoint.y);
+                    p.Save(L"profiles/last_calibrated.json");
+                }
             }
             return 0;
 
         case WM_INPUT: {
-            if (g_isCursorVisible) return 0;
+            if (g_isCursorVisible || g_isSelectionMode) return 0;
             int dx = GetRawInputDeltaX(lParam);
             g_logic.Update(dx);
             return 0;
@@ -89,7 +140,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
         }
 
         case WM_PAINT:
-            DrawOverlay(hWnd, g_logic.GetAngle(), g_status.c_str());
+            DrawOverlay(hWnd, g_logic.GetAngle(), g_status.c_str(), g_detectionRatio, g_showCrosshair);
             return 0;
 
         case WM_DESTROY:
