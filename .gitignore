@@ -1,0 +1,28 @@
+# Build artifacts
+/build/
+/bin/
+/out/
+*.exe
+*.obj
+*.pdb
+*.ilk
+*.lib
+*.dll
+*.exp
+
+# IDEs
+.vs/
+.vscode/
+
+# Python leftovers
+__pycache__/
+*.pyc
+angle_app_state.json
+angle_fov_detector.json
+angle_keybinds.json
+angle_overlay.log
+angle_profiles.json
+
+# System
+Thumbs.db
+.DS_Store
