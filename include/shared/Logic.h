@@ -8,6 +8,7 @@ public:
     AngleLogic(double dpi, double sens);
     void Update(int dx);
     double GetAngle() const;
+    double GetScale() const { return m_scalePerDx; }
     void SetZero();
     void SetScale(double scale);
 

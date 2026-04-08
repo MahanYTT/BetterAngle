@@ -1,9 +1,12 @@
 #include "shared/State.h"
+#include "shared/Logic.h"
 #include <gdiplus.h>
 #include <iostream>
 #include <string>
 
 using namespace Gdiplus;
+
+bool IsFortniteFocused();
 
 void DrawOverlay(HWND hwnd, double angle, const char* status, float detectionRatio, bool showCrosshair) {
     PAINTSTRUCT ps;
@@ -149,7 +152,39 @@ void DrawOverlay(HWND hwnd, double angle, const char* status, float detectionRat
     graphics.DrawString(L"CURRENT ANGLE (LIVE)", -1, &subFont, PointF(rx + 30, ry + 25), &greyBrush);
 
     Font miniFont(&fontFamily, 10, FontStyleRegular, UnitPixel);
-    graphics.DrawString(L"Release Workflow Fix v4.9.19 | Auto-Installer Ready", -1, &miniFont, PointF(rx + 30, ry + 150), &greyBrush);
+    graphics.DrawString(L"Release Workflow Fix v4.9.20 | Auto-Installer Ready", -1, &miniFont, PointF(rx + 30, ry + 150), &greyBrush);
+
+    // 8. Debug Menu (Ctrl + 9)
+    if (g_debugMode) {
+        int dx = 40, dy = 250, dw = 320, dh = 150;
+        GraphicsPath dbgPath;
+        dbgPath.AddRectangle(Rect(dx, dy, dw, dh));
+        graphics.FillPath(&SolidBrush(Color(200, 10, 10, 15)), &dbgPath);
+        graphics.DrawPath(&Pen(Color(150, 255, 255, 255), 1), &dbgPath);
+
+        Font dbgTitleFont(&fontFamily, 14, FontStyleBold, UnitPixel);
+        Font dbgFont(&fontFamily, 11, FontStyleRegular, UnitPixel);
+        SolidBrush whiteBrush(Color(255, 255, 255, 255));
+        SolidBrush yellowBrush(Color(255, 255, 255, 0));
+
+        graphics.DrawString(L"DEBUG DASHBOARD", -1, &dbgTitleFont, PointF(dx + 15, dy + 10), &yellowBrush);
+
+        std::wstring rawAngle = L"Raw Angle: " + std::to_wstring(angle);
+        std::wstring focusStr = L"Fortnite Focused: ";
+        focusStr += IsFortniteFocused() ? L"YES" : L"NO";
+        
+        // We need to access g_logic to get scale, it's global in BetterAngle.cpp
+        // For now, let's use what we have or extern it.
+        extern class AngleLogic g_logic; 
+        std::wstring scaleStr = L"Active Scale: " + std::to_wstring(g_logic.GetScale());
+        std::wstring detStr = L"Raw Detection: " + std::to_wstring(detectionRatio);
+
+        graphics.DrawString(rawAngle.c_str(), -1, &dbgFont, PointF(dx + 15, dy + 40), &whiteBrush);
+        graphics.DrawString(focusStr.c_str(), -1, &dbgFont, PointF(dx + 15, dy + 60), &whiteBrush);
+        graphics.DrawString(scaleStr.c_str(), -1, &dbgFont, PointF(dx + 15, dy + 80), &whiteBrush);
+        graphics.DrawString(detStr.c_str(), -1, &dbgFont, PointF(dx + 15, dy + 100), &whiteBrush);
+        graphics.DrawString(L"Mode: SECRET DEBUG ACTIVE", -1, &dbgFont, PointF(dx + 15, dy + 120), &yellowBrush);
+    }
 
     BitBlt(hdc, 0, 0, sw, sh, hdcMem, 0, 0, SRCCOPY);
     SelectObject(hdcMem, hOld);

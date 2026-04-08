@@ -92,19 +92,6 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 if (x >= 40 && x <= 200) g_currentTab = 0; 
                 else if (x >= 210 && x <= 380) g_currentTab = 1; 
             }
-            if (g_currentTab == 0) {
-                if (x >= 40 && x <= 380 && y >= 250 && y <= 290) {
-                    CHOOSECOLOR cc;
-                    static COLORREF acrCustClr[16]; 
-                    ZeroMemory(&cc, sizeof(cc));
-                    cc.lStructSize = sizeof(cc);
-                    cc.hwndOwner = hWnd;
-                    cc.lpCustColors = (LPDWORD)acrCustClr;
-                    cc.rgbResult = g_targetColor;
-                    cc.Flags = CC_FULLOPEN | CC_RGBINIT;
-                    if (ChooseColor(&cc)) { g_targetColor = cc.rgbResult; }
-                }
-            }
             if (g_currentTab == 1) { 
                 if (x >= 40 && x <= 380 && y >= 320 && y <= 370) {
                     if (g_updateAvailable) {
@@ -169,7 +156,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 if (pTargetBrush) pTargetBrush->Release();
 
                 g_pRenderTarget->DrawText(L"Precision Crosshair: F10\nVisual ROI Selector: Ctrl + R\nToggle ROI Box: F9", 66, pVerFormat, D2D1::RectF(40, 170, 380, 240), pGrey);
-                // Quick Guide for Workspace selection
+                // Quick Guide for Workspace selection (v4.9.20: Removed hidden color picker)
                 g_pRenderTarget->DrawText(L"Press CTRL+R to begin full-screen selection.", 45, pVerFormat, D2D1::RectF(40, 250, 380, 290), pWhite);
             } else if (g_currentTab == 1) {
                 g_pRenderTarget->DrawText(L"SOFTWARE DASHBOARD", 18, pHeaderFormat, D2D1::RectF(40, 140, 380, 170), pWhite);
@@ -181,7 +168,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                     g_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
                 }
 
-                std::wstring curVer = L"Current Version: v4.9.19 (Release Workflow Fix)";
+                std::wstring curVer = L"Current Version: v4.9.20 (Release Workflow Fix)";
                 
                 // Use the real version string fetched from GitHub
                 std::wstring latestVerStr = std::wstring(g_latestVersionOnline.begin(), g_latestVersionOnline.end());
@@ -192,7 +179,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 
                 // Ensure it requires a version higher than 4.9.2 to trigger future updates
                 if (g_updateAvailable) {
-                    std::wstring changelog = L"BetterAngle v4.9.19 is now available online!\nFull-screen ROI selection is here.";
+                    std::wstring changelog = L"BetterAngle v4.9.20 is now available online!\nFull-screen ROI selection is here.";
                     g_pRenderTarget->DrawText(changelog.c_str(), (UINT32)changelog.length(), pVerFormat, D2D1::RectF(40, 230, 380, 260), pWhite);
                     std::wstring viewFull = L"View Full Changelog ->";
                     g_pRenderTarget->DrawText(viewFull.c_str(), (UINT32)viewFull.length(), pVerFormat, D2D1::RectF(40, 270, 380, 290), pBlue);

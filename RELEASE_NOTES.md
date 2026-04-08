@@ -1,3 +1,6 @@
+### BetterAngle Pro v4.9.20: "Removed old stuff"
+v4.9.20: Removed old stuff.
+
 ### BetterAngle Pro v4.9.16: "Added Set Zero Functionality (NOT TESTED YET)"
 v4.9.16: Added a "Set Zero" button but can't compile so someone please test it.
 ### BetterAngle Pro v4.9.15: "Release Workflow Fix"
