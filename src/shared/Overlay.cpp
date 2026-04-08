@@ -152,9 +152,9 @@ void DrawOverlay(HWND hwnd, double angle, const char* status, float detectionRat
     graphics.DrawString(L"CURRENT ANGLE (LIVE)", -1, &subFont, PointF(rx + 30, ry + 25), &greyBrush);
 
 #ifndef APP_VERSION
-#define APP_VERSION "4.9.32"
+#define APP_VERSION "4.9.33"
 #endif
-#define WAPP_VERSION L"4.9.32"
+#define WAPP_VERSION L"4.9.33"
 
     Font miniFont(&fontFamily, 10, FontStyleRegular, UnitPixel);
     graphics.DrawString(L"BetterAngle Pro v" WAPP_VERSION L" | Auto-Installer Ready", -1, &miniFont, PointF(rx + 30, ry + 150), &greyBrush);
