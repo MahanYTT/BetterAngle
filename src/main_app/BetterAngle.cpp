@@ -81,32 +81,36 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
             RegisterHotKey(hWnd, 1, MOD_CONTROL, 'U'); // Toggle Panel
             RegisterHotKey(hWnd, 2, MOD_CONTROL, 'R'); // ROI Select
             RegisterHotKey(hWnd, 3, 0, VK_F10);        // Crosshair
+            RegisterHotKey(hWnd, 4, MOD_CONTROL, 'G'); // Zero Angle
             return 0;
 
         case WM_HOTKEY:
-            if (wParam == 1) { // Toggle Panel
-                if (IsIconic(g_hPanel)) ShowWindow(g_hPanel, SW_RESTORE);
-                else if (IsWindowVisible(g_hPanel)) ShowWindow(g_hPanel, SW_MINIMIZE);
-                else ShowWindow(g_hPanel, SW_SHOW);
-            } else if (wParam == 2) { // ROI Select Toggle
-                if (g_currentSelection == NONE) {
-                    CaptureDesktop(); // Capture before dimming
-                    g_currentSelection = SELECTING_ROI;
-                    g_isSelectionActive = true;
-                    long exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
-                    exStyle &= ~WS_EX_TRANSPARENT;
-                    SetWindowLong(hWnd, GWL_EXSTYLE, exStyle);
-                    SetForegroundWindow(hWnd);
-                } else {
-                    g_currentSelection = NONE;
-                    g_isSelectionActive = false;
-                    SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
-                }
-            } else if (wParam == 3) {
-                g_showCrosshair = !g_showCrosshair;
+            switch (wParam)
+            {
+                case 1: // Toggle Panel
+                    if (IsIconic(g_hPanel)) ShowWindow(g_hPanel, SW_RESTORE);
+                    else if (IsWindowVisible(g_hPanel)) ShowWindow(g_hPanel, SW_MINIMIZE);
+                    else ShowWindow(g_hPanel, SW_SHOW);
+                case 2: // ROI Select Toggle
+                    if (g_currentSelection == NONE) {
+                        CaptureDesktop(); // Capture before dimming
+                        g_currentSelection = SELECTING_ROI;
+                        g_isSelectionActive = true;
+                        long exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+                        exStyle &= ~WS_EX_TRANSPARENT;
+                        SetWindowLong(hWnd, GWL_EXSTYLE, exStyle);
+                        SetForegroundWindow(hWnd);
+                    } else {
+                        g_currentSelection = NONE;
+                        g_isSelectionActive = false;
+                        SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
+                    }
+                case 3:
+                    g_showCrosshair = !g_showCrosshair;
+                case 4:
+                    g_currentAngle = 0.0f;
             }
             return 0;
-
         case WM_LBUTTONDOWN:
             if (g_currentSelection == SELECTING_ROI) {
                 POINT cur; GetCursorPos(&cur);
