@@ -158,19 +158,12 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 g_pRenderTarget->DrawText(L"Precision Crosshair: F10\nVisual ROI Selector: Ctrl + R\nToggle ROI Box: F9", 66, pVerFormat, D2D1::RectF(40, 170, 380, 240), pGrey);
                 // Quick Guide for Workspace selection (v4.9.20: Removed hidden color picker)
                 g_pRenderTarget->DrawText(L"Press CTRL+R to begin full-screen selection.", 45, pVerFormat, D2D1::RectF(40, 250, 380, 290), pWhite);
-#ifndef APP_VERSION
-#define APP_VERSION "4.9.35"
+#ifndef APP_VERSION_STR
+#define APP_VERSION_STR "4.9.36"
 #endif
-
-#define STRING2(x) #x
-#define STRING(x) STRING2(x)
-#define XSTR(x) STRING(x)
-
-#define WSTRING2(x) L#x
-#define WSTRING(x) WSTRING2(x)
-#define WXSTR(x) WSTRING(x)
-
-#define WAPP_VERSION WXSTR(APP_VERSION)
+#ifndef APP_VERSION_WSTR
+#define APP_VERSION_WSTR L"4.9.36"
+#endif
 
             } else if (g_currentTab == 1) {
                 g_pRenderTarget->DrawText(L"SOFTWARE DASHBOARD", 18, pHeaderFormat, D2D1::RectF(40, 140, 380, 170), pWhite);
@@ -182,7 +175,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                     g_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
                 }
 
-                std::wstring curVer = L"Current Version: v" WAPP_VERSION L" (Live Pro Build)";
+                std::wstring curVer = L"Current Version: v" APP_VERSION_WSTR L" (Live Pro Build)";
                 
                 // Use the real version string fetched from GitHub
                 std::wstring latestVerStr = std::wstring(g_latestVersionOnline.begin(), g_latestVersionOnline.end());
@@ -193,7 +186,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 
                 // Ensure it requires a version higher than 4.9.2 to trigger future updates
                 if (g_updateAvailable) {
-                    std::wstring changelog = L"BetterAngle v" WAPP_VERSION L" is now available online!\nNewest Stable Version.";
+                    std::wstring changelog = L"BetterAngle v" APP_VERSION_WSTR L" is now available online!\nNewest Stable Version.";
                     g_pRenderTarget->DrawText(changelog.c_str(), (UINT32)changelog.length(), pVerFormat, D2D1::RectF(40, 230, 380, 260), pWhite);
                     std::wstring viewFull = L"View Full Changelog ->";
                     g_pRenderTarget->DrawText(viewFull.c_str(), (UINT32)viewFull.length(), pVerFormat, D2D1::RectF(40, 270, 380, 290), pBlue);

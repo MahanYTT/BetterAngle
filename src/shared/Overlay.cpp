@@ -151,22 +151,12 @@ void DrawOverlay(HWND hwnd, double angle, const char* status, float detectionRat
     // 7. Mini Labels
     graphics.DrawString(L"CURRENT ANGLE (LIVE)", -1, &subFont, PointF(rx + 30, ry + 25), &greyBrush);
 
-#ifndef APP_VERSION
-#define APP_VERSION "4.9.35"
+#ifndef APP_VERSION_WSTR
+#define APP_VERSION_WSTR L"4.9.36"
 #endif
 
-#define STRING2(x) #x
-#define STRING(x) STRING2(x)
-#define XSTR(x) STRING(x)
-
-#define WSTRING2(x) L#x
-#define WSTRING(x) WSTRING2(x)
-#define WXSTR(x) WSTRING(x)
-
-#define WAPP_VERSION WXSTR(APP_VERSION)
-
     Font miniFont(&fontFamily, 10, FontStyleRegular, UnitPixel);
-    graphics.DrawString(L"BetterAngle Pro v" WAPP_VERSION L" | Auto-Installer Ready", -1, &miniFont, PointF(rx + 30, ry + 150), &greyBrush);
+    graphics.DrawString(L"BetterAngle Pro v" APP_VERSION_WSTR L" | Auto-Installer Ready", -1, &miniFont, PointF(rx + 30, ry + 150), &greyBrush);
 
     // 8. Debug Menu (Ctrl + 9)
     if (g_debugMode) {

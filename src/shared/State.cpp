@@ -18,17 +18,13 @@ float g_latestVersion = 4.920f; // v4.9.20 format fallback
 std::wstring g_latestName = L"Pending Scan";
 RECT g_selectionRect = { 0, 0, 0, 0 };
 POINT g_startPoint = { 0 };
-#ifndef APP_VERSION
-#define APP_VERSION "4.9.35"
+#ifndef APP_VERSION_STR
+#define APP_VERSION_STR "4.9.36"
 #endif
 
-#define STRING2(x) #x
-#define STRING(x) STRING2(x)
-#define XSTR(x) STRING(x)
-
-std::string g_status = "Connected (v" + std::string(XSTR(APP_VERSION)) + " Pro)";
+std::string g_status = "Connected (v" APP_VERSION_STR " Pro)";
 float g_currentAngle = 0.0f;
 bool g_debugMode = false;
 bool g_isCursorVisible = false;
-std::string g_latestVersionOnline = "v" + std::string(XSTR(APP_VERSION));
+std::string g_latestVersionOnline = "v" APP_VERSION_STR;
 AngleLogic g_logic(800, 6.5);

@@ -27,10 +27,10 @@ jobs:
           $ver = (Get-Content VERSION).Trim()
           
           # Build Main App (Bundle with all shared features)
-          cl.exe /EHsc /O2 /DUNICODE /D_UNICODE /DAPP_VERSION=\"$ver\" /Iinclude /Isrc src/main_app/BetterAngle.cpp src/shared/*.cpp /Fe:bin/BetterAngle.exe /link user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib shell32.lib d2d1.lib dwrite.lib windowscodecs.lib /SUBSYSTEM:WINDOWS
+          cl.exe /EHsc /O2 /DUNICODE /D_UNICODE /DAPP_VERSION_STR=\"$ver\" /DAPP_VERSION_WSTR=L\"$ver\" /Iinclude /Isrc src/main_app/BetterAngle.cpp src/shared/*.cpp /Fe:bin/BetterAngle.exe /link user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib shell32.lib d2d1.lib dwrite.lib windowscodecs.lib /SUBSYSTEM:WINDOWS
           
           # Build Config Tool
-          cl.exe /EHsc /O2 /DUNICODE /D_UNICODE /DAPP_VERSION=\"$ver\" /Iinclude /Isrc src/config_tool/BetterAngleConfig.cpp src/shared/*.cpp /Fe:bin/BetterAngleConfig.exe /link user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib shell32.lib d2d1.lib dwrite.lib windowscodecs.lib /SUBSYSTEM:WINDOWS
+          cl.exe /EHsc /O2 /DUNICODE /D_UNICODE /DAPP_VERSION_STR=\"$ver\" /DAPP_VERSION_WSTR=L\"$ver\" /Iinclude /Isrc src/config_tool/BetterAngleConfig.cpp src/shared/*.cpp /Fe:bin/BetterAngleConfig.exe /link user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib shell32.lib d2d1.lib dwrite.lib windowscodecs.lib /SUBSYSTEM:WINDOWS
 
       - name: Get Version
         id: get_version
