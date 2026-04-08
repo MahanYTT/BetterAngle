@@ -159,12 +159,12 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 // Quick Guide for Workspace selection (v4.9.20: Removed hidden color picker)
                 g_pRenderTarget->DrawText(L"Press CTRL+R to begin full-screen selection.", 45, pVerFormat, D2D1::RectF(40, 250, 380, 290), pWhite);
 #ifndef APP_VERSION
-#define APP_VERSION "4.9.31"
+#define APP_VERSION "4.9.32"
 #endif
 
 #define STRING2(x) #x
 #define STRING(x) STRING2(x)
-#define WAPP_VERSION L"4.9.31"
+#define WAPP_VERSION L"4.9.32"
 
             } else if (g_currentTab == 1) {
                 g_pRenderTarget->DrawText(L"SOFTWARE DASHBOARD", 18, pHeaderFormat, D2D1::RectF(40, 140, 380, 170), pWhite);

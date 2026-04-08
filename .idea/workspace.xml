@@ -18,10 +18,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ded3ab96-8c88-4192-9044-339706012801" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/RELEASE_NOTES.md" beforeDir="false" afterPath="$PROJECT_DIR$/RELEASE_NOTES.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/shared/Updater.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/shared/Updater.cpp" afterDir="false" />
-    </list>
+    <list default="true" id="ded3ab96-8c88-4192-9044-339706012801" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

@@ -10,7 +10,7 @@
 #pragma comment(lib, "urlmon.lib")
 
 #ifndef APP_VERSION
-#define APP_VERSION "4.9.31"
+#define APP_VERSION "4.9.32"
 #endif
 
 bool CheckForUpdates() {
