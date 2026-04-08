@@ -152,7 +152,7 @@ void DrawOverlay(HWND hwnd, double angle, const char* status, float detectionRat
     graphics.DrawString(L"CURRENT ANGLE (LIVE)", -1, &subFont, PointF(rx + 30, ry + 25), &greyBrush);
 
     Font miniFont(&fontFamily, 10, FontStyleRegular, UnitPixel);
-    graphics.DrawString(L"Release Workflow Fix v4.9.23 | Auto-Installer Ready", -1, &miniFont, PointF(rx + 30, ry + 150), &greyBrush);
+    graphics.DrawString(L"Release Workflow Fix v4.9.24 | Auto-Installer Ready", -1, &miniFont, PointF(rx + 30, ry + 150), &greyBrush);
 
     // 8. Debug Menu (Ctrl + 9)
     if (g_debugMode) {

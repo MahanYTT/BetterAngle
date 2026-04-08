@@ -1,5 +1,8 @@
-### BetterAngle Pro v4.9.21: "Fixed some bugs"
-v4.9.21: Bug fixes.
+### BetterAngle Pro v4.9.24: "Fixed angle calculation & updated version"
+v4.9.24: Fixed angle calculation bug and updated version.
+
+### BetterAngle Pro v4.9.23: "Fixed some bugs"
+v4.9.23: Bug fixes.
 
 ### BetterAngle Pro v4.9.20: "Removed old stuff"
 v4.9.20: Removed old stuff.

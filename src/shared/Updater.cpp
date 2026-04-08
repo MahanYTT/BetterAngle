@@ -11,7 +11,7 @@
 
 bool CheckForUpdates() {
     g_isCheckingForUpdates = true;
-    HINTERNET hInternet = InternetOpenA("BetterAngle/4.9.23", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    HINTERNET hInternet = InternetOpenA("BetterAngle/4.9.24", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
     if (!hInternet) return false;
 
     HINTERNET hUrl = InternetOpenUrlA(hInternet, "https://raw.githubusercontent.com/MahanYTT/BetterAngle/main/VERSION", NULL, 0, INTERNET_FLAG_RELOAD, 0);
@@ -45,7 +45,7 @@ bool CheckForUpdates() {
         
         g_latestName = L"GitHub Main Branch (v" + std::wstring(newVersion.begin(), newVersion.end()) + L")";
         
-        if (g_latestVersionOnline != "v4.9.23") {
+        if (g_latestVersionOnline != "v4.9.24") {
             g_updateAvailable = true;
         } else {
             g_updateAvailable = false;
