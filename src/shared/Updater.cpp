@@ -11,53 +11,48 @@
 
 bool CheckForUpdates() {
     g_isCheckingForUpdates = true;
-    HINTERNET hInternet = InternetOpenA("BetterAngle/4.9.15", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    HINTERNET hInternet = InternetOpenA("BetterAngle/4.9.17", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
     if (!hInternet) return false;
 
-    HINTERNET hUrl = InternetOpenUrlA(hInternet, "https://api.github.com/repos/MahanYTT/BetterAngle/releases/latest", NULL, 0, INTERNET_FLAG_RELOAD, 0);
+    HINTERNET hUrl = InternetOpenUrlA(hInternet, "https://raw.githubusercontent.com/MahanYTT/BetterAngle/main/VERSION", NULL, 0, INTERNET_FLAG_RELOAD, 0);
     if (!hUrl) {
         InternetCloseHandle(hInternet);
         return false;
     }
 
-    char buffer[4096];
+    char buffer[128];
     DWORD bytesRead = 0;
-    std::string jsonResponse;
-    while (InternetReadFile(hUrl, buffer, sizeof(buffer), &bytesRead) && bytesRead > 0) {
-        jsonResponse.append(buffer, bytesRead);
+    std::string newVersion;
+    if (InternetReadFile(hUrl, buffer, sizeof(buffer) - 1, &bytesRead) && bytesRead > 0) {
+        buffer[bytesRead] = '\0';
+        newVersion = buffer;
+        // Trim any trailing whitespace/newlines
+        size_t last = newVersion.find_last_not_of(" \n\r\t");
+        if (last != std::string::npos) newVersion = newVersion.substr(0, last + 1);
     }
 
     InternetCloseHandle(hUrl);
     InternetCloseHandle(hInternet);
 
-    // Manual Parsing for "tag_name":"vX.X.X"
-    size_t tagPos = jsonResponse.find("\"tag_name\":\"");
-    if (tagPos != std::string::npos) {
-        tagPos += 12; // Skip "tag_name":"
-        size_t endPos = jsonResponse.find("\"", tagPos);
-        if (endPos != std::string::npos) {
-            g_latestVersionOnline = jsonResponse.substr(tagPos, endPos - tagPos);
-            
-            // Convert "v4.9.3" to float 4.93f for comparison
-            std::string verNum = g_latestVersionOnline;
-            if (verNum[0] == 'v') verNum = verNum.substr(1);
-            try {
-                g_latestVersion = std::stof(verNum);
-            } catch (...) {
-                g_latestVersion = 4.82f;
-            }
-            
-            g_latestName = L"GitHub Production Release";
-            
-            if (g_latestVersionOnline != "v4.9.15") {
-                g_updateAvailable = true;
-            } else {
-                g_updateAvailable = false;
-            }
-            
-            g_isCheckingForUpdates = false;
-            return g_updateAvailable; 
+    if (!newVersion.empty()) {
+        g_latestVersionOnline = "v" + newVersion;
+        
+        try {
+            g_latestVersion = std::stof(newVersion);
+        } catch (...) {
+            g_latestVersion = 4.917f;
         }
+        
+        g_latestName = L"GitHub Main Branch (v" + std::wstring(newVersion.begin(), newVersion.end()) + L")";
+        
+        if (g_latestVersionOnline != "v4.9.17") {
+            g_updateAvailable = true;
+        } else {
+            g_updateAvailable = false;
+        }
+        
+        g_isCheckingForUpdates = false;
+        return g_updateAvailable;
     }
 
     g_isCheckingForUpdates = false;

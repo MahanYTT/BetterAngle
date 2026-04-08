@@ -93,10 +93,10 @@
 }]]></component>
   <component name="RecapSpentCounter">
     <option name="endsOfQuotaMs" value="1776614410539" />
-    <option name="spentUsd" value="0.0604495" />
+    <option name="spentUsd" value="0.06945655" />
   </component>
   <component name="RecapUselessUpdatesCounter">
-    <option name="suspendCountdown" value="4" />
+    <option name="suspendCountdown" value="1" />
   </component>
   <component name="RunManager">
     <configuration name="Build with MSVC Tools" type="ShConfigurationType">
@@ -127,7 +127,7 @@
       <workItem from="1775653758776" duration="2114000" />
       <workItem from="1775655893560" duration="899000" />
       <workItem from="1775656860147" duration="1022000" />
-      <workItem from="1775660856789" duration="5620000" />
+      <workItem from="1775660856789" duration="7550000" />
     </task>
     <servers />
   </component>

@@ -1,14 +1,30 @@
 #include "shared/Logic.h"
 #include <cmath>
+#include "shared/State.h"
+
+bool IsFortniteFocused() {
+    HWND hForeground = GetForegroundWindow();
+    if (hForeground == NULL) return false;
+
+    wchar_t windowTitle[256];
+    GetWindowTextW(hForeground, windowTitle, 256);
+
+    // Fortnite's window title is typically "Fortnite  " or contains "Fortnite"
+    std::wstring title(windowTitle);
+    if (title.find(L"Fortnite") != std::wstring::npos) {
+        return true;
+    }
+
+    return false;
+}
 
 AngleLogic::AngleLogic(double dpi, double sens)
     : m_dpi(dpi), m_sens(sens), m_accumDx(0), m_baseDx(0), m_baseAngle(0.0), m_scalePerDx(0.0) {}
 
 void AngleLogic::Update(int dx) {
+    if (!IsFortniteFocused()) return;
     m_accumDx += dx;
 }
-
-#include "shared/State.h"
 
 double AngleLogic::GetAngle() const {
     if (m_scalePerDx == 0.0) return 0.0;
