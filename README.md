@@ -1,4 +1,4 @@
-# BetterAngle
+# BetterAngle - Experimental C++ Version (Not working yet)
 
 A high-performance, low-latency angle tracker and FOV detection overlay for Windows.
 
@@ -13,6 +13,14 @@ We are currently porting the project from Python to **Pure C++** to achieve:
 - **ROI FOV Detector**: Automatically detects game states (Dive/Glide) using high-speed pixel scanning.
 - **Transparent Overlay**: Click-through, topmost UI that doesn't interfere with gameplay.
 - **Auto-Updater**: Automatically stays up-to-date with the latest releases from GitHub.
+- **Auto-Installer**: Automatically installs the latest version of the software.
+- **No Ban Risk**: Doesn't touch the game files or memory.
+
+## ⚠️ Warning
+- **this tool does not provide any advantages**
+- **do not use this software in competitive matches**
+- **do not use this software in tournaments**
+- **we are not responsible for any bans or consequences**
 
 ## 📦 Download
 Check the **[Releases](https://github.com/MahanYTT/BetterAngle/releases)** page for the latest `BetterAngle.exe`.
@@ -22,4 +30,4 @@ Check the **[Releases](https://github.com/MahanYTT/BetterAngle/releases)** page 
 2. Open with Visual Studio or compile using `msbuild`.
 
 ---
-*Created by MahanYTT*
+*Created by MahanYTT & [itsdolphin](https://github.com/byu163) with ❤️*
