@@ -1,4 +1,5 @@
 #include "shared/State.h"
+#include "shared/Logic.h"
 
 SelectionState g_currentSelection = NONE;
 bool g_isSelectionActive = false;
@@ -17,7 +18,8 @@ float g_latestVersion = 4.920f; // v4.9.20 format fallback
 std::wstring g_latestName = L"Pending Scan";
 RECT g_selectionRect = { 0, 0, 0, 0 };
 POINT g_startPoint = { 0 };
-std::string g_status = "Connected (v4.9.20 Pro)";
+std::string g_status = "Connected (v4.9.21 Pro)";
 float g_currentAngle = 0.0f;
 bool g_debugMode = false;
-std::string g_latestVersionOnline = "v4.9.20";
+std::string g_latestVersionOnline = "v4.9.21";
+AngleLogic g_logic(800, 6.5);

@@ -31,7 +31,6 @@ HWND g_hHUD = NULL;
 HWND g_hPanel = NULL;
 ULONG_PTR g_gdiplusToken;
 std::atomic<bool> g_running(true);
-AngleLogic g_logic(800, 6.5);
 FovDetector g_detector;
 
 Profile g_currentProfile;

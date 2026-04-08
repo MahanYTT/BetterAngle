@@ -152,11 +152,11 @@ void DrawOverlay(HWND hwnd, double angle, const char* status, float detectionRat
     graphics.DrawString(L"CURRENT ANGLE (LIVE)", -1, &subFont, PointF(rx + 30, ry + 25), &greyBrush);
 
     Font miniFont(&fontFamily, 10, FontStyleRegular, UnitPixel);
-    graphics.DrawString(L"Release Workflow Fix v4.9.20 | Auto-Installer Ready", -1, &miniFont, PointF(rx + 30, ry + 150), &greyBrush);
+    graphics.DrawString(L"Release Workflow Fix v4.9.21 | Auto-Installer Ready", -1, &miniFont, PointF(rx + 30, ry + 150), &greyBrush);
 
     // 8. Debug Menu (Ctrl + 9)
     if (g_debugMode) {
-        int dx = 40, dy = 250, dw = 320, dh = 150;
+        int dx = 40, dy = 250, dw = 320, dh = 180;
         GraphicsPath dbgPath;
         dbgPath.AddRectangle(Rect(dx, dy, dw, dh));
         graphics.FillPath(&SolidBrush(Color(200, 10, 10, 15)), &dbgPath);
@@ -173,17 +173,22 @@ void DrawOverlay(HWND hwnd, double angle, const char* status, float detectionRat
         std::wstring focusStr = L"Fortnite Focused: ";
         focusStr += IsFortniteFocused() ? L"YES" : L"NO";
         
-        // We need to access g_logic to get scale, it's global in BetterAngle.cpp
-        // For now, let's use what we have or extern it.
-        extern class AngleLogic g_logic; 
         std::wstring scaleStr = L"Active Scale: " + std::to_wstring(g_logic.GetScale());
         std::wstring detStr = L"Raw Detection: " + std::to_wstring(detectionRatio);
+        
+        std::wstring cursorStr = L"Cursor Visible: ";
+        cursorStr += g_isCursorVisible ? L"YES" : L"NO";
+        
+        std::wstring selectionStr = L"Selection State: ";
+        selectionStr += (g_currentSelection == NONE) ? L"NONE" : ((g_currentSelection == SELECTING_ROI) ? L"ROI" : L"COLOR");
 
         graphics.DrawString(rawAngle.c_str(), -1, &dbgFont, PointF(dx + 15, dy + 40), &whiteBrush);
         graphics.DrawString(focusStr.c_str(), -1, &dbgFont, PointF(dx + 15, dy + 60), &whiteBrush);
         graphics.DrawString(scaleStr.c_str(), -1, &dbgFont, PointF(dx + 15, dy + 80), &whiteBrush);
         graphics.DrawString(detStr.c_str(), -1, &dbgFont, PointF(dx + 15, dy + 100), &whiteBrush);
-        graphics.DrawString(L"Mode: SECRET DEBUG ACTIVE", -1, &dbgFont, PointF(dx + 15, dy + 120), &yellowBrush);
+        graphics.DrawString(cursorStr.c_str(), -1, &dbgFont, PointF(dx + 15, dy + 120), &whiteBrush);
+        graphics.DrawString(selectionStr.c_str(), -1, &dbgFont, PointF(dx + 15, dy + 140), &whiteBrush);
+        graphics.DrawString(L"Mode: SECRET DEBUG ACTIVE", -1, &dbgFont, PointF(dx + 15, dy + 160), &yellowBrush);
     }
 
     BitBlt(hdc, 0, 0, sw, sh, hdcMem, 0, 0, SRCCOPY);

@@ -5,6 +5,7 @@
 #include <atomic>
 #include <vector>
 #include <string>
+#include "shared/Logic.h"
 
 // HUD & Global Shared State
 enum SelectionState { NONE, SELECTING_ROI, SELECTING_COLOR };
@@ -29,5 +30,6 @@ extern std::string g_status;
 extern std::string g_latestVersionOnline;
 extern float g_currentAngle;
 extern bool g_debugMode;
+extern AngleLogic g_logic;
 
 #endif // STATE_H

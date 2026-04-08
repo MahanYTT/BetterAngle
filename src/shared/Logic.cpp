@@ -11,7 +11,7 @@ bool IsFortniteFocused() {
 
     // Fortnite's window title is typically "Fortnite  " or contains "Fortnite"
     std::wstring title(windowTitle);
-    if (title.find(L"Fortnite") != std::wstring::npos || title.find(L"Epic Games") != std::wstring::npos) {
+    if (title.find(L"Fortnite") != std::wstring::npos || title.find(L"Epic Games") != std::wstring::npos || title.find(L"Battle Royale") != std::wstring::npos) {
         return true;
     }
 
