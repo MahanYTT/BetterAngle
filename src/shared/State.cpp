@@ -19,7 +19,7 @@ std::wstring g_latestName = L"Pending Scan";
 RECT g_selectionRect = { 0, 0, 0, 0 };
 POINT g_startPoint = { 0 };
 #ifndef APP_VERSION
-#define APP_VERSION "4.9.30"
+#define APP_VERSION "4.9.31"
 #endif
 
 std::string g_status = "Connected (v" APP_VERSION " Pro)";
