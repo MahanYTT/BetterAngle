@@ -30,6 +30,7 @@ extern std::string g_status;
 extern std::string g_latestVersionOnline;
 extern float g_currentAngle;
 extern bool g_debugMode;
+extern bool g_isCursorVisible;
 extern AngleLogic g_logic;
 
 #endif // STATE_H

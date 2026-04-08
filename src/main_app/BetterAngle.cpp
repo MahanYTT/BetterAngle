@@ -36,7 +36,6 @@ FovDetector g_detector;
 Profile g_currentProfile;
 std::vector<Profile> g_allProfiles;
 int g_selectedProfileIdx = 0;
-bool g_isCursorVisible = false;
 
 // FOV Detector Thread
 void DetectorThread() {
