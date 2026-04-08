@@ -1,5 +1,8 @@
+### BetterAngle Pro v4.9.30: "Fixing auto update"
+v4.9.30: Fixed auto update.
+
 ### BetterAngle Pro v4.9.24: "Fixed angle calculation & updated version"
-v4.9.24: Fixed angle calculation bug and updated version. Sfsedfkl;jwesld;ikrtjf
+v4.9.24: Fixed angle calculation bug and updated version.
 
 ### BetterAngle Pro v4.9.23: "Fixed some bugs"
 v4.9.23: Bug fixes.

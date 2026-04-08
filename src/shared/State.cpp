@@ -19,12 +19,12 @@ std::wstring g_latestName = L"Pending Scan";
 RECT g_selectionRect = { 0, 0, 0, 0 };
 POINT g_startPoint = { 0 };
 #ifndef APP_VERSION
-#define APP_VERSION "4.9.27"
+#define APP_VERSION "4.9.30"
 #endif
 
-std::string g_status = "Connected (v4.9.27 Pro)";
+std::string g_status = "Connected (v" APP_VERSION " Pro)";
 float g_currentAngle = 0.0f;
 bool g_debugMode = false;
 bool g_isCursorVisible = false;
-std::string g_latestVersionOnline = "v4.9.27";
+std::string g_latestVersionOnline = "v" APP_VERSION;
 AngleLogic g_logic(800, 6.5);
