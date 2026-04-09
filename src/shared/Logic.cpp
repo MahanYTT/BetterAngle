@@ -4,29 +4,22 @@
 
 bool IsFortniteFocused() {
     HWND hForeground = GetForegroundWindow();
-    if (hForeground == NULL) return false;
+    if (!hForeground) return false;
 
-    wchar_t windowTitle[256];
-    GetWindowTextW(hForeground, windowTitle, 256);
-
-    // Fortnite's window title is typically "Fortnite  " or contains "Fortnite"
-    std::wstring title(windowTitle);
-    if (title.find(L"Fortnite") != std::wstring::npos || 
-        title.find(L"Epic Games") != std::wstring::npos || 
-        title.find(L"Battle Royale") != std::wstring::npos ||
-        title.find(L"FortniteClient-Win64-Shipping") != std::wstring::npos) {
-        return true;
-    }
-
-    // Class Name Check
     wchar_t className[256];
     GetClassNameW(hForeground, className, 256);
     std::wstring cls(className);
-    if (cls == L"UnrealWindow") {
+
+    // Fortnite uses "UnrealWindow" or "Fortnite"
+    if (cls == L"UnrealWindow" || cls == L"Fortnite") {
         return true;
     }
 
-    return false;
+    wchar_t title[256];
+    GetWindowTextW(hForeground, title, 256);
+    std::wstring wTitle(title);
+
+    return (wTitle.find(L"Fortnite") != std::wstring::npos);
 }
 
 AngleLogic::AngleLogic(double dpi, double sens)

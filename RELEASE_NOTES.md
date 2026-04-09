@@ -1,3 +1,6 @@
+### BetterAngle Pro v4.9.37: "Fixed angle and color picker bug"
+v4.9.31: Fixed angle and color picker bug.
+
 ### BetterAngle Pro v4.9.30: "Fixing auto update"
 v4.9.30: Fixed auto update.
 

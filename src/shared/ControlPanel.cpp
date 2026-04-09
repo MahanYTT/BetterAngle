@@ -128,6 +128,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                     ShellExecuteW(0, L"open", L"https://github.com/MahanYTT/BetterAngle/releases", 0, 0, SW_SHOW);
                 }
             }
+
             if (x >= 40 && x <= 380 && y >= 580 && y <= 630) {
                 PostQuitMessage(0);
             }
@@ -199,6 +200,27 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                     DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 380, 380, 430), L"DOWNLOAD UPDATE", D2D1::ColorF(0.0f, 0.5f, 0.8f));
                 }
                 DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 320, 380, 370), g_updateAvailable ? L"INSTALL UPDATE NOW" : L"DOWNLOAD AND INSTALL NOW", D2D1::ColorF(0.15f, 0.17f, 0.2f));
+            }
+                DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 90, 145, 120), L"GENERAL", g_currentTab == 0 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
+                DrawD2DButton(g_pRenderTarget, D2D1::RectF(155, 90, 265, 120), L"UPDATES", g_currentTab == 1 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
+                DrawD2DButton(g_pRenderTarget, D2D1::RectF(275, 90, 380, 120), L"COLORS", g_currentTab == 2 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
+            else if (g_currentTab == 2) {
+                g_pRenderTarget->DrawText(L"COLOR CONFIGURATION", 19, pHeaderFormat, D2D1::RectF(40, 140, 380, 170), pWhite);
+
+                // Preview of Active Color
+                g_pRenderTarget->DrawText(L"Active Target Color:", 20, pVerFormat, D2D1::RectF(40, 180, 250, 200), pGrey);
+
+                ID2D1SolidColorBrush* pPreviewBrush = NULL;
+                g_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(GetRValue(g_targetColor)/255.0f, GetGValue(g_targetColor)/255.0f, GetBValue(g_targetColor)/255.0f), &pPreviewBrush);
+                g_pRenderTarget->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(260, 175, 380, 205), 4.0f, 4.0f), pPreviewBrush);
+                if (pPreviewBrush) pPreviewBrush->Release();
+
+                // Instructions
+                std::wstring colorDesc = L"The algorithm focuses on this specific color value to calculate angles. Accuracy depends on your monitor's color profile.";
+                g_pRenderTarget->DrawText(colorDesc.c_str(), (UINT32)colorDesc.length(), pVerFormat, D2D1::RectF(40, 220, 380, 280), pGrey);
+
+                // Interaction Button
+                DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 320, 380, 370), L"OPEN COLOR PALETTE", D2D1::ColorF(0.2f, 0.4f, 0.6f));
             }
 
             DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 580, 380, 630), L"QUIT SUITE", D2D1::ColorF(0.7f, 0.1f, 0.15f));

@@ -181,8 +181,8 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
             }
             return 0;
 
-        case WM_INPUT: {
-            if (g_isCursorVisible || g_currentSelection != NONE) return 0;
+		case WM_INPUT: {
+            // THE FIX: Send the mouse delta to the logic engine
             int dx = GetRawInputDeltaX(lParam);
             g_logic.Update(dx);
             return 0;
@@ -256,7 +256,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         0, 0, screenW, screenH,
         NULL, NULL, hInstance, NULL
     );
-
+    RegisterRawMouse(hWnd);
     ShowWindow(g_hHUD, SW_SHOW);
     UpdateWindow(g_hHUD);
     SetTimer(g_hHUD, 1, 25, NULL);
