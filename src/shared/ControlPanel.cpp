@@ -13,17 +13,6 @@
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dwrite.lib")
 
-#ifndef APP_VERSION_STR
-#define APP_VERSION_STR "4.9.36"
-#endif
-#ifndef APP_VERSION_WSTR
-#define APP_VERSION_WSTR L"4.9.36"
-#endif
-
-#ifndef VERSION_STR
-#define VERSION_STR TO_STRING(APP_VERSION)
-#define VERSION_WSTR TO_WSTRING(APP_VERSION)
-#endif
 using namespace D2D1;
 
 ID2D1Factory* g_pD2DFactory = NULL;
@@ -47,19 +36,19 @@ void InitD2D(HWND hWnd) {
 void DrawD2DButton(ID2D1HwndRenderTarget* rt, D2D1_RECT_F rect, const wchar_t* text, D2D1_COLOR_F color) {
     ID2D1SolidColorBrush* pBrush = NULL;
     rt->CreateSolidColorBrush(color, &pBrush);
-    
+
     rt->FillRoundedRectangle(D2D1::RoundedRect(rect, 8.0f, 8.0f), pBrush);
-    
+
     ID2D1SolidColorBrush* pWhite = NULL;
     rt->CreateSolidColorBrush(ColorF(ColorF::White), &pWhite);
-    
+
     IDWriteTextFormat* pTextFormat = NULL;
     g_pDWriteFactory->CreateTextFormat(L"Segoe UI Variable Display", NULL, DWRITE_FONT_WEIGHT_BOLD, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 14.0f, L"en-us", &pTextFormat);
     pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
     pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-    
+
     rt->DrawText(text, (UINT32)wcslen(text), pTextFormat, rect, pWhite);
-    
+
     pTextFormat->Release();
     pWhite->Release();
     pBrush->Release();
@@ -99,20 +88,21 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             return 0;
         case WM_LBUTTONDOWN: {
             int x = LOWORD(lParam), y = HIWORD(lParam);
+
+            // Tab Navigation (Y: 90-120)
             if (y >= 90 && y <= 120) {
-                if (x >= 40 && x <= 200) g_currentTab = 0;
-                else if (x >= 210 && x <= 380) g_currentTab = 1;
+                if (x >= 40 && x <= 145) g_currentTab = 0;      // General
+                else if (x >= 155 && x <= 265) g_currentTab = 1; // Updates
+                else if (x >= 275 && x <= 380) g_currentTab = 2; // Colors
             }
+
             if (g_currentTab == 1) {
                 if (x >= 40 && x <= 380 && y >= 320 && y <= 370) {
                     if (g_updateAvailable) {
-                        // FIX: Immediately lock the state to prevent multiple threads
-                        g_updateAvailable = false;
-
+                        g_updateAvailable = false; // Lock immediately to prevent thread spam
                         std::thread([]() {
-                            std::wstring verStr = std::wstring(g_latestVersionOnline.begin(), g_latestVersionOnline.end());
-                            std::wstring downloadUrl = L"https://github.com/MahanYTT/BetterAngle/releases/latest/download/BetterAngle.exe";
-                            if (DownloadUpdate(downloadUrl, L"update_tmp.exe")) {
+                            // Use AUTO to trigger the new dynamic GitHub URL logic
+                            if (DownloadUpdate(L"AUTO", L"update_tmp.exe")) {
                                 ApplyUpdateAndRestart();
                             }
                         }).detach();
@@ -133,7 +123,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 PostQuitMessage(0);
             }
             return 0;
-        } // <-- Make sure this closing brace exists!
+        }
         case WM_PAINT: {
             if (!g_pRenderTarget) return 0;
             g_pRenderTarget->BeginDraw();
@@ -154,13 +144,15 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             g_pDWriteFactory->CreateTextFormat(L"Segoe UI Variable Display", NULL, DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 13.0f, L"en-us", &pVerFormat);
 
             g_pRenderTarget->DrawText(L"Pro Command Center", 18, pTitleFormat, D2D1::RectF(40, 40, 380, 80), pWhite);
-            
-            DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 90, 200, 120), L"GENERAL / BINDS", g_currentTab == 0 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
-            DrawD2DButton(g_pRenderTarget, D2D1::RectF(210, 90, 380, 120), L"UPDATES", g_currentTab == 1 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
+
+            // Draw 3 Tabs
+            DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 90, 145, 120), L"GENERAL", g_currentTab == 0 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
+            DrawD2DButton(g_pRenderTarget, D2D1::RectF(155, 90, 265, 120), L"UPDATES", g_currentTab == 1 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
+            DrawD2DButton(g_pRenderTarget, D2D1::RectF(275, 90, 380, 120), L"COLORS", g_currentTab == 2 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
 
             if (g_currentTab == 0) {
                 g_pRenderTarget->DrawText(L"CURRENT KEYBINDS", 16, pHeaderFormat, D2D1::RectF(40, 140, 380, 170), pWhite);
-                
+
                 // Target Color Preview Circle (Linked to g_targetColor)
                 ID2D1SolidColorBrush* pTargetBrush = NULL;
                 g_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(GetRValue(g_targetColor)/255.0f, GetGValue(g_targetColor)/255.0f, GetBValue(g_targetColor)/255.0f), &pTargetBrush);
@@ -169,12 +161,11 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 if (pTargetBrush) pTargetBrush->Release();
 
                 g_pRenderTarget->DrawText(L"Precision Crosshair: F10\nVisual ROI Selector: Ctrl + R\nToggle ROI Box: F9", 66, pVerFormat, D2D1::RectF(40, 170, 380, 240), pGrey);
-                // Quick Guide for Workspace selection (v4.9.20: Removed hidden color picker)
                 g_pRenderTarget->DrawText(L"Press CTRL+R to begin full-screen selection.", 45, pVerFormat, D2D1::RectF(40, 250, 380, 290), pWhite);
 
             } else if (g_currentTab == 1) {
                 g_pRenderTarget->DrawText(L"SOFTWARE DASHBOARD", 18, pHeaderFormat, D2D1::RectF(40, 140, 380, 170), pWhite);
-                
+
                 if (g_isCheckingForUpdates) {
                     D2D1_POINT_2F center = D2D1::Point2F(365.0f, 155.0f);
                     g_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Rotation(g_updateSpinAngle, center));
@@ -182,45 +173,61 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                     g_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
                 }
 
-                std::wstring curVer = L"Current Version: v" APP_VERSION_WSTR L" (Live Pro Build)";
-                
-                // Use the real version string fetched from GitHub
+                // Use the VERSION_WSTR macro correctly
+                std::wstring curVer = L"Current Version: v" VERSION_WSTR L" (Live Pro Build)";
+
                 std::wstring latestVerStr = std::wstring(g_latestVersionOnline.begin(), g_latestVersionOnline.end());
                 std::wstring latestVer = L"Latest Found: " + latestVerStr + L" (" + g_latestName + L")";
 
                 g_pRenderTarget->DrawText(curVer.c_str(), (UINT32)curVer.length(), pVerFormat, D2D1::RectF(40, 170, 380, 190), pGrey);
                 g_pRenderTarget->DrawText(latestVer.c_str(), (UINT32)latestVer.length(), pVerFormat, D2D1::RectF(40, 195, 380, 215), pGrey);
 
-                // Ensure it requires a version higher than 4.9.2 to trigger future updates
                 if (g_updateAvailable) {
-                    std::wstring changelog = L"BetterAngle v" APP_VERSION_WSTR L" is now available online!\nNewest Stable Version.";
+                    std::wstring changelog = L"BetterAngle v" VERSION_WSTR L" is now available online!\nNewest Stable Version.";
                     g_pRenderTarget->DrawText(changelog.c_str(), (UINT32)changelog.length(), pVerFormat, D2D1::RectF(40, 230, 380, 260), pWhite);
                     std::wstring viewFull = L"View Full Changelog ->";
                     g_pRenderTarget->DrawText(viewFull.c_str(), (UINT32)viewFull.length(), pVerFormat, D2D1::RectF(40, 270, 380, 290), pBlue);
                     DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 380, 380, 430), L"DOWNLOAD UPDATE", D2D1::ColorF(0.0f, 0.5f, 0.8f));
                 }
                 DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 320, 380, 370), g_updateAvailable ? L"INSTALL UPDATE NOW" : L"DOWNLOAD AND INSTALL NOW", D2D1::ColorF(0.15f, 0.17f, 0.2f));
-            }
-            DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 90, 145, 120), L"GENERAL", g_currentTab == 0 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
-            DrawD2DButton(g_pRenderTarget, D2D1::RectF(155, 90, 265, 120), L"UPDATES", g_currentTab == 1 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
-            DrawD2DButton(g_pRenderTarget, D2D1::RectF(275, 90, 380, 120), L"COLORS", g_currentTab == 2 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
-            if (g_currentTab == 2) {
-                g_pRenderTarget->DrawText(L"COLOR CONFIGURATION", 19, pHeaderFormat, D2D1::RectF(40, 140, 380, 170), pWhite);
 
-                // Preview of Active Color
-                g_pRenderTarget->DrawText(L"Active Target Color:", 20, pVerFormat, D2D1::RectF(40, 180, 250, 200), pGrey);
+            } else if (g_currentTab == 2) {
+                g_pRenderTarget->DrawText(L"ALGORITHM COLOR CONFIG", 22, pHeaderFormat, D2D1::RectF(40, 140, 380, 170), pWhite);
 
-                ID2D1SolidColorBrush* pPreviewBrush = NULL;
-                g_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(GetRValue(g_targetColor)/255.0f, GetGValue(g_targetColor)/255.0f, GetBValue(g_targetColor)/255.0f), &pPreviewBrush);
-                g_pRenderTarget->FillRoundedRectangle(D2D1::RoundedRect(D2D1::RectF(260, 175, 380, 205), 4.0f, 4.0f), pPreviewBrush);
-                if (pPreviewBrush) pPreviewBrush->Release();
+                std::wstring statusText;
+                D2D1_COLOR_F statusColor;
 
-                // Instructions
-                std::wstring colorDesc = L"The algorithm focuses on this specific color value to calculate angles. Accuracy depends on your monitor's color profile.";
-                g_pRenderTarget->DrawText(colorDesc.c_str(), (UINT32)colorDesc.length(), pVerFormat, D2D1::RectF(40, 220, 380, 280), pGrey);
+                if (g_currentSelection == SELECTING_COLOR) {
+                    statusText = L"STATUS: CLICK A PIXEL ON YOUR SCREEN";
+                    statusColor = D2D1::ColorF(1.0f, 0.8f, 0.0f); // Amber
+                } else {
+                    statusText = L"STATUS: ACTIVE AND MONITORING";
+                    statusColor = D2D1::ColorF(0.0f, 1.0f, 0.5f); // Green
+                }
 
-                // Interaction Button
-                DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 320, 380, 370), L"OPEN COLOR PALETTE", D2D1::ColorF(0.2f, 0.4f, 0.6f));
+                ID2D1SolidColorBrush* pStatusBrush = NULL;
+                g_pRenderTarget->CreateSolidColorBrush(statusColor, &pStatusBrush);
+                g_pRenderTarget->DrawText(statusText.c_str(), (UINT32)statusText.length(), pVerFormat, D2D1::RectF(40, 180, 380, 200), pStatusBrush);
+                if (pStatusBrush) pStatusBrush->Release();
+
+                g_pRenderTarget->DrawText(L"Current Target Value:", 21, pVerFormat, D2D1::RectF(40, 220, 250, 240), pGrey);
+
+                D2D1_RECT_F swatchRect = D2D1::RectF(40, 250, 380, 310);
+                ID2D1SolidColorBrush* pSwatchBrush = NULL;
+                g_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(GetRValue(g_targetColor)/255.0f, GetGValue(g_targetColor)/255.0f, GetBValue(g_targetColor)/255.0f), &pSwatchBrush);
+                g_pRenderTarget->FillRoundedRectangle(D2D1::RoundedRect(swatchRect, 6.0f, 6.0f), pSwatchBrush);
+                g_pRenderTarget->DrawRoundedRectangle(D2D1::RoundedRect(swatchRect, 6.0f, 6.0f), pGrey, 1.0f);
+                if (pSwatchBrush) pSwatchBrush->Release();
+
+                wchar_t colorInfo[64];
+                swprintf_s(colorInfo, L"RGB: %d, %d, %d", GetRValue(g_targetColor), GetGValue(g_targetColor), GetBValue(g_targetColor));
+                g_pRenderTarget->DrawText(colorInfo, (UINT32)wcslen(colorInfo), pHeaderFormat, D2D1::RectF(40, 320, 380, 350), pWhite);
+
+                g_pRenderTarget->DrawText(L"WORKFLOW GUIDE:", 16, pVerFormat, D2D1::RectF(40, 380, 380, 400), pWhite);
+                std::wstring instructions = L"1. Press CTRL+R to start ROI selection.\n"
+                                            L"2. Drag a box over your target area.\n"
+                                            L"3. Release the mouse and click the exact color you want the app to track.";
+                g_pRenderTarget->DrawText(instructions.c_str(), (UINT32)instructions.length(), pVerFormat, D2D1::RectF(40, 410, 380, 500), pGrey);
             }
 
             DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 580, 380, 630), L"QUIT SUITE", D2D1::ColorF(0.7f, 0.1f, 0.15f));

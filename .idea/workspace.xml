@@ -20,6 +20,7 @@
   <component name="ChangeListManager">
     <list default="true" id="ded3ab96-8c88-4192-9044-339706012801" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/shared/ControlPanel.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/shared/ControlPanel.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/shared/Updater.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/shared/Updater.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -36,6 +37,7 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="UPDATE_TYPE" value="REBASE" />
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/include/shared/Config.h" root0="FORCE_HIGHLIGHTING" />
