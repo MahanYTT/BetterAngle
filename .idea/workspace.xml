@@ -20,7 +20,7 @@
   <component name="ChangeListManager">
     <list default="true" id="ded3ab96-8c88-4192-9044-339706012801" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/VERSION" beforeDir="false" afterPath="$PROJECT_DIR$/VERSION" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/shared/Updater.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/shared/Updater.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,6 +31,7 @@
     <option name="formatViaClangd" value="false" />
   </component>
   <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="40" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="Git.Settings">
@@ -131,6 +132,7 @@
       <workItem from="1775655893560" duration="899000" />
       <workItem from="1775656860147" duration="1022000" />
       <workItem from="1775660856789" duration="14832000" />
+      <workItem from="1775747915768" duration="142000" />
     </task>
     <servers />
   </component>

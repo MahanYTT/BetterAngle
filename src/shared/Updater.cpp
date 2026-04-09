@@ -80,19 +80,28 @@ void ApplyUpdateAndRestart() {
     std::ofstream bat("cleanup.bat");
 
     bat << "@echo off\n";
+
     // FIX 2: Wait 2 seconds for BetterAngle.exe to fully close and release file locks
     bat << "timeout /t 2 /nobreak >nul\n";
-    // Force kill just in case, but DO NOT loop on it
+
+    // Force kill just in case, but DO NOT loop infinitely
     bat << "taskkill /F /IM BetterAngle.exe >nul 2>&1\n";
+
+    // Swap the files
     bat << "del BetterAngle.exe\n";
     bat << "rename update_tmp.exe BetterAngle.exe\n";
-    // FIX 3: Start securely with empty title quotes to prevent path spacing issues
+
+    // FIX 3: Start securely with empty title quotes to prevent path issues
     bat << "start \"\" \"BetterAngle.exe\"\n";
+
+    // Self-destruct the batch file
     bat << "del \"%~f0\"\n";
 
     bat.close();
 
-    // Execute the new ASCII batch script
+    // Execute the new ASCII batch script silently
     ShellExecuteA(NULL, "open", "cleanup.bat", NULL, NULL, SW_HIDE);
+
+    // Exit the current instance immediately so the batch file can delete it
     exit(0);
 }
