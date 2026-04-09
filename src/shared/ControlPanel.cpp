@@ -201,10 +201,10 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 }
                 DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 320, 380, 370), g_updateAvailable ? L"INSTALL UPDATE NOW" : L"DOWNLOAD AND INSTALL NOW", D2D1::ColorF(0.15f, 0.17f, 0.2f));
             }
-                DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 90, 145, 120), L"GENERAL", g_currentTab == 0 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
-                DrawD2DButton(g_pRenderTarget, D2D1::RectF(155, 90, 265, 120), L"UPDATES", g_currentTab == 1 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
-                DrawD2DButton(g_pRenderTarget, D2D1::RectF(275, 90, 380, 120), L"COLORS", g_currentTab == 2 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
-            else if (g_currentTab == 2) {
+            DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 90, 145, 120), L"GENERAL", g_currentTab == 0 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
+            DrawD2DButton(g_pRenderTarget, D2D1::RectF(155, 90, 265, 120), L"UPDATES", g_currentTab == 1 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
+            DrawD2DButton(g_pRenderTarget, D2D1::RectF(275, 90, 380, 120), L"COLORS", g_currentTab == 2 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
+            if (g_currentTab == 2) {
                 g_pRenderTarget->DrawText(L"COLOR CONFIGURATION", 19, pHeaderFormat, D2D1::RectF(40, 140, 380, 170), pWhite);
 
                 // Preview of Active Color
