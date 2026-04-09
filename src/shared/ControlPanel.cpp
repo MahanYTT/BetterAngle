@@ -13,6 +13,15 @@
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dwrite.lib")
 
+#ifndef APP_VERSION_STR
+#define APP_VERSION_STR "4.9.36"
+#endif
+#ifndef APP_VERSION_WSTR
+#define APP_VERSION_WSTR L"4.9.36"
+#endif
+
+#define VERSION_STR TO_STRING(APP_VERSION)
+#define VERSION_WSTR TO_WSTRING(APP_VERSION)
 using namespace D2D1;
 
 ID2D1Factory* g_pD2DFactory = NULL;
@@ -159,12 +168,6 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 g_pRenderTarget->DrawText(L"Precision Crosshair: F10\nVisual ROI Selector: Ctrl + R\nToggle ROI Box: F9", 66, pVerFormat, D2D1::RectF(40, 170, 380, 240), pGrey);
                 // Quick Guide for Workspace selection (v4.9.20: Removed hidden color picker)
                 g_pRenderTarget->DrawText(L"Press CTRL+R to begin full-screen selection.", 45, pVerFormat, D2D1::RectF(40, 250, 380, 290), pWhite);
-#ifndef APP_VERSION_STR
-#define APP_VERSION_STR "4.9.36"
-#endif
-#ifndef APP_VERSION_WSTR
-#define APP_VERSION_WSTR L"4.9.36"
-#endif
 
             } else if (g_currentTab == 1) {
                 g_pRenderTarget->DrawText(L"SOFTWARE DASHBOARD", 18, pHeaderFormat, D2D1::RectF(40, 140, 380, 170), pWhite);
