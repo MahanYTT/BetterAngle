@@ -1,29 +1,48 @@
-#include <iostream>
+#ifndef STATE_H
+#define STATE_H
+
+#include <mutex>
 #include <string>
+#include <windows.h>
 
-class Person {
-public:
-  std::string name;
-  int age;
+#include "shared/Logic.h"
 
-  // Constructor with default values for parameters
-  Person(std::string n = "Unknown", int a = 0) : name(n), age(a) {}
+#define STRING_HELPER(x) #x
+#define TO_STRING(x) STRING_HELPER(x)
+#define TO_WSTRING(x) L"" TO_STRING(x)
 
-  void displayInfo() const {
-    std::cout << "Name: " << name << ", Age: " << age << std::endl;
-  }
-};
+#ifndef APP_VERSION
+#define APP_VERSION 4.9.36
+#endif
 
-int main() {
-  // Create an instance of Person with default values
-  Person person1;
+#define VERSION_STR TO_STRING(APP_VERSION)
+#define VERSION_WSTR TO_WSTRING(APP_VERSION)
 
-  // Set the name and age using member variables
-  person1.name = "John";
-  person1.age = 25;
+enum SelectionState { NONE, SELECTING_ROI, SELECTING_COLOR };
 
-  // Display information about the person
-  person1.displayInfo();
+extern std::mutex g_stateMutex;
+extern SelectionState g_currentSelection;
+extern bool g_isSelectionActive;
+extern HBITMAP g_screenSnapshot;
+extern bool g_isDiving;
+extern bool g_showROIBox;
+extern int g_currentTab;
+extern float g_detectionRatio;
+extern bool g_isCheckingForUpdates;
+extern float g_updateSpinAngle;
+extern bool g_updateAvailable;
+extern bool g_showCrosshair;
+extern COLORREF g_pickedColor;
+extern COLORREF g_targetColor;
+extern float g_latestVersion;
+extern std::wstring g_latestName;
+extern RECT g_selectionRect;
+extern POINT g_startPoint;
+extern std::string g_status;
+extern std::string g_latestVersionOnline;
+extern float g_currentAngle;
+extern bool g_debugMode;
+extern bool g_isCursorVisible;
+extern AngleLogic g_logic;
 
-  return 0;
-}
+#endif

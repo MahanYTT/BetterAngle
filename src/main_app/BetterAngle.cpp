@@ -437,40 +437,5 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     g_logic.SetZero();
   }
 
-  // Cleanup Direct2D resources
-  if (g_pD2DFactory) {
-    g_pD2DFactory->Release();
-    g_pD2DFactory = NULL;
-  }
-  if (g_pDWriteFactory) {
-    g_pDWriteFactory->Release();
-    g_pDWriteFactory = NULL;
-  }
-  if (g_pRenderTarget) {
-    g_pRenderTarget->Release();
-    g_pRenderTarget = NULL;
-  }
-
-  // Cleanup GDI+ resources
-  if (g_gdiplusToken) {
-    GdiplusShutdown(g_gdiplusToken);
-    g_gdiplusToken = 0;
-  }
-
-  // Cleanup Windows
-  if (g_hHUD) {
-    DestroyWindow(g_hHUD);
-    g_hHUD = NULL;
-  }
-  if (g_hPanel) {
-    DestroyWindow(g_hPanel);
-    g_hPanel = NULL;
-  }
-
-  // Cleanup detector
-  // Note: g_detector is a global object and will be automatically destroyed
-  // when the program exits
-
   return (int)msg.wParam;
-}
 }
