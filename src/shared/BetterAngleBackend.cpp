@@ -253,21 +253,8 @@ void BetterAngleBackend::downloadUpdate() {
 
 void BetterAngleBackend::saveThresholds() { SaveSettings(); }
 
-QString BetterAngleBackend::versionStr() const { return QString(VERSION_STR); }
-QString BetterAngleBackend::latestVersion() const { return QString::fromStdString(g_latestVersionOnline); }
-bool BetterAngleBackend::updateAvailable() const { return g_updateAvailable; }
-bool BetterAngleBackend::isDownloading() const { return g_isDownloadingUpdate; }
-bool BetterAngleBackend::downloadComplete() const { return g_downloadComplete; }
-QString BetterAngleBackend::updateHistory() const { return QString::fromStdString(g_updateHistory); }
+// Redundant definitions removed.
 
-QString BetterAngleBackend::updateStatus() const {
-  if (g_isCheckingForUpdates) return "Checking...";
-  if (g_isDownloadingUpdate) return "Downloading...";
-  if (g_downloadComplete) return "Ready to Install";
-  if (g_updateAvailable) return "Update Found!";
-  if (g_hasCheckedForUpdates) return "Checking for updates...";
-  return "Check for Updates";
-}
 
 
 QStringList BetterAngleBackend::crosshairPresetNames() const {
@@ -319,7 +306,8 @@ void BetterAngleBackend::loadCrosshairPreset(int index) {
   p.crossOffsetX = cp.offsetX;
   p.crossOffsetY = cp.offsetY;
   p.crossAngle = cp.angle;
-  p.Save(GetAppStoragePath() + p.name + L".json");
+  p.Save(GetProfilesPath() + p.name + L".json");
+
   emit crosshairChanged();
 }
 
@@ -330,6 +318,7 @@ void BetterAngleBackend::deleteCrosshairPreset(int index) {
   if (index < 0 || index >= (int)p.crosshairPresets.size())
     return;
   p.crosshairPresets.erase(p.crosshairPresets.begin() + index);
-  p.Save(GetAppStoragePath() + p.name + L".json");
+  p.Save(GetProfilesPath() + p.name + L".json");
+
   emit crosshairPresetsChanged();
 }

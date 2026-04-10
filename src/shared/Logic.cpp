@@ -29,10 +29,11 @@ double FetchFortniteSensitivity() {
         }
     }
 
-    // High-priority paths based on user feedback
+    std::vector<std::wstring> potentialPaths;
     potentialPaths.push_back(basePath + L"\\WindowClient\\GameUserSettings.ini");
     potentialPaths.push_back(basePath + L"\\WindowsClient\\GameUserSettings.ini");
     potentialPaths.push_back(basePath + L"\\WindowsNoEditor\\GameUserSettings.ini");
+
 
     // Dynamic search fallback
     WIN32_FIND_DATAW findData;
