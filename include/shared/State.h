@@ -84,5 +84,10 @@ extern bool g_isCursorVisible;
 extern AngleLogic g_logic;
 extern bool g_forceDiving;
 extern bool g_forceDetection;
+extern int g_hudX;
+extern int g_hudY;
+extern bool g_isDraggingHUD;
+extern POINT g_dragStartHUD;
+extern POINT g_dragStartMouse;
 
 #endif // STATE_H

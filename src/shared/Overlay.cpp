@@ -132,7 +132,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
     }
 
     // 4. Draw Clean Glass HUD
-    int rx = 40, ry = 40, rw = 320, rh = 180, r = 20;
+    int rx = g_hudX, ry = g_hudY, rw = 320, rh = 180, r = 20;
     GraphicsPath path;
     path.AddArc(rx, ry, r, r, 180, 90);
     path.AddArc(rx + rw - r, ry, r, r, 270, 90);

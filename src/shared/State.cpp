@@ -79,6 +79,9 @@ void LoadSettings() {
 
   g_glideThreshold = eFloat("glideThreshold", 0.05f);
   g_freefallThreshold = eFloat("freefallThreshold", 0.20f);
+  
+  g_hudX = eInt("hudX", 40);
+  g_hudY = eInt("hudY", 40);
 
   size_t pp = content.find("\"lastProfile\":\"");
   if (pp != std::string::npos) {
@@ -104,6 +107,8 @@ void SaveSettings() {
   ofs << "  \"debugKey\": " << g_keybinds.debugKey << ",\n";
   ofs << "  \"glideThreshold\": " << g_glideThreshold << ",\n";
   ofs << "  \"freefallThreshold\": " << g_freefallThreshold << ",\n";
+  ofs << "  \"hudX\": " << g_hudX << ",\n";
+  ofs << "  \"hudY\": " << g_hudY << ",\n";
 
   std::string lp = "Fallback_Default";
   lp = "";
@@ -134,3 +139,9 @@ bool g_isCursorVisible = false;
 AngleLogic g_logic(0.05);
 bool g_forceDiving = false;
 bool g_forceDetection = false;
+
+int g_hudX = 40;
+int g_hudY = 40;
+bool g_isDraggingHUD = false;
+POINT g_dragStartHUD = {0, 0};
+POINT g_dragStartMouse = {0, 0};

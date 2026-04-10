@@ -227,6 +227,29 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
             return 0;
 
         case WM_TIMER: {
+            if (g_currentSelection == NONE) {
+                bool lDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
+                POINT pt; GetCursorPos(&pt);
+                if (lDown && !g_isDraggingHUD) {
+                    if (pt.x >= g_hudX && pt.x <= g_hudX + 320 && 
+                        pt.y >= g_hudY && pt.y <= g_hudY + 180) {
+                        g_isDraggingHUD = true;
+                        g_dragStartMouse = pt;
+                        g_dragStartHUD.x = g_hudX;
+                        g_dragStartHUD.y = g_hudY;
+                    }
+                } else if (!lDown && g_isDraggingHUD) {
+                    g_isDraggingHUD = false;
+                    SaveSettings();
+                }
+                
+                if (g_isDraggingHUD && lDown) {
+                    g_hudX = g_dragStartHUD.x + (pt.x - g_dragStartMouse.x);
+                    g_hudY = g_dragStartHUD.y + (pt.y - g_dragStartMouse.y);
+                    InvalidateRect(hWnd, NULL, FALSE);
+                }
+            }
+
             // Only repaint if the angle or diving state actually changed
             static float lastAngle = -9999.0f;
             static bool  lastDiving = false;
