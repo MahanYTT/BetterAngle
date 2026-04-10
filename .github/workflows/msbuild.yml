@@ -44,6 +44,7 @@ jobs:
           
       - name: Archive Build
         run: |
+          New-Item -ItemType Directory -Force -Path bin
           cd build/Release
           Compress-Archive -Path * -DestinationPath ../../bin/BetterAngle_Release.zip
       - name: Get Version
