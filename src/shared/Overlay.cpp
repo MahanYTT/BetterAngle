@@ -53,7 +53,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
     static SolidBrush whiteBrush(Color(255, 255, 255, 255));
     static SolidBrush dimWhite(Color(180, 220, 220, 220));
     static SolidBrush redBrush(Color(255, 255, 50, 50));
-    static SolidBrush bgPanelBrush(Color(255, 0, 0, 0));
+    static SolidBrush bgPanelBrush(Color(255, 1, 1, 1));
     static SolidBrush matchLabelBrush(Color(120, 180, 190, 200));
     
     static Pen xhairScopePen(Color(200, 255, 50, 50), 1.0f);

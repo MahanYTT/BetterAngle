@@ -98,6 +98,10 @@ std::string GetKeyNameStr(UINT mod, UINT vk) {
 }
 
 void RenderImGuiFrame() {
+    static bool s_inFrame = false;
+    if (s_inFrame) return; // Prevent re-entrancy during modal loops (e.g. Setup)
+    s_inFrame = true;
+
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
@@ -116,6 +120,7 @@ void RenderImGuiFrame() {
         ImGui::End();
         ImGui::PopStyleVar(2);
         ImGui::Render();
+        s_inFrame = false;
         return;
     }
     Profile& p = g_allProfiles[g_selectedProfileIdx];
@@ -455,6 +460,7 @@ void RenderImGuiFrame() {
     g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, clear_color_with_alpha);
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
     g_pSwapChain->Present(1, 0); // Present with vsync
+    s_inFrame = false;
 }
 
 LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
