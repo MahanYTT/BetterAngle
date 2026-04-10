@@ -3,6 +3,8 @@
 #include <iostream>
 #include <vector>
 #include <windows.h>
+#include <sstream>
+#include <locale>
 
 bool Profile::Load(const std::wstring& path) {
     std::ifstream f(path, std::ios::binary);
@@ -24,7 +26,12 @@ bool Profile::Load(const std::wstring& path) {
         size_t pos = content.find("\"" + key + "\": ");
         if (pos == std::string::npos) return 0.003;
         size_t end = content.find_first_of(",}", pos + 3 + key.length());
-        return std::stod(content.substr(pos + 3 + key.length(), end - (pos + 3 + key.length())));
+        std::string valStr = content.substr(pos + 3 + key.length(), end - (pos + 3 + key.length()));
+        std::istringstream iss(valStr);
+        iss.imbue(std::locale("C"));
+        double d = 0.003;
+        iss >> d;
+        return d;
     };
 
     scale_normal = extractDouble("scale_normal");
@@ -45,17 +52,22 @@ bool Profile::Save(const std::wstring& path) {
 
     std::string n;
     for (wchar_t c : name) n += (char)c;
-    f << "{\n";
-    f << "  \"name\": \"" << n << "\",\n";
-    f << "  \"scale_normal\": " << scale_normal << ",\n";
-    f << "  \"scale_diving\": " << scale_diving << ",\n";
-    f << "  \"roi_x\": " << roi_x << ",\n";
-    f << "  \"roi_y\": " << roi_y << ",\n";
-    f << "  \"roi_w\": " << roi_w << ",\n";
-    f << "  \"roi_h\": " << roi_h << ",\n";
-    f << "  \"target_color\": " << target_color << ",\n";
-    f << "  \"tolerance\": " << tolerance << "\n";
-    f << "}";
+    // Ensure we write with a safe dot decimal regardless of locale
+    std::ostringstream oss;
+    oss.imbue(std::locale("C"));
+    oss << "{\n";
+    oss << "  \"name\": \"" << n << "\",\n";
+    oss << "  \"scale_normal\": " << scale_normal << ",\n";
+    oss << "  \"scale_diving\": " << scale_diving << ",\n";
+    oss << "  \"roi_x\": " << roi_x << ",\n";
+    oss << "  \"roi_y\": " << roi_y << ",\n";
+    oss << "  \"roi_w\": " << roi_w << ",\n";
+    oss << "  \"roi_h\": " << roi_h << ",\n";
+    oss << "  \"target_color\": " << target_color << ",\n";
+    oss << "  \"tolerance\": " << tolerance << "\n";
+    oss << "}";
+    
+    f << oss.str();
 
     return true;
 }

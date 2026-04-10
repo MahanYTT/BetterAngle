@@ -26,7 +26,9 @@ AngleLogic::AngleLogic(double dpi, double sens)
     : m_dpi(dpi), m_sens(sens), m_accumDx(0), m_baseDx(0), m_baseAngle(0.0), m_scalePerDx(0.0) {}
 
 void AngleLogic::Update(int dx) {
-    if (!g_debugMode && !IsFortniteFocused()) return;
+    if (!g_debugMode) {
+        if (!IsFortniteFocused() || g_isCursorVisible) return;
+    }
     m_accumDx += dx;
 }
 

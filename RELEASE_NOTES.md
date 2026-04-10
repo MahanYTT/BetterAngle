@@ -1,3 +1,6 @@
+### BetterAngle Pro v4.9.39: "Angle Calculation & Simulation Overhaul"
+v4.9.39: Critical fix for Angle remaining 0 (RawInput memory padding bug resolved). Fixed locale-dependent JSON parsing that broke float scales on European OS settings. Debug Mode now perfectly overrides all Fortnite gating including cursor lock.
+
 ### BetterAngle Pro v4.9.38: "Zero-Copy Optics & Advanced Debug Engine"
 v4.9.38: Fixed memory-lock color match bugs via CreateDIBSection. Fully functional Angle Logic globally active with Fortnite override bypass in new Debug tab.
 

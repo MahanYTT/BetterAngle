@@ -22,7 +22,8 @@ int GetRawInputDeltaX(LPARAM lparam) {
     LPBYTE lpb = new BYTE[dwSize];
     if (lpb == NULL) return 0;
 
-    if (GetRawInputData((HRAWINPUT)lparam, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER)) != dwSize) {
+    int bytesCopied = GetRawInputData((HRAWINPUT)lparam, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER));
+    if (bytesCopied == (UINT)-1) {
         delete[] lpb;
         return 0;
     }
