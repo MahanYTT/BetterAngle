@@ -1,3 +1,8 @@
+### BetterAngle Pro v4.20.3
+- Refactored entire UI layout to use 100% percentage-based vertical and horizontal positioning.
+- Added Dynamic Font Scaling (text shrinks/grows with window size).
+- Ensured "QUIT" and footer buttons are always visible on all resolutions.
+
 ### BetterAngle Pro v4.20.2
 - Fixed GitHub Release URL casing for CamelCase repository "BetterAngle".
 - Synchronized internal version strings to eliminate stale "Update Available" flags.
