@@ -385,20 +385,35 @@ void RenderImGuiFrame() {
         // TAB: UPDATES
         if (ImGui::BeginTabItem("UPDATES")) {
             ImGui::Spacing();
-            ImGui::Text("BetterAngle Pro");
-            ImGui::TextDisabled("Version %s", VERSION_STR);
+            ImGui::Text("BetterAngle Pro | Precision Suite");
+            ImGui::Spacing();
+            ImGui::Text("Current Version: v%s", VERSION_STR);
+            
+            if (g_hasCheckedForUpdates) {
+                ImGui::Text("Latest Version:  %s", g_latestVersionOnline.c_str());
+            } else {
+                ImGui::TextDisabled("Latest Version:  (Checking...)");
+            }
+
             ImGui::Spacing();
             ImGui::Separator();
             ImGui::Spacing();
 
             if (g_updateAvailable) {
-                ImGui::TextColored(ImVec4(0.2f, 0.8f, 0.4f, 1.0f), "A NEW UPDATE IS AVAILABLE!");
-                if (ImGui::Button("DOWNLOAD & INSTALL NOW", ImVec2(-1, 40))) {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.2f, 0.8f, 0.4f, 1.0f));
+                ImGui::TextWrapped("A new update is available for BetterAngle Pro!");
+                ImGui::PopStyleColor();
+                if (ImGui::Button("DOWNLOAD & INSTALL v" VERSION_STR "+ NOW", ImVec2(-1, 40))) {
                     UpdateApp();
                 }
             } else {
-                ImGui::Text("Your software is up to date.");
-                if (ImGui::Button("CHECK FOR UPDATES", ImVec2(200, 30))) {
+                if (g_hasCheckedForUpdates) {
+                    ImGui::Text("Your software is fully up to date.");
+                } else {
+                    ImGui::TextDisabled("Click below to check for software updates.");
+                }
+                
+                if (ImGui::Button("CHECK FOR UPDATES", ImVec2(-1, 35))) {
                     std::thread([]() { CheckForUpdates(); }).detach();
                 }
             }
