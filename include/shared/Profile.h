@@ -24,6 +24,14 @@ struct Profile {
   COLORREF target_color;
   int tolerance;
 
+  // Crosshair Settings
+  float crossThickness;
+  COLORREF crossColor;
+  float crossOffsetX;
+  float crossOffsetY;
+  float crossAngle;
+  bool crossPulse;
+
   bool Load(const std::wstring &path);
   bool Save(const std::wstring &path);
 };

@@ -73,6 +73,17 @@ bool Profile::Load(const std::wstring &path) {
   target_color = (COLORREF)extractDouble("target_color");
   tolerance = (int)extractDouble("tolerance");
 
+  // Load Crosshair (with defaults for legacy files)
+  crossThickness = (float)extractDouble("crossThickness");
+  if (crossThickness <= 0) crossThickness = 2.0f;
+  crossColor = (COLORREF)extractDouble("crossColor");
+  if (crossColor == 0) crossColor = RGB(255, 0, 0); // Default Red
+  crossOffsetX = (float)extractDouble("crossOffsetX");
+  crossOffsetY = (float)extractDouble("crossOffsetY");
+  crossAngle = (float)extractDouble("crossAngle");
+  crossPulse = extractDouble("crossPulse") > 0.5;
+
+
   return true;
 }
 
@@ -102,7 +113,13 @@ bool Profile::Save(const std::wstring &path) {
   oss << "  \"roi_w\": " << roi_w << ",\n";
   oss << "  \"roi_h\": " << roi_h << ",\n";
   oss << "  \"target_color\": " << target_color << ",\n";
-  oss << "  \"tolerance\": " << tolerance << "\n";
+  oss << "  \"tolerance\": " << tolerance << ",\n";
+  oss << "  \"crossThickness\": " << crossThickness << ",\n";
+  oss << "  \"crossColor\": " << crossColor << ",\n";
+  oss << "  \"crossOffsetX\": " << crossOffsetX << ",\n";
+  oss << "  \"crossOffsetY\": " << crossOffsetY << ",\n";
+  oss << "  \"crossAngle\": " << crossAngle << ",\n";
+  oss << "  \"crossPulse\": " << (crossPulse ? 1 : 0) << "\n";
   oss << "}";
 
   f << oss.str();

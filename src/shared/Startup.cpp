@@ -8,15 +8,6 @@
 
 using namespace Gdiplus;
 
-LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
-    if (message == WM_PAINT) {
-        PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(hWnd, &ps);
-        EndPaint(hWnd, &ps);
-    }
-    return DefWindowProc(hWnd, message, wParam, lParam);
-}
-
 void ShowSplashLoader(HINSTANCE hInst) {
     WNDCLASS wc = { 0 };
     wc.lpfnWndProc = DefWindowProc;
@@ -35,8 +26,12 @@ void ShowSplashLoader(HINSTANCE hInst) {
     UpdateWindow(hSplash);
 
     HDC hdc = GetDC(hSplash);
+    HDC hdcMem = CreateCompatibleDC(hdc);
+    HBITMAP hbmMem = CreateCompatibleBitmap(hdc, w, h);
+    HGDIOBJ hOld = SelectObject(hdcMem, hbmMem);
+
     {
-        Graphics g(hdc);
+        Graphics g(hdcMem);
         g.SetSmoothingMode(SmoothingModeAntiAlias);
         g.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
 
@@ -50,9 +45,13 @@ void ShowSplashLoader(HINSTANCE hInst) {
         SolidBrush gray(Color(255, 100, 105, 115));
 
         DWORD start = GetTickCount();
-        while (GetTickCount() - start < 1800) {
+        DWORD duration = 1800;
+
+        while (true) {
             DWORD elapsed = GetTickCount() - start;
-            float progress = (float)elapsed / 1600.0f;
+            if (elapsed > duration) break;
+
+            float progress = (float)elapsed / (float)(duration - 200);
             if (progress > 1.0f) progress = 1.0f;
 
             MSG msg;
@@ -62,18 +61,21 @@ void ShowSplashLoader(HINSTANCE hInst) {
             }
 
             g.Clear(Color(255, 15, 17, 22));
+            
+            // Neon Border
             Pen neonPen(Color(255, 0, 255, 255), 1);
             g.DrawRectangle(&neonPen, 0, 0, w - 1, h - 1);
 
+            // Title
             g.DrawString(L"BetterAngle Pro", -1, &titleFont, PointF(40, 60), &white);
             g.DrawString(L"HIGH PERFORMANCE GAMING OPTIMIZER", -1, &gearFont, PointF(42, 100), &neon);
             
-            std::wstring status = progress < 0.7f ? L"INITIALIZING ENGINE..." : L"OPTIMIZING CALCULATIONS...";
+            std::wstring status = progress < 0.7f ? L"INITIALIZING ENGINE..." : L"READY TO LOCK IN...";
             g.DrawString(status.c_str(), -1, &subFont, PointF(40, 140), &gray);
 
+            // Progress Bar
             SolidBrush barBg(Color(255, 40, 45, 55));
             g.FillRectangle(&barBg, 40, 180, 370, 6);
-
             RectF barRect(40, 180, 370 * progress, 6);
             LinearGradientBrush grad(barRect, Color(255, 0, 200, 255), Color(255, 0, 255, 200), LinearGradientModeHorizontal);
             g.FillRectangle(&grad, barRect);
@@ -81,10 +83,20 @@ void ShowSplashLoader(HINSTANCE hInst) {
             std::wstring verLabel = L"v" + std::wstring(VERSION_WSTR) + L" | STABLE";
             g.DrawString(verLabel.c_str(), -1, &gearFont, PointF(40, 200), &gray);
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(15));
+            BitBlt(hdc, 0, 0, w, h, hdcMem, 0, 0, SRCCOPY);
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+
+        // Smooth Fade Out
+        for (int a = 255; a >= 0; a -= 15) {
+            SetLayeredWindowAttributes(hSplash, 0, (BYTE)a, LWA_ALPHA);
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
     }
 
+    SelectObject(hdcMem, hOld);
+    DeleteObject(hbmMem);
+    DeleteDC(hdcMem);
     ReleaseDC(hSplash, hdc);
     DestroyWindow(hSplash);
 }

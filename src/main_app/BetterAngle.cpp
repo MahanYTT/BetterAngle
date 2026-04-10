@@ -79,6 +79,8 @@ void DetectorThread() {
                 g_logic.SetDivingState(false);
                 g_detectionRatio = 0.0f;
             }
+
+            }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
@@ -301,6 +303,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
     
     g_currentProfile = g_allProfiles[g_selectedProfileIdx];
+    
+    // Sync Crosshair Settings from Profile to Global State
+    g_crossThickness = g_currentProfile.crossThickness;
+    g_crossColor     = g_currentProfile.crossColor;
+    g_crossOffsetX   = g_currentProfile.crossOffsetX;
+    g_crossOffsetY   = g_currentProfile.crossOffsetY;
+    g_crossAngle     = g_currentProfile.crossAngle;
+    g_crossPulse     = g_currentProfile.crossPulse;
+
     g_logic.LoadProfile(g_currentProfile.dpi, g_currentProfile.sensitivityX, g_currentProfile.divingScaleMultiplier);
 
     // Message Window for Raw Input (Bypasses Layered Window UI Bugs)

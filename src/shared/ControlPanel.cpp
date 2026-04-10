@@ -370,6 +370,33 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                     }
                 }
             }
+
+            // --- Action Buttons: RESET, SAVE POS, SAVE ALL ---
+            float btnRowY = cY + 0.44f * L.H;
+            float abW = (L.contentW - 30) / 3;
+            if (fy >= btnRowY && fy <= btnRowY + rowH) {
+                if (fx >= L.margin && fx <= L.margin + abW) {
+                    // RESET
+                    g_crossThickness = 2.0f; g_crossOffsetX = 0.0f; g_crossOffsetY = 0.0f;
+                    g_crossAngle = 0.0f; g_crossPulse = false; g_crossColor = RGB(255,0,0);
+                } else if (fx >= L.margin + abW + 15 && fx <= L.margin + 2 * abW + 15) {
+                    // SAVE POSITION
+                    if (!g_allProfiles.empty()) {
+                        Profile& p = g_allProfiles[g_selectedProfileIdx];
+                        p.crossOffsetX = g_crossOffsetX; p.crossOffsetY = g_crossOffsetY;
+                        p.Save(GetAppStoragePath() + p.name + L".json");
+                    }
+                } else if (fx >= L.margin + 2 * abW + 30 && fx <= L.margin + 3 * abW + 30) {
+                    // SAVE ALL
+                    if (!g_allProfiles.empty()) {
+                        Profile& p = g_allProfiles[g_selectedProfileIdx];
+                        p.crossThickness = g_crossThickness; p.crossColor = g_crossColor;
+                        p.crossOffsetX = g_crossOffsetX; p.crossOffsetY = g_crossOffsetY;
+                        p.crossAngle = g_crossAngle; p.crossPulse = g_crossPulse;
+                        p.Save(GetAppStoragePath() + p.name + L".json");
+                    }
+                }
+            }
         }
 
         InvalidateRect(hWnd, NULL, FALSE);
@@ -611,8 +638,22 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                     D2D1::RectF(valX, ry + 0.005f * L.H, L.W - L.margin, ry + bH), pBlue);
             }
 
+            // Action Buttons (Reset/Save)
+            float btnRowY = cY + 0.44f * L.H;
+            float actionBtnH = 32.0f * baseScale;
+            float abW = (L.contentW - 30) / 3;
+            
+            DrawD2DButton(g_pRenderTarget, D2D1::RectF(L.margin, btnRowY, L.margin + abW, btnRowY + actionBtnH), 
+                L"RESET", D2D1::ColorF(0.4f, 0.4f, 0.45f), 11.0f * baseScale);
+            
+            DrawD2DButton(g_pRenderTarget, D2D1::RectF(L.margin + abW + 15, btnRowY, L.margin + 2 * abW + 15, btnRowY + actionBtnH), 
+                L"SAVE POS", D2D1::ColorF(0.15f, 0.35f, 0.25f), 11.0f * baseScale);
+            
+            DrawD2DButton(g_pRenderTarget, D2D1::RectF(L.margin + 2 * abW + 30, btnRowY, L.margin + 3 * abW + 30, btnRowY + actionBtnH), 
+                L"SAVE ALL", D2D1::ColorF(0.15f, 0.25f, 0.55f), 11.0f * baseScale);
+
             g_pRenderTarget->DrawText(L"Press F10 in-game to toggle the crosshair overlay.", 50, pBody,
-                D2D1::RectF(L.margin, cY + 0.48f * L.H, L.W - L.margin, cY + 0.54f * L.H), pGrey);
+                D2D1::RectF(L.margin, cY + 0.52f * L.H, L.W - L.margin, cY + 0.58f * L.H), pGrey);
         }
 
         // ── Footer Quit button ────────────────────────────────────────────────
