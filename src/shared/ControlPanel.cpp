@@ -291,7 +291,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             DrawD2DButton(g_pRenderTarget, D2D1::RectF(margin + tabW + 10, 90, margin + 2 * tabW + 10, 120), L"UPDATES", g_currentTab == 1 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
             DrawD2DButton(g_pRenderTarget, D2D1::RectF(margin + 2 * tabW + 20, 90, margin + 3 * tabW + 20, 120), L"COLORS", g_currentTab == 2 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
             DrawD2DButton(g_pRenderTarget, D2D1::RectF(margin + 3 * tabW + 30, 90, margin + 4 * tabW + 30, 120), L"DEBUG", g_currentTab == 3 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
-            DrawD2DButton(g_pRenderTarget, D2D1::RectF(margin + 4 * tabW + 40, 90, W - margin, 120), L"XHAIR", g_currentTab == 4 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
+            DrawD2DButton(g_pRenderTarget, D2D1::RectF(margin + 4 * tabW + 40, 90, W - margin, 120), L"CROSSHAIR", g_currentTab == 4 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
 
             if (g_currentTab == 0) {
                 g_pRenderTarget->DrawText(L"HOTKEYS (Click to Rebind)", 25, pHeaderFormat, D2D1::RectF(margin, 130, W - margin, 150), pWhite);

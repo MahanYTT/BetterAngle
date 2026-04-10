@@ -1,3 +1,7 @@
+### BetterAngle Pro v4.20.1
+- Renamed "XHAIR" tab to "CROSSHAIR" for better visibility.
+- Refined responsive tab layout to ensure all 5 tabs are visible on all window sizes.
+
 ### BetterAngle Pro v4.20.0: "Responsive Pro Command Center"
 v4.20.0: Major UI overhaul for the Control Panel. The window is now fully resizable and responsive—all tabs, buttons, and interaction hit-boxes dynamically auto-fit to any window size. Implemented a focus-locking mechanism where the angle accumulation only triggers when Fortnite is in the foreground. Finalized the "XHAIR" precision configuration tab and ensured all calibration data persists correctly to active profiles.
 
