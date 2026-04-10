@@ -75,8 +75,48 @@ bool Profile::Load(const std::wstring &path) {
   crossOffsetX = (float)extractDouble("crossOffsetX");
   crossOffsetY = (float)extractDouble("crossOffsetY");
   crossAngle = (float)extractDouble("crossAngle");
-  crossPulse = extractDouble("crossPulse") > 0.5;
+  bool pulseVal = extractDouble("crossPulse") > 0.5;
+  crossPulse = pulseVal;
 
+  // Load Presets Array (Manual Parser)
+  crosshairPresets.clear();
+  size_t arrPos = content.find("\"crosshairPresets\": [");
+  if (arrPos != std::string::npos) {
+    size_t endArr = content.find("]", arrPos);
+    std::string arrContent = content.substr(arrPos, endArr - arrPos);
+    size_t objPos = 0;
+    while ((objPos = arrContent.find("{", objPos)) != std::string::npos) {
+        size_t objEnd = arrContent.find("}", objPos);
+        if (objEnd == std::string::npos) break;
+        std::string obj = arrContent.substr(objPos, objEnd - objPos);
+        
+        CrosshairPreset cp;
+        // Parse name
+        size_t nP = obj.find("\"name\": \"");
+        if (nP != std::string::npos) {
+            size_t nE = obj.find("\"", nP + 9);
+            std::string nStr = obj.substr(nP + 9, nE - (nP + 9));
+            cp.name = std::wstring(nStr.begin(), nStr.end());
+        }
+        // Parse coords
+        auto exD = [&](std::string k) -> float {
+            size_t p = obj.find("\"" + k + "\": ");
+            if (p == std::string::npos) return 0.0f;
+            return (float)std::atof(obj.substr(p + k.length() + 3).c_str());
+        };
+        cp.offsetX = exD("x");
+        cp.offsetY = exD("y");
+        cp.angle   = exD("a");
+        crosshairPresets.push_back(cp);
+        objPos = objEnd + 1;
+    }
+  }
+
+  // Ensure default if empty
+  if (crosshairPresets.empty()) {
+    CrosshairPreset def = { L"🎯 Screen Center", 0.0f, 0.0f, 0.0f };
+    crosshairPresets.push_back(def);
+  }
 
   return true;
 }
@@ -111,7 +151,17 @@ bool Profile::Save(const std::wstring &path) {
   oss << "  \"crossOffsetX\": " << crossOffsetX << ",\n";
   oss << "  \"crossOffsetY\": " << crossOffsetY << ",\n";
   oss << "  \"crossAngle\": " << crossAngle << ",\n";
-  oss << "  \"crossPulse\": " << (crossPulse ? 1 : 0) << "\n";
+  oss << "  \"crossPulse\": " << (crossPulse ? 1 : 0) << ",\n";
+  
+  oss << "  \"crosshairPresets\": [\n";
+  for (size_t i = 0; i < crosshairPresets.size(); i++) {
+    const auto& cp = crosshairPresets[i];
+    std::string n; for (wchar_t c : cp.name) n += (char)c;
+    oss << "    {\"name\": \"" << n << "\", \"x\": " << cp.offsetX << ", \"y\": " << cp.offsetY << ", \"a\": " << cp.angle << "}";
+    if (i < crosshairPresets.size() - 1) oss << ",";
+    oss << "\n";
+  }
+  oss << "  ]\n";
   oss << "}";
 
   f << oss.str();

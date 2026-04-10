@@ -308,6 +308,54 @@ void RenderImGuiFrame() {
                     p.Save(GetAppStoragePath() + p.name + L".json");
                 }
             }
+
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            ImGui::TextDisabled("SAVED POSITIONS (PRESETS)");
+            static char presetName[64] = "";
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 110);
+            ImGui::InputTextWithHint("##presetNm", "Preset Name...", presetName, 64);
+            ImGui::SameLine();
+            if (ImGui::Button("SAVE AS", ImVec2(100, 0))) {
+                if (!g_allProfiles.empty() && strlen(presetName) > 0) {
+                    Profile& p = g_allProfiles[g_selectedProfileIdx];
+                    std::string nStr(presetName);
+                    CrosshairPreset cp = { std::wstring(nStr.begin(), nStr.end()), g_crossOffsetX, g_crossOffsetY, g_crossAngle };
+                    p.crosshairPresets.push_back(cp);
+                    p.Save(GetAppStoragePath() + p.name + L".json");
+                    presetName[0] = '\0'; // Clear input
+                }
+            }
+
+            ImGui::Spacing();
+            ImGui::BeginChild("PresetsList", ImVec2(0, 150), true);
+            if (!g_allProfiles.empty()) {
+                Profile& p = g_allProfiles[g_selectedProfileIdx];
+                for (size_t i = 0; i < p.crosshairPresets.size(); i++) {
+                    auto& cp = p.crosshairPresets[i];
+                    std::string label;
+                    for (wchar_t c : cp.name) label += (char)c;
+                    
+                    std::string fullLabel = "[" + std::to_string(i+1) + "] " + label;
+                    
+                    if (ImGui::Button(fullLabel.c_str(), ImVec2(ImGui::GetContentRegionAvail().x - 30, 30))) {
+                        g_crossOffsetX = cp.offsetX;
+                        g_crossOffsetY = cp.offsetY;
+                        g_crossAngle   = cp.angle;
+                        SaveSettings();
+                    }
+                    ImGui::SameLine();
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.4f, 0.1f, 0.1f, 1.0f));
+                    if (ImGui::Button(("X##" + std::to_string(i)).c_str(), ImVec2(25, 30))) {
+                        p.crosshairPresets.erase(p.crosshairPresets.begin() + i);
+                        p.Save(GetAppStoragePath() + p.name + L".json");
+                    }
+                    ImGui::PopStyleColor();
+                }
+            }
+            ImGui::EndChild();
             ImGui::EndTabItem();
         }
 

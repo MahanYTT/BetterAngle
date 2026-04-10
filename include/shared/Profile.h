@@ -5,6 +5,13 @@
 #include <vector>
 #include <windows.h>
 
+struct CrosshairPreset {
+  std::wstring name;
+  float offsetX;
+  float offsetY;
+  float angle;
+};
+
 
 struct Profile {
   std::wstring name;
@@ -29,6 +36,8 @@ struct Profile {
   float crossOffsetY;
   float crossAngle;
   bool crossPulse;
+
+  std::vector<CrosshairPreset> crosshairPresets;
 
   bool Load(const std::wstring &path);
   bool Save(const std::wstring &path);
