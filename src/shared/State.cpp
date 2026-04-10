@@ -37,7 +37,7 @@ std::wstring GetAppStoragePath() {
 
 void LoadSettings() {
   std::wstring sp = GetAppStoragePath() + L"settings.json";
-  std::ifstream ifs(std::string(sp.begin(), sp.end()));
+  std::ifstream ifs(sp.c_str());
   if (!ifs.is_open())
     return;
   std::string content((std::istreambuf_iterator<char>(ifs)),
@@ -86,7 +86,7 @@ void LoadSettings() {
 
 void SaveSettings() {
   std::wstring sp = GetAppStoragePath() + L"settings.json";
-  std::ofstream ofs(std::string(sp.begin(), sp.end()));
+  std::ofstream ofs(sp.c_str());
   ofs << "{\n";
   ofs << "  \"toggleMod\": " << g_keybinds.toggleMod << ",\n";
   ofs << "  \"toggleKey\": " << g_keybinds.toggleKey << ",\n";
