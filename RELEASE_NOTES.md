@@ -1,3 +1,8 @@
+### BetterAngle Pro v4.20.2
+- Fixed GitHub Release URL casing for CamelCase repository "BetterAngle".
+- Synchronized internal version strings to eliminate stale "Update Available" flags.
+- Optimized Updater User-Agent to comply with GitHub API requirements.
+
 ### BetterAngle Pro v4.20.1
 - Renamed "XHAIR" tab to "CROSSHAIR" for better visibility.
 - Refined responsive tab layout to ensure all 5 tabs are visible on all window sizes.

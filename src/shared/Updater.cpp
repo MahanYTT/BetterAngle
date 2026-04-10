@@ -11,14 +11,15 @@
 #pragma comment(lib, "urlmon.lib")
 
 // Fallback if the build system fails to provide it
-#ifndef APP_VERSION_STR
-#define APP_VERSION_STR "4.9.36"
+#ifndef VERSION_STR
+#define VERSION_STR "4.20.1"
 #endif
+#define APP_VERSION_STR VERSION_STR
 
 // Helper to construct the predictable GitHub download URL
 std::wstring GetReleaseDownloadUrl(const std::string& tag) {
-    // Format: https://github.com/MahanYTT/betterangle/releases/download/v4.9.36/BetterAngle.exe
-    std::string url = "https://github.com/MahanYTT/betterangle/releases/download/" + tag + "/BetterAngle.exe";
+    // Format: https://github.com/MahanYTT/BetterAngle/releases/download/v4.20.1/BetterAngle.exe
+    std::string url = "https://github.com/MahanYTT/BetterAngle/releases/download/" + tag + "/BetterAngle.exe";
     return std::wstring(url.begin(), url.end());
 }
 
@@ -26,7 +27,7 @@ bool CheckForUpdates() {
     g_isCheckingForUpdates = true;
 
     // GitHub API REQUIRES a valid User-Agent, or it returns 403 Forbidden.
-    std::string userAgent = "BetterAngle-Updater/" APP_VERSION_STR;
+    std::string userAgent = "BetterAngle-Updater/" VERSION_STR;
     HINTERNET hInternet = InternetOpenA(userAgent.c_str(), INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
     if (!hInternet) {
         g_isCheckingForUpdates = false;
@@ -35,7 +36,7 @@ bool CheckForUpdates() {
 
     // Target the specific GitHub API endpoint for the latest release
     HINTERNET hUrl = InternetOpenUrlA(hInternet,
-        "https://api.github.com/repos/MahanYTT/betterangle/releases/latest",
+        "https://api.github.com/repos/MahanYTT/BetterAngle/releases/latest",
         NULL, 0, INTERNET_FLAG_RELOAD | INTERNET_FLAG_SECURE, 0);
 
     if (!hUrl) {

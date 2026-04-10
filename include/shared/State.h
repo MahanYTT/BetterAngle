@@ -18,10 +18,10 @@ std::wstring GetAppStoragePath();
 
 // Define the "raw" version if not passed by compiler flags
 #ifndef APP_VERSION
-#define APP_VERSION 4.19.0
+#define APP_VERSION 4.20.1
 #endif
 
-// This creates the actual strings "4.9.36" and L"4.9.36"
+// This creates the actual strings "4.20.1" and L"4.20.1"
 #define VERSION_STR TO_STRING(APP_VERSION)
 #define VERSION_WSTR TO_WSTRING(APP_VERSION)
 
