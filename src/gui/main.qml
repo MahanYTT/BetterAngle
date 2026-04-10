@@ -31,18 +31,7 @@ Window {
 
         MouseArea {
             anchors.fill: parent
-            property point clickPos: "0,0"
-
-            onPressed: (mouse) => {
-                clickPos = Qt.point(mouse.x, mouse.y)
-            }
-
-            onPositionChanged: (mouse) => {
-                var deltaX = mouse.x - clickPos.x
-                var deltaY = mouse.y - clickPos.y
-                mainWindow.x += deltaX
-                mainWindow.y += deltaY
-            }
+            onPressed: mainWindow.startSystemMove()
         }
 
         // Window Controls
