@@ -4,6 +4,7 @@
 #include "shared/Logic.h"
 #include "shared/Updater.h"
 #include <QGuiApplication>
+#include <QTimer>
 #include <thread>
 #include <windows.h>
 
@@ -13,8 +14,24 @@ extern AngleLogic g_logic;
 extern double FetchFortniteSensitivity();
 
 BetterAngleBackend::BetterAngleBackend(QObject *parent) : QObject(parent) {
-    // A real implementation would setup a QTimer to poll g_hasCheckedForUpdates 
-    // and emit updateStatusChanged() so QML knows when the thread finishes.
+    QTimer* timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, [this]() {
+        static bool lastChecking = false;
+        static bool lastDownloading = false;
+        if (g_hasCheckedForUpdates) {
+            g_hasCheckedForUpdates = false;
+            emit updateStatusChanged();
+        }
+        if (g_isCheckingForUpdates != lastChecking) {
+            lastChecking = g_isCheckingForUpdates;
+            emit updateStatusChanged();
+        }
+        if (g_isDownloadingUpdate != lastDownloading) {
+            lastDownloading = g_isDownloadingUpdate;
+            emit updateStatusChanged();
+        }
+    });
+    timer->start(100);
 }
 
 double BetterAngleBackend::sensX() const {
