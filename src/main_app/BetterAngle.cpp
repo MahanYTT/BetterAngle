@@ -36,16 +36,6 @@ std::atomic<bool> g_running(true);
 FovDetector g_detector;
 
 // Only update sensitivity state when Fortnite is the foreground window
-static bool IsFortniteFocused() {
-    HWND fg = GetForegroundWindow();
-    if (!fg) return false;
-    wchar_t cls[256] = { 0 };
-    GetClassNameW(fg, cls, 256);
-    if (wcscmp(cls, L"UnrealWindow") != 0) return false;
-    wchar_t title[256] = { 0 };
-    GetWindowTextW(fg, title, 256);
-    return wcsstr(title, L"Fortnite") != nullptr;
-}
 
 // FOV Detector Thread
 void DetectorThread() {

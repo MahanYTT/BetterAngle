@@ -35,6 +35,17 @@ double FetchFortniteSensitivity() {
     return -1.0; // Key not found in file
 }
 
+bool IsFortniteFocused() {
+    HWND fg = GetForegroundWindow();
+    if (!fg) return false;
+    wchar_t cls[256] = { 0 };
+    GetClassNameW(fg, cls, 256);
+    if (wcscmp(cls, L"UnrealWindow") != 0) return false;
+    wchar_t title[256] = { 0 };
+    GetWindowTextW(fg, title, 256);
+    return wcsstr(title, L"Fortnite") != nullptr;
+}
+
 AngleLogic::AngleLogic(double sensX) : m_sensX(sensX), m_accumDx(0), m_isDiving(false), m_baseDx(0), m_baseAngle(0.0) {}
 
 void AngleLogic::Update(int dx) {

@@ -6,6 +6,7 @@
 #include <string>
 
 double FetchFortniteSensitivity();
+bool IsFortniteFocused();
 
 class AngleLogic {
 public:

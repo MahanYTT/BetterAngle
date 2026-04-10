@@ -12,6 +12,7 @@ bool g_isCheckingForUpdates = false;
 bool g_hasCheckedForUpdates = false;
 float g_updateSpinAngle = 0.0f;
 bool g_updateAvailable = false;
+bool g_isDownloadingUpdate = false;
 std::atomic<bool> g_fortniteFocusedCache(false);
 bool g_setupComplete = false;
 
@@ -29,6 +30,7 @@ float g_freefallThreshold = 0.20f;
 
 #include <shlobj.h>
 #pragma comment(lib, "shell32.lib")
+#pragma comment(lib, "advapi32.lib")
 
 std::wstring GetAppStoragePath() {
     wchar_t exePath[MAX_PATH];
