@@ -29,18 +29,38 @@ double FetchFortniteSensitivity() {
         }
     }
 
-    // Folders to search in priority order
-    const std::wstring subfolders[] = { L"\\WindowsClient\\", L"\\WindowsNoEditor\\" };
+    // Folders to search: We will iterate through all subfolders of Config
+    // to find GameUserSettings.ini, handling variations like WindowClient, WindowsClient, etc.
+    std::vector<std::wstring> potentialPaths;
     
-    for (const auto& sub : subfolders) {
-        std::wstring pPath = basePath + sub + L"GameUserSettings.ini";
+    WIN32_FIND_DATAW findData;
+    std::wstring searchPattern = basePath + L"\\*";
+    HANDLE hFind = FindFirstFileW(searchPattern.c_str(), &findData);
+    
+    if (hFind != INVALID_HANDLE_VALUE) {
+        do {
+            if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+                if (wcscmp(findData.cFileName, L".") != 0 && wcscmp(findData.cFileName, L"..") != 0) {
+                    potentialPaths.push_back(basePath + L"\\" + findData.cFileName + L"\\GameUserSettings.ini");
+                }
+            }
+        } while (FindNextFileW(hFind, &findData));
+        FindClose(hFind);
+    }
+    
+    // Also add the common defaults just in case the directory iteration is restricted
+    potentialPaths.push_back(basePath + L"\\WindowsClient\\GameUserSettings.ini");
+    potentialPaths.push_back(basePath + L"\\WindowsNoEditor\\GameUserSettings.ini");
+    potentialPaths.push_back(basePath + L"\\WindowClient\\GameUserSettings.ini");
+
+    for (const auto& pPath : potentialPaths) {
         std::ifstream ifs(pPath, std::ios::binary);
         if (!ifs.is_open()) continue;
 
         ifs.seekg(0, std::ios::end);
         std::streamsize size = ifs.tellg();
         ifs.seekg(0, std::ios::beg);
-        if (size <= 0 || size > 10 * 1024 * 1024) continue; // sanity: max 10 MB
+        if (size <= 0 || size > 10 * 1024 * 1024) continue; 
 
         std::string buffer(static_cast<size_t>(size), '\0');
         if (!ifs.read(&buffer[0], size)) continue;
@@ -49,7 +69,7 @@ double FetchFortniteSensitivity() {
         buffer.erase(std::remove(buffer.begin(), buffer.end(), '\0'), buffer.end());
 
         // Search for sensitivity keys in priority order
-        const char* keys[] = { "MouseSensitivityX=", "MouseSensitivity=" };
+        const char* keys[] = { "MouseSensitivityX=", "MouseSensitivity=", "MouseX=" };
         for (const char* key : keys) {
             size_t pos = buffer.find(key);
             if (pos != std::string::npos) {
