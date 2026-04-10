@@ -253,7 +253,7 @@ void BetterAngleBackend::downloadUpdate() {
 
 void BetterAngleBackend::saveThresholds() { SaveSettings(); }
 
-// Redundant definitions removed.
+
 
 
 
@@ -307,7 +307,10 @@ void BetterAngleBackend::loadCrosshairPreset(int index) {
   p.crossOffsetY = cp.offsetY;
   p.crossAngle = cp.angle;
   p.Save(GetProfilesPath() + p.name + L".json");
+<<<<<<< HEAD
 
+=======
+>>>>>>> 6706197 (Fix: Resolved build errors, restored missing Updater logic, and hardened persistence)
   emit crosshairChanged();
 }
 
@@ -319,6 +322,9 @@ void BetterAngleBackend::deleteCrosshairPreset(int index) {
     return;
   p.crosshairPresets.erase(p.crosshairPresets.begin() + index);
   p.Save(GetProfilesPath() + p.name + L".json");
+<<<<<<< HEAD
 
+=======
+>>>>>>> 6706197 (Fix: Resolved build errors, restored missing Updater logic, and hardened persistence)
   emit crosshairPresetsChanged();
 }

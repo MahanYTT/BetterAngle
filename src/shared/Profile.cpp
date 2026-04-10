@@ -141,60 +141,66 @@ bool Profile::Load(const std::wstring &path) {
 }
 
 bool Profile::Save(const std::wstring &path) {
-  std::ofstream f(path, std::ios::trunc);
+  // Ensure file is not hidden before writing to avoid permission issues
+  SetFileAttributesW(path.c_str(), FILE_ATTRIBUTE_NORMAL);
+
+  std::wofstream f(path, std::ios::trunc);
   if (!f.is_open())
     return false;
 
-  std::string n;
+  std::string nStr;
   for (wchar_t c : name)
-    n += (char)c;
-  // Ensure we write with a safe dot decimal regardless of locale
-  std::ostringstream oss;
-  oss.imbue(std::locale("C"));
-  oss << "{\n";
-  oss << "  \"name\": \"" << n << "\",\n";
-  oss << "  \"sensitivityX\": " << sensitivityX << ",\n";
-  oss << "  \"sensitivityY\": " << sensitivityY << ",\n";
-  oss << "  \"fov\": " << fov << ",\n";
-  oss << "  \"resolutionWidth\": " << resolutionWidth << ",\n";
-  oss << "  \"resolutionHeight\": " << resolutionHeight << ",\n";
-  oss << "  \"renderScale\": " << renderScale << ",\n";
-  oss << "  \"roi_x\": " << roi_x << ",\n";
-  oss << "  \"roi_y\": " << roi_y << ",\n";
-  oss << "  \"roi_w\": " << roi_w << ",\n";
-  oss << "  \"roi_h\": " << roi_h << ",\n";
-  oss << "  \"target_color\": " << target_color << ",\n";
-  oss << "  \"tolerance\": " << tolerance << ",\n";
-  oss << "  \"kb_toggleMod\": " << keybinds.toggleMod << ",\n";
-  oss << "  \"kb_toggleKey\": " << keybinds.toggleKey << ",\n";
-  oss << "  \"kb_roiMod\": " << keybinds.roiMod << ",\n";
-  oss << "  \"kb_roiKey\": " << keybinds.roiKey << ",\n";
-  oss << "  \"kb_crossMod\": " << keybinds.crossMod << ",\n";
-  oss << "  \"kb_crossKey\": " << keybinds.crossKey << ",\n";
-  oss << "  \"kb_zeroMod\": " << keybinds.zeroMod << ",\n";
-  oss << "  \"kb_zeroKey\": " << keybinds.zeroKey << ",\n";
-  oss << "  \"kb_debugMod\": " << keybinds.debugMod << ",\n";
-  oss << "  \"kb_debugKey\": " << keybinds.debugKey << ",\n";
-  oss << "  \"crossThickness\": " << crossThickness << ",\n";
-  oss << "  \"crossColor\": " << crossColor << ",\n";
-  oss << "  \"crossOffsetX\": " << crossOffsetX << ",\n";
-  oss << "  \"crossOffsetY\": " << crossOffsetY << ",\n";
-  oss << "  \"crossAngle\": " << crossAngle << ",\n";
-  oss << "  \"crossPulse\": " << (crossPulse ? 1 : 0) << ",\n";
+    nStr += (char)c;
   
-  oss << "  \"crosshairPresets\": [\n";
+  // Ensure we write with a safe dot decimal regardless of locale
+  std::wostringstream oss;
+  oss.imbue(std::locale("C"));
+
+  oss << L"{\n";
+  oss << L"  \"name\": \"" << name << L"\",\n";
+  oss << L"  \"sensitivityX\": " << sensitivityX << L",\n";
+  oss << L"  \"sensitivityY\": " << sensitivityY << L",\n";
+  oss << L"  \"fov\": " << fov << L",\n";
+  oss << L"  \"resolutionWidth\": " << resolutionWidth << L",\n";
+  oss << L"  \"resolutionHeight\": " << resolutionHeight << L",\n";
+  oss << L"  \"renderScale\": " << renderScale << L",\n";
+  oss << L"  \"roi_x\": " << roi_x << L",\n";
+  oss << L"  \"roi_y\": " << roi_y << L",\n";
+  oss << L"  \"roi_w\": " << roi_w << L",\n";
+  oss << L"  \"roi_h\": " << roi_h << L",\n";
+  oss << L"  \"target_color\": " << (float)target_color << L",\n";
+  oss << L"  \"tolerance\": " << tolerance << L",\n";
+  oss << L"  \"kb_toggleMod\": " << keybinds.toggleMod << L",\n";
+  oss << L"  \"kb_toggleKey\": " << keybinds.toggleKey << L",\n";
+  oss << L"  \"kb_roiMod\": " << keybinds.roiMod << L",\n";
+  oss << L"  \"kb_roiKey\": " << keybinds.roiKey << L",\n";
+  oss << L"  \"kb_crossMod\": " << keybinds.crossMod << L",\n";
+  oss << L"  \"kb_crossKey\": " << keybinds.crossKey << L",\n";
+  oss << L"  \"kb_zeroMod\": " << keybinds.zeroMod << L",\n";
+  oss << L"  \"kb_zeroKey\": " << keybinds.zeroKey << L",\n";
+  oss << L"  \"kb_debugMod\": " << keybinds.debugMod << L",\n";
+  oss << L"  \"kb_debugKey\": " << keybinds.debugKey << L",\n";
+  oss << L"  \"crossThickness\": " << crossThickness << L",\n";
+  oss << L"  \"crossColor\": " << (float)crossColor << L",\n";
+  oss << L"  \"crossOffsetX\": " << crossOffsetX << L",\n";
+  oss << L"  \"crossOffsetY\": " << crossOffsetY << L",\n";
+  oss << L"  \"crossAngle\": " << crossAngle << L",\n";
+  oss << L"  \"crossPulse\": " << (crossPulse ? 1 : 0) << L",\n";
+  
+  oss << L"  \"crosshairPresets\": [\n";
   for (size_t i = 0; i < crosshairPresets.size(); i++) {
     const auto& cp = crosshairPresets[i];
-    std::string n; for (wchar_t c : cp.name) n += (char)c;
-    oss << "    {\"name\": \"" << n << "\", \"x\": " << cp.offsetX << ", \"y\": " << cp.offsetY << ", \"a\": " << cp.angle << "}";
-    if (i < crosshairPresets.size() - 1) oss << ",";
-    oss << "\n";
+    oss << L"    {\"name\": \"" << cp.name << L"\", \"x\": " << cp.offsetX << L", \"y\": " << cp.offsetY << L", \"a\": " << cp.angle << L"}";
+    if (i < crosshairPresets.size() - 1) oss << L",";
+    oss << L"\n";
   }
-  oss << "  ]\n";
-  oss << "}";
+  oss << L"  ]\n";
+  oss << L"}";
 
   f << oss.str();
-
+  f.close();
+  
+  SetFileAttributesW(path.c_str(), FILE_ATTRIBUTE_HIDDEN);
   return true;
 }
 
@@ -208,7 +214,7 @@ std::vector<Profile> GetProfiles(const std::wstring &directory) {
     do {
       if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
         Profile p;
-        if (p.Load(directory + L"/" + findData.cFileName)) {
+        if (p.Load(directory + findData.cFileName)) {
           profiles.push_back(p);
         }
       }

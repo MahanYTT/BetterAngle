@@ -29,9 +29,8 @@ std::wstring g_lastLoadedProfileName = L"";
 float g_glideThreshold = 0.05f;
 float g_freefallThreshold = 0.20f;
 
-#include <fstream>
-#include <string>
-
+#include <locale>
+#include <sstream>
 #include <shlobj.h>
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "advapi32.lib")
@@ -41,7 +40,6 @@ std::wstring GetAppRootPath() {
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) {
         std::wstring path = std::wstring(appdata) + L"\\BetterAngle";
         CreateDirectoryW(path.c_str(), NULL);
-        SetFileAttributesW(path.c_str(), FILE_ATTRIBUTE_HIDDEN); // Keep it clean as requested
         return path + L"\\";
     }
     return L"";
@@ -74,7 +72,11 @@ void LoadSettings() {
       if (p == std::string::npos) return def;
       size_t valStart = content.find_first_not_of(" \t\n\r", p + k.length() + 2);
       if (valStart == std::string::npos) return def;
-      try { return std::stof(content.substr(valStart)); } catch (...) { return def; }
+      try { 
+        std::istringstream iss(content.substr(valStart));
+        iss.imbue(std::locale("C"));
+        float v; iss >> v; return v;
+      } catch (...) { return def; }
     };
     auto eInt = [&](std::string k, int def) -> int {
       size_t p = content.find("\"" + k + "\":");
@@ -128,29 +130,41 @@ void LoadSettings() {
 
 void SaveSettings() {
   std::wstring sp = GetAppRootPath() + L"settings.json";
-  std::ofstream ofs(sp.c_str());
+  
+  // Ensure file is not hidden before writing to avoid permission issues with some stream implementations
+  SetFileAttributesW(sp.c_str(), FILE_ATTRIBUTE_NORMAL);
+
+  std::wofstream ofs(sp.c_str(), std::ios::trunc);
   if (!ofs.is_open()) return;
 
-  ofs << "{\n";
-  ofs << "  \"glideThreshold\": " << g_glideThreshold << ",\n";
-  ofs << "  \"freefallThreshold\": " << g_freefallThreshold << ",\n";
-  ofs << "  \"hudX\": " << g_hudX << ",\n";
-  ofs << "  \"hudY\": " << g_hudY << ",\n";
-  ofs << "  \"crossThickness\": " << g_crossThickness << ",\n";
-  ofs << "  \"crossColor\": " << g_crossColor << ",\n";
-  ofs << "  \"crossOffsetX\": " << g_crossOffsetX << ",\n";
-  ofs << "  \"crossOffsetY\": " << g_crossOffsetY << ",\n";
-  ofs << "  \"crossAngle\": " << g_crossAngle << ",\n";
-  ofs << "  \"crossPulse\": " << (g_crossPulse ? 1 : 0) << ",\n";
-  ofs << "  \"setupComplete\": " << (g_setupComplete ? 1 : 0) << ",\n";
-  ofs << "  \"showCrosshair\": " << (g_showCrosshair ? 1 : 0) << ",\n";
-  ofs << "  \"selectedProfileIdx\": " << g_selectedProfileIdx << ",\n";
-  ofs << "  \"lastVersionRun\":\"" << VERSION_STR << "\",\n";
+  std::wostringstream oss;
+  oss.imbue(std::locale("C"));
 
-  std::string lp = "";
-  for (wchar_t c : g_lastLoadedProfileName) lp += (char)c;
-  ofs << "  \"lastProfile\":\"" << lp << "\"\n";
-  ofs << "}\n";
+  oss << L"{\n";
+  oss << L"  \"glideThreshold\": " << g_glideThreshold << L",\n";
+  oss << L"  \"freefallThreshold\": " << g_freefallThreshold << L",\n";
+  oss << L"  \"hudX\": " << g_hudX << L",\n";
+  oss << L"  \"hudY\": " << g_hudY << L",\n";
+  oss << L"  \"crossThickness\": " << g_crossThickness << L",\n";
+  oss << L"  \"crossColor\": " << (float)g_crossColor << L",\n";
+  oss << L"  \"crossOffsetX\": " << g_crossOffsetX << L",\n";
+  oss << L"  \"crossOffsetY\": " << g_crossOffsetY << L",\n";
+  oss << L"  \"crossAngle\": " << g_crossAngle << L",\n";
+  oss << L"  \"crossPulse\": " << (g_crossPulse ? 1 : 0) << L",\n";
+  oss << L"  \"setupComplete\": " << (g_setupComplete ? 1 : 0) << L",\n";
+  oss << L"  \"showCrosshair\": " << (g_showCrosshair ? 1 : 0) << L",\n";
+  oss << L"  \"selectedProfileIdx\": " << g_selectedProfileIdx << L",\n";
+  
+  std::string vs = VERSION_STR;
+  std::wstring wvs(vs.begin(), vs.end());
+  oss << L"  \"lastVersionRun\":\"" << wvs << L"\",\n";
+
+  std::wstring lp = g_lastLoadedProfileName;
+  oss << L"  \"lastProfile\":\"" << lp << L"\"\n";
+  oss << L"}\n";
+  
+  ofs << oss.str();
+  ofs.close();
   
   SetFileAttributesW(sp.c_str(), FILE_ATTRIBUTE_HIDDEN);
 }

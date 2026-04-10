@@ -196,25 +196,21 @@ LRESULT CALLBACK FirstTimeSetupProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
             return 0;
         }
         if (wParam == VK_RETURN) {
-            // Only finish setup if we are in a valid finishing state
             bool canFinish = false;
             if (g_extractedConfig && !g_isEditingManual) {
-                // In confirmation stage, Enter = YES
                 canFinish = true;
             } else {
-                // In manual stage, only finish if we have some data
                 if (!g_setupSensX.empty() && !g_setupSensY.empty()) {
                     canFinish = true;
                 }
             }
-            
             if (canFinish) {
                 FinishSetup(); 
                 DestroyWindow(hWnd);
                 return 0;
             }
         }
-        return 0;
+        break;
 
 
     case WM_CHAR: {
@@ -279,14 +275,31 @@ void ShowFirstTimeSetup(HINSTANCE hInstance) {
     g_setupState = 2; g_setupSensX = L""; g_setupSensY = L"";
     g_focusedInput = 1; g_extractedConfig = false;
 
-    // Fast GameUserSettings.ini extraction (Robust v4.20.34)
+    // Fast GameUserSettings.ini extraction (Expanded Robust Search)
     wchar_t appdata[MAX_PATH];
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) {
-        std::wstring folders[] = { L"\\WindowsClient\\", L"\\WindowsNoEditor\\" };
         std::wstring basePath = std::wstring(appdata) + L"\\FortniteGame\\Saved\\Config";
         
-        for (const auto& f : folders) {
-            std::wstring pPath = basePath + f + L"GameUserSettings.ini";
+        std::vector<std::wstring> potentialPaths;
+        potentialPaths.push_back(basePath + L"\\WindowsClient\\GameUserSettings.ini");
+        potentialPaths.push_back(basePath + L"\\WindowsNoEditor\\GameUserSettings.ini");
+        potentialPaths.push_back(basePath + L"\\WindowClient\\GameUserSettings.ini");
+
+        // Dynamic search
+        WIN32_FIND_DATAW fd;
+        HANDLE hF = FindFirstFileW((basePath + L"\\*").c_str(), &fd);
+        if (hF != INVALID_HANDLE_VALUE) {
+            do {
+                if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+                    if (wcscmp(fd.cFileName, L".") != 0 && wcscmp(fd.cFileName, L"..") != 0) {
+                        potentialPaths.push_back(basePath + L"\\" + fd.cFileName + L"\\GameUserSettings.ini");
+                    }
+                }
+            } while (FindNextFileW(hF, &fd));
+            FindClose(hF);
+        }
+        
+        for (const auto& pPath : potentialPaths) {
             std::ifstream ifs(pPath.c_str());
             if (ifs.good()) {
                 std::string line;
@@ -308,11 +321,14 @@ void ShowFirstTimeSetup(HINSTANCE hInstance) {
                 if (!g_setupSensX.empty() || !g_setupSensY.empty()) {
                     g_extractedConfig = true;
                     break;
-                } else {
-                    g_setupSensX = L"0.05";
-                    g_setupSensY = L"0.05";
                 }
             }
+        }
+        
+        // Final fallback if nothing found
+        if (!g_extractedConfig && (g_setupSensX.empty() || g_setupSensY.empty())) {
+            g_setupSensX = L"0.05";
+            g_setupSensY = L"0.05";
         }
     }
 

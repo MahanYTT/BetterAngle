@@ -320,13 +320,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     LoadSettings();
     CleanupUpdateJunk();
 
-    // Fresh Start: If version mismatch, force raw setup again (Robust Update v4.20.57)
-    if (g_lastVersionRun != VERSION_STR) {
-        g_setupComplete = false;
-        // Save immediately so even if they crash during setup, it's marked
-        SaveSettings();
-    }
-
     bool ranSetup = false;
     if (!g_setupComplete) {
         ShowFirstTimeSetup(hInstance);

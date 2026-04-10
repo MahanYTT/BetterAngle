@@ -5,11 +5,13 @@
 #include <string>
 #include <algorithm>
 #include <shlobj.h>
+#include <vector>
 
 double FetchFortniteSensitivity() {
     // Build path via ExpandEnvironmentStrings (%LOCALAPPDATA%)
     wchar_t expPath[MAX_PATH] = {};
     std::wstring basePath;
+    std::vector<std::wstring> potentialPaths;
 
     if (ExpandEnvironmentStringsW(L"%LOCALAPPDATA%\\FortniteGame\\Saved\\Config", expPath, MAX_PATH) && expPath[0] != L'%') {
         basePath = expPath;

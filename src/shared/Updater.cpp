@@ -10,14 +10,15 @@
 #pragma comment(lib, "wininet.lib")
 
 // Placeholders for actual URLs — user should replace these in GitHub Actions or similar if needed
-const wchar_t* VERSION_URL = L"https://raw.githubusercontent.com/MahanYTT/BetterAngle/main/version.txt";
+// GitHub API for latest release info
+const wchar_t* VERSION_URL = L"https://api.github.com/repos/MahanYTT/BetterAngle/releases/latest";
 const wchar_t* DOWNLOAD_URL = L"https://github.com/MahanYTT/BetterAngle/releases/latest/download/BetterAngle.exe";
 
 bool DownloadFile(const std::wstring& url, const std::wstring& dest) {
     HINTERNET hInternet = InternetOpenW(L"BetterAngleUpdater", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
     if (!hInternet) return false;
 
-    HINTERNET hUrl = InternetOpenUrlW(hInternet, url.c_str(), NULL, 0, INTERNET_FLAG_RELOAD, 0);
+    HINTERNET hUrl = InternetOpenUrlW(hInternet, url.c_str(), L"User-Agent: BetterAngleUpdater\r\n", -1L, INTERNET_FLAG_RELOAD | INTERNET_FLAG_SECURE, 0);
     if (!hUrl) {
         InternetCloseHandle(hInternet);
         return false;
@@ -45,23 +46,35 @@ bool DownloadFile(const std::wstring& url, const std::wstring& dest) {
 bool CheckForUpdates() {
     g_isCheckingForUpdates = true;
     
-    std::wstring tempVer = GetAppRootPath() + L"latest_version.txt";
-    if (DownloadFile(VERSION_URL, tempVer)) {
-        std::ifstream ifs(tempVer);
-        std::string latestVerStr;
-        if (std::getline(ifs, latestVerStr)) {
-            // Very simple version comparison (v1.2.3 vs v1.2.4)
-            // Trim whitespace
-            latestVerStr.erase(0, latestVerStr.find_first_not_of(" \t\r\n"));
-            latestVerStr.erase(latestVerStr.find_last_not_of(" \t\r\n") + 1);
+    std::wstring tempRes = GetAppRootPath() + L"latest_release.json";
+    if (DownloadFile(VERSION_URL, tempRes)) {
+        std::ifstream ifs(tempRes);
+        std::string json((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+        
+        // Simple JSON parsing for "tag_name": "vX.Y.Z"
+        size_t tagPos = json.find("\"tag_name\":");
+        if (tagPos != std::string::npos) {
+            size_t start = json.find("\"", tagPos + 11);
+            if (start != std::string::npos) {
+                size_t end = json.find("\"", start + 1);
+                if (end != std::string::npos) {
+                    std::string latestVerStr = json.substr(start + 1, end - start - 1);
+                    
+                    // Normalize (strip 'v' prefix if present)
+                    std::string normLatest = latestVerStr;
+                    if (!normLatest.empty() && (normLatest[0] == 'v' || normLatest[0] == 'V')) {
+                        normLatest = normLatest.substr(1);
+                    }
 
-            g_latestVersionOnline = latestVerStr;
-            
-            if (!latestVerStr.empty() && latestVerStr != VERSION_STR) {
-                g_updateAvailable = true;
-                g_updateHistory = std::string(VERSION_STR) + " -> " + latestVerStr;
-            } else {
-                g_updateAvailable = false;
+                    g_latestVersionOnline = latestVerStr;
+                    
+                    if (!normLatest.empty() && normLatest != VERSION_STR) {
+                        g_updateAvailable = true;
+                        g_updateHistory = std::string(VERSION_STR) + " -> " + latestVerStr;
+                    } else {
+                        g_updateAvailable = false;
+                    }
+                }
             }
         }
     }
