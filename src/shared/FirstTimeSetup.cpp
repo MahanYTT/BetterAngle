@@ -36,32 +36,28 @@ void FinishSetup() {
     p.resolutionHeight = GetSystemMetrics(SM_CYSCREEN);
     p.renderScale = 100.0f;
 
-    // Parse numeric values safely — fallback to 0.05 if empty/invalid
+    // Parse numeric values safely
     double sensX = 0.05, sensY = 0.05;
-    try { if (!g_setupSensX.empty()) sensX = std::stod(g_setupSensX); } catch(...) {}
-    try { if (!g_setupSensY.empty()) sensY = std::stod(g_setupSensY); } catch(...) {}
+    try { if (!g_setupSensX.empty()) sensX  = std::stod(g_setupSensX); } catch(...) {}
+    try { if (!g_setupSensY.empty()) sensY  = std::stod(g_setupSensY); } catch(...) {}
     
     p.sensitivityX = (std::max)(0.0001, sensX);
     p.sensitivityY = (std::max)(0.0001, sensY);
 
-    // Ensure storage directory exists
-    std::wstring dir = GetAppStoragePath();
-    CreateDirectoryW(dir.c_str(), NULL);
-
     if (g_allProfiles.empty()) {
-        p.Save(dir + L"Default.json");
+        p.Save(GetAppStoragePath() + L"Default.json");
         g_allProfiles.push_back(p);
         g_selectedProfileIdx = 0;
     } else {
-        if (g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
+        // Update existing selected profile safely
+        if (g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) {
             g_selectedProfileIdx = 0;
+        }
         Profile& e = g_allProfiles[g_selectedProfileIdx];
         e.sensitivityX = p.sensitivityX;
         e.sensitivityY = p.sensitivityY;
-        e.Save(dir + e.name + L".json");
+        e.Save(GetAppStoragePath() + e.name + L".json");
     }
-
-    // Mark complete and save BEFORE we destroy the window
     g_setupComplete = true; 
     SaveSettings();
 }
@@ -262,43 +258,39 @@ void ShowFirstTimeSetup(HINSTANCE hInstance) {
     g_setupState = 2; g_setupSensX = L""; g_setupSensY = L"";
     g_focusedInput = 1; g_extractedConfig = false;
 
-    // Fast GameUserSettings.ini extraction — binary mode to handle UTF-16LE
-    wchar_t expPath[MAX_PATH];
-    if (ExpandEnvironmentStringsW(
-            L"%LOCALAPPDATA%\\FortniteGame\\Saved\\Config\\WindowsClient\\GameUserSettings.ini",
-            expPath, MAX_PATH)) {
-        std::ifstream ifs(std::wstring(expPath), std::ios::binary);
-        if (ifs.is_open()) {
-            ifs.seekg(0, std::ios::end);
-            std::streamsize sz = ifs.tellg();
-            ifs.seekg(0, std::ios::beg);
-            std::string buf; buf.resize(sz);
-            if (ifs.read(&buf[0], sz)) {
-                // Strip null bytes (handles UTF-16 LE files)
-                buf.erase(std::remove(buf.begin(), buf.end(), '\0'), buf.end());
-                const char* keysX[] = { "MouseSensitivityX=", "MouseSensitivity=" };
-                const char* keysY[] = { "MouseSensitivityY=" };
-                auto extract = [&](const char** keys, int n, std::wstring& out) {
-                    for (int i = 0; i < n; i++) {
-                        size_t pos = buf.find(keys[i]);
-                        if (pos != std::string::npos) {
-                            size_t vs = pos + strlen(keys[i]);
-                            size_t ve = buf.find_first_of("\r\n", vs);
-                            if (ve == std::string::npos) ve = buf.size();
-                            std::string v = buf.substr(vs, ve - vs);
-                            // Trim whitespace
-                            while (!v.empty() && (v.back()==' '||v.back()=='\r'||v.back()=='\n')) v.pop_back();
-                            if (!v.empty()) { out = std::wstring(v.begin(), v.end()); return; }
+    // Fast GameUserSettings.ini extraction (Robust v4.20.34)
+    wchar_t appdata[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) {
+        std::wstring folders[] = { L"\\WindowsClient\\", L"\\WindowsNoEditor\\" };
+        std::wstring basePath = std::wstring(appdata) + L"\\FortniteGame\\Saved\\Config";
+        
+        for (const auto& f : folders) {
+            std::wstring pPath = basePath + f + L"GameUserSettings.ini";
+            std::ifstream ifs(pPath.c_str());
+            if (ifs.good()) {
+                std::string line;
+                while (std::getline(ifs, line)) {
+                    if (line.find("MouseSensitivityX=") != std::string::npos || line.find("MouseX=") != std::string::npos) {
+                        size_t eq = line.find("=");
+                        if (eq != std::string::npos) {
+                            std::string val = line.substr(eq + 1);
+                            if (g_setupSensX.empty()) g_setupSensX = std::wstring(val.begin(), val.end());
+                        }
+                    } else if (line.find("MouseSensitivityY=") != std::string::npos || line.find("MouseY=") != std::string::npos) {
+                        size_t eq = line.find("=");
+                        if (eq != std::string::npos) {
+                            std::string val = line.substr(eq + 1);
+                            if (g_setupSensY.empty()) g_setupSensY = std::wstring(val.begin(), val.end());
                         }
                     }
-                };
-                extract(keysX, 2, g_setupSensX);
-                extract(keysY, 1, g_setupSensY);
-                // If sensY not found separately, mirror sensX
-                if (!g_setupSensX.empty() && g_setupSensY.empty())
-                    g_setupSensY = g_setupSensX;
-                if (!g_setupSensX.empty())
+                }
+                if (!g_setupSensX.empty() || !g_setupSensY.empty()) {
                     g_extractedConfig = true;
+                    break;
+                } else {
+                    g_setupSensX = L"0.05";
+                    g_setupSensY = L"0.05";
+                }
             }
         }
     }
