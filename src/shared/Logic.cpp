@@ -7,44 +7,58 @@
 #include <shlobj.h>
 
 double FetchFortniteSensitivity() {
-    wchar_t expPath[MAX_PATH];
-    if (!ExpandEnvironmentStringsW(L"%LOCALAPPDATA%\\FortniteGame\\Saved\\Config\\WindowsClient\\GameUserSettings.ini", expPath, MAX_PATH))
-        return -1.0;
+    // Build path via ExpandEnvironmentStrings (%LOCALAPPDATA%)
+    wchar_t expPath[MAX_PATH] = {};
+    std::wstring pPath;
 
-    std::wstring pPath = expPath;
+    if (ExpandEnvironmentStringsW(
+            L"%LOCALAPPDATA%\\FortniteGame\\Saved\\Config\\WindowsClient\\GameUserSettings.ini",
+            expPath, MAX_PATH) && expPath[0] != L'%') {
+        pPath = expPath;
+    } else {
+        // Fallback: SHGetFolderPath
+        wchar_t appdata[MAX_PATH] = {};
+        if (!SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata)))
+            return -1.0;
+        pPath = std::wstring(appdata) +
+                L"\\FortniteGame\\Saved\\Config\\WindowsClient\\GameUserSettings.ini";
+    }
 
     std::ifstream ifs(pPath, std::ios::binary);
-    if (!ifs.is_open() || !ifs.good())
-        return -1.0; 
+    if (!ifs.is_open()) return -1.0;
 
     ifs.seekg(0, std::ios::end);
     std::streamsize size = ifs.tellg();
     ifs.seekg(0, std::ios::beg);
+    if (size <= 0 || size > 10 * 1024 * 1024) return -1.0; // sanity: max 10 MB
 
-    std::string buffer;
-    buffer.resize(size);
-    if (ifs.read(&buffer[0], size)) {
-        // Remove null bytes seamlessly, converting UTF-16LE to standard string for basic ASCII keys
-        buffer.erase(std::remove(buffer.begin(), buffer.end(), '\0'), buffer.end());
+    std::string buffer(static_cast<size_t>(size), '\0');
+    if (!ifs.read(&buffer[0], size)) return -1.0;
 
-        // Fortnite often uses MouseSensitivityX, but search for MouseSensitivity as fallback
-        const char* keys[] = { "MouseSensitivityX=", "MouseSensitivity=" };
-        for (const char* key : keys) {
-            size_t pos = buffer.find(key);
-            if (pos != std::string::npos) {
-                size_t valStart = pos + std::string(key).length();
-                size_t valEnd = buffer.find_first_of("\r\n", valStart);
-                if (valEnd == std::string::npos) valEnd = buffer.length();
+    // Strip null bytes — handles UTF-16 LE INI files
+    buffer.erase(std::remove(buffer.begin(), buffer.end(), '\0'), buffer.end());
 
-                std::string valStr = buffer.substr(valStart, valEnd - valStart);
-                try {
-                    double val = std::stod(valStr);
-                    return (std::max)(val, 0.0001);
-                } catch (...) { }
-            }
+    // Search for sensitivity keys in priority order
+    const char* keys[] = { "MouseSensitivityX=", "MouseSensitivity=" };
+    for (const char* key : keys) {
+        size_t pos = buffer.find(key);
+        if (pos != std::string::npos) {
+            size_t valStart = pos + strlen(key);
+            size_t valEnd   = buffer.find_first_of("\r\n", valStart);
+            if (valEnd == std::string::npos) valEnd = buffer.size();
+
+            std::string valStr = buffer.substr(valStart, valEnd - valStart);
+            // Trim trailing spaces/CR/LF
+            while (!valStr.empty() && (valStr.back() == ' ' || valStr.back() == '\r' || valStr.back() == '\n'))
+                valStr.pop_back();
+
+            try {
+                double val = std::stod(valStr);
+                if (val > 0.0) return val;
+            } catch (...) {}
         }
     }
-    return -1.0; 
+    return -1.0;
 }
 
 bool IsFortniteFocused() {

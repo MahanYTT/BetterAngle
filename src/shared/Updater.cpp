@@ -166,10 +166,21 @@ static bool WinHttpGetString(const std::wstring& url, std::string& out) {
                                         WINHTTP_DEFAULT_ACCEPT_TYPES, flags);
     if (!hReq) { WinHttpCloseHandle(hConn); WinHttpCloseHandle(hSess); return false; }
 
-    // GitHub API requires User-Agent — already set via WinHttpOpen above.
-    bool ok = WinHttpSendRequest(hReq, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
+    // GitHub API REQUIRES both User-Agent (set in WinHttpOpen) AND Accept header.
+    // Without Accept: application/vnd.github+json GitHub returns 406 or old format.
+    const wchar_t* hdrs = L"Accept: application/vnd.github+json\r\nX-GitHub-Api-Version: 2022-11-28";
+    bool ok = WinHttpSendRequest(hReq, hdrs, (DWORD)-1L,
                                  WINHTTP_NO_REQUEST_DATA, 0, 0, 0) &&
               WinHttpReceiveResponse(hReq, NULL);
+
+    // Verify HTTP 200
+    if (ok) {
+        DWORD status = 0, sz2 = sizeof(DWORD);
+        WinHttpQueryHeaders(hReq,
+            WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+            WINHTTP_HEADER_NAME_BY_INDEX, &status, &sz2, WINHTTP_NO_HEADER_INDEX);
+        ok = (status == 200);
+    }
 
     if (ok) {
         char buf[4096];
@@ -198,9 +209,9 @@ bool CheckForUpdates() {
     g_updateAvailable      = false;
 
     std::string json;
-    // Download ALL releases to find the mathematically highest tag, avoiding accidental body matches
+    // Use releases/latest — returns a single JSON object, fastest and simplest.
     bool got = WinHttpGetString(
-        L"https://api.github.com/repos/MahanYTT/BetterAngle/releases", json);
+        L"https://api.github.com/repos/MahanYTT/BetterAngle/releases/latest", json);
 
     if (!got || json.empty()) {
         g_isCheckingForUpdates = false;
@@ -208,21 +219,21 @@ bool CheckForUpdates() {
         return false;
     }
 
-    std::string highestTag = "";
-    const std::string prefix = "\"tag_name\": \"";
-    size_t pos = 0;
-    
-    while ((pos = json.find(prefix, pos)) != std::string::npos) {
-        size_t start = pos + prefix.size();
-        size_t end   = json.find('"', start);
-        if (end != std::string::npos) {
-            std::string tag = json.substr(start, end - start);
-            if (highestTag.empty() || IsVersionHigher(tag, highestTag)) {
-                highestTag = tag;
-            }
+    // Extract "tag_name": "v4.x.x" from JSON
+    std::string highestTag;
+    const std::string prefix = "\"tag_name\":\"";
+    const std::string prefix2 = "\"tag_name\": \"";
+    auto findTag = [&](const std::string& p) {
+        size_t pos = json.find(p);
+        if (pos != std::string::npos) {
+            size_t start = pos + p.size();
+            size_t end   = json.find('"', start);
+            if (end != std::string::npos)
+                highestTag = json.substr(start, end - start);
         }
-        pos = end;
-    }
+    };
+    findTag(prefix);
+    if (highestTag.empty()) findTag(prefix2);
 
     if (highestTag.empty()) {
         g_isCheckingForUpdates = false;
@@ -230,18 +241,18 @@ bool CheckForUpdates() {
         return false;
     }
 
-    // Sanitize: Strip any non-version characters (v4.20.45-abc -> 4.20.45)
-    std::string cleanTag = "";
+    // Sanitize: strip non-version chars (v4.20.45-rc1 -> 4.20.45)
+    std::string cleanTag;
     for (char c : highestTag) {
         if (isdigit(c) || c == '.') cleanTag += c;
     }
-    if (cleanTag.empty()) cleanTag = highestTag; // Fallback
+    if (cleanTag.empty()) cleanTag = highestTag;
 
     g_latestVersionOnline = cleanTag;
-    g_latestName = L"Latest Version: " + std::wstring(cleanTag.begin(), cleanTag.end());
+    g_latestName = L"Latest: " + std::wstring(cleanTag.begin(), cleanTag.end());
 
     std::string local = APP_VERSION_STR;
-    g_updateAvailable = IsVersionHigher(highestTag, local);
+    g_updateAvailable      = IsVersionHigher(highestTag, local);
     g_isCheckingForUpdates = false;
     g_hasCheckedForUpdates = true;
     return g_updateAvailable;
