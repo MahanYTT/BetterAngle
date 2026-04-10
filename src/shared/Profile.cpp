@@ -67,6 +67,25 @@ bool Profile::Load(const std::wstring &path) {
   target_color = (COLORREF)extractDouble("target_color");
   tolerance = (int)extractDouble("tolerance");
 
+  // Load Keybinds
+  keybinds.toggleMod = (UINT)extractDouble("kb_toggleMod");
+  keybinds.toggleKey = (UINT)extractDouble("kb_toggleKey");
+  keybinds.roiMod    = (UINT)extractDouble("kb_roiMod");
+  keybinds.roiKey    = (UINT)extractDouble("kb_roiKey");
+  keybinds.crossMod  = (UINT)extractDouble("kb_crossMod");
+  keybinds.crossKey  = (UINT)extractDouble("kb_crossKey");
+  keybinds.zeroMod   = (UINT)extractDouble("kb_zeroMod");
+  keybinds.zeroKey   = (UINT)extractDouble("kb_zeroKey");
+  keybinds.debugMod  = (UINT)extractDouble("kb_debugMod");
+  keybinds.debugKey  = (UINT)extractDouble("kb_debugKey");
+
+  // Fallback defaults for new files or legacy ones
+  if (keybinds.toggleKey == 0) { keybinds.toggleMod = MOD_CONTROL; keybinds.toggleKey = 'U'; }
+  if (keybinds.roiKey == 0)    { keybinds.roiMod    = MOD_CONTROL; keybinds.roiKey    = 'R'; }
+  if (keybinds.crossKey == 0)  { keybinds.crossMod  = 0;           keybinds.crossKey  = VK_F10; }
+  if (keybinds.zeroKey == 0)   { keybinds.zeroMod   = MOD_CONTROL; keybinds.zeroKey   = 'G'; }
+  if (keybinds.debugKey == 0)  { keybinds.debugMod  = MOD_CONTROL; keybinds.debugKey  = '9'; }
+
   // Load Crosshair (with defaults for legacy files)
   crossThickness = (float)extractDouble("crossThickness");
   if (crossThickness <= 0) crossThickness = 2.0f;
@@ -146,6 +165,16 @@ bool Profile::Save(const std::wstring &path) {
   oss << "  \"roi_h\": " << roi_h << ",\n";
   oss << "  \"target_color\": " << target_color << ",\n";
   oss << "  \"tolerance\": " << tolerance << ",\n";
+  oss << "  \"kb_toggleMod\": " << keybinds.toggleMod << ",\n";
+  oss << "  \"kb_toggleKey\": " << keybinds.toggleKey << ",\n";
+  oss << "  \"kb_roiMod\": " << keybinds.roiMod << ",\n";
+  oss << "  \"kb_roiKey\": " << keybinds.roiKey << ",\n";
+  oss << "  \"kb_crossMod\": " << keybinds.crossMod << ",\n";
+  oss << "  \"kb_crossKey\": " << keybinds.crossKey << ",\n";
+  oss << "  \"kb_zeroMod\": " << keybinds.zeroMod << ",\n";
+  oss << "  \"kb_zeroKey\": " << keybinds.zeroKey << ",\n";
+  oss << "  \"kb_debugMod\": " << keybinds.debugMod << ",\n";
+  oss << "  \"kb_debugKey\": " << keybinds.debugKey << ",\n";
   oss << "  \"crossThickness\": " << crossThickness << ",\n";
   oss << "  \"crossColor\": " << crossColor << ",\n";
   oss << "  \"crossOffsetX\": " << crossOffsetX << ",\n";

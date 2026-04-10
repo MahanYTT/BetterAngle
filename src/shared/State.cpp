@@ -31,15 +31,25 @@ float g_freefallThreshold = 0.20f;
 #pragma comment(lib, "shell32.lib")
 
 std::wstring GetAppStoragePath() {
-    wchar_t out[MAX_PATH];
-    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_APPDATA, NULL, 0, out))) {
-        std::wstring path = std::wstring(out) + L"\\BetterAngle";
-        CreateDirectoryW(path.c_str(), NULL);
-        path += L"\\profiles";
-        CreateDirectoryW(path.c_str(), NULL);
-        return path + L"\\";
+    wchar_t exePath[MAX_PATH];
+    GetModuleFileNameW(NULL, exePath, MAX_PATH);
+    std::wstring path = exePath;
+    size_t lastBackslash = path.find_last_of(L"\\/");
+    if (lastBackslash != std::wstring::npos) {
+        path = path.substr(0, lastBackslash) + L"\\.BetterAngle";
+    } else {
+        path = L".\\.BetterAngle";
     }
-    return L"profiles\\"; // Fallback to local
+    
+    // Create directoy and ensure it is HIDDEN on Windows
+    CreateDirectoryW(path.c_str(), NULL);
+    SetFileAttributesW(path.c_str(), FILE_ATTRIBUTE_HIDDEN);
+    
+    std::wstring pPath = path + L"\\profiles";
+    CreateDirectoryW(pPath.c_str(), NULL);
+    SetFileAttributesW(pPath.c_str(), FILE_ATTRIBUTE_HIDDEN);
+    
+    return path + L"\\profiles\\";
 }
 
 void LoadSettings() {

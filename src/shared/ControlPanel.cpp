@@ -134,11 +134,11 @@ void RenderImGuiFrame() {
                 }
             };
             
-            BindRow("Toggle Dashboard", 1, g_keybinds.toggleMod, g_keybinds.toggleKey);
-            BindRow("Visual ROI Selector", 2, g_keybinds.roiMod, g_keybinds.roiKey);
-            BindRow("Precision Crosshair", 3, g_keybinds.crossMod, g_keybinds.crossKey);
-            BindRow("Zero Angle Reset", 4, g_keybinds.zeroMod, g_keybinds.zeroKey);
-            BindRow("Secret Debug Tab", 5, g_keybinds.debugMod, g_keybinds.debugKey);
+            BindRow("Toggle Dashboard", 1, p.keybinds.toggleMod, p.keybinds.toggleKey);
+            BindRow("Visual ROI Selector", 2, p.keybinds.roiMod, p.keybinds.roiKey);
+            BindRow("Precision Crosshair", 3, p.keybinds.crossMod, p.keybinds.crossKey);
+            BindRow("Zero Angle Reset", 4, p.keybinds.zeroMod, p.keybinds.zeroKey);
+            BindRow("Secret Debug Tab", 5, p.keybinds.debugMod, p.keybinds.debugKey);
 
             ImGui::Spacing();
             ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "MANUAL SENSITIVITY");
@@ -180,35 +180,7 @@ void RenderImGuiFrame() {
                     ImGui::TextColored(syncColor, "%s", syncResult.c_str());
                 }
                 
-                ImGui::Spacing();
-                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "360° CALIBRATION ASSISTANT");
-                ImGui::TextWrapped("If the angle is drifting, use this to fix it perfectly.");
-                
-                if (!g_calibrating) {
-                    if (ImGui::Button("START 360° CALIBRATION", ImVec2(-1, 40))) {
-                        g_calibrating = true;
-                        g_calStartDx = g_logic.GetAccumDx();
-                    }
-                } else {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0.8f, 0, 1));
-                    ImGui::Text("CALIBRATION IN PROGRESS...");
-                    ImGui::PopStyleColor();
-                    ImGui::Text("1. Focus Fortnite.\n2. Turn exactly 360 degrees.\n3. Click FINISH below.");
-                    
-                    if (ImGui::Button("FINISH CALIBRATION", ImVec2(-1, 40))) {
-                        long long endDx = g_logic.GetAccumDx();
-                        long long delta = std::abs(endDx - g_calStartDx);
-                        if (delta > 100) {
-                            // Scale = 360 / DeltaPixels
-                            // sensX = Scale / 0.05555
-                            double actualScale = 360.0 / (double)delta;
-                            p.sensitivityX = actualScale / 0.05555;
-                            p.Save(GetAppStoragePath() + p.name + L".json");
-                        }
-                        g_calibrating = false;
-                    }
-                    if (ImGui::Button("Cancel", ImVec2(100, 0))) g_calibrating = false;
-                }
+            // v4.20.37: 360 Calibration Assistant Removed (Per User Request)
             } else {
                 ImGui::TextDisabled("No profiles available to adjust sensitivity.");
             }
@@ -304,15 +276,24 @@ void RenderImGuiFrame() {
             
             ImGui::Spacing();
 
-            // Precision Control Helper
+            // Precision Control Helper (v4.20.37: With Immediate HUD Refresh)
             auto PrecisionSlider = [](const char* label, float* val, float minV, float maxV, float step) {
                 ImGui::Text("%s", label);
-                if (ImGui::Button(("-##" + std::string(label)).c_str(), ImVec2(25, 25))) { *val -= step; SaveSettings(); }
+                if (ImGui::Button(("-##" + std::string(label)).c_str(), ImVec2(25, 25))) { 
+                    *val -= step; SaveSettings(); 
+                    if (g_hHUD) { InvalidateRect(g_hHUD, NULL, FALSE); UpdateWindow(g_hHUD); }
+                }
                 ImGui::SameLine();
                 ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 35);
-                if (ImGui::SliderFloat(("##" + std::string(label)).c_str(), val, minV, maxV, "%.2f")) SaveSettings();
+                if (ImGui::SliderFloat(("##" + std::string(label)).c_str(), val, minV, maxV, "%.2f")) {
+                    SaveSettings();
+                    if (g_hHUD) { InvalidateRect(g_hHUD, NULL, FALSE); UpdateWindow(g_hHUD); }
+                }
                 ImGui::SameLine();
-                if (ImGui::Button(("+##" + std::string(label)).c_str(), ImVec2(25, 25))) { *val += step; SaveSettings(); }
+                if (ImGui::Button(("+##" + std::string(label)).c_str(), ImVec2(25, 25))) { 
+                    *val += step; SaveSettings(); 
+                    if (g_hHUD) { InvalidateRect(g_hHUD, NULL, FALSE); UpdateWindow(g_hHUD); }
+                }
             };
 
             PrecisionSlider("Thickness", &g_crossThickness, 1.0f, 10.0f, 0.5f);

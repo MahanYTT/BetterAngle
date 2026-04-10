@@ -5,13 +5,18 @@
 #include <vector>
 #include <windows.h>
 
-struct CrosshairPreset {
-  std::wstring name;
-  float offsetX;
-  float offsetY;
-  float angle;
+struct Keybinds {
+  UINT toggleMod = MOD_CONTROL;
+  UINT toggleKey = 'U';
+  UINT roiMod = MOD_CONTROL;
+  UINT roiKey = 'R';
+  UINT crossMod = 0;
+  UINT crossKey = VK_F10;
+  UINT zeroMod = MOD_CONTROL;
+  UINT zeroKey = 'G';
+  UINT debugMod = MOD_CONTROL;
+  UINT debugKey = '9';
 };
-
 
 struct Profile {
   std::wstring name;
@@ -37,6 +42,7 @@ struct Profile {
   float crossAngle;
   bool crossPulse;
 
+  Keybinds keybinds;
   std::vector<CrosshairPreset> crosshairPresets;
 
   bool Load(const std::wstring &path);
