@@ -629,7 +629,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
         if (pDark)   pDark->Release();
         if (pWhite)  pWhite->Release();
 
-        hr = g_pRenderTarget->EndDraw();
+        HRESULT hr = g_pRenderTarget->EndDraw();
         if (hr == D2DERR_RECREATE_TARGET) {
             g_pRenderTarget->Release();
             g_pRenderTarget = NULL;
