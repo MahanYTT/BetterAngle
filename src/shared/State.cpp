@@ -61,10 +61,8 @@ void SaveSettings() {
     ofs << "  \"debugKey\": " << g_keybinds.debugKey << ",\n";
     
     std::string lp = "Fallback_Default";
-    // We assume BetterAngle.cpp exposes the list but wait, State.cpp doesn't have g_allProfiles
-    // Wait, g_lastLoadedProfileName is synced whenever the user clicks a profile. 
-    // We just write g_lastLoadedProfileName directly.
-    lp = std::string(g_lastLoadedProfileName.begin(), g_lastLoadedProfileName.end());
+    lp = "";
+    for (wchar_t c : g_lastLoadedProfileName) lp += (char)c;
     ofs << "  \"lastProfile\":\"" << lp << "\"\n";
     ofs << "}\n";
 }

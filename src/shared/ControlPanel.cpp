@@ -11,6 +11,7 @@
 
 extern std::vector<Profile> g_allProfiles;
 extern int g_selectedProfileIdx;
+extern Profile g_currentProfile;
 
 #include <commdlg.h>
 #pragma comment(lib, "comdlg32.lib")
