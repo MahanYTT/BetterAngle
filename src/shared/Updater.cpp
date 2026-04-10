@@ -75,28 +75,21 @@ bool CheckForUpdates() {
     std::string newVersionTag = jsonResponse.substr(startPos, endPos - startPos);
 
     if (!newVersionTag.empty()) {
-        g_latestVersionOnline = newVersionTag; // Usually looks like "v4.9.36"
+        g_latestVersionOnline = newVersionTag; 
 
-        // Strip the 'v' for float conversion (e.g., v4.9.36 -> 4.936)
-        std::string rawVersion = newVersionTag;
-        if (rawVersion[0] == 'v' || rawVersion[0] == 'V') {
-            rawVersion = rawVersion.substr(1);
-        }
-
-        try {
-            // Keep your existing float fallback logic for internal comparisons
-            g_latestVersion = std::stof(rawVersion);
-        } catch (...) {
-            g_latestVersion = 4.920f;
+        // Strip the 'v' for standard comparison if present
+        std::string remoteClean = newVersionTag;
+        if (!remoteClean.empty() && (remoteClean[0] == 'v' || remoteClean[0] == 'V')) {
+            remoteClean = remoteClean.substr(1);
         }
 
         g_latestName = L"GitHub Release (" + std::wstring(newVersionTag.begin(), newVersionTag.end()) + L")";
 
-        // Compare with local version. Ensure local APP_VERSION_STR matches tag formatting.
-        std::string localVersion = std::string(APP_VERSION_STR);
-        std::string localVersionWithV = "v" + localVersion;
+        // Get local version safely
+        std::string localClean = std::string(APP_VERSION_STR);
 
-        if (newVersionTag != localVersion && newVersionTag != localVersionWithV) {
+        // Check for meaningful update
+        if (remoteClean != localClean) {
             g_updateAvailable = true;
         } else {
             g_updateAvailable = false;

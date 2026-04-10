@@ -276,6 +276,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 
         // ── TAB 1 — UPDATES ───────────────────────────────────────────────
         else if (g_currentTab == 1) {
+            // Check / Install button
             if (fx >= L.margin && fx <= L.W - L.margin && fy >= 0.45f * L.H && fy <= 0.56f * L.H) {
                 if (g_updateAvailable) {
                     g_updateAvailable = false;
@@ -286,6 +287,24 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 } else {
                     g_isCheckingForUpdates = true;
                     std::thread(CheckForUpdates).detach();
+                }
+            }
+        }
+
+        // ── TAB 2 — COLORS ────────────────────────────────────────────────
+        else if (g_currentTab == 2) {
+            // Target Color swatch area
+            if (fx >= L.margin && fx <= L.W - L.margin && fy >= cY + 0.15f * L.H && fy <= cY + 0.32f * L.H) {
+                CHOOSECOLOR cc = {};
+                static COLORREF acrCustClr[16] = {};
+                cc.lStructSize = sizeof(cc);
+                cc.hwndOwner = hWnd;
+                cc.lpCustColors = (LPDWORD)acrCustClr;
+                cc.rgbResult = g_targetColor;
+                cc.Flags = CC_FULLOPEN | CC_RGBINIT;
+                if (ChooseColor(&cc)) {
+                    g_targetColor = cc.rgbResult;
+                    SaveSettings();
                 }
             }
         }
@@ -337,14 +356,12 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             }
 
             // ─ / + buttons for each setting row ─────────────────────────
-            // Rows: Thickness 0.14, OffsetX 0.22, OffsetY 0.30, Rotation 0.38
             float rows[4] = {
                 cY + 0.14f * L.H,
                 cY + 0.22f * L.H,
                 cY + 0.30f * L.H,
                 cY + 0.38f * L.H
             };
-            // Button rects (percentage-based, matches drawSetting below)
             float btnW  = L.contentW * 0.12f;
             float minX  = L.margin + L.contentW * 0.40f;
             float plusX = L.margin + L.contentW * 0.56f;
@@ -371,23 +388,20 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 }
             }
 
-            // --- Action Buttons: RESET, SAVE POS, SAVE ALL ---
+            // Action Buttons: RESET, SAVE POS, SAVE ALL
             float btnRowY = cY + 0.44f * L.H;
             float abW = (L.contentW - 30) / 3;
             if (fy >= btnRowY && fy <= btnRowY + rowH) {
                 if (fx >= L.margin && fx <= L.margin + abW) {
-                    // RESET
                     g_crossThickness = 2.0f; g_crossOffsetX = 0.0f; g_crossOffsetY = 0.0f;
                     g_crossAngle = 0.0f; g_crossPulse = false; g_crossColor = RGB(255,0,0);
                 } else if (fx >= L.margin + abW + 15 && fx <= L.margin + 2 * abW + 15) {
-                    // SAVE POSITION
                     if (!g_allProfiles.empty()) {
                         Profile& p = g_allProfiles[g_selectedProfileIdx];
                         p.crossOffsetX = g_crossOffsetX; p.crossOffsetY = g_crossOffsetY;
                         p.Save(GetAppStoragePath() + p.name + L".json");
                     }
                 } else if (fx >= L.margin + 2 * abW + 30 && fx <= L.margin + 3 * abW + 30) {
-                    // SAVE ALL
                     if (!g_allProfiles.empty()) {
                         Profile& p = g_allProfiles[g_selectedProfileIdx];
                         p.crossThickness = g_crossThickness; p.crossColor = g_crossColor;
