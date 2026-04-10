@@ -264,6 +264,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
         
         DrawRow(L"FPS", FmtFloat(s_fps, 0), s_fps >= 60.0f ? &colGood : &colWarn);
         DrawRow(L"Angle (raw)", FmtFloat(angle, 2) + L"°", &colVal);
+        int matchPct = (int)(g_detectionRatio * 100.0f);
         DrawRow(L"Detection Ratio", FmtFloat(detectionRatio * 100.0, 0) + L"% / match " + std::to_wstring(matchPct) + L"%", matchPct > 5 ? &colGood : &colVal);
         DrawRow(L"Diving", g_isDiving ? L"YES" : L"NO", g_isDiving ? &colGood : &colVal);
         DrawRow(L"Fortnite Focused", fortFocused ? L"YES" : L"NO", fortFocused ? &colGood : &colBad);
