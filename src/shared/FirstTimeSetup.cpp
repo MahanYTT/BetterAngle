@@ -300,24 +300,40 @@ void ShowFirstTimeSetup(HINSTANCE hInstance) {
         }
         
         for (const auto& pPath : potentialPaths) {
-            std::ifstream ifs(pPath.c_str());
-            if (ifs.good()) {
-                std::string line;
-                while (std::getline(ifs, line)) {
-                    if (line.find("MouseSensitivityX=") != std::string::npos || line.find("MouseX=") != std::string::npos) {
-                        size_t eq = line.find("=");
-                        if (eq != std::string::npos) {
-                            std::string val = line.substr(eq + 1);
-                            if (g_setupSensX.empty()) g_setupSensX = std::wstring(val.begin(), val.end());
-                        }
-                    } else if (line.find("MouseSensitivityY=") != std::string::npos || line.find("MouseY=") != std::string::npos) {
-                        size_t eq = line.find("=");
-                        if (eq != std::string::npos) {
-                            std::string val = line.substr(eq + 1);
-                            if (g_setupSensY.empty()) g_setupSensY = std::wstring(val.begin(), val.end());
+            std::ifstream ifs(pPath.c_str(), std::ios::binary);
+            if (ifs.is_open()) {
+                ifs.seekg(0, std::ios::end);
+                std::streamsize size = ifs.tellg();
+                ifs.seekg(0, std::ios::beg);
+                if (size <= 0 || size > 5 * 1024 * 1024) continue;
+
+                std::string buffer(static_cast<size_t>(size), '\0');
+                if (!ifs.read(&buffer[0], size)) continue;
+
+                // Robust handling for UTF-16 LE
+                buffer.erase(std::remove(buffer.begin(), buffer.end(), '\0'), buffer.end());
+
+                const char* keysX[] = { "MouseSensitivityX=", "MouseX=" };
+                const char* keysY[] = { "MouseSensitivityY=", "MouseY=" };
+
+                auto extractVal = [&](const char** keys, size_t count) -> std::wstring {
+                    for (size_t i = 0; i < count; i++) {
+                        size_t pos = buffer.find(keys[i]);
+                        if (pos != std::string::npos) {
+                            size_t start = pos + strlen(keys[i]);
+                            size_t end = buffer.find_first_of("\r\n", start);
+                            if (end == std::string::npos) end = buffer.size();
+                            std::string valStr = buffer.substr(start, end - start);
+                            while (!valStr.empty() && (valStr.back() == ' ' || valStr.back() == '\t')) valStr.pop_back();
+                            return std::wstring(valStr.begin(), valStr.end());
                         }
                     }
-                }
+                    return L"";
+                };
+
+                if (g_setupSensX.empty()) g_setupSensX = extractVal(keysX, 2);
+                if (g_setupSensY.empty()) g_setupSensY = extractVal(keysY, 2);
+
                 if (!g_setupSensX.empty() || !g_setupSensY.empty()) {
                     g_extractedConfig = true;
                     break;

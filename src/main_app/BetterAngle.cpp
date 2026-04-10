@@ -77,14 +77,20 @@ void DetectorThread() {
 
 // Screen Snapshot for Flicker-Free Selection (v4.9.15)
 void CaptureDesktop() {
-    int sw = GetSystemMetrics(SM_CXSCREEN);
-    int sh = GetSystemMetrics(SM_CYSCREEN);
+    int sw = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    int sh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+    int sx = GetSystemMetrics(SM_XVIRTUALSCREEN);
+    int sy = GetSystemMetrics(SM_YVIRTUALSCREEN);
+
     HDC hdcScreen = GetDC(NULL);
     HDC hdcMem = CreateCompatibleDC(hdcScreen);
     if (g_screenSnapshot) DeleteObject(g_screenSnapshot);
     g_screenSnapshot = CreateCompatibleBitmap(hdcScreen, sw, sh);
     HGDIOBJ hOld = SelectObject(hdcMem, g_screenSnapshot);
-    BitBlt(hdcMem, 0, 0, sw, sh, hdcScreen, 0, 0, SRCCOPY);
+    
+    // Capture the entire virtual desktop
+    BitBlt(hdcMem, 0, 0, sw, sh, hdcScreen, sx, sy, SRCCOPY);
+    
     SelectObject(hdcMem, hOld);
     ReleaseDC(NULL, hdcScreen);
     DeleteDC(hdcMem);
@@ -170,9 +176,13 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                     HDC hdcMem = CreateCompatibleDC(hdcScreen);
                     HGDIOBJ hOld = SelectObject(hdcMem, g_screenSnapshot);
                     
+                    int sx = GetSystemMetrics(SM_XVIRTUALSCREEN);
+                    int sy = GetSystemMetrics(SM_YVIRTUALSCREEN);
+                    
                     POINT cur; GetCursorPos(&cur);
-                    COLORREF pixel = GetPixel(hdcMem, cur.x, cur.y);
-                    // Sync: GDI returns 0x00BBGGRR
+                    // Adjust color sample coord by the same virtual screen offset used in CaptureDesktop
+                    COLORREF pixel = GetPixel(hdcMem, cur.x - sx, cur.y - sy);
+                    
                     g_pickedColor = pixel;
                     g_targetColor = pixel;
                     SelectObject(hdcMem, hOld);
@@ -303,6 +313,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 // WinMain...
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    SetProcessDPIAware();
     int argc = 1;
     char* argv[] = { (char*)"BetterAngle.exe", nullptr };
     QGuiApplication app(argc, argv);
@@ -407,14 +418,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wc.lpszClassName = L"BetterAngleHUD";
     RegisterClass(&wc);
 
-    int screenW = GetSystemMetrics(SM_CXSCREEN);
-    int screenH = GetSystemMetrics(SM_CYSCREEN);
+    int screenW = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    int screenH = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+    int screenX = GetSystemMetrics(SM_XVIRTUALSCREEN);
+    int screenY = GetSystemMetrics(SM_YVIRTUALSCREEN);
 
     g_hHUD = CreateWindowEx(
         WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW,
         L"BetterAngleHUD", L"BetterAngle HUD",
         WS_POPUP,
-        0, 0, screenW, screenH,
+        screenX, screenY, screenW, screenH,
         NULL, NULL, hInstance, NULL
     );
     ShowWindow(g_hHUD, SW_SHOW);
