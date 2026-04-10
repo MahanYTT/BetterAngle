@@ -1,3 +1,9 @@
+### BetterAngle Pro v4.20.54
+- **Qt 6 Framework Upgrade**: Replaced the entire ImGui / DirectX 11 interface with a modern Qt Quick (QML) GUI featuring silky smooth transitions, responsive tabs, and a massive reduction in boilerplate size.
+- **Inno Setup Installer Module**: Removed `.zip` packaging. The software now distributes exclusively as a `.exe` setup wizard that automatically injects dependencies, assigns Desktop shortcuts, and provides clean Windows uninstallation.
+- **Aesthetics Overhaul**: Shrunk the command center to a sleek `650x480`. Smooth 8px rounded corners gracefully frame the GDI+ Game Overlay and Debug tools. Dropped their alpha transparency limits to eliminate visual obstruction during gameplay.
+- **Tick Logic Hotfix**: Repaired the infinite binding loop causing QML toggles (e.g., Debug Menu and Animations) to occasionally "stick" visually.
+
 ### BetterAngle Pro v4.20.50
 - **Overlay Fix:** Rewrote `Overlay.cpp` using ASCII-safe source encoding, fixing corrupted box-drawing characters that rendered as pixel-dot squares and a capital T instead of the degree symbol. HUD now correctly shows `0.0°`, a working match bar, target colour swatch, and the `:: drag` hint.
 - **Control Panel:** Restored missing COLORS tab (target colour picker + tolerance slider), DEBUG tab (force diving/detection toggles + threshold sliders), CROSSHAIR pulse animation checkbox, and the full MANUAL SENSITIVITY section with Fortnite config auto-sync button.
