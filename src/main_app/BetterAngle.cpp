@@ -145,6 +145,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                         g_currentSelection = NONE;
                         g_isSelectionActive = false;
                         SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
+                        InvalidateRect(hWnd, NULL, FALSE);
                     }
                     break;
                 case 3:
@@ -185,6 +186,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                 g_currentSelection = NONE;
                 g_isSelectionActive = false;
                 SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
+                InvalidateRect(hWnd, NULL, FALSE);
 
                 if (!g_allProfiles.empty()) {
                     Profile& p = g_allProfiles[g_selectedProfileIdx];
