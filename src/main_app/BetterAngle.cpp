@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <shlobj.h>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -19,7 +20,6 @@
 #include "shared/Tray.h"
 #include "shared/Startup.h"
 #include "shared/ControlPanel.h"
-#include "shared/FirstTimeSetup.h"
 
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "gdiplus.lib")
@@ -303,10 +303,37 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     LoadSettings();
     g_allProfiles = GetProfiles(GetAppStoragePath());
     if (g_allProfiles.empty()) {
-        ShowFirstTimeSetup(hInstance);
-        // Reload profiles from disk after setup wizard completes
-        g_allProfiles = GetProfiles(GetAppStoragePath());
+        Profile p;
+        p.name = L"Default";
+        p.tolerance = 25;
+        p.roi_x = 760; p.roi_y = 640; p.roi_w = 400; p.roi_h = 70;
+        p.target_color = RGB(150, 150, 150);
+        p.crossThickness = 2.0f;
+        p.crossColor = RGB(255,0,0);
+        p.Save(GetAppStoragePath() + L"Default.json");
+        g_allProfiles.push_back(p);
     }
+    
+    // Auto-fetch Fortnite Sensitivity at launch
+    double fetchedSens = 0.05;
+    wchar_t appdata[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) {
+        std::wstring pPath = std::wstring(appdata) + L"\\FortniteGame\\Saved\\Config\\WindowsClient\\GameUserSettings.ini";
+        std::ifstream ifs(pPath.c_str());
+        if (ifs.good()) {
+            std::string line;
+            while (std::getline(ifs, line)) {
+                if (line.find("MouseSensitivityX=") != std::string::npos) {
+                    try {
+                        fetchedSens = std::stod(line.substr(line.find("=") + 1));
+                    } catch (...) { }
+                    break;
+                }
+            }
+        }
+    }
+    g_allProfiles[g_selectedProfileIdx].sensitivityX = (std::max)(fetchedSens, 0.0001);
+    g_currentProfile = g_allProfiles[g_selectedProfileIdx];
     
     // Guard: if still empty after setup, something went wrong — exit cleanly
     if (g_allProfiles.empty()) {
@@ -334,7 +361,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     g_crossAngle     = g_currentProfile.crossAngle;
     g_crossPulse     = g_currentProfile.crossPulse;
 
-    g_logic.LoadProfile(g_currentProfile.sensitivityX);
+    g_logic.LoadProfile(g_currentProfile.sensitivityX); // Now using the auto-fetched 800 DPI matched sens
 
     // Message Window for Raw Input (Bypasses Layered Window UI Bugs)
     WNDCLASS wcMsg = { 0 };

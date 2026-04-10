@@ -262,16 +262,6 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 if (fx >= bindX && fx <= L.W - L.margin && fy >= b.y && fy <= b.y + rowH + rowGap)
                     g_listeningKey = b.id;
             }
-            // Recalibrate button
-            if (fx >= L.margin && fx <= L.W - L.margin && fy >= 0.65f * L.H && fy <= 0.73f * L.H) {
-                void ShowFirstTimeSetup(HINSTANCE);
-                ShowFirstTimeSetup((HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
-            }
-            // Calibration Wizard
-            if (fx >= L.margin && fx <= L.W - L.margin && fy >= 0.75f * L.H && fy <= 0.83f * L.H) {
-                void StartThresholdWizard(HINSTANCE);
-                StartThresholdWizard((HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE));
-            }
         }
 
         // ── TAB 1 — UPDATES ───────────────────────────────────────────────
@@ -343,9 +333,16 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
         // ── TAB 4 — CROSSHAIR ─────────────────────────────────────────────
         else if (g_currentTab == 4) {
             float rowH = 0.06f * L.H;
-            // Color picker (left button)
+            
+            // Layout constants for 2-column
+            float col1X = L.margin;
+            float col1W = L.contentW * 0.45f;
+            float col2X = L.margin + L.contentW * 0.55f;
+            float col2W = L.contentW * 0.45f;
+
+            // Color picker (left) & Pulse toggle (right)
             if (fy >= cY + 0.06f * L.H && fy <= cY + 0.06f * L.H + rowH) {
-                if (fx >= L.margin && fx <= L.margin + L.contentW * 0.45f) {
+                if (fx >= col1X && fx <= col1X + col1W) {
                     CHOOSECOLOR cc = {};
                     static COLORREF acrCustClr[16] = {};
                     cc.lStructSize = sizeof(cc);
@@ -353,31 +350,25 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                     cc.lpCustColors = (LPDWORD)acrCustClr;
                     cc.rgbResult   = g_crossColor;
                     cc.Flags       = CC_FULLOPEN | CC_RGBINIT;
-                    if (ChooseColor(&cc)) g_crossColor = cc.rgbResult;
-                    SaveSettings();
+                    if (ChooseColor(&cc)) { g_crossColor = cc.rgbResult; SaveSettings(); }
                 }
-                // Pulse toggle (right button)
-                else if (fx >= L.W - L.margin - L.contentW * 0.45f && fx <= L.W - L.margin) {
+                else if (fx >= col2X && fx <= col2X + col2W) {
                     g_crossPulse = !g_crossPulse;
                     SaveSettings();
                 }
             }
 
-            // ─ / + buttons for each setting row ─────────────────────────
-            float rows[4] = {
-                cY + 0.14f * L.H,
-                cY + 0.22f * L.H,
-                cY + 0.30f * L.H,
-                cY + 0.38f * L.H
-            };
-            float btnW  = L.contentW * 0.12f;
-            float minX  = L.margin + L.contentW * 0.40f;
-            float plusX = L.margin + L.contentW * 0.56f;
+            // ─ / + buttons 2 columns ─────────────────────────
+            float row1Y = cY + 0.16f * L.H;
+            float row2Y = cY + 0.28f * L.H;
+            float btnW  = col1W * 0.25f;
 
-            for (int i = 0; i < 4; i++) {
-                if (fy >= rows[i] && fy <= rows[i] + rowH) {
+            auto hitTestPlusMinus = [&](float rowY, float colX, int idx) {
+                if (fy >= rowY && fy <= rowY + rowH) {
+                    float minX = colX + col1W * 0.4f;
+                    float plusX = colX + col1W * 0.7f;
                     if (fx >= minX && fx <= minX + btnW) {
-                        switch(i) {
+                        switch(idx) {
                             case 0: g_crossThickness = (std::max)(1.0f, g_crossThickness - 1.0f); break;
                             case 1: g_crossOffsetX -= 1.0f; break;
                             case 2: g_crossOffsetY -= 1.0f; break;
@@ -385,7 +376,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                         }
                         SaveSettings();
                     } else if (fx >= plusX && fx <= plusX + btnW) {
-                        switch(i) {
+                        switch(idx) {
                             case 0: g_crossThickness += 1.0f; break;
                             case 1: g_crossOffsetX += 1.0f; break;
                             case 2: g_crossOffsetY += 1.0f; break;
@@ -394,10 +385,15 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                         SaveSettings();
                     }
                 }
-            }
+            };
+            
+            hitTestPlusMinus(row1Y, col1X, 0); // Thickness (Col 1, Row 1)
+            hitTestPlusMinus(row1Y, col2X, 3); // Rotation (Col 2, Row 1)
+            hitTestPlusMinus(row2Y, col1X, 1); // Offset X (Col 1, Row 2)
+            hitTestPlusMinus(row2Y, col2X, 2); // Offset Y (Col 2, Row 2)
 
             // Action Buttons: RESET, SAVE POS, SAVE ALL
-            float btnRowY = cY + 0.44f * L.H;
+            float btnRowY = cY + 0.42f * L.H;
             float abW = (L.contentW - 30) / 3;
             if (fy >= btnRowY && fy <= btnRowY + rowH) {
                 if (fx >= L.margin && fx <= L.margin + abW) {
@@ -511,13 +507,6 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                     (g_listeningKey == rows[i].id) ? pBlue : pWhite);
             }
 
-            DrawD2DButton(g_pRenderTarget,
-                D2D1::RectF(L.margin, 0.65f * L.H, L.W - L.margin, 0.73f * L.H),
-                L"RECALIBRATE BASE SETTINGS", D2D1::ColorF(0.55f, 0.15f, 0.15f), 12.0f * baseScale);
-            DrawD2DButton(g_pRenderTarget,
-                D2D1::RectF(L.margin, 0.75f * L.H, L.W - L.margin, 0.83f * L.H),
-                L"MASTER CALIBRATION WIZARD", D2D1::ColorF(0.75f, 0.35f, 0.0f), 12.0f * baseScale);
-
         } else if (g_currentTab == 1) {
             // ─ UPDATES ──────────────────────────────────────────────────────
             g_pRenderTarget->DrawText(L"SOFTWARE DASHBOARD", 18, pHeader,
@@ -615,55 +604,51 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 
             float bH  = 0.06f * L.H;
             float bY0 = cY + 0.06f * L.H;
+            
+            float col1X = L.margin;
+            float col1W = L.contentW * 0.45f;
+            float col2X = L.margin + L.contentW * 0.55f;
+            float col2W = L.contentW * 0.45f;
+            
             // Top two control buttons
             DrawD2DButton(g_pRenderTarget,
-                D2D1::RectF(L.margin, bY0, L.margin + L.contentW * 0.45f, bY0 + bH),
+                D2D1::RectF(col1X, bY0, col1X + col1W, bY0 + bH),
                 L"CHOOSE COLOR", D2D1::ColorF(0.12f, 0.15f, 0.22f), 12.0f * baseScale);
             DrawD2DButton(g_pRenderTarget,
-                D2D1::RectF(L.W - L.margin - L.contentW * 0.45f, bY0, L.W - L.margin, bY0 + bH),
+                D2D1::RectF(col2X, bY0, col2X + col2W, bY0 + bH),
                 g_crossPulse ? L"PULSE  [ ON ]" : L"PULSE  [ OFF ]",
                 g_crossPulse  ? D2D1::ColorF(0.45f, 0.1f, 0.55f) : D2D1::ColorF(0.15f, 0.15f, 0.20f),
                 12.0f * baseScale);
 
-            // ─ / + setting rows ─────────────────────────────────────────────
-            // Layout: [Label 38%] [  –btn 12%  ] [  +btn 12%  ] [Value 38%]
-            float btnW  = L.contentW * 0.12f;
-            float minX  = L.margin + L.contentW * 0.42f;
-            float plusX = L.margin + L.contentW * 0.58f;
-            float valX  = L.margin + L.contentW * 0.74f;
+            // ─ / + setting rows layout ─────────────────────────────────────────────
+            float row1Y = cY + 0.16f * L.H;
+            float row2Y = cY + 0.28f * L.H;
+            float btnW  = col1W * 0.25f;
 
-            struct SettingRow { const wchar_t* label; float value; };
-            SettingRow settings[4] = {
-                { L"Thickness:",  g_crossThickness },
-                { L"Offset X:",   g_crossOffsetX   },
-                { L"Offset Y:",   g_crossOffsetY   },
-                { L"Rotation:",   g_crossAngle     },
-            };
-            float rows[4] = {
-                cY + 0.14f * L.H,
-                cY + 0.22f * L.H,
-                cY + 0.30f * L.H,
-                cY + 0.38f * L.H
-            };
-            for (int i = 0; i < 4; i++) {
-                float ry = rows[i];
-                // Label
-                g_pRenderTarget->DrawText(settings[i].label, (UINT32)wcslen(settings[i].label), pBody,
-                    D2D1::RectF(L.margin, ry + 0.01f * L.H, minX, ry + bH), pGrey);
-                // – button
-                DrawD2DButton(g_pRenderTarget, D2D1::RectF(minX, ry, minX + btnW, ry + bH),
+            auto drawRow = [&](float rowY, float colX, const wchar_t* label, float value) {
+                float minX = colX + col1W * 0.4f;
+                float plusX = colX + col1W * 0.7f;
+                float valX = colX + col1W * 0.98f;
+                
+                g_pRenderTarget->DrawText(label, (UINT32)wcslen(label), pBody,
+                    D2D1::RectF(colX, rowY + 0.01f * L.H, minX, rowY + bH), pGrey);
+                DrawD2DButton(g_pRenderTarget, D2D1::RectF(minX, rowY, minX + btnW, rowY + bH),
                     L"–", D2D1::ColorF(0.15f, 0.15f, 0.20f), 14.0f * baseScale);
-                // + button
-                DrawD2DButton(g_pRenderTarget, D2D1::RectF(plusX, ry, plusX + btnW, ry + bH),
+                DrawD2DButton(g_pRenderTarget, D2D1::RectF(plusX, rowY, plusX + btnW, rowY + bH),
                     L"+", D2D1::ColorF(0.15f, 0.15f, 0.20f), 14.0f * baseScale);
-                // Value
-                std::wstring val = std::to_wstring((int)settings[i].value);
+                
+                std::wstring val = std::to_wstring((int)value);
                 g_pRenderTarget->DrawText(val.c_str(), (UINT32)val.length(), pHeader,
-                    D2D1::RectF(valX, ry + 0.005f * L.H, L.W - L.margin, ry + bH), pBlue);
-            }
+                    D2D1::RectF(valX, rowY + 0.005f * L.H, L.W - L.margin, rowY + bH), pBlue);
+            };
+
+            drawRow(row1Y, col1X, L"Thickness:", g_crossThickness);
+            drawRow(row1Y, col2X, L"Rotation:", g_crossAngle);
+            drawRow(row2Y, col1X, L"Offset X:", g_crossOffsetX);
+            drawRow(row2Y, col2X, L"Offset Y:", g_crossOffsetY);
 
             // Action Buttons (Reset/Save)
-            float btnRowY = cY + 0.44f * L.H;
+            float btnRowY = cY + 0.42f * L.H;
             float actionBtnH = 32.0f * baseScale;
             float abW = (L.contentW - 30) / 3;
             

@@ -336,11 +336,11 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
                 s_fps >= 60.0f ? &colGood : &colWarn);
 
         DrawRow(L"Angle (raw)",
-                FmtFloat(angle, 4) + L"°",
+                FmtFloat(angle, 2) + L"°",
                 &colVal);
 
         DrawRow(L"Detection Ratio",
-                FmtFloat(detectionRatio * 100.0, 1) + L"% / match " + std::to_wstring(matchPct) + L"%",
+                FmtFloat(detectionRatio * 100.0, 0) + L"% / match " + std::to_wstring(matchPct) + L"%",
                 matchPct > 5 ? &colGood : &colVal);
 
         DrawRow(L"Diving",

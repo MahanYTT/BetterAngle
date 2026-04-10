@@ -16,6 +16,33 @@
 #endif
 #define APP_VERSION_STR VERSION_STR
 
+#include <vector>
+#include <algorithm>
+
+// Semantic version parser 
+static std::vector<int> ParseVer(const std::string& v) {
+    std::vector<int> parts;
+    std::string s = v;
+    if (!s.empty() && (s[0] == 'v' || s[0] == 'V')) s = s.substr(1);
+    std::stringstream ss(s);
+    std::string token;
+    while (std::getline(ss, token, '.')) {
+        try { parts.push_back(std::stoi(token)); } catch (...) { break; }
+    }
+    return parts;
+}
+
+// Comparer
+static bool IsVersionHigher(const std::string& a, const std::string& b) {
+    auto va = ParseVer(a), vb = ParseVer(b);
+    for (size_t i = 0; i < std::max(va.size(), vb.size()); i++) {
+        int pa = i < va.size() ? va[i] : 0;
+        int pb = i < vb.size() ? vb[i] : 0;
+        if (pa != pb) return pa > pb;
+    }
+    return false;
+}
+
 // The single canonical download URL — GitHub resolves /releases/latest/download/ automatically
 static const wchar_t* DOWNLOAD_URL =
     L"https://github.com/MahanYTT/BetterAngle/releases/latest/download/BetterAngle.exe";
@@ -170,38 +197,42 @@ bool CheckForUpdates() {
     g_updateAvailable      = false;
 
     std::string json;
+    // Download ALL releases to find the mathematically highest tag, avoiding accidental body matches
     bool got = WinHttpGetString(
-        L"https://api.github.com/repos/MahanYTT/BetterAngle/releases/latest", json);
+        L"https://api.github.com/repos/MahanYTT/BetterAngle/releases", json);
 
     if (!got || json.empty()) {
         g_isCheckingForUpdates = false;
         return false;
     }
 
-    // Extract "tag_name": "vX.Y.Z"
+    std::string highestTag = "";
     const std::string prefix = "\"tag_name\": \"";
-    size_t pos = json.find(prefix);
-    if (pos == std::string::npos) {
+    size_t pos = 0;
+    
+    while ((pos = json.find(prefix, pos)) != std::string::npos) {
+        size_t start = pos + prefix.size();
+        size_t end   = json.find('"', start);
+        if (end != std::string::npos) {
+            std::string tag = json.substr(start, end - start);
+            if (highestTag.empty() || IsVersionHigher(tag, highestTag)) {
+                highestTag = tag;
+            }
+        }
+        pos = end;
+    }
+
+    if (highestTag.empty()) {
         g_isCheckingForUpdates = false;
         return false;
     }
 
-    size_t start = pos + prefix.size();
-    size_t end   = json.find('"', start);
-    std::string tag = json.substr(start, end - start);   // e.g. "v4.20.5"
-
-    g_latestVersionOnline = tag;
+    g_latestVersionOnline = highestTag;
     g_latestName = L"GitHub Release (" +
-                   std::wstring(tag.begin(), tag.end()) + L")";
-
-    // Strip leading 'v' for comparison
-    std::string remote = tag;
-    if (!remote.empty() && (remote[0] == 'v' || remote[0] == 'V'))
-        remote = remote.substr(1);
+                   std::wstring(highestTag.begin(), highestTag.end()) + L")";
 
     std::string local = APP_VERSION_STR;
-
-    g_updateAvailable      = (remote != local);
+    g_updateAvailable = IsVersionHigher(highestTag, local);
     g_isCheckingForUpdates = false;
     return g_updateAvailable;
 }
