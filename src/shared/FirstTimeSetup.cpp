@@ -1,93 +1,77 @@
 #include "shared/FirstTimeSetup.h"
 #include <windows.h>
 #include <windowsx.h>
-#include <gdiplus.h>
 #include <string>
 #include <fstream>
 #include <shlobj.h>
 #include "shared/Profile.h"
 #include "shared/State.h"
 
-#pragma comment(lib, "gdiplus.lib")
+// ─── Pure GDI colours (no GDI+, zero GPU cost) ───────────────────────────
+static const COLORREF C_BG      = RGB( 13,  15,  20);
+static const COLORREF C_INPUT   = RGB( 28,  31,  40);
+static const COLORREF C_ACCENT  = RGB( 59, 130, 246);
+static const COLORREF C_DIM     = RGB( 55,  60,  75);
+static const COLORREF C_GRAY    = RGB(110, 115, 135);
+static const COLORREF C_WHITE   = RGB(255, 255, 255);
+static const COLORREF C_CYAN    = RGB(  0, 210, 200);
+static const COLORREF C_BTNOFF  = RGB( 40,  44,  55);
 
-using namespace Gdiplus;
-
-int g_setupState = 1;
-std::wstring g_setupDPI  = L"";
+int g_setupState    = 1;
+std::wstring g_setupDPI   = L"";
 std::wstring g_setupSensX = L"";
 std::wstring g_setupSensY = L"";
-bool g_extractedConfig = false;
-int g_focusedInput = 1;
+bool g_extractedConfig    = false;
+int  g_focusedInput       = 1;
 
-// ── Palette ────────────────────────────────────────────────────────────────
-static const Color BG        (255,  13,  15,  20);
-static const Color INPUT_BG  (255,  28,  31,  40);
-static const Color ACCENT    (255,  59, 130, 246);
-static const Color ACCENT_DIM(255,  37,  60, 110);
-static const Color WHITE     (255, 255, 255, 255);
-static const Color GRAY      (255, 110, 115, 135);
-static const Color DIMGRAY   (255,  55,  60,  75);
-static const Color CYAN      (255,   0, 210, 200);
-
-// ── Rounded-rect helpers ───────────────────────────────────────────────────
-static void FillRR(Graphics& g, Brush* br, int x, int y, int w, int h, int r) {
-    GraphicsPath p;
-    p.AddArc(x,         y,         r*2, r*2, 180, 90);
-    p.AddArc(x+w-r*2,   y,         r*2, r*2, 270, 90);
-    p.AddArc(x+w-r*2,   y+h-r*2,   r*2, r*2,   0, 90);
-    p.AddArc(x,         y+h-r*2,   r*2, r*2,  90, 90);
-    p.CloseFigure();
-    g.FillPath(br, &p);
-}
-static void DrawRR(Graphics& g, Pen* pen, int x, int y, int w, int h, int r) {
-    GraphicsPath p;
-    p.AddArc(x,         y,         r*2, r*2, 180, 90);
-    p.AddArc(x+w-r*2,   y,         r*2, r*2, 270, 90);
-    p.AddArc(x+w-r*2,   y+h-r*2,   r*2, r*2,   0, 90);
-    p.AddArc(x,         y+h-r*2,   r*2, r*2,  90, 90);
-    p.CloseFigure();
-    g.DrawPath(pen, &p);
+// ── GDI helpers ───────────────────────────────────────────────────────────
+static void FillR(HDC hdc, int x, int y, int w, int h, COLORREF c) {
+    RECT r = { x, y, x+w, y+h };
+    HBRUSH br = CreateSolidBrush(c);
+    FillRect(hdc, &r, br);
+    DeleteObject(br);
 }
 
-// ── Centered draw helper ───────────────────────────────────────────────────
-static void DrawC(Graphics& g, Font* f, const wchar_t* t, SolidBrush* br,
-                  int winW, float y, float h = 40.0f) {
-    StringFormat sf;
-    sf.SetAlignment(StringAlignmentCenter);
-    g.DrawString(t, -1, f, RectF(0.0f, y, (REAL)winW, h), &sf, br);
+static void DrawT(HDC hdc, const wchar_t* t, int x, int y, int w, int h,
+                  COLORREF c, int sz, bool bold = false, UINT fmt = DT_CENTER|DT_VCENTER|DT_SINGLELINE) {
+    HFONT f = CreateFontW(-sz, 0, 0, 0,
+                          bold ? FW_BOLD : FW_NORMAL,
+                          0, 0, 0, DEFAULT_CHARSET,
+                          OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                          CLEARTYPE_QUALITY, DEFAULT_PITCH,
+                          L"Segoe UI");
+    HFONT old = (HFONT)SelectObject(hdc, f);
+    SetTextColor(hdc, c);
+    SetBkMode(hdc, TRANSPARENT);
+    RECT r = { x, y, x+w, y+h };
+    DrawTextW(hdc, t, -1, &r, fmt);
+    SelectObject(hdc, old);
+    DeleteObject(f);
 }
 
-// ── Profile save ──────────────────────────────────────────────────────────
+// ── Profile save ─────────────────────────────────────────────────────────
 void FinishSetup() {
     Profile p;
-    p.name          = L"Default";
-    p.roi_h         = 60; p.roi_w = 400;
-    p.roi_x         = 760; p.roi_y = 650;
-    p.target_color  = RGB(150, 150, 150);
-    p.tolerance     = 25;
+    p.name = L"Default"; p.tolerance = 25;
+    p.roi_h = 60; p.roi_w = 400; p.roi_x = 760; p.roi_y = 650;
+    p.target_color = RGB(150, 150, 150);
 
-    double dpiVal = 800.0;
-    try { dpiVal = std::stod(g_setupDPI); } catch(...) {}
+    double dpiVal = 800.0, sensX = 0.05, sensY = 0.05;
+    try { dpiVal = std::stod(g_setupDPI); }  catch(...) {}
+    try { sensX  = std::stod(g_setupSensX); } catch(...) {}
+    try { sensY  = std::stod(g_setupSensY); } catch(...) {}
     if (dpiVal <= 0) dpiVal = 800.0;
+    if (sensX  <= 0) sensX  = 0.05;
+    if (sensY  <= 0) sensY  = 0.05;
 
-    double sensX = 0.05, sensY = 0.05;
-    try { sensX = std::stod(g_setupSensX); } catch(...) {}
-    try { sensY = std::stod(g_setupSensY); } catch(...) {}
-    if (sensX <= 0) sensX = 0.05;
-    if (sensY <= 0) sensY = 0.05;
-
-    p.dpi                    = (int)dpiVal;
-    p.sensitivityX           = sensX;
-    p.sensitivityY           = sensY;
-    p.divingScaleMultiplier  = 1.22;
-    p.fov                    = 80.0f;
-    p.resolutionWidth        = GetSystemMetrics(SM_CXSCREEN);
-    p.resolutionHeight       = GetSystemMetrics(SM_CYSCREEN);
-    p.renderScale            = 100.0f;
+    p.dpi = (int)dpiVal; p.sensitivityX = sensX; p.sensitivityY = sensY;
+    p.divingScaleMultiplier = 1.22; p.fov = 80.0f;
+    p.resolutionWidth  = GetSystemMetrics(SM_CXSCREEN);
+    p.resolutionHeight = GetSystemMetrics(SM_CYSCREEN);
+    p.renderScale = 100.0f;
 
     extern std::vector<Profile> g_allProfiles;
     extern int g_selectedProfileIdx;
-
     if (g_allProfiles.empty()) {
         p.Save(GetAppStoragePath() + L"Default.json");
         g_allProfiles.push_back(p);
@@ -101,256 +85,199 @@ void FinishSetup() {
     }
 }
 
-// ── Window Procedure ───────────────────────────────────────────────────────
+// ── Paint (pure GDI — no GPU, no GDI+) ───────────────────────────────────
+static void PaintSetup(HWND hWnd) {
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(hWnd, &ps);
+    RECT rc; GetClientRect(hWnd, &rc);
+    int W = rc.right, H = rc.bottom;
+
+    // Off-screen buffer to avoid flicker
+    HDC     buf = CreateCompatibleDC(hdc);
+    HBITMAP bmp = CreateCompatibleBitmap(hdc, W, H);
+    HGDIOBJ old = SelectObject(buf, bmp);
+
+    // Background
+    FillR(buf, 0, 0, W, H, C_BG);
+
+    // Progress pills (2px flat rectangles)
+    COLORREF p1 = (g_setupState >= 1) ? C_ACCENT : C_DIM;
+    COLORREF p2 = (g_setupState >= 2) ? C_ACCENT : C_DIM;
+    int pilX = (W - 148) / 2;
+    FillR(buf, pilX,      28, 70, 2, p1);
+    FillR(buf, pilX + 78, 28, 70, 2, p2);
+
+    // Step label
+    DrawT(buf, (g_setupState == 1) ? L"Step 1 of 2" : L"Step 2 of 2",
+          0, 36, W, 18, C_GRAY, 11);
+
+    // Heading
+    const wchar_t* hd = (g_setupState == 1) ? L"Mouse DPI" : L"Sensitivity";
+    DrawT(buf, hd, 0, 60, W, 34, C_WHITE, 26, true);
+
+    // Thin separator
+    FillR(buf, 30, 103, W - 60, 1, C_DIM);
+
+    if (g_setupState == 1) {
+        // Subtitle
+        DrawT(buf, L"Enter the DPI from your mouse software or sensor label",
+              30, 113, W-60, 20, C_GRAY, 11, false, DT_CENTER | DT_SINGLELINE);
+
+        // Input box
+        int ix = 30, iw = W-60, iy = 142, ih = 40;
+        FillR(buf, ix, iy, iw, ih, C_INPUT);
+        // 1px accent border
+        HPEN pen = CreatePen(PS_SOLID, 1, C_ACCENT);
+        HPEN op  = (HPEN)SelectObject(buf, pen);
+        HBRUSH bn = (HBRUSH)GetStockObject(NULL_BRUSH);
+        HBRUSH ob = (HBRUSH)SelectObject(buf, bn);
+        RECT br = { ix, iy, ix+iw, iy+ih };
+        Rectangle(buf, ix, iy, ix+iw, iy+ih);
+        SelectObject(buf, op); SelectObject(buf, ob);
+        DeleteObject(pen);
+
+        std::wstring val = g_setupDPI.empty() ? L"e.g. 800" : g_setupDPI + L"|";
+        COLORREF tc = g_setupDPI.empty() ? C_DIM : C_WHITE;
+        DrawT(buf, val.c_str(), ix+12, iy, iw-24, ih, tc, 14, false, DT_LEFT|DT_VCENTER|DT_SINGLELINE);
+
+        // Next button
+        bool rdy = !g_setupDPI.empty();
+        int bx = (W-180)/2, by = H-74, bw = 180, bh = 40;
+        FillR(buf, bx, by, bw, bh, rdy ? C_ACCENT : C_BTNOFF);
+        DrawT(buf, L"Next  →", bx, by, bw, bh, C_WHITE, 13, true);
+
+    } else {
+        // Subtitle
+        const wchar_t* sub = g_extractedConfig
+            ? L"Pre-filled from GameUserSettings.ini"
+            : L"Enter your in-game sensitivity values";
+        COLORREF sc = g_extractedConfig ? C_CYAN : C_GRAY;
+        DrawT(buf, sub, 30, 113, W-60, 20, sc, 11, false, DT_CENTER|DT_SINGLELINE);
+
+        // Two side-by-side inputs
+        int fw = (W - 75) / 2;
+        int fxA = 30,      fxB = fxA + fw + 15;
+        int fy = 170, fh = 40;
+
+        // Labels
+        DrawT(buf, L"Sensitivity X", fxA, 154, fw, 16, C_GRAY, 10, false, DT_LEFT|DT_SINGLELINE);
+        DrawT(buf, L"Sensitivity Y", fxB, 154, fw, 16, C_GRAY, 10, false, DT_LEFT|DT_SINGLELINE);
+
+        auto drawField = [&](int fx, int focusIdx, const std::wstring& val) {
+            FillR(buf, fx, fy, fw, fh, C_INPUT);
+            HPEN pen = CreatePen(PS_SOLID, 1, (g_focusedInput == focusIdx) ? C_ACCENT : C_DIM);
+            HPEN op  = (HPEN)SelectObject(buf, pen);
+            HBRUSH bn = (HBRUSH)GetStockObject(NULL_BRUSH);
+            HBRUSH ob = (HBRUSH)SelectObject(buf, bn);
+            Rectangle(buf, fx, fy, fx+fw, fy+fh);
+            SelectObject(buf, op); SelectObject(buf, ob); DeleteObject(pen);
+            std::wstring d = val.empty() ? L"0.05" : val + (g_focusedInput==focusIdx ? L"|" : L"");
+            COLORREF tc = val.empty() ? C_DIM : C_WHITE;
+            DrawT(buf, d.c_str(), fx+10, fy, fw-20, fh, tc, 13, false, DT_LEFT|DT_VCENTER|DT_SINGLELINE);
+        };
+        drawField(fxA, 1, g_setupSensX);
+        drawField(fxB, 2, g_setupSensY);
+
+        // Tab hint
+        DrawT(buf, L"Tab to switch  ·  Enter to confirm",
+              30, fy+fh+8, W-60, 16, C_DIM, 10, false, DT_CENTER|DT_SINGLELINE);
+
+        // Confirm button
+        int bx = (W-180)/2, by = H-74, bw = 180, bh = 40;
+        FillR(buf, bx, by, bw, bh, C_ACCENT);
+        DrawT(buf, L"Confirm  ✓", bx, by, bw, bh, C_WHITE, 13, true);
+    }
+
+    // Brand
+    DrawT(buf, L"BetterAngle Pro", 14, H-20, 160, 16, C_CYAN, 10, false, DT_LEFT|DT_SINGLELINE);
+    // Drag hint
+    DrawT(buf, L"drag ↑", W-52, 6, 46, 14, C_DIM, 9, false, DT_LEFT|DT_SINGLELINE);
+
+    BitBlt(hdc, 0, 0, W, H, buf, 0, 0, SRCCOPY);
+    SelectObject(buf, old);
+    DeleteObject(bmp);
+    DeleteDC(buf);
+    EndPaint(hWnd, &ps);
+}
+
+// ── Window Procedure ──────────────────────────────────────────────────────
 LRESULT CALLBACK FirstTimeSetupProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
-    // ── Keep window visible when it loses focus (never hide/minimize) ──────
     if (msg == WM_ACTIVATE) {
-        if (LOWORD(wParam) == WA_INACTIVE) {
-            // Bring back to top without forcing foreground (avoids OS rejection)
-            SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0,
-                         SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-        }
+        if (LOWORD(wParam) == WA_INACTIVE)
+            SetWindowPos(hWnd, HWND_TOPMOST, 0,0,0,0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
         return 0;
     }
-    if (msg == WM_NCACTIVATE) {
-        // Return TRUE so the non-client area never draws as "inactive"
-        return TRUE;
-    }
+    if (msg == WM_NCACTIVATE)   return TRUE;
     if (msg == WM_MOUSEACTIVATE) return MA_ACTIVATE;
 
-    // ── Drag from top header ───────────────────────────────────────────────
     if (msg == WM_NCHITTEST) {
         LRESULT hit = DefWindowProc(hWnd, msg, wParam, lParam);
         if (hit == HTCLIENT) {
             POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
             ScreenToClient(hWnd, &pt);
-            if (pt.y < 55) return HTCAPTION;
+            if (pt.y < 52) return HTCAPTION;
         }
         return hit;
     }
 
-    // ── Tab key on step 2 switches fields ─────────────────────────────────
-    if (msg == WM_KEYDOWN) {
-        if (wParam == VK_TAB && g_setupState == 2) {
-            g_focusedInput = (g_focusedInput == 1) ? 2 : 1;
-            InvalidateRect(hWnd, NULL, FALSE);
-            return 0;
-        }
-        // Escape cancels — but we just re-show the window (no close during setup)
+    if (msg == WM_KEYDOWN && wParam == VK_TAB && g_setupState == 2) {
+        g_focusedInput = (g_focusedInput == 1) ? 2 : 1;
+        InvalidateRect(hWnd, NULL, FALSE);
         return 0;
     }
 
-    // ── Text input ────────────────────────────────────────────────────────
     if (msg == WM_CHAR) {
         if (wParam == VK_RETURN) {
             if (g_setupState == 1 && !g_setupDPI.empty()) {
-                g_setupState   = 2;
-                g_focusedInput = 1;
+                g_setupState = 2; g_focusedInput = 1;
             } else if (g_setupState == 2) {
-                FinishSetup();
-                DestroyWindow(hWnd);
+                FinishSetup(); DestroyWindow(hWnd);
             }
             InvalidateRect(hWnd, NULL, FALSE);
             return 0;
         }
-        std::wstring* cur = nullptr;
-        if      (g_setupState == 1)              cur = &g_setupDPI;
-        else if (g_focusedInput == 1)            cur = &g_setupSensX;
-        else                                      cur = &g_setupSensY;
-
+        std::wstring* cur = (g_setupState == 1) ? &g_setupDPI
+                          : (g_focusedInput == 1) ? &g_setupSensX : &g_setupSensY;
         if (wParam == VK_BACK) {
-            if (cur && !cur->empty()) cur->pop_back();
+            if (!cur->empty()) cur->pop_back();
         } else if (wParam >= 32 && wParam <= 126) {
-            if (cur) cur->push_back((wchar_t)wParam);
+            cur->push_back((wchar_t)wParam);
         }
         InvalidateRect(hWnd, NULL, FALSE);
         return 0;
     }
 
-    // ── Mouse clicks ───────────────────────────────────────────────────────
     if (msg == WM_LBUTTONDOWN) {
         int mx = GET_X_LPARAM(lParam), my = GET_Y_LPARAM(lParam);
         RECT rc; GetClientRect(hWnd, &rc);
         int W = rc.right, H = rc.bottom;
 
         if (g_setupState == 1) {
-            int bx = (W-200)/2, by = H - 80;
-            if (mx >= bx && mx <= bx+200 && my >= by && my <= by+44 && !g_setupDPI.empty()) {
+            int bx = (W-180)/2, by = H-74;
+            if (mx>=bx && mx<=bx+180 && my>=by && my<=by+40 && !g_setupDPI.empty()) {
                 g_setupState = 2; g_focusedInput = 1;
                 InvalidateRect(hWnd, NULL, FALSE);
             }
         } else {
-            // Field hit-test
-            int fieldY = 195, fieldH = 44;
-            int fw2    = (W - 75) / 2;
-            int fxA    = 30, fxB = fxA + fw2 + 15;
-            if (my >= fieldY && my <= fieldY + fieldH) {
-                if      (mx >= fxA && mx <= fxA + fw2) { g_focusedInput = 1; InvalidateRect(hWnd, NULL, FALSE); }
-                else if (mx >= fxB && mx <= fxB + fw2) { g_focusedInput = 2; InvalidateRect(hWnd, NULL, FALSE); }
+            int fw = (W-75)/2, fxA = 30, fxB = fxA+fw+15, fy = 170, fh = 40;
+            if (my >= fy && my <= fy+fh) {
+                if      (mx>=fxA && mx<=fxA+fw) { g_focusedInput=1; InvalidateRect(hWnd,NULL,FALSE); }
+                else if (mx>=fxB && mx<=fxB+fw) { g_focusedInput=2; InvalidateRect(hWnd,NULL,FALSE); }
             }
-            // Confirm button
-            int bx = (W-200)/2, by = H - 80;
-            if (mx >= bx && mx <= bx+200 && my >= by && my <= by+44) {
-                FinishSetup();
-                DestroyWindow(hWnd);
+            int bx=(W-180)/2, by=H-74;
+            if (mx>=bx && mx<=bx+180 && my>=by && my<=by+40) {
+                FinishSetup(); DestroyWindow(hWnd);
             }
         }
         SetFocus(hWnd);
-        // fall through for default activation
     }
 
-    // ── Paint ──────────────────────────────────────────────────────────────
-    if (msg == WM_PAINT) {
-        PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(hWnd, &ps);
-        RECT rc; GetClientRect(hWnd, &rc);
-        int W = rc.right, H = rc.bottom;
-
-        // Double-buffer to eliminate flicker
-        HDC     hdcBuf = CreateCompatibleDC(hdc);
-        HBITMAP hbmBuf = CreateCompatibleBitmap(hdc, W, H);
-        HGDIOBJ hOld   = SelectObject(hdcBuf, hbmBuf);
-        {
-            Graphics g(hdcBuf);
-            g.SetSmoothingMode(SmoothingModeAntiAlias);
-            g.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
-
-            g.Clear(BG);
-
-            FontFamily ff(L"Segoe UI");
-            Font fStep  (&ff, 11, FontStyleRegular, UnitPixel);
-            Font fTitle (&ff, 28, FontStyleBold,    UnitPixel);
-            Font fSub   (&ff, 12, FontStyleRegular, UnitPixel);
-            Font fLabel (&ff, 11, FontStyleRegular, UnitPixel);
-            Font fInput (&ff, 14, FontStyleRegular, UnitPixel);
-            Font fBtn   (&ff, 13, FontStyleBold,    UnitPixel);
-            Font fBrand (&ff, 10, FontStyleRegular, UnitPixel);
-
-            SolidBrush brWhite  (WHITE);
-            SolidBrush brGray   (GRAY);
-            SolidBrush brDim    (DIMGRAY);
-            SolidBrush brAccent (ACCENT);
-            SolidBrush brDimAcc (ACCENT_DIM);
-            SolidBrush brInput  (INPUT_BG);
-            SolidBrush brCyan   (CYAN);
-
-            Pen penAccent (ACCENT,  1.5f);
-            Pen penDim    (DIMGRAY, 1.0f);
-
-            StringFormat sfC, sfL;
-            sfC.SetAlignment(StringAlignmentCenter);
-            sfC.SetLineAlignment(StringAlignmentCenter);
-            sfL.SetAlignment(StringAlignmentNear);
-            sfL.SetLineAlignment(StringAlignmentCenter);
-
-            // ── Step indicator ─────────────────────────────────────────
-            const wchar_t* stepTxt = (g_setupState == 1) ? L"Step 1 of 2" : L"Step 2 of 2";
-            DrawC(g, &fStep, stepTxt, &brGray, W, 28.0f, 20.0f);
-
-            // ── Progress bar (two pills) ───────────────────────────────
-            int pilW = 70, pilH = 3, pilY = 52;
-            int pilX = (W - pilW*2 - 8) / 2;
-            SolidBrush brP1(g_setupState >= 1 ? ACCENT : DIMGRAY);
-            SolidBrush brP2(g_setupState >= 2 ? ACCENT : DIMGRAY);
-            FillRR(g, &brP1, pilX,        pilY, pilW, pilH, 1);
-            FillRR(g, &brP2, pilX+pilW+8, pilY, pilW, pilH, 1);
-
-            // ── Heading ────────────────────────────────────────────────
-            const wchar_t* heading = (g_setupState == 1) ? L"Mouse DPI" : L"Fortnite Sensitivity";
-            DrawC(g, &fTitle, heading, &brWhite, W, 68.0f, 40.0f);
-
-            // thin separator line
-            Pen sepPen(DIMGRAY, 1.0f);
-            g.DrawLine(&sepPen, 30, 116, W-30, 116);
-
-            if (g_setupState == 1) {
-                // ── Subtitle ───────────────────────────────────────────
-                DrawC(g, &fSub, L"Check your mouse software or the label on your sensor", &brGray, W, 124.0f, 28.0f);
-
-                // ── Input ──────────────────────────────────────────────
-                int ix = 30, iw = W-60, iy = 162, ih = 46;
-                FillRR(g, &brInput, ix, iy, iw, ih, 8);
-                DrawRR(g, &penAccent, ix, iy, iw, ih, 8);
-
-                std::wstring d = g_setupDPI.empty() ? L"e.g. 800" : g_setupDPI + L"│";
-                SolidBrush* tb = g_setupDPI.empty() ? &brDim : &brWhite;
-                g.DrawString(d.c_str(), -1, &fInput,
-                             RectF((REAL)(ix+14),(REAL)iy,(REAL)(iw-28),(REAL)ih), &sfL, tb);
-
-                // ── Next button ────────────────────────────────────────
-                int bx = (W-200)/2, by = H - 80;
-                bool ready = !g_setupDPI.empty();
-                FillRR(g, ready ? &brAccent : &brDim, bx, by, 200, 44, 8);
-                g.DrawString(L"Next  →", -1, &fBtn,
-                             RectF((REAL)bx,(REAL)by,200.0f,44.0f), &sfC, &brWhite);
-
-            } else {
-                // ── Subtitle ───────────────────────────────────────────
-                const wchar_t* sub = g_extractedConfig
-                    ? L"Pre-filled from GameUserSettings.ini"
-                    : L"Enter your in-game sensitivity values";
-                SolidBrush* subBr = g_extractedConfig ? &brCyan : &brGray;
-                DrawC(g, &fSub, sub, subBr, W, 124.0f, 28.0f);
-
-                // ── Two input fields ───────────────────────────────────
-                int fw2 = (W - 75) / 2;
-                int fxA = 30, fxB = fxA + fw2 + 15;
-                int fy  = 195, fh = 44;
-
-                // Labels
-                g.DrawString(L"Sensitivity X", -1, &fLabel, PointF((REAL)fxA, 178.0f), &brGray);
-                g.DrawString(L"Sensitivity Y", -1, &fLabel, PointF((REAL)fxB, 178.0f), &brGray);
-
-                // Field A
-                FillRR(g, &brInput, fxA, fy, fw2, fh, 8);
-                DrawRR(g, g_focusedInput==1 ? &penAccent : &penDim, fxA, fy, fw2, fh, 8);
-                {
-                    std::wstring dx = g_setupSensX.empty() ? L"0.05" : g_setupSensX + (g_focusedInput==1 ? L"│":L"");
-                    SolidBrush* tb = g_setupSensX.empty() ? &brDim : &brWhite;
-                    g.DrawString(dx.c_str(), -1, &fInput,
-                                 RectF((REAL)(fxA+10),(REAL)fy,(REAL)(fw2-20),(REAL)fh), &sfL, tb);
-                }
-
-                // Field B
-                FillRR(g, &brInput, fxB, fy, fw2, fh, 8);
-                DrawRR(g, g_focusedInput==2 ? &penAccent : &penDim, fxB, fy, fw2, fh, 8);
-                {
-                    std::wstring dy = g_setupSensY.empty() ? L"0.05" : g_setupSensY + (g_focusedInput==2 ? L"│":L"");
-                    SolidBrush* tb = g_setupSensY.empty() ? &brDim : &brWhite;
-                    g.DrawString(dy.c_str(), -1, &fInput,
-                                 RectF((REAL)(fxB+10),(REAL)fy,(REAL)(fw2-20),(REAL)fh), &sfL, tb);
-                }
-
-                // Tab hint
-                g.DrawString(L"Tab to switch fields  ·  Enter to confirm",
-                             -1, &fLabel, PointF(30.0f, 248.0f), &brDim);
-
-                // ── Confirm button ─────────────────────────────────────
-                int bx = (W-200)/2, by = H - 80;
-                FillRR(g, &brAccent, bx, by, 200, 44, 8);
-                g.DrawString(L"Confirm  ✓", -1, &fBtn,
-                             RectF((REAL)bx,(REAL)by,200.0f,44.0f), &sfC, &brWhite);
-            }
-
-            // ── Brand + drag hint ──────────────────────────────────────
-            g.DrawString(L"BetterAngle Pro", -1, &fBrand, PointF(16.0f,(REAL)(H-20)), &brCyan);
-            g.DrawString(L"drag ↑", -1, &fBrand, PointF((REAL)(W-50), 8.0f), &brDim);
-        }
-        BitBlt(hdc, 0, 0, W, H, hdcBuf, 0, 0, SRCCOPY);
-        SelectObject(hdcBuf, hOld);
-        DeleteObject(hbmBuf);
-        DeleteDC(hdcBuf);
-
-        EndPaint(hWnd, &ps);
-        return 0;
-    }
-
-    if (msg == WM_DESTROY) return 0; // Do NOT post quit — modal loop exits via IsWindow
+    if (msg == WM_PAINT) { PaintSetup(hWnd); return 0; }
+    if (msg == WM_DESTROY) return 0;
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-// ── Modal loop ────────────────────────────────────────────────────────────
 void StartModalSetupLoop(HWND hwnd) {
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
@@ -360,16 +287,10 @@ void StartModalSetupLoop(HWND hwnd) {
     }
 }
 
-// ── Entry point ───────────────────────────────────────────────────────────
 void ShowFirstTimeSetup(HINSTANCE hInstance) {
-    g_setupState      = 1;
-    g_setupDPI        = L"";
-    g_setupSensX      = L"";
-    g_setupSensY      = L"";
-    g_focusedInput    = 1;
-    g_extractedConfig = false;
+    g_setupState = 1; g_setupDPI = L""; g_setupSensX = L"";
+    g_setupSensY = L""; g_focusedInput = 1; g_extractedConfig = false;
 
-    // Try auto-detect from Fortnite config
     std::string ini;
     wchar_t appdata[MAX_PATH];
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) {
@@ -388,21 +309,18 @@ void ShowFirstTimeSetup(HINSTANCE hInstance) {
     };
     g_setupSensX = extract("MouseX");
     g_setupSensY = extract("MouseY");
-    if (!g_setupSensX.empty() || !g_setupSensY.empty())
-        g_extractedConfig = true;
+    if (!g_setupSensX.empty() || !g_setupSensY.empty()) g_extractedConfig = true;
 
-    // Register window class (safe to call multiple times — just fails silently)
     WNDCLASS wc     = { 0 };
     wc.style        = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc  = FirstTimeSetupProc;
     wc.hInstance    = hInstance;
     wc.hCursor      = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground= CreateSolidBrush(RGB(13, 15, 20));
+    wc.hbrBackground= (HBRUSH)GetStockObject(BLACK_BRUSH);
     wc.lpszClassName= L"FTSWindowClass";
-    RegisterClass(&wc); // safe to ignore return value on re-registration
+    RegisterClass(&wc);
 
-    // Size: 520 wide, 360 tall — fits all content with breathing room
-    int W = 520, H = 360;
+    int W = 500, H = 310;
     HWND hWnd = CreateWindowEx(
         WS_EX_TOPMOST | WS_EX_APPWINDOW,
         L"FTSWindowClass", L"BetterAngle — Setup",
@@ -417,6 +335,5 @@ void ShowFirstTimeSetup(HINSTANCE hInstance) {
     SetForegroundWindow(hWnd);
     BringWindowToTop(hWnd);
     SetFocus(hWnd);
-
     StartModalSetupLoop(hWnd);
 }

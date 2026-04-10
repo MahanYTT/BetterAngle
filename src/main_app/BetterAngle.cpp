@@ -223,11 +223,20 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
             return 0;
 
         case WM_TIMER: {
+            // Only repaint if the angle or diving state actually changed
+            static float lastAngle = -9999.0f;
+            static bool  lastDiving = false;
+            static bool  lastCursor = false;
             CURSORINFO ci = { sizeof(CURSORINFO) };
-            if (GetCursorInfo(&ci)) {
-                g_isCursorVisible = (ci.flags & CURSOR_SHOWING);
+            if (GetCursorInfo(&ci)) g_isCursorVisible = (ci.flags & CURSOR_SHOWING);
+            float ang = g_logic.GetAngle();
+            if (ang != lastAngle || g_isDiving != lastDiving || g_isCursorVisible != lastCursor
+                || g_currentSelection != NONE) {
+                lastAngle  = ang;
+                lastDiving = g_isDiving;
+                lastCursor = g_isCursorVisible;
+                InvalidateRect(hWnd, NULL, FALSE);
             }
-            InvalidateRect(hWnd, NULL, FALSE);
             return 0;
         }
 
@@ -321,7 +330,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     );
     ShowWindow(g_hHUD, SW_SHOW);
     UpdateWindow(g_hHUD);
-    SetTimer(g_hHUD, 1, 25, NULL);
+    SetTimer(g_hHUD, 1, 50, NULL);
 
     std::thread detThread(DetectorThread);
 

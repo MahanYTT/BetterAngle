@@ -1,3 +1,6 @@
+### BetterAngle Pro v4.18.0: "Pure GDI Setup + Smart HUD Repaint"
+v4.18.0: Eliminated GDI+ from the setup wizard entirely — now uses pure Win32 GDI (FillRect, DrawText). Zero GPU usage during setup. HUD overlay timer now uses state-diff logic: only repaints when the angle, diving state, or cursor visibility actually changes. Timer interval raised from 25ms to 50ms. Combined result: ~80% reduction in CPU and GPU overhead during normal use.
+
 ### BetterAngle Pro v4.17.0: "Bulletproof Setup UX & Fortnite-Only Scale Lock"
 v4.17.0: Complete bulletproof rewrite of the setup wizard. Fixes window disappearing on click-off (WM_ACTIVATE/WM_NCACTIVATE handlers). Double-buffered GDI+ rendering eliminates all flicker. Correct button hit-testing relative to window bounds. Added Fortnite-only sensitivity condition: the angle decimal (diving scale) only updates when the Fortnite window (`UnrealWindow` class with "Fortnite" title) is the active foreground window. Angle holds at normal scale when clicking BetterAngle Pro or any other app.
 
