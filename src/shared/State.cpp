@@ -29,6 +29,8 @@ std::wstring g_lastLoadedProfileName = L"";
 float g_glideThreshold = 0.05f;
 float g_freefallThreshold = 0.20f;
 
+#include <fstream>
+#include <string>
 #include <locale>
 #include <sstream>
 #include <shlobj.h>
