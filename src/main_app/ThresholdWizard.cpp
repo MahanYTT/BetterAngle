@@ -4,6 +4,9 @@
 #include "shared/Profile.h"
 #include "shared/Input.h"
 #include <gdiplus.h>
+#include <cmath>
+#include <algorithm>
+#include <vector>
 
 extern float g_detectionRatio;
 extern std::vector<Profile> g_allProfiles;
@@ -53,9 +56,9 @@ LRESULT CALLBACK ThresholdWizProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
                 p.Load(path); 
                 
                 double dpiBase = p.dpi <= 0 ? 800.0 : (double)p.dpi;
-                double normalScaleTested = 120.0 / diff_n;
+                double normalScaleTested = 120.0 / (std::max)(1.0, diff_n);
                 p.sensitivityX = 0.5555 / (dpiBase * normalScaleTested);
-                p.divingScaleMultiplier = (double)diff_n / (double)diff_f;
+                p.divingScaleMultiplier = (double)diff_n / (std::max)(1.0, diff_f);
                 
                 p.name = L"last_calibrated";
                 

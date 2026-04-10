@@ -2,6 +2,8 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <algorithm>
+#include <cstdlib>
 
 FovDetector::FovDetector() 
     : m_hdcScreen(NULL), m_hdcMem(NULL), m_hbm(NULL), m_hOld(NULL), m_curW(0), m_curH(0), m_pixels(NULL) {

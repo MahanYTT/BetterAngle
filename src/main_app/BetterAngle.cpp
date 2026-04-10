@@ -7,6 +7,8 @@
 #include <atomic>
 #include <dwmapi.h>
 #include <gdiplus.h>
+#include <algorithm>
+#include <cmath>
 
 #include "shared/Input.h"
 #include "shared/Overlay.h"
@@ -209,10 +211,10 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
             if (g_currentSelection != NONE) {
                 if (g_currentSelection == SELECTING_ROI && (wParam & MK_LBUTTON)) {
                     POINT cur; GetCursorPos(&cur);
-                    g_selectionRect.left = min(g_startPoint.x, cur.x);
-                    g_selectionRect.right = max(g_startPoint.x, cur.x);
-                    g_selectionRect.top = min(g_startPoint.y, cur.y);
-                    g_selectionRect.bottom = max(g_startPoint.y, cur.y);
+                    g_selectionRect.left = (std::min)(g_startPoint.x, cur.x);
+                    g_selectionRect.right = (std::max)(g_startPoint.x, cur.x);
+                    g_selectionRect.top = (std::min)(g_startPoint.y, cur.y);
+                    g_selectionRect.bottom = (std::max)(g_startPoint.y, cur.y);
                 }
                 InvalidateRect(hWnd, NULL, FALSE);
             }
