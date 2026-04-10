@@ -29,8 +29,9 @@ Window {
             font.pixelSize: 16
         }
 
-        DragHandler {
-            target: mainWindow
+        MouseArea {
+            anchors.fill: parent
+            onPressed: mainWindow.startSystemMove()
         }
 
         // Window Controls
