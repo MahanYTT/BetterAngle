@@ -79,8 +79,6 @@ void DetectorThread() {
                 g_logic.SetDivingState(false);
                 g_detectionRatio = 0.0f;
             }
-
-            }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
