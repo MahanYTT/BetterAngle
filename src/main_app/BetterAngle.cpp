@@ -56,10 +56,10 @@ void DetectorThread() {
                 if (g_forceDiving) {
                     g_isDiving = true;
                     g_logic.SetDivingState(true);
-                } else if (g_detectionRatio >= 0.01f) {
+                } else if (g_detectionRatio >= g_freefallThreshold) {
                     g_isDiving = true;
                     g_logic.SetDivingState(true);
-                } else {
+                } else if (g_detectionRatio <= g_glideThreshold) {
                     g_isDiving = false;
                     g_logic.SetDivingState(false);
                 }
