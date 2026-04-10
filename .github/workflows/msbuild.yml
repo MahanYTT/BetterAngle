@@ -30,6 +30,8 @@ jobs:
           $versionDef = "/DAPP_VERSION=$ver"
           
           cl.exe /EHsc /O2 /DUNICODE /D_UNICODE $versionDef /Iinclude /Isrc src/main_app/BetterAngle.cpp src/shared/*.cpp /Fe:bin/BetterAngle.exe /link user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib shell32.lib d2d1.lib dwrite.lib windowscodecs.lib /SUBSYSTEM:WINDOWS
+          
+          cl.exe /EHsc /O2 /DUNICODE /D_UNICODE $versionDef /Iinclude /Isrc src/config_tool/BetterAngleConfig.cpp src/shared/*.cpp /Fe:bin/BetterAngleConfig.exe /link user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib shell32.lib d2d1.lib dwrite.lib windowscodecs.lib /SUBSYSTEM:WINDOWS
       - name: Get Version
         id: get_version
         run: |
@@ -40,7 +42,9 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: bin/BetterAngle.exe
+          files: |
+            bin/BetterAngle.exe
+            bin/BetterAngleConfig.exe
           tag_name: ${{ env.TAG }}
           name: BetterAngle Pro ${{ env.TAG }}
           body: |

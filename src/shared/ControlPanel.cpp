@@ -81,6 +81,24 @@ HWND CreateControlPanel(HINSTANCE hInst) {
     return hPanel;
 }
 
+int g_listeningKey = -1;
+
+std::wstring GetKeyName(UINT mod, UINT vk) {
+    if (vk == 0) return L"Unbound";
+    std::wstring n = L"";
+    if (mod & MOD_CONTROL) n += L"Ctrl + ";
+    if (mod & MOD_SHIFT) n += L"Shift + ";
+    if (mod & MOD_ALT) n += L"Alt + ";
+    
+    if (vk >= 'A' && vk <= 'Z') n += (wchar_t)vk;
+    else if (vk >= '0' && vk <= '9') n += (wchar_t)vk;
+    else if (vk >= VK_F1 && vk <= VK_F12) n += L"F" + std::to_wstring(vk - VK_F1 + 1);
+    else n += L"Key(" + std::to_wstring(vk) + L")";
+    return n;
+}
+
+extern HWND g_hHUD;
+
 LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
         case WM_CREATE:
@@ -90,15 +108,86 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
         case WM_SIZE:
             InitD2D(hWnd);
             return 0;
+        case WM_KEYDOWN:
+            if (g_listeningKey != -1) {
+                if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) return 0;
+                
+                UINT mod = 0;
+                if (GetAsyncKeyState(VK_CONTROL) & 0x8000) mod |= MOD_CONTROL;
+                if (GetAsyncKeyState(VK_SHIFT) & 0x8000) mod |= MOD_SHIFT;
+                if (GetAsyncKeyState(VK_MENU) & 0x8000) mod |= MOD_ALT;
+                
+                if (g_listeningKey == 1) { g_keybinds.toggleMod = mod; g_keybinds.toggleKey = wParam; }
+                if (g_listeningKey == 2) { g_keybinds.roiMod = mod; g_keybinds.roiKey = wParam; }
+                if (g_listeningKey == 3) { g_keybinds.crossMod = mod; g_keybinds.crossKey = wParam; }
+                if (g_listeningKey == 4) { g_keybinds.zeroMod = mod; g_keybinds.zeroKey = wParam; }
+                if (g_listeningKey == 5) { g_keybinds.debugMod = mod; g_keybinds.debugKey = wParam; }
+                
+                g_listeningKey = -1;
+                SaveSettings();
+                
+                if (g_hHUD) {
+                    UnregisterHotKey(g_hHUD, 1); UnregisterHotKey(g_hHUD, 2);
+                    UnregisterHotKey(g_hHUD, 3); UnregisterHotKey(g_hHUD, 4);
+                    UnregisterHotKey(g_hHUD, 5);
+                    RegisterHotKey(g_hHUD, 1, g_keybinds.toggleMod, g_keybinds.toggleKey);
+                    RegisterHotKey(g_hHUD, 2, g_keybinds.roiMod, g_keybinds.roiKey);
+                    RegisterHotKey(g_hHUD, 3, g_keybinds.crossMod, g_keybinds.crossKey);
+                    RegisterHotKey(g_hHUD, 4, g_keybinds.zeroMod, g_keybinds.zeroKey);
+                    RegisterHotKey(g_hHUD, 5, g_keybinds.debugMod, g_keybinds.debugKey);
+                }
+            }
+            return 0;
         case WM_LBUTTONDOWN: {
             int x = LOWORD(lParam), y = HIWORD(lParam);
 
             // Tab Navigation (Y: 90-120)
             if (y >= 90 && y <= 120) {
-                if (x >= 40 && x <= 115) g_currentTab = 0;      // General
-                else if (x >= 125 && x <= 200) g_currentTab = 1; // Updates
-                else if (x >= 210 && x <= 295) g_currentTab = 2; // Colors
-                else if (x >= 305 && x <= 380) g_currentTab = 3; // Debug
+                if (x >= 40 && x <= 115) { g_currentTab = 0; g_listeningKey = -1; }
+                else if (x >= 125 && x <= 200) { g_currentTab = 1; g_listeningKey = -1; }
+                else if (x >= 210 && x <= 295) { g_currentTab = 2; g_listeningKey = -1; }
+                else if (x >= 305 && x <= 380) { g_currentTab = 3; g_listeningKey = -1; }
+            }
+
+            if (g_currentTab == 0 && g_listeningKey == -1) {
+                // Keybinds Selection (160 - 280)
+                if (x >= 200 && x <= 380) {
+                    if (y >= 160 && y <= 180) g_listeningKey = 1;
+                    else if (y >= 185 && y <= 205) g_listeningKey = 2;
+                    else if (y >= 210 && y <= 230) g_listeningKey = 3;
+                    else if (y >= 235 && y <= 255) g_listeningKey = 4;
+                    else if (y >= 260 && y <= 280) g_listeningKey = 5;
+                }
+                
+                // Cloud Sync
+                if (g_cloudProfileNames.empty() && !g_isCheckingCloud && x >= 40 && x <= 380 && y >= 330 && y <= 370) {
+                    std::thread(FetchCloudProfiles).detach();
+                } else if (!g_cloudProfileNames.empty() && x >= 40 && x <= 380) {
+                    for (int i=0; i<min(7, (int)g_cloudProfileNames.size()); i++) {
+                        float cy = 330.0f + (i * 35);
+                        if (y >= cy && y <= cy + 30) {
+                            DownloadCloudProfile(i);
+                            g_lastLoadedProfileName = g_cloudProfileNames[i];
+                            // Remove .json for display/internal
+                            if (g_lastLoadedProfileName.find(L".json") != std::wstring::npos) {
+                                g_lastLoadedProfileName = g_lastLoadedProfileName.substr(0, g_lastLoadedProfileName.length() - 5);
+                            }
+                            SaveSettings();
+                            
+                            // Reload Profiles Array
+                            g_allProfiles = GetProfiles(L"profiles");
+                            g_selectedProfileIdx = 0;
+                            for (size_t pidx = 0; pidx < g_allProfiles.size(); pidx++) {
+                                if (g_allProfiles[pidx].name == g_lastLoadedProfileName) {
+                                    g_selectedProfileIdx = pidx; break;
+                                }
+                            }
+                            g_currentProfile = g_allProfiles[g_selectedProfileIdx];
+                            g_logic.SetScale(g_currentProfile.scale_normal);
+                            break;
+                        }
+                    }
+                }
             }
 
             if (g_currentTab == 3) {
@@ -179,17 +268,34 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             DrawD2DButton(g_pRenderTarget, D2D1::RectF(305, 90, 380, 120), L"DEBUG", g_currentTab == 3 ? D2D1::ColorF(0.2f, 0.25f, 0.3f) : D2D1::ColorF(0.1f, 0.12f, 0.15f));
 
             if (g_currentTab == 0) {
-                g_pRenderTarget->DrawText(L"CURRENT KEYBINDS", 16, pHeaderFormat, D2D1::RectF(40, 140, 380, 170), pWhite);
+                g_pRenderTarget->DrawText(L"HOTKEYS (Click to Rebind)", 25, pHeaderFormat, D2D1::RectF(40, 130, 380, 150), pWhite);
 
-                // Target Color Preview Circle (Linked to g_targetColor)
-                ID2D1SolidColorBrush* pTargetBrush = NULL;
-                g_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(GetRValue(g_targetColor)/255.0f, GetGValue(g_targetColor)/255.0f, GetBValue(g_targetColor)/255.0f), &pTargetBrush);
-                g_pRenderTarget->FillEllipse(D2D1::Ellipse(D2D1::Point2F(360.0f, 155.0f), 12.0f, 12.0f), pTargetBrush);
-                g_pRenderTarget->DrawEllipse(D2D1::Ellipse(D2D1::Point2F(360.0f, 155.0f), 12.0f, 12.0f), pGrey, 1.0f);
-                if (pTargetBrush) pTargetBrush->Release();
+                auto drawBind = [&](int id, std::wstring name, UINT mod, UINT vk, float y) {
+                    g_pRenderTarget->DrawText(name.c_str(), name.length(), pVerFormat, D2D1::RectF(40, y, 200, y+20), pGrey);
+                    std::wstring bindText = (g_listeningKey == id) ? L"[ Press Key... ]" : (L"[ " + GetKeyName(mod, vk) + L" ]");
+                    g_pRenderTarget->DrawText(bindText.c_str(), bindText.length(), pVerFormat, D2D1::RectF(210, y, 380, y+20), (g_listeningKey == id) ? pBlue : pWhite);
+                };
+                drawBind(1, L"Toggle Dashboard:", g_keybinds.toggleMod, g_keybinds.toggleKey, 160);
+                drawBind(2, L"Visual ROI Selector:", g_keybinds.roiMod, g_keybinds.roiKey, 185);
+                drawBind(3, L"Precision Crosshair:", g_keybinds.crossMod, g_keybinds.crossKey, 210);
+                drawBind(4, L"Zero Angle Reset:", g_keybinds.zeroMod, g_keybinds.zeroKey, 235);
+                drawBind(5, L"Secret Debug Tab:", g_keybinds.debugMod, g_keybinds.debugKey, 260);
 
-                g_pRenderTarget->DrawText(L"Precision Crosshair: F10\nVisual ROI Selector: Ctrl + R\nToggle ROI Box: F9", 66, pVerFormat, D2D1::RectF(40, 170, 380, 240), pGrey);
-                g_pRenderTarget->DrawText(L"Press CTRL+R to begin full-screen selection.", 45, pVerFormat, D2D1::RectF(40, 250, 380, 290), pWhite);
+                g_pRenderTarget->DrawText(L"CLOUD PROFILES REPOSITORY", 25, pHeaderFormat, D2D1::RectF(40, 300, 380, 320), pWhite);
+
+                if (g_cloudProfileNames.empty() && !g_isCheckingCloud) {
+                    DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, 330, 380, 370), L"FETCH GITHUB PROFILES", D2D1::ColorF(0.2f, 0.4f, 0.8f));
+                } else if (g_isCheckingCloud) {
+                    g_pRenderTarget->DrawText(L"Connecting to GitHub API...", 25, pVerFormat, D2D1::RectF(40, 340, 380, 360), pGrey);
+                } else {
+                    for (int i=0; i<min(7, (int)g_cloudProfileNames.size()); i++) {
+                        float cy = 330.0f + (i * 35);
+                        DrawD2DButton(g_pRenderTarget, D2D1::RectF(40, cy, 380, cy+30), g_cloudProfileNames[i].c_str(), D2D1::ColorF(0.2f, 0.2f, 0.25f));
+                    }
+                }
+
+                std::wstring act = L"Active: " + g_currentProfile.name;
+                g_pRenderTarget->DrawText(act.c_str(), act.length(), pVerFormat, D2D1::RectF(40, 560, 380, 580), pBlue);
 
             } else if (g_currentTab == 1) {
                 g_pRenderTarget->DrawText(L"SOFTWARE DASHBOARD", 18, pHeaderFormat, D2D1::RectF(40, 140, 380, 170), pWhite);

@@ -141,3 +141,45 @@ void ApplyUpdateAndRestart() {
     ShellExecuteA(NULL, "open", "cleanup.bat", NULL, NULL, SW_HIDE);
     exit(0);
 }
+
+std::vector<std::wstring> g_cloudProfileNames;
+std::vector<std::wstring> g_cloudProfileUrls;
+bool g_isCheckingCloud = false;
+
+void FetchCloudProfiles() {
+    g_isCheckingCloud = true;
+    g_cloudProfileNames.clear(); g_cloudProfileUrls.clear();
+    std::string userAgent = "BetterAngle-Profiles/" APP_VERSION_STR;
+    HINTERNET hInternet = InternetOpenA(userAgent.c_str(), INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    HINTERNET hUrl = InternetOpenUrlA(hInternet, "https://api.github.com/repos/MahanYTT/BetterAngle/contents/profiles", NULL, 0, INTERNET_FLAG_RELOAD | INTERNET_FLAG_SECURE, 0);
+    if (hUrl) {
+        std::string jsonResponse; char buffer[1024]; DWORD bytesRead = 0;
+        while (InternetReadFile(hUrl, buffer, sizeof(buffer) - 1, &bytesRead) && bytesRead > 0) { buffer[bytesRead] = '\0'; jsonResponse += buffer; }
+        InternetCloseHandle(hUrl);
+        
+        size_t pos = 0;
+        while ((pos = jsonResponse.find("\"name\":\"")) != std::string::npos) {
+            size_t endN = jsonResponse.find("\"", pos + 8);
+            std::string name = jsonResponse.substr(pos + 8, endN - (pos + 8));
+            size_t urlP = jsonResponse.find("\"download_url\":\"", endN);
+            if (urlP != std::string::npos && name.find(".json") != std::string::npos && name != "settings.json" && name != "Fallback_Default.json") {
+                size_t urlE = jsonResponse.find("\"", urlP + 16);
+                std::string url = jsonResponse.substr(urlP + 16, urlE - (urlP + 16));
+                g_cloudProfileNames.push_back(std::wstring(name.begin(), name.end()));
+                g_cloudProfileUrls.push_back(std::wstring(url.begin(), url.end()));
+            }
+            pos = endN; // continue searching
+            if (pos >= jsonResponse.size()) break;
+            jsonResponse = jsonResponse.substr(pos); // advance to prevent loop
+        }
+    }
+    if (hInternet) InternetCloseHandle(hInternet);
+    g_isCheckingCloud = false;
+}
+
+void DownloadCloudProfile(int index) {
+    if (index >= 0 && index < g_cloudProfileNames.size()) {
+        std::wstring dest = L"profiles/" + g_cloudProfileNames[index];
+        URLDownloadToFileW(NULL, g_cloudProfileUrls[index].c_str(), dest.c_str(), 0, NULL);
+    }
+}

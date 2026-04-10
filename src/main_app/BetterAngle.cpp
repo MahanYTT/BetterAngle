@@ -90,11 +90,11 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
     switch (message) {
         case WM_CREATE:
             SetLayeredWindowAttributes(hWnd, RGB(0, 0, 0), 0, LWA_COLORKEY);
-            RegisterHotKey(hWnd, 1, MOD_CONTROL, 'U'); // Toggle Panel
-            RegisterHotKey(hWnd, 2, MOD_CONTROL, 'R'); // ROI Select
-            RegisterHotKey(hWnd, 3, 0, VK_F10);        // Crosshair
-            RegisterHotKey(hWnd, 4, MOD_CONTROL, 'G'); // Zero Angle
-            RegisterHotKey(hWnd, 5, MOD_CONTROL, '9'); // Secret Debug
+            RegisterHotKey(hWnd, 1, g_keybinds.toggleMod, g_keybinds.toggleKey);
+            RegisterHotKey(hWnd, 2, g_keybinds.roiMod, g_keybinds.roiKey);
+            RegisterHotKey(hWnd, 3, g_keybinds.crossMod, g_keybinds.crossKey);
+            RegisterHotKey(hWnd, 4, g_keybinds.zeroMod, g_keybinds.zeroKey);
+            RegisterHotKey(hWnd, 5, g_keybinds.debugMod, g_keybinds.debugKey);
             return 0;
 
         case WM_HOTKEY:
@@ -235,7 +235,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // Phase 1: Startup Sequence (Splash)
     ShowSplashLoader(hInstance);
 
-    // Initial Load (Syncing was handled or represented in Splash)
+    LoadSettings();
     CreateDirectoryW(L"profiles", NULL);
     g_allProfiles = GetProfiles(L"profiles");
     if (g_allProfiles.empty()) {
@@ -253,7 +253,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         g_allProfiles.push_back(defaultP);
     }
     
-    g_currentProfile = g_allProfiles[0];
+    g_selectedProfileIdx = 0;
+    for (size_t i = 0; i < g_allProfiles.size(); i++) {
+        if (g_allProfiles[i].name == g_lastLoadedProfileName) {
+            g_selectedProfileIdx = i; break;
+        }
+    }
+    if (g_lastLoadedProfileName.empty() && !g_allProfiles.empty()) {
+        g_lastLoadedProfileName = g_allProfiles[0].name;
+    }
+    
+    g_currentProfile = g_allProfiles[g_selectedProfileIdx];
     g_logic.SetScale(g_currentProfile.scale_normal);
 
     // Message Window for Raw Input (Bypasses Layered Window UI Bugs)

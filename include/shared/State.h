@@ -14,7 +14,7 @@
 
 // Define the "raw" version if not passed by compiler flags
 #ifndef APP_VERSION
-    #define APP_VERSION 4.9.41
+    #define APP_VERSION 4.10.0
 #endif
 
 // This creates the actual strings "4.9.36" and L"4.9.36"
@@ -29,15 +29,29 @@ extern HBITMAP g_screenSnapshot;
 extern bool g_isDiving;
 extern bool g_showROIBox;
 extern int g_currentTab;
-extern float g_detectionRatio;
+extern std::wstring g_latestName;
 extern bool g_isCheckingForUpdates;
-extern float g_updateSpinAngle;
+extern bool g_updateAvailable;
+
+struct Keybinds {
+    UINT toggleMod = MOD_CONTROL; UINT toggleKey = 'U';
+    UINT roiMod = MOD_CONTROL; UINT roiKey = 'R';
+    UINT crossMod = 0; UINT crossKey = VK_F10;
+    UINT zeroMod = MOD_CONTROL; UINT zeroKey = 'G';
+    UINT debugMod = MOD_CONTROL; UINT debugKey = '9';
+};
+extern Keybinds g_keybinds;
+extern std::wstring g_lastLoadedProfileName;
+
+void LoadSettings();
+void SaveSettings();
 extern bool g_updateAvailable;
 extern bool g_showCrosshair;
 extern COLORREF g_pickedColor;
 extern COLORREF g_targetColor;
 extern float g_latestVersion;
-extern std::wstring g_latestName;
+extern float g_detectionRatio;
+extern float g_updateSpinAngle;
 extern RECT g_selectionRect;
 extern POINT g_startPoint;
 extern std::string g_status;
