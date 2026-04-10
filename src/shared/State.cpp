@@ -36,17 +36,25 @@ float g_freefallThreshold = 0.20f;
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "advapi32.lib")
 
-std::wstring GetAppStoragePath() {
+std::wstring GetAppRootPath() {
     wchar_t appdata[MAX_PATH];
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) {
         std::wstring path = std::wstring(appdata) + L"\\BetterAngle";
         CreateDirectoryW(path.c_str(), NULL);
-        std::wstring pPath = path + L"\\profiles";
-        CreateDirectoryW(pPath.c_str(), NULL);
-        return pPath + L"\\";
+        SetFileAttributesW(path.c_str(), FILE_ATTRIBUTE_HIDDEN); // Keep it clean as requested
+        return path + L"\\";
     }
     return L"";
 }
+
+std::wstring GetProfilesPath() {
+    std::wstring root = GetAppRootPath();
+    if (root.empty()) return L"";
+    std::wstring pPath = root + L"profiles";
+    CreateDirectoryW(pPath.c_str(), NULL);
+    return pPath + L"\\";
+}
+
 
 void LoadFromRegistry() {
     HKEY hKey;
@@ -129,24 +137,27 @@ void LoadSettings() {
     content.assign((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
     auto eFloat = [&](std::string k, float def) -> float {
       size_t p = content.find("\"" + k + "\":");
-      if (p == std::string::npos)
-        return def;
+      if (p == std::string::npos) return def;
+      size_t valStart = content.find_first_not_of(" \t\n\r", p + k.length() + 2);
+      if (valStart == std::string::npos) return def;
       try {
-        return std::stof(content.substr(p + k.length() + 2));
+        return std::stof(content.substr(valStart));
       } catch (...) {
         return def;
       }
     };
     auto eInt = [&](std::string k, UINT def) -> UINT {
       size_t p = content.find("\"" + k + "\":");
-      if (p == std::string::npos)
-        return def;
+      if (p == std::string::npos) return def;
+      size_t valStart = content.find_first_not_of(" \t\n\r", p + k.length() + 2);
+      if (valStart == std::string::npos) return def;
       try {
-        return std::stoi(content.substr(p + k.length() + 2));
+        return (UINT)std::stoi(content.substr(valStart));
       } catch (...) {
         return def;
       }
     };
+
     
     // Global Keybinds loading removed (v4.20.37)
     g_glideThreshold = eFloat("glideThreshold", 0.05f);
@@ -166,29 +177,42 @@ void LoadSettings() {
 
     size_t vp = content.find("\"lastVersionRun\":\"");
     if (vp != std::string::npos) {
-      size_t end = content.find("\"", vp + 18);
+      size_t valS = vp + 18; // offset of "lastVersionRun":"
+      size_t end = content.find("\"", valS);
       if (end != std::string::npos) {
-          g_lastVersionRun = content.substr(vp + 18, end - (vp + 18));
+          g_lastVersionRun = content.substr(valS, end - valS);
       }
     }
-
 
     size_t pp = content.find("\"lastProfile\":\"");
     if (pp != std::string::npos) {
-      size_t end = content.find("\"", pp + 15);
+      size_t valS = pp + 15; // offset of "lastProfile":"
+      size_t end = content.find("\"", valS);
       if (end != std::string::npos) {
-          std::string n = content.substr(pp + 15, end - (pp + 15));
+          std::string n = content.substr(valS, end - valS);
           g_lastLoadedProfileName = std::wstring(n.begin(), n.end());
       }
     }
+  } else {
+    // Migration: Check if it exists in the OLD path (profiles/settings.json)
+    std::wstring oldPath = GetProfilesPath() + L"settings.json";
+    std::ifstream oldIfs(oldPath.c_str());
+    if (oldIfs.is_open()) {
+        oldIfs.close();
+        MoveFileW(oldPath.c_str(), sp.c_str());
+        LoadSettings(); // Recursive call once to lead moved file
+        return;
+    }
   }
+
   
   LoadFromRegistry();
 }
 
 void SaveSettings() {
-  std::wstring sp = GetAppStoragePath() + L"settings.json";
+  std::wstring sp = GetAppRootPath() + L"settings.json";
   std::ofstream ofs(sp.c_str());
+
   ofs << "{\n";
   // Global Keybinds saving removed (v4.20.37)
   ofs << "  \"glideThreshold\": " << g_glideThreshold << ",\n";

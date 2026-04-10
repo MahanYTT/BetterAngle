@@ -45,7 +45,7 @@ void FinishSetup() {
     p.sensitivityY = (std::max)(0.0001, sensY);
 
     if (g_allProfiles.empty()) {
-        p.Save(GetAppStoragePath() + L"Default.json");
+        p.Save(GetProfilesPath() + L"Default.json");
         g_allProfiles.push_back(p);
         g_selectedProfileIdx = 0;
     } else {
@@ -56,8 +56,9 @@ void FinishSetup() {
         Profile& e = g_allProfiles[g_selectedProfileIdx];
         e.sensitivityX = p.sensitivityX;
         e.sensitivityY = p.sensitivityY;
-        e.Save(GetAppStoragePath() + e.name + L".json");
+        e.Save(GetProfilesPath() + e.name + L".json");
     }
+
     g_setupComplete = true; 
     SaveSettings();
     

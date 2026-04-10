@@ -336,7 +336,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // Cache the profiles set by setup (have correct sens in memory)
     std::vector<Profile> setupProfiles = g_allProfiles;
 
-    g_allProfiles = GetProfiles(GetAppStoragePath());
+    g_allProfiles = GetProfiles(GetProfilesPath());
     if (g_allProfiles.empty()) {
         Profile p;
         p.name = L"Default";
@@ -345,7 +345,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         p.target_color = RGB(150, 150, 150);
         p.crossThickness = 2.0f;
         p.crossColor = RGB(255,0,0);
-        p.Save(GetAppStoragePath() + L"Default.json");
+        p.Save(GetProfilesPath() + L"Default.json");
+
         g_allProfiles.push_back(p);
     }
 
@@ -437,8 +438,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // Final Save on Exit
     if (!g_allProfiles.empty()) {
         Profile& p = g_allProfiles[g_selectedProfileIdx];
-        p.Save(GetAppStoragePath() + p.name + L".json");
+        p.Save(GetProfilesPath() + p.name + L".json");
     }
+
     SaveSettings();
 
     GdiplusShutdown(g_gdiplusToken);

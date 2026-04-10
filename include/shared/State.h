@@ -8,7 +8,8 @@
 #include <vector>
 #include <windows.h>
 
-std::wstring GetAppStoragePath();
+std::wstring GetAppRootPath();
+std::wstring GetProfilesPath();
 extern std::atomic<bool> g_fortniteFocusedCache;
 
 // Versioning system

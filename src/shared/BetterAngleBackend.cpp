@@ -59,7 +59,8 @@ void BetterAngleBackend::setSensX(double v) {
   Profile &p = g_allProfiles[g_selectedProfileIdx];
   p.sensitivityX = (std::max)(0.001, v);
   g_logic.LoadProfile(p.sensitivityX);
-  p.Save(GetAppStoragePath() + p.name + L".json");
+  p.Save(GetProfilesPath() + p.name + L".json");
+  SaveSettings();
   emit profileChanged();
 }
 
@@ -73,7 +74,8 @@ void BetterAngleBackend::setSensY(double v) {
     return;
   Profile &p = g_allProfiles[g_selectedProfileIdx];
   p.sensitivityY = (std::max)(0.001, v);
-  p.Save(GetAppStoragePath() + p.name + L".json");
+  p.Save(GetProfilesPath() + p.name + L".json");
+  SaveSettings();
   emit profileChanged();
 }
 
@@ -87,7 +89,8 @@ void BetterAngleBackend::setTolerance(int v) {
     return;
   Profile &p = g_allProfiles[g_selectedProfileIdx];
   p.tolerance = v;
-  p.Save(GetAppStoragePath() + p.name + L".json");
+  p.Save(GetProfilesPath() + p.name + L".json");
+  SaveSettings();
   emit profileChanged();
 }
 
@@ -226,8 +229,9 @@ void BetterAngleBackend::terminateApp() {
     p.crossOffsetY = g_crossOffsetY;
     p.crossAngle = g_crossAngle;
     p.crossPulse = g_crossPulse;
-    p.Save(GetAppStoragePath() + p.name + L".json");
+    p.Save(GetProfilesPath() + p.name + L".json");
   }
+
   SaveSettings();
   QGuiApplication::quit();
 }
