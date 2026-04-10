@@ -114,6 +114,7 @@ void RenderImGuiFrame() {
     if (g_allProfiles.empty()) {
         ImGui::TextDisabled("No profiles found. Please run the setup wizard.");
         ImGui::End();
+        ImGui::PopStyleVar(2);
         ImGui::Render();
         return;
     }
@@ -435,6 +436,7 @@ void RenderImGuiFrame() {
     }
     
     ImGui::End();
+    ImGui::PopStyleVar(2);
     ImGui::Render();
     const float clear_color_with_alpha[4] = { 0.05f, 0.05f, 0.05f, 1.0f };
     g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, nullptr);
