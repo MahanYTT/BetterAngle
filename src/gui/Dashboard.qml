@@ -157,37 +157,199 @@ Item {
                         }
                     }
 
-                    // Color
+                    // ── HSV Spectrum Color Picker ──────────────────────
                     Text { text: "CROSSHAIR COLOUR"; color: "#666"; font.pixelSize: 11; font.bold: true }
-                    Row {
-                        spacing: 10; width: parent.width
-                        Rectangle {
-                            width: 36; height: 36; radius: 4
-                            color: Qt.rgba(backend.crossColor.r, backend.crossColor.g, backend.crossColor.b, 1)
-                            border.color: "#555"; border.width: 1
+
+                    Item {
+                        id: colorPicker
+                        width: parent.width
+                        height: svCanvas.height + hueStrip.height + hexRow.height + 16
+
+                        // Internal HSV state
+                        property real hue: 0.0
+                        property real sat: 1.0
+                        property real val: 1.0
+
+                        // Initialise from backend color when it changes
+                        function initFromBackend() {
+                            var c = backend.crossColor
+                            var hsv = rgbToHsv(c.r, c.g, c.b)
+                            hue = hsv[0]; sat = hsv[1]; val = hsv[2]
                         }
-                        Column {
-                            spacing: 4
-                            Row { spacing: 6
-                                Text { text: "R"; color: "#ff6666"; width: 14; verticalAlignment: Text.AlignVCenter }
-                                Slider { id: slR; from: 0; to: 255; width: 160; value: backend.crossColor.r * 255
-                                    onMoved: backend.crossColor = Qt.rgba(value/255, backend.crossColor.g, backend.crossColor.b, 1) }
-                                Text { text: Math.round(slR.value); color: "#aaa"; width: 28 }
+
+                        function rgbToHsv(r, g, b) {
+                            var max = Math.max(r,g,b), min = Math.min(r,g,b)
+                            var d = max - min, h = 0, s = max === 0 ? 0 : d/max, v = max
+                            if (d !== 0) {
+                                if (max === r) h = ((g-b)/d + (g < b ? 6 : 0)) / 6
+                                else if (max === g) h = ((b-r)/d + 2) / 6
+                                else h = ((r-g)/d + 4) / 6
                             }
-                            Row { spacing: 6
-                                Text { text: "G"; color: "#66ff88"; width: 14; verticalAlignment: Text.AlignVCenter }
-                                Slider { id: slG; from: 0; to: 255; width: 160; value: backend.crossColor.g * 255
-                                    onMoved: backend.crossColor = Qt.rgba(backend.crossColor.r, value/255, backend.crossColor.b, 1) }
-                                Text { text: Math.round(slG.value); color: "#aaa"; width: 28 }
+                            return [h, s, v]
+                        }
+
+                        function hsvToRgb(h, s, v) {
+                            var i = Math.floor(h*6), f = h*6-i
+                            var p=v*(1-s), q=v*(1-f*s), t=v*(1-(1-f)*s)
+                            switch(i%6){
+                                case 0: return [v,t,p]
+                                case 1: return [q,v,p]
+                                case 2: return [p,v,t]
+                                case 3: return [p,q,v]
+                                case 4: return [t,p,v]
+                                case 5: return [v,p,q]
                             }
-                            Row { spacing: 6
-                                Text { text: "B"; color: "#6699ff"; width: 14; verticalAlignment: Text.AlignVCenter }
-                                Slider { id: slB; from: 0; to: 255; width: 160; value: backend.crossColor.b * 255
-                                    onMoved: backend.crossColor = Qt.rgba(backend.crossColor.r, backend.crossColor.g, value/255, 1) }
-                                Text { text: Math.round(slB.value); color: "#aaa"; width: 28 }
+                            return [0,0,0]
+                        }
+
+                        function toHex2(x) {
+                            var s = Math.round(x*255).toString(16)
+                            return s.length===1 ? "0"+s : s
+                        }
+
+                        function applyColor() {
+                            var rgb = hsvToRgb(hue, sat, val)
+                            backend.crossColor = Qt.rgba(rgb[0], rgb[1], rgb[2], 1)
+                            hexField.text = toHex2(rgb[0]) + toHex2(rgb[1]) + toHex2(rgb[2])
+                        }
+
+                        Component.onCompleted: initFromBackend()
+                        Connections {
+                            target: backend
+                            function onCrosshairChanged() { colorPicker.initFromBackend() }
+                        }
+
+                        // Pure hue color for the SV gradient base
+                        property color hueColor: Qt.hsva(hue, 1.0, 1.0, 1.0)
+
+                        // ── SV Square ──────────────────────────────────
+                        Item {
+                            id: svCanvas
+                            x: 0; y: 0
+                            width: parent.width; height: Math.min(parent.width * 0.55, 160)
+
+                            // White → HueColor (left to right)
+                            Rectangle {
+                                anchors.fill: parent; radius: 6
+                                gradient: Gradient {
+                                    orientation: Gradient.Horizontal
+                                    GradientStop { position: 0.0; color: "white" }
+                                    GradientStop { position: 1.0; color: colorPicker.hueColor }
+                                }
+                            }
+                            // Transparent → Black (top to bottom, overlaid)
+                            Rectangle {
+                                anchors.fill: parent; radius: 6
+                                gradient: Gradient {
+                                    orientation: Gradient.Vertical
+                                    GradientStop { position: 0.0; color: "transparent" }
+                                    GradientStop { position: 1.0; color: "black" }
+                                }
+                            }
+
+                            // Picker cursor circle
+                            Rectangle {
+                                x: colorPicker.sat * parent.width - width/2
+                                y: (1 - colorPicker.val) * parent.height - height/2
+                                width: 12; height: 12; radius: 6
+                                color: "transparent"
+                                border.color: "white"; border.width: 2
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                function pick(mx, my) {
+                                    colorPicker.sat = Math.max(0, Math.min(1, mx / svCanvas.width))
+                                    colorPicker.val = Math.max(0, Math.min(1, 1 - my / svCanvas.height))
+                                    colorPicker.applyColor()
+                                }
+                                onPressed: (mouse) => pick(mouse.x, mouse.y)
+                                onPositionChanged: (mouse) => { if (pressed) pick(mouse.x, mouse.y) }
+                            }
+                        }
+
+                        // ── Rainbow Hue Strip ──────────────────────────
+                        Item {
+                            id: hueStrip
+                            x: 0; anchors.top: svCanvas.bottom; anchors.topMargin: 8
+                            width: parent.width; height: 18
+
+                            Rectangle {
+                                anchors.fill: parent; radius: 9
+                                gradient: Gradient {
+                                    orientation: Gradient.Horizontal
+                                    GradientStop { position: 0.000; color: "#ff0000" }
+                                    GradientStop { position: 0.167; color: "#ffff00" }
+                                    GradientStop { position: 0.333; color: "#00ff00" }
+                                    GradientStop { position: 0.500; color: "#00ffff" }
+                                    GradientStop { position: 0.667; color: "#0000ff" }
+                                    GradientStop { position: 0.833; color: "#ff00ff" }
+                                    GradientStop { position: 1.000; color: "#ff0000" }
+                                }
+                            }
+
+                            // Hue cursor thumb
+                            Rectangle {
+                                x: colorPicker.hue * parent.width - width/2
+                                y: (parent.height - height)/2
+                                width: 10; height: 22; radius: 5
+                                color: "white"
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                function pick(mx) {
+                                    colorPicker.hue = Math.max(0, Math.min(1, mx / hueStrip.width))
+                                    colorPicker.applyColor()
+                                }
+                                onPressed: (mouse) => pick(mouse.x)
+                                onPositionChanged: (mouse) => { if (pressed) pick(mouse.x) }
+                            }
+                        }
+
+                        // ── Swatch + Hex field ─────────────────────────
+                        Row {
+                            id: hexRow
+                            anchors.top: hueStrip.bottom; anchors.topMargin: 8
+                            width: parent.width; spacing: 10
+
+                            Rectangle {
+                                width: 32; height: 32; radius: 4
+                                color: backend.crossColor
+                                border.color: "#555"; border.width: 1
+                            }
+
+                            Rectangle {
+                                width: parent.width - 42; height: 32; radius: 4
+                                color: "#1c1c2e"; border.color: "#4466ff"; border.width: 1
+                                Row {
+                                    anchors { fill: parent; leftMargin: 10 }
+                                    spacing: 4
+                                    Text { text: "#"; color: "#888"; verticalAlignment: Text.AlignVCenter; height: parent.height }
+                                    TextInput {
+                                        id: hexField
+                                        width: parent.width - 24
+                                        height: parent.height
+                                        color: "white"
+                                        font.pixelSize: 14
+                                        text: colorPicker.toHex2(backend.crossColor.r) + colorPicker.toHex2(backend.crossColor.g) + colorPicker.toHex2(backend.crossColor.b)
+                                        verticalAlignment: Text.AlignVCenter
+                                        onEditingFinished: {
+                                            var hex = text.replace("#","")
+                                            if (hex.length === 6) {
+                                                var r = parseInt(hex.substr(0,2),16)/255
+                                                var g = parseInt(hex.substr(2,2),16)/255
+                                                var b = parseInt(hex.substr(4,2),16)/255
+                                                backend.crossColor = Qt.rgba(r,g,b,1)
+                                                colorPicker.initFromBackend()
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
+
 
                     // Pulse
                     CheckBox {
