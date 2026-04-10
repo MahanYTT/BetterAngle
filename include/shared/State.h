@@ -14,7 +14,7 @@
 
 // Define the "raw" version if not passed by compiler flags
 #ifndef APP_VERSION
-    #define APP_VERSION 4.9.36
+    #define APP_VERSION 4.9.38
 #endif
 
 // This creates the actual strings "4.9.36" and L"4.9.36"
@@ -46,5 +46,7 @@ extern float g_currentAngle;
 extern bool g_debugMode;
 extern bool g_isCursorVisible;
 extern AngleLogic g_logic;
+extern bool g_forceDiving;
+extern bool g_forceDetection;
 
 #endif // STATE_H

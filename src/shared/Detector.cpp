@@ -4,7 +4,7 @@
 #include <vector>
 
 FovDetector::FovDetector() 
-    : m_hdcScreen(NULL), m_hdcMem(NULL), m_hbm(NULL), m_hOld(NULL), m_curW(0), m_curH(0) {
+    : m_hdcScreen(NULL), m_hdcMem(NULL), m_hbm(NULL), m_hOld(NULL), m_curW(0), m_curH(0), m_pixels(NULL) {
     m_hdcScreen = GetDC(NULL);
 }
 
@@ -27,7 +27,16 @@ void FovDetector::EnsureResources(int w, int h) {
     }
 
     m_hdcMem = CreateCompatibleDC(m_hdcScreen);
-    m_hbm = CreateCompatibleBitmap(m_hdcScreen, w, h);
+    
+    BITMAPINFO bmi = { 0 };
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = w;
+    bmi.bmiHeader.biHeight = -h; // Top-down
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    m_hbm = CreateDIBSection(m_hdcScreen, &bmi, DIB_RGB_COLORS, &m_pixels, NULL, 0);
     m_hOld = SelectObject(m_hdcMem, m_hbm);
     m_curW = w;
     m_curH = h;
@@ -39,25 +48,16 @@ float FovDetector::Scan(const RoiConfig& cfg) {
     EnsureResources(cfg.w, cfg.h);
     BitBlt(m_hdcMem, 0, 0, cfg.w, cfg.h, m_hdcScreen, cfg.x, cfg.y, SRCCOPY);
 
-    BITMAPINFO bmi = { 0 };
-    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth = cfg.w;
-    bmi.bmiHeader.biHeight = -cfg.h; // Top-down
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 32;
-    bmi.bmiHeader.biCompression = BI_RGB;
-
-    std::vector<DWORD> pixels(cfg.w * cfg.h);
-    if (GetDIBits(m_hdcMem, m_hbm, 0, cfg.h, pixels.data(), &bmi, DIB_RGB_COLORS) == 0) {
-        return 0.0f;
-    }
-
     int match = 0;
     BYTE tr = GetRValue(cfg.target);
     BYTE tg = GetGValue(cfg.target);
     BYTE tb = GetBValue(cfg.target);
 
-    for (DWORD p : pixels) {
+    DWORD* pPixels = (DWORD*)m_pixels;
+    int totalPixels = cfg.w * cfg.h;
+    
+    for (int i = 0; i < totalPixels; i++) {
+        DWORD p = pPixels[i];
         BYTE b = p & 0xFF;
         BYTE g = (p >> 8) & 0xFF;
         BYTE r = (p >> 16) & 0xFF;
@@ -69,5 +69,5 @@ float FovDetector::Scan(const RoiConfig& cfg) {
         }
     }
 
-    return (float)match / (float)(cfg.w * cfg.h);
+    return (float)match / (float)totalPixels;
 }

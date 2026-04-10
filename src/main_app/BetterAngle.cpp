@@ -45,7 +45,12 @@ void DetectorThread() {
             RoiConfig cfg = { p.roi_x, p.roi_y, p.roi_w, p.roi_h, p.target_color, p.tolerance };
             
             g_detectionRatio = g_detector.Scan(cfg);
-            if (g_detectionRatio > 0.05f) {
+            
+            if (g_forceDetection) g_detectionRatio = 1.0f; // SIMULATE MATCH
+            
+            if (g_forceDiving) {
+                g_logic.SetScale(p.scale_diving);
+            } else if (g_detectionRatio > 0.05f) {
                 g_logic.SetScale(p.scale_diving);
             } else {
                 g_logic.SetScale(p.scale_normal);

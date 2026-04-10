@@ -1,3 +1,6 @@
+### BetterAngle Pro v4.9.38: "Zero-Copy Optics & Advanced Debug Engine"
+v4.9.38: Fixed memory-lock color match bugs via CreateDIBSection. Fully functional Angle Logic globally active with Fortnite override bypass in new Debug tab.
+
 ### BetterAngle Pro v4.9.37: "Fixed angle and color picker bug"
 v4.9.31: Fixed angle and color picker bug.
 

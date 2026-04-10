@@ -26,3 +26,5 @@ float g_currentAngle = 0.0f;
 bool g_debugMode = false;
 bool g_isCursorVisible = false;
 AngleLogic g_logic(800, 6.5);
+bool g_forceDiving = false;
+bool g_forceDetection = false;

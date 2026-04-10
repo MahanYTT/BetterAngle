@@ -23,6 +23,7 @@ private:
     HBITMAP m_hbm;
     HGDIOBJ m_hOld;
     int m_curW, m_curH;
+    void* m_pixels;
 
     void EnsureResources(int w, int h);
 };
