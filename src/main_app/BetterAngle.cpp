@@ -149,6 +149,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                     } else {
                         g_currentSelection = NONE;
                         g_isSelectionActive = false;
+                        if (g_screenSnapshot) { DeleteObject(g_screenSnapshot); g_screenSnapshot = NULL; }
                         SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
                         InvalidateRect(hWnd, NULL, FALSE);
                     }
@@ -190,6 +191,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                 // Finalize and Exit Selection
                 g_currentSelection = NONE;
                 g_isSelectionActive = false;
+                if (g_screenSnapshot) { DeleteObject(g_screenSnapshot); g_screenSnapshot = NULL; }
                 SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
                 InvalidateRect(hWnd, NULL, FALSE);
 

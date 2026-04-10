@@ -36,6 +36,18 @@ static void TickFPS() {
 void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrosshair) {
     TickFPS();
 
+    // Cache GDI+ Resources (Memory Leak Fix)
+    static FontFamily ff(L"Segoe UI");
+    static Font Font_Large(&ff, 54, FontStyleBold, UnitPixel); // Adjusted for Minimalist HUD
+    static Font Font_Med(&ff, 28, FontStyleBold, UnitPixel);
+    static Font Font_Small(&ff, 15, FontStyleRegular, UnitPixel);
+    static Font Font_Label(&ff, 12, FontStyleBold, UnitPixel);
+    static Font Font_LabelSmall(&ff, 10, FontStyleRegular, UnitPixel);
+    static Font Font_Tiny(&ff, 9, FontStyleRegular, UnitPixel);
+    static Font Font_DbgTitle(&ff, 11, FontStyleBold, UnitPixel);
+    static Font Font_DbgKey(&ff, 10, FontStyleBold, UnitPixel);
+    static Font Font_DbgVal(&ff, 10, FontStyleRegular, UnitPixel);
+
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
 
@@ -68,20 +80,15 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
         SolidBrush dimBrush(Color(120, 0, 0, 0));
         graphics.FillRectangle(&dimBrush, 0, 0, sw, sh);
 
-        FontFamily selFF(L"Segoe UI");
-        Font       selFont(&selFF, 28, FontStyleBold, UnitPixel);
-        Font       selSub (&selFF, 15, FontStyleRegular, UnitPixel);
-
         SolidBrush whiteBrush(Color(255, 255, 255, 255));
         SolidBrush dimWhite  (Color(180, 220, 220, 220));
 
         if (g_currentSelection == SELECTING_ROI) {
             graphics.DrawString(L"STAGE 1  ·  Drag to select the dive prompt area",
-                                -1, &selFont, PointF(50.0f, 42.0f), &whiteBrush);
+                                -1, &Font_Med, PointF(50.0f, 42.0f), &whiteBrush);
             graphics.DrawString(L"Press the hotkey again to cancel",
-                                -1, &selSub,  PointF(52.0f, 80.0f), &dimWhite);
+                                -1, &Font_Small,  PointF(52.0f, 80.0f), &dimWhite);
 
-            // Live rubber-band rect while dragging
             if (g_selectionRect.right > g_selectionRect.left) {
                 Pen dashPen(Color(200, 255, 255, 255), 1.5f);
                 REAL dash[] = { 6.0f, 4.0f };
@@ -94,11 +101,10 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
 
         } else if (g_currentSelection == SELECTING_COLOR) {
             graphics.DrawString(L"STAGE 2  ·  Click to pick the prompt colour",
-                                -1, &selFont, PointF(50.0f, 42.0f), &whiteBrush);
+                                -1, &Font_Med, PointF(50.0f, 42.0f), &whiteBrush);
             graphics.DrawString(L"Hover over the brightest part of the prompt text",
-                                -1, &selSub,  PointF(52.0f, 80.0f), &dimWhite);
+                                -1, &Font_Small,  PointF(52.0f, 80.0f), &dimWhite);
 
-            // Magnifier scope
             POINT mouse; GetCursorPos(&mouse);
             int scopeSize = 210;
             int offset    = 24;
@@ -107,8 +113,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
             if (scopeX + scopeSize > sw) scopeX = mouse.x - scopeSize - offset;
             if (scopeY + scopeSize > sh) scopeY = mouse.y - scopeSize - offset;
 
-            // Shadow ring
-            graphics.DrawEllipse(&Pen(Color(80, 0, 0, 0), 6.0f), scopeX - 1, scopeY - 1, scopeSize + 2, scopeSize + 2);
+            graphics.DrawEllipse(&Pen(Color(80, 0, 0, 0), 6.0f), (REAL)scopeX - 1, (REAL)scopeY - 1, (REAL)scopeSize + 2, (REAL)scopeSize + 2);
 
             GraphicsPath scopePath;
             scopePath.AddEllipse(scopeX, scopeY, scopeSize, scopeSize);
@@ -123,18 +128,15 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
                 DeleteDC(hdcSnap);
             }
 
-            // Precision crosshair lines inside scope
             int centerX = scopeX + scopeSize / 2;
             int centerY = scopeY + scopeSize / 2;
             Pen xhairPen(Color(200, 255, 50, 50), 1.0f);
             graphics.DrawLine(&xhairPen, centerX - scopeSize/2, centerY, centerX + scopeSize/2, centerY);
             graphics.DrawLine(&xhairPen, centerX, centerY - scopeSize/2, centerX, centerY + scopeSize/2);
 
-            // Red centre dot
             graphics.ResetClip();
             graphics.FillEllipse(&SolidBrush(Color(255, 255, 50, 50)), centerX - 3, centerY - 3, 6, 6);
 
-            // Scope ring  
             Pen scopeRing(Color(220, 255, 255, 255), 2.5f);
             graphics.DrawEllipse(&scopeRing, scopeX, scopeY, scopeSize, scopeSize);
         }
@@ -142,7 +144,6 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
 
     // ── Live ROI box (always visible) ────────────────────────────────────
     if (g_showROIBox && g_selectionRect.right > g_selectionRect.left) {
-        // Colour: green idle, red diving, white during selection
         Color boxColor = g_isDiving ? Color(220, 255, 60, 60) : Color(220, 60, 230, 80);
         if (g_currentSelection != NONE) boxColor = Color(200, 255, 255, 255);
         Pen roiPen(boxColor, 1.5f);
@@ -159,7 +160,6 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
 
         float a = 255.0f;
         if (g_crossPulse) {
-            // High-frequency pulse using QueryPerformanceCounter for accuracy
             LARGE_INTEGER freq, cnt;
             QueryPerformanceFrequency(&freq);
             QueryPerformanceCounter(&cnt);
@@ -183,7 +183,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // === Minimalist HUD (v4.20.36) =========================================
+    // === Minimalist HUD (v4.20.40) =========================================
     // ══════════════════════════════════════════════════════════════════════
     const int rx = g_hudX, ry = g_hudY, rw = 220, rh = 100;
     const int RAD = 12;
@@ -205,8 +205,6 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
     graphics.DrawPath(&borderPen, &path);
 
     // Center Angle Text
-    FontFamily ff(L"Segoe UI");
-    Font angleFont(&ff, 54, FontStyleBold, UnitPixel);
     std::wstring angleStr = FmtFloat(angle, 1) + L"°"; 
 
     StringFormat sf;
@@ -217,7 +215,13 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
     SolidBrush angleBrush(angleCol);
     
     RectF textRect((REAL)rx, (REAL)ry, (REAL)rw, (REAL)rh);
-    graphics.DrawString(angleStr.c_str(), -1, &angleFont, textRect, &sf, &angleBrush);
+    graphics.DrawString(angleStr.c_str(), -1, &Font_Large, textRect, &sf, &angleBrush);
+
+    // Relative Match Info (Top-Left)
+    int matchPct = int(detectionRatio * 100.0f);
+    std::wstring matchStr = std::to_wstring(matchPct) + L"% match";
+    SolidBrush matchBrush(Color(120, 180, 190, 200));
+    graphics.DrawString(matchStr.c_str(), -1, &Font_Tiny, PointF((REAL)rx + 8, (REAL)ry + 8), &matchBrush);
 
     // Subtle Target Swatch (Top-Right)
     int swatchSize = 12;
@@ -227,12 +231,11 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
     graphics.DrawEllipse(&Pen(Color(100, 255, 255, 255), 1.0f), swatchX, swatchY, swatchSize, swatchSize);
 
     // Subtle Drag Hint (Bottom-Center)
-    Font tinyFont(&ff, 9, FontStyleRegular, UnitPixel);
-    SolidBrush tinyBrush(Color(40, 200, 200, 200));
+    SolidBrush tinyBrush(Color(g_isDraggingHUD ? 130 : 55, 200, 210, 220));
     StringFormat sfBottom;
     sfBottom.SetAlignment(StringAlignmentCenter);
     RectF hintRect((REAL)rx, (REAL)ry + rh - 14, (REAL)rw, 14.0f);
-    graphics.DrawString(L"⠿ drag", -1, &tinyFont, hintRect, &sfBottom, &tinyBrush);
+    graphics.DrawString(L"⠿ drag", -1, &Font_Tiny, hintRect, &sfBottom, &tinyBrush);
 
     // ══════════════════════════════════════════════════════════════════════
     // ── Debug Dashboard (Ctrl+9) ──────────────────────────────────────────
@@ -243,10 +246,8 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
         int dw = 370, dh = 28 + DBG_ROWS * ROW_H + 10;
         int dx = rx, dy = ry + rh + 10;
 
-        // Clamp to screen bottom
         if (dy + dh > sh) dy = ry - dh - 8;
 
-        // Background
         GraphicsPath dbgPath;
         dbgPath.AddRectangle(Rect(dx, dy, dw, dh));
         LinearGradientBrush dbgBg(Point(dx, dy), Point(dx, dy + dh),
@@ -254,31 +255,24 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
         graphics.FillPath(&dbgBg, &dbgPath);
         graphics.DrawPath(&Pen(Color(100, 0, 190, 255), 1.0f), &dbgPath);
 
-        // Title bar stripe
         graphics.FillRectangle(&SolidBrush(Color(100, 40, 40, 40)), dx, dy, dw, 22);
 
-        Font dbgTitle(&ff, 11, FontStyleBold,    UnitPixel);
-        Font dbgKey  (&ff, 10, FontStyleBold,    UnitPixel);
-        Font dbgVal  (&ff, 10, FontStyleRegular, UnitPixel);
-
         SolidBrush colTitle (Color(255, 255, 255, 255));
-        SolidBrush colKey   (Color(255, 180, 180, 180));   // neutral key
-        SolidBrush colVal   (Color(255, 220, 230, 240));   // light value
-        SolidBrush colGood  (Color(255,  60, 230, 100));   // green flag
-        SolidBrush colBad   (Color(255, 255,  70,  70));   // red flag
-        SolidBrush colWarn  (Color(255, 255, 210,  50));   // yellow warning
+        SolidBrush colKey   (Color(255, 180, 180, 180));
+        SolidBrush colVal   (Color(255, 220, 230, 240));
+        SolidBrush colGood  (Color(255,  60, 230, 100));
+        SolidBrush colBad   (Color(255, 255,  70,  70));
+        SolidBrush colWarn  (Color(255, 255, 210,  50));
 
-        graphics.DrawString(L"  DEBUG DASHBOARD", -1, &dbgTitle,
+        graphics.DrawString(L"  DEBUG DASHBOARD", -1, &Font_DbgTitle,
                             PointF(float(dx + 4), float(dy + 5)), &colTitle);
 
-        // Helper lambda to draw a key=value row
         int row = 0;
         auto DrawRow = [&](const wchar_t* key, const std::wstring& val, SolidBrush* valBrush) {
             float y = float(dy + 28 + row * ROW_H);
-            graphics.DrawString(key, -1, &dbgKey, PointF(float(dx + 8),  y), &colKey);
-            graphics.DrawString(val.c_str(), -1, &dbgVal, PointF(float(dx + 175), y), valBrush);
+            graphics.DrawString(key, -1, &Font_DbgKey, PointF(float(dx + 8),  y), &colKey);
+            graphics.DrawString(val.c_str(), -1, &Font_DbgVal, PointF(float(dx + 175), y), valBrush);
 
-            // Subtle separator
             if (row > 0)
                 graphics.DrawLine(&Pen(Color(20, 255, 255, 255), 1.0f),
                                   dx + 4, int(y) - 1, dx + dw - 4, int(y) - 1);
@@ -287,34 +281,15 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
 
         bool fortFocused = IsFortniteFocused();
 
-        // ── Rows ──────────────────────────────────────────────────────────
-        int matchPct = int(detectionRatio * 100.0f);
-        
-        DrawRow(L"FPS",
-                FmtFloat(s_fps, 0),
-                s_fps >= 60.0f ? &colGood : &colWarn);
+        DrawRow(L"FPS", FmtFloat(s_fps, 0), s_fps >= 60.0f ? &colGood : &colWarn);
+        DrawRow(L"Angle (raw)", FmtFloat(angle, 2) + L"°", &colVal);
+        DrawRow(L"Detection Ratio", FmtFloat(detectionRatio * 100.0, 0) + L"% / match " + std::to_wstring(matchPct) + L"%", matchPct > 5 ? &colGood : &colVal);
+        DrawRow(L"Diving", g_isDiving ? L"YES" : L"NO", g_isDiving ? &colGood : &colVal);
+        DrawRow(L"Fortnite Focused", fortFocused ? L"YES" : L"NO", fortFocused ? &colGood : &colBad);
 
-        DrawRow(L"Angle (raw)",
-                FmtFloat(angle, 2) + L"°",
-                &colVal);
-
-        DrawRow(L"Detection Ratio",
-                FmtFloat(detectionRatio * 100.0, 0) + L"% / match " + std::to_wstring(matchPct) + L"%",
-                matchPct > 5 ? &colGood : &colVal);
-
-        DrawRow(L"Diving",
-                g_isDiving ? L"YES" : L"NO",
-                g_isDiving ? &colGood : &colVal);
-
-        DrawRow(L"Fortnite Focused",
-                fortFocused ? L"YES" : L"NO",
-                fortFocused ? &colGood : &colBad);
-
-        // Profile name
         std::wstring profName = !g_allProfiles.empty() ? g_allProfiles[g_selectedProfileIdx].name : L"–";
         DrawRow(L"Profile", profName, &colVal);
 
-        // ROI dimensions
         {
             std::wstring roiStr;
             if (!g_allProfiles.empty()) {
@@ -326,40 +301,19 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
             DrawRow(L"ROI", roiStr, &colVal);
         }
 
-        // HUD position
-        DrawRow(L"HUD Position",
-                L"x" + std::to_wstring(g_hudX) + L"  y" + std::to_wstring(g_hudY),
-                &colVal);
+        DrawRow(L"HUD Position", L"x" + std::to_wstring(g_hudX) + L"  y" + std::to_wstring(g_hudY), &colVal);
+        DrawRow(L"Glide Threshold", FmtFloat(g_glideThreshold * 100.0f, 1) + L"%", &colVal);
+        DrawRow(L"Freefall Threshold", FmtFloat(g_freefallThreshold * 100.0f, 1) + L"%", &colVal);
+        DrawRow(L"Force Diving", g_forceDiving ? L"ON" : L"OFF", g_forceDiving ? &colWarn : &colVal);
+        DrawRow(L"Force Detection", g_forceDetection ? L"ON" : L"OFF", g_forceDetection ? &colWarn : &colVal);
+        DrawRow(L"Cursor Visible", g_isCursorVisible ? L"YES" : L"NO", &colVal);
 
-        // Thresholds
-        DrawRow(L"Glide Threshold",
-                FmtFloat(g_glideThreshold * 100.0f, 1) + L"%",
-                &colVal);
-        DrawRow(L"Freefall Threshold",
-                FmtFloat(g_freefallThreshold * 100.0f, 1) + L"%",
-                &colVal);
-
-        // Force flags
-        DrawRow(L"Force Diving",
-                g_forceDiving ? L"ON" : L"OFF",
-                g_forceDiving ? &colWarn : &colVal);
-        DrawRow(L"Force Detection",
-                g_forceDetection ? L"ON" : L"OFF",
-                g_forceDetection ? &colWarn : &colVal);
-
-        // Cursor visible
-        DrawRow(L"Cursor Visible",
-                g_isCursorVisible ? L"YES" : L"NO",
-                &colVal);
-
-        // Selection state
         const wchar_t* selStr = (g_currentSelection == NONE) ? L"NONE"
                               : (g_currentSelection == SELECTING_ROI) ? L"SELECTING ROI"
                               : L"SELECTING COLOR";
         DrawRow(L"Selection State", selStr, g_currentSelection != NONE ? &colWarn : &colVal);
     }
 
-    // ── Blit to screen ────────────────────────────────────────────────────
     BitBlt(hdc, 0, 0, sw, sh, hdcMem, 0, 0, SRCCOPY);
     SelectObject(hdcMem, hOld);
     DeleteObject(hbmMem);

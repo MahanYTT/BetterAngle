@@ -51,6 +51,9 @@ extern float g_glideThreshold;
 // Keybinds struct moved to Profile.h (v4.20.37)
 void LoadSettings();
 void SaveSettings();
+void LoadFromRegistry();
+void SaveToRegistry();
+
 extern bool g_showCrosshair;
 extern float g_crossThickness;
 extern COLORREF g_crossColor;

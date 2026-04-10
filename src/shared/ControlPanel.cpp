@@ -208,8 +208,8 @@ void RenderImGuiFrame() {
             ImGui::EndTabItem();
         }
 
-        // TAB: COLORS
-        if (ImGui::BeginTabItem("COLORS")) {
+        // TAB: DEBUG
+        if (ImGui::BeginTabItem("DEBUG")) {
             ImGui::Spacing();
             ImGui::TextDisabled("ALGORITHM COLOR CONFIG");
             ImGui::Spacing();
@@ -220,12 +220,11 @@ void RenderImGuiFrame() {
             }
             ImGui::Spacing();
             ImGui::TextWrapped("Press Ctrl+R in-game to open the ROI selector, then click the pixel you want to track.");
-            ImGui::EndTabItem();
-        }
-
-        // TAB: DEBUG
-        if (ImGui::BeginTabItem("DEBUG")) {
+            
             ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
             ImGui::TextDisabled("DEBUG & SIMULATION");
             ImGui::Checkbox("SIMULATION MODE", &g_debugMode);
             ImGui::Checkbox("FORCE DIVING", &g_forceDiving);
