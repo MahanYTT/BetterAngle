@@ -9,6 +9,8 @@
 #include <d2d1.h>
 #include <dwrite.h>
 #include <string>
+#include <algorithm>
+#include <vector>
 
 extern std::vector<Profile> g_allProfiles;
 extern int g_selectedProfileIdx;
@@ -58,7 +60,7 @@ void DrawD2DButton(ID2D1HwndRenderTarget* rt, D2D1_RECT_F rect, const wchar_t* t
     ID2D1SolidColorBrush* pWhite  = NULL;
 
     rt->CreateSolidColorBrush(color, &pBrush);
-    rt->CreateSolidColorBrush(D2D1::ColorF(min(1.0f, color.r * 1.6f), min(1.0f, color.g * 1.6f), min(1.0f, color.b * 1.6f)), &pStroke);
+    rt->CreateSolidColorBrush(D2D1::ColorF((std::min)(1.0f, color.r * 1.6f), (std::min)(1.0f, color.g * 1.6f), (std::min)(1.0f, color.b * 1.6f)), &pStroke);
     rt->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &pWhite);
 
     rt->FillRoundedRectangle(D2D1::RoundedRect(rect, 6.0f, 6.0f), pBrush);
@@ -299,7 +301,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             else if (fy >= 0.60f * L.H && fy <= 0.67f * L.H) {
                 if (fx >= L.margin && fx <= L.margin + L.contentW * 0.45f) {
                     if (!g_allProfiles.empty()) {
-                        g_allProfiles[g_selectedProfileIdx].tolerance = max(0, g_allProfiles[g_selectedProfileIdx].tolerance - 2);
+                        g_allProfiles[g_selectedProfileIdx].tolerance = (std::max)(0, g_allProfiles[g_selectedProfileIdx].tolerance - 2);
                         g_allProfiles[g_selectedProfileIdx].Save(GetAppStoragePath() + g_allProfiles[g_selectedProfileIdx].name + L".json");
                     }
                 } else if (fx >= L.W - L.margin - L.contentW * 0.45f && fx <= L.W - L.margin) {
@@ -351,7 +353,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 if (fy >= rows[i] && fy <= rows[i] + rowH) {
                     if (fx >= minX && fx <= minX + btnW) {
                         switch(i) {
-                            case 0: g_crossThickness = max(1.0f, g_crossThickness - 1.0f); break;
+                            case 0: g_crossThickness = (std::max)(1.0f, g_crossThickness - 1.0f); break;
                             case 1: g_crossOffsetX -= 1.0f; break;
                             case 2: g_crossOffsetY -= 1.0f; break;
                             case 3: g_crossAngle -= 5.0f; break;
@@ -389,7 +391,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
         Layout L(sz.width, sz.height);
 
         // Base scale for fonts
-        float baseScale = min(L.W / 560.0f, L.H / 600.0f);
+        float baseScale = (std::min)(L.W / 560.0f, L.H / 600.0f);
         if (baseScale < 0.65f) baseScale = 0.65f;
 
         // ── Brushes ──────────────────────────────────────────────────────────
