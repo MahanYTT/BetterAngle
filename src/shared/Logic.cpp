@@ -31,18 +31,32 @@ double FetchFortniteSensitivity() {
     return (std::max)(fetchedSens, 0.0001);
 }
 
-AngleLogic::AngleLogic(double sensitivity) : sensitivity(sensitivity), accumulatedDeltaX(0) {}
+AngleLogic::AngleLogic(double sensX) : m_sensX(sensX), m_accumDx(0), m_isDiving(false), m_baseDx(0), m_baseAngle(0.0) {}
 
-void AngleLogic::Update(int deltaX) {
-    accumulatedDeltaX += deltaX;
+void AngleLogic::Update(int dx) {
+    m_accumDx += dx;
 }
 
-double AngleLogic::GetCurrentAngle() {
+double AngleLogic::GetAngle() const {
     // 360 degrees rotation is approx 1 / sensitivity units? 
     // This is a placeholder for the actual Fortnite scaling logic
-    return (accumulatedDeltaX * sensitivity * 0.022); 
+    return (m_accumDx.load() * m_sensX.load() * 0.022); 
 }
 
 void AngleLogic::SetZero() {
-    accumulatedDeltaX = 0;
+    m_accumDx = 0;
+}
+
+void AngleLogic::LoadProfile(double sensX) {
+    m_sensX = sensX;
+}
+
+void AngleLogic::SetDivingState(bool diving) {
+    m_isDiving = diving;
+}
+
+double AngleLogic::Norm360(double a) const {
+    while (a >= 360.0) a -= 360.0;
+    while (a < 0.0) a += 360.0;
+    return a;
 }

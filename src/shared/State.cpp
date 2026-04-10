@@ -86,7 +86,8 @@ void LoadFromRegistry() {
             LoadInt(L"ROI_W", p.roi_w);
             LoadInt(L"ROI_H", p.roi_h);
             DWORD color;
-            if (RegQueryValueExW(hKey, L"TargetColor", NULL, NULL, (LPBYTE)&color, &(DWORD){sizeof(color)}) == ERROR_SUCCESS) {
+            DWORD colorSize = sizeof(color);
+            if (RegQueryValueExW(hKey, L"TargetColor", NULL, NULL, (LPBYTE)&color, &colorSize) == ERROR_SUCCESS) {
                 p.target_color = (COLORREF)color;
                 g_targetColor = p.target_color;
             }
