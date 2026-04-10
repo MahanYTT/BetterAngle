@@ -20,7 +20,7 @@ AngleLogic::AngleLogic(double sensX)
 
 void AngleLogic::Update(int dx) {
     if (!g_debugMode) {
-        if (!IsFortniteFocused() || g_isCursorVisible) return;
+        if (!g_fortniteFocusedCache || g_isCursorVisible) return;
     }
     m_accumDx += dx;
 }

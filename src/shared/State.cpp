@@ -11,6 +11,7 @@ float g_detectionRatio = 0.0f;
 bool g_isCheckingForUpdates = false;
 float g_updateSpinAngle = 0.0f;
 bool g_updateAvailable = false;
+std::atomic<bool> g_fortniteFocusedCache(false);
 
 Profile g_currentProfile;
 std::vector<Profile> g_allProfiles;

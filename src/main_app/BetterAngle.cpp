@@ -56,6 +56,7 @@ void DetectorThread() {
             g_logic.LoadProfile(p.sensitivityX);
 
             bool fortFocused = IsFortniteFocused();
+            g_fortniteFocusedCache = fortFocused;
 
             if (fortFocused || g_debugMode) {
                 // Only scan and change angle scale when Fortnite is in focus
@@ -78,6 +79,7 @@ void DetectorThread() {
                 g_isDiving = false;
                 g_logic.SetDivingState(false);
                 g_detectionRatio = 0.0f;
+                g_fortniteFocusedCache = false;
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -104,7 +106,7 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
     if (message == WM_INPUT) {
         int dx = GetRawInputDeltaX(lParam);
         // Only update angle accumulation (the decimal) if Fortnite is focused or debug mode is ON
-        if (IsFortniteFocused() || g_debugMode) {
+        if (g_fortniteFocusedCache || g_debugMode) {
             g_logic.Update(dx);
         }
         return 0;

@@ -9,6 +9,7 @@
 #include <windows.h>
 
 std::wstring GetAppStoragePath();
+extern std::atomic<bool> g_fortniteFocusedCache;
 
 // Versioning system
 #define APP_STR_Z(x) #x
@@ -19,7 +20,7 @@ std::wstring GetAppStoragePath();
 #ifndef V_MAJ
 #define V_MAJ 4
 #define V_MIN 20
-#define V_PAT 15
+#define V_PAT 17
 #endif
 
 #define VERSION_STR  APP_STR_Y(V_MAJ) "." APP_STR_Y(V_MIN) "." APP_STR_Y(V_PAT)

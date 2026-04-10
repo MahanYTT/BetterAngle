@@ -1,3 +1,6 @@
+### BetterAngle Pro v4.20.17
+- Performance Fix: Resolved the severe UI thread contention issue located entirely within the Win32 `WM_INPUT` message loop. Re-routed the blocking `IsFortniteFocused()` system cross-process polling hooks into the asynchronous DetectorThread, resolving the persistent raw mouse delta drops (which manifested as "coordinate system drift" to users when returning their physical mouse to position 0).
+
 ### BetterAngle Pro v4.20.15
 - Hotfix: Repaired GitHub Actions MSVC quotation bug causing compilation failures via robust `TOSTRING` macro implementation.
 
