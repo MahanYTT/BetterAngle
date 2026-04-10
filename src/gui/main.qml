@@ -31,10 +31,7 @@ Window {
 
         MouseArea {
             anchors.fill: parent
-            property point lastMousePos: Qt.point(0, 0)
-            onPressed: { lastMousePos = Qt.point(mouseX, mouseY); }
-            onMouseXChanged: mainWindow.x += (mouseX - lastMousePos.x)
-            onMouseYChanged: mainWindow.y += (mouseY - lastMousePos.y)
+            onPressed: mainWindow.startSystemMove()
         }
 
         // Window Controls
