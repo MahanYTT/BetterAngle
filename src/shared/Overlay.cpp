@@ -190,7 +190,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
 
     // Outer glow  
     {
-        Color glowCol = g_isDiving ? Color(60, 0, 200, 255) : Color(40, 100, 100, 120);
+        Color glowCol = g_isDiving ? Color(60, 240, 240, 240) : Color(40, 120, 120, 120);
         SolidBrush glowBrush(glowCol);
         for (int g = 6; g >= 1; g--) {
             GraphicsPath gp;
@@ -199,7 +199,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
             gp.AddArc(rx + rw - RAD + g, ry + rh - RAD + g, RAD, RAD, 0, 90);
             gp.AddArc(rx - g, ry + rh - RAD + g, RAD, RAD, 90, 90);
             gp.CloseFigure();
-            graphics.FillPath(&SolidBrush(Color(BYTE(30 - g * 4), 0, 180, 255)), &gp);
+            graphics.FillPath(&SolidBrush(Color(BYTE(30 - g * 4), 200, 200, 200)), &gp);
         }
     }
 
@@ -221,7 +221,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
     graphics.FillPath(&topStripe, &path);   // clips to rounded rect naturally
 
     // Border
-    Color borderCol = g_isDiving ? Color(160, 0, 200, 255) : Color(70, 200, 210, 220);
+    Color borderCol = g_isDiving ? Color(200, 255, 255, 255) : Color(100, 150, 150, 150);
     Pen borderPen(borderCol, 1.2f);
     graphics.DrawPath(&borderPen, &path);
 
@@ -234,9 +234,9 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
 
     // -- Angle text --------------------------------------------------------
     Font      angleFont(&ff, 68, FontStyleBold, UnitPixel);
-    std::wstring    angleStr = FmtFloat(angle, 1) + L" deg"; 
+    std::wstring    angleStr = FmtFloat(angle, 1) + L"°"; 
     // Colour: teal idle, cyan when diving
-    Color angleCol = g_isDiving ? Color(255, 0, 220, 255) : Color(255, 0, 210, 140);
+    Color angleCol = g_isDiving ? Color(255, 255, 255, 255) : Color(255, 210, 210, 210);
     SolidBrush angleBrush(angleCol);
     graphics.DrawString(angleStr.c_str(), -1, &angleFont, PointF(float(rx + 14), float(ry + 26)), &angleBrush);
 
@@ -298,14 +298,14 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
         graphics.DrawPath(&Pen(Color(100, 0, 190, 255), 1.0f), &dbgPath);
 
         // Title bar stripe
-        graphics.FillRectangle(&SolidBrush(Color(60, 0, 160, 255)), dx, dy, dw, 22);
+        graphics.FillRectangle(&SolidBrush(Color(100, 40, 40, 40)), dx, dy, dw, 22);
 
         Font dbgTitle(&ff, 11, FontStyleBold,    UnitPixel);
         Font dbgKey  (&ff, 10, FontStyleBold,    UnitPixel);
         Font dbgVal  (&ff, 10, FontStyleRegular, UnitPixel);
 
         SolidBrush colTitle (Color(255, 255, 255, 255));
-        SolidBrush colKey   (Color(255, 120, 180, 255));   // blue-ish key
+        SolidBrush colKey   (Color(255, 180, 180, 180));   // neutral key
         SolidBrush colVal   (Color(255, 220, 230, 240));   // light value
         SolidBrush colGood  (Color(255,  60, 230, 100));   // green flag
         SolidBrush colBad   (Color(255, 255,  70,  70));   // red flag
