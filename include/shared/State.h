@@ -2,28 +2,28 @@
 #define STATE_H
 
 #include "shared/Logic.h"
+#include "shared/Profile.h"
 #include <atomic>
 #include <string>
 #include <vector>
 #include <windows.h>
 
-
-// --- Inside State.h ---
-#define STRING_HELPER(x) #x
-#define TO_STRING(x) STRING_HELPER(x)
-#define TO_WSTRING(x) L"" TO_STRING(x)
-#include <string>
-
 std::wstring GetAppStoragePath();
 
-// Define the "raw" version if not passed by compiler flags
+// Versioning system
 #ifndef APP_VERSION
-#define APP_VERSION 4.20.1
+#define APP_VERSION "4.20.7"
 #endif
 
-// This creates the actual strings "4.20.1" and L"4.20.1"
-#define VERSION_STR TO_STRING(APP_VERSION)
-#define VERSION_WSTR TO_WSTRING(APP_VERSION)
+// APP_VERSION is now assumed to be a quoted string from the compiler
+#define VERSION_STR APP_VERSION
+#define VERSION_WSTR L"" APP_VERSION
+
+// Global Profile Management
+extern Profile g_currentProfile;
+extern std::vector<Profile> g_allProfiles;
+extern int g_selectedProfileIdx;
+extern std::wstring g_lastLoadedProfileName;
 
 // HUD & Global Shared State
 enum SelectionState { NONE, SELECTING_ROI, SELECTING_COLOR };
@@ -38,6 +38,7 @@ extern bool g_isCheckingForUpdates;
 extern bool g_updateAvailable;
 extern float g_freefallThreshold;
 extern float g_glideThreshold;
+
 struct Keybinds {
   UINT toggleMod = MOD_CONTROL;
   UINT toggleKey = 'U';
@@ -51,11 +52,10 @@ struct Keybinds {
   UINT debugKey = '9';
 };
 extern Keybinds g_keybinds;
-extern std::wstring g_lastLoadedProfileName;
 
 void LoadSettings();
 void SaveSettings();
-extern bool g_updateAvailable;
+
 extern bool g_showCrosshair;
 extern float g_crossThickness;
 extern COLORREF g_crossColor;

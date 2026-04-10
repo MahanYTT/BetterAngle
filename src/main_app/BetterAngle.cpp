@@ -29,15 +29,12 @@ using namespace Gdiplus;
 #include "shared/State.h"
 
 // Global State
+// Global HUD and Panel Handles
 HWND g_hHUD = NULL;
 HWND g_hPanel = NULL;
 ULONG_PTR g_gdiplusToken;
 std::atomic<bool> g_running(true);
 FovDetector g_detector;
-
-Profile g_currentProfile;
-std::vector<Profile> g_allProfiles;
-int g_selectedProfileIdx = 0;
 
 // Only update sensitivity state when Fortnite is the foreground window
 static bool IsFortniteFocused() {

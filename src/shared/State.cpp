@@ -12,6 +12,10 @@ bool g_isCheckingForUpdates = false;
 float g_updateSpinAngle = 0.0f;
 bool g_updateAvailable = false;
 
+Profile g_currentProfile;
+std::vector<Profile> g_allProfiles;
+int g_selectedProfileIdx = 0;
+
 Keybinds g_keybinds;
 std::wstring g_lastLoadedProfileName = L"";
 float g_glideThreshold = 0.05f;
