@@ -7,12 +7,11 @@
 #include <shlobj.h>
 
 double FetchFortniteSensitivity() {
-    wchar_t appdata[MAX_PATH];
-    if (!SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata)))
+    wchar_t expPath[MAX_PATH];
+    if (!ExpandEnvironmentStringsW(L"%LOCALAPPDATA%\\FortniteGame\\Saved\\Config\\WindowsClient\\GameUserSettings.ini", expPath, MAX_PATH))
         return -1.0;
 
-    std::wstring pPath = std::wstring(appdata) +
-        L"\\FortniteGame\\Saved\\Config\\WindowsClient\\GameUserSettings.ini";
+    std::wstring pPath = expPath;
 
     std::ifstream ifs(pPath, std::ios::binary);
     if (!ifs.is_open() || !ifs.good())
