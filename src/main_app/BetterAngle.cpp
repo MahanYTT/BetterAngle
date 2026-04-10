@@ -337,7 +337,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         g_allProfiles.push_back(p);
     }
     
-    g_allProfiles[g_selectedProfileIdx].sensitivityX = FetchFortniteSensitivity();
+    // Sensitivity is loaded from the JSON profile; Do not blindly overwrite it here.
     g_currentProfile = g_allProfiles[g_selectedProfileIdx];
     
     // Guard: if still empty after setup, something went wrong — exit cleanly

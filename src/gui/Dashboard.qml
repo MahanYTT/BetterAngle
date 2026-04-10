@@ -89,6 +89,15 @@ Item {
                     color: backend.syncResult.includes("OK") ? "#00cca3" : "#ff3333"
                     font.bold: true
                 }
+
+                Button {
+                    text: "QUIT APP"
+                    width: parent.width
+                    height: 40
+                    contentItem: Text { text: parent.text; color: "white"; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                    background: Rectangle { color: parent.hovered ? "#ff4c4c" : "#e63939"; radius: 4 }
+                    onClicked: backend.terminateApp()
+                }
             }
         }
 
