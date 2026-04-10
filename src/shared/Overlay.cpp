@@ -109,18 +109,39 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
                                 -1, &selSub,  PointF(52.0f, 80.0f), &dimWhite);
 
             // Live magnifier
-            POINT cur; GetCursorPos(&cur);
-            int mx = cur.x - 40, my = cur.y - 40, mw = 80, mh = 80;
+            POINT curScr; GetCursorPos(&curScr);
+            POINT cur = curScr; ScreenToClient(hwnd, &cur);
+
+            int mx = curScr.x - 40, my = curScr.y - 40, mw = 80, mh = 80;
             HDC hdcScr = GetDC(NULL);
             HDC hdcZoom = CreateCompatibleDC(hdcMem);
             HBITMAP hbmZoom = CreateCompatibleBitmap(hdcMem, mw * 3, mh * 3);
             SelectObject(hdcZoom, hbmZoom);
             StretchBlt(hdcZoom, 0, 0, mw * 3, mh * 3, hdcScr, mx, my, mw, mh, SRCCOPY);
-            // Position magnifier 20px to the right of cursor, clipped to screen
+
+            // Position magnifier relative to client cursor
             int zx = (cur.x + 20 + mw * 3 < sw) ? (cur.x + 20) : (cur.x - mw * 3 - 20);
             int zy = (cur.y + mh * 3 < sh) ? cur.y : (sh - mh * 3);
+            
+            // Draw magnifier content and border
             BitBlt(hdcMem, zx, zy, mw * 3, mh * 3, hdcZoom, 0, 0, SRCCOPY);
-            DeleteObject(hbmZoom); DeleteDC(hdcZoom); ReleaseDC(NULL, hdcScr);
+            Pen magBorder(Color(255, 255, 255, 255), 2.0f);
+            graphics.DrawRectangle(&magBorder, zx, zy, mw * 3, mh * 3);
+
+            // Magnifier center crosshair
+            Pen magCross(Color(180, 255, 0, 0), 1.0f);
+            graphics.DrawLine(&magCross, zx + (mw * 3 / 2), zy, zx + (mw * 3 / 2), zy + (mh * 3));
+            graphics.DrawLine(&magCross, zx, zy + (mh * 3 / 2), zx + (mw * 3), zy + (mh * 3 / 2));
+
+            // Precision dot at cursor tip
+            SolidBrush dotBrush(Color(255, 255, 0, 0));
+            graphics.FillEllipse(&dotBrush, (int)cur.x - 2, (int)cur.y - 2, 4, 4);
+            Pen dotOuter(Color(255, 255, 255, 255), 1.0f);
+            graphics.DrawEllipse(&dotOuter, (int)cur.x - 2, (int)cur.y - 2, 4, 4);
+
+            DeleteObject(hbmZoom);
+            DeleteDC(hdcZoom);
+            ReleaseDC(NULL, hdcScr);
         }
 
         BitBlt(hdc, 0, 0, sw, sh, hdcMem, 0, 0, SRCCOPY);
