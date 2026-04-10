@@ -84,6 +84,9 @@ LRESULT CALLBACK FirstTimeSetupProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
     if (message == WM_CREATE) {
         return 0;
     }
+    if (message == WM_MOUSEACTIVATE) {
+        return MA_ACTIVATE;
+    }
     if (message == WM_CHAR) {
         if (wParam == VK_RETURN) { // Enter confirms the step
             if (g_setupState == 1) {
@@ -134,13 +137,19 @@ LRESULT CALLBACK FirstTimeSetupProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
                 else if (x > 180 && x < 310) { g_focusedInput = 2; InvalidateRect(hWnd, NULL, FALSE); }
             }
         }
+        SetFocus(hWnd); // Ensure window gets focus on any click
         return 0;
     }
     if (message == WM_PAINT) {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
         Graphics g(hdc);
-        g.Clear(Color(255, 20, 24, 30));
+        g.Clear(Color(255, 15, 17, 22)); // Match Startup Charcoal
+
+        // Neon Border
+        Pen neonPen(Color(255, 0, 255, 255), 1);
+        RECT rc; GetClientRect(hWnd, &rc);
+        g.DrawRectangle(&neonPen, 0, 0, rc.right - 1, rc.bottom - 1);
 
         FontFamily ff(L"Segoe UI");
         Font title(&ff, 20, FontStyleBold, UnitPixel);
