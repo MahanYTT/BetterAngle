@@ -75,12 +75,21 @@ void CaptureDesktop() {
     DeleteDC(hdcMem);
 }
 
+// Message-Only Window for Bullet-Proof Raw Input
+LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    if (message == WM_INPUT) {
+        int dx = GetRawInputDeltaX(lParam);
+        g_logic.Update(dx);
+        return 0;
+    }
+    return DefWindowProc(hWnd, message, wParam, lParam);
+}
+
 // HUD Window Procedure
 LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
         case WM_CREATE:
             SetLayeredWindowAttributes(hWnd, RGB(0, 0, 0), 0, LWA_COLORKEY);
-            RegisterRawMouse(hWnd);
             RegisterHotKey(hWnd, 1, MOD_CONTROL, 'U'); // Toggle Panel
             RegisterHotKey(hWnd, 2, MOD_CONTROL, 'R'); // ROI Select
             RegisterHotKey(hWnd, 3, 0, VK_F10);        // Crosshair
@@ -186,13 +195,6 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
             }
             return 0;
 
-		case WM_INPUT: {
-            // THE FIX: Send the mouse delta to the logic engine
-            int dx = GetRawInputDeltaX(lParam);
-            g_logic.Update(dx);
-            return 0;
-        }
-
         case WM_TIMER: {
             CURSORINFO ci = { sizeof(CURSORINFO) };
             if (GetCursorInfo(&ci)) {
@@ -240,6 +242,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         g_logic.SetScale(g_currentProfile.scale_normal);
     }
 
+    // Message Window for Raw Input (Bypasses Layered Window UI Bugs)
+    WNDCLASS wcMsg = { 0 };
+    wcMsg.lpfnWndProc = MsgWndProc;
+    wcMsg.hInstance = hInstance;
+    wcMsg.lpszClassName = L"BetterAngleMsgWnd";
+    RegisterClass(&wcMsg);
+    HWND hMsgWnd = CreateWindowEx(0, L"BetterAngleMsgWnd", NULL, 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, hInstance, NULL);
+    RegisterRawMouse(hMsgWnd);
+
     // Phase 2: Create Control Panel (Interactive)
     g_hPanel = CreateControlPanel(hInstance);
     
@@ -261,7 +272,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         0, 0, screenW, screenH,
         NULL, NULL, hInstance, NULL
     );
-    RegisterRawMouse(g_hHUD);
     ShowWindow(g_hHUD, SW_SHOW);
     UpdateWindow(g_hHUD);
     SetTimer(g_hHUD, 1, 25, NULL);

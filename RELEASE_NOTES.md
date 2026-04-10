@@ -1,3 +1,6 @@
+### BetterAngle Pro v4.9.40: "Message Pump & Corrupt JSON Purge"
+v4.9.40: Re-routed RawInput via a dedicated invisible HWND_MESSAGE window to bypass Windows 11 transparent layer dropping blocks. Implemented pre-parse comma swapping to restore already-corrupted profiles saving 0,0 float metrics.
+
 ### BetterAngle Pro v4.9.39: "Angle Calculation & Simulation Overhaul"
 v4.9.39: Critical fix for Angle remaining 0 (RawInput memory padding bug resolved). Fixed locale-dependent JSON parsing that broke float scales on European OS settings. Debug Mode now perfectly overrides all Fortnite gating including cursor lock.
 

@@ -27,6 +27,7 @@ bool Profile::Load(const std::wstring& path) {
         if (pos == std::string::npos) return 0.003;
         size_t end = content.find_first_of(",}", pos + 3 + key.length());
         std::string valStr = content.substr(pos + 3 + key.length(), end - (pos + 3 + key.length()));
+        for (char& c : valStr) if (c == ',') c = '.'; // Fix existing comma-polluted files
         std::istringstream iss(valStr);
         iss.imbue(std::locale("C"));
         double d = 0.003;
