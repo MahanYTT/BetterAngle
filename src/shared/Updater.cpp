@@ -257,12 +257,21 @@ void ApplyUpdateAndRestart() {
     std::wstring tmpFull = exeDir + L"update_tmp.exe";
     std::wstring batFull = exeDir + L"ba_update.bat";
 
-    // Write the helper batch using narrow strings (cmd.exe is fine with ANSI paths)
-    std::string exeA(exeFull.begin(), exeFull.end());
-    std::string tmpA(tmpFull.begin(), tmpFull.end());
-    std::string batA(batFull.begin(), batFull.end());
-    std::string dirA(exeDir.begin(),  exeDir.end());
-    std::string nameA(exeName.begin(), exeName.end());
+    // Write the helper batch using narrow strings safely
+    auto w2n = [](const std::wstring& w) -> std::string {
+        if (w.empty()) return "";
+        int s = WideCharToMultiByte(CP_UTF8, 0, w.c_str(), -1, NULL, 0, NULL, NULL);
+        if (s <= 0) return "";
+        std::string res(s - 1, 0);
+        WideCharToMultiByte(CP_UTF8, 0, w.c_str(), -1, &res[0], s, NULL, NULL);
+        return res;
+    };
+
+    std::string exeA  = w2n(exeFull);
+    std::string tmpA  = w2n(tmpFull);
+    std::string batA  = w2n(batFull);
+    std::string dirA  = w2n(exeDir);
+    std::string nameA = w2n(exeName);
 
     std::ofstream bat(batFull);
     bat << "@echo off\n";
