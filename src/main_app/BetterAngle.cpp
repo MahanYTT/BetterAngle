@@ -319,10 +319,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     LoadSettings();
     
     // Phase 1: Startup Guard (v4.20.44: Complete Lockdown)
+    bool ranSetup = false;
     if (!g_setupComplete) {
         ShowFirstTimeSetup(hInstance);
-        LoadSettings(); // Reload after setup setup to sync sense
+        LoadSettings(); // Reload after setup to sync settings flags
+        ranSetup = true;
     }
+
+    // Cache the profiles set by setup (have correct sens in memory)
+    std::vector<Profile> setupProfiles = g_allProfiles;
 
     g_allProfiles = GetProfiles(GetAppStoragePath());
     if (g_allProfiles.empty()) {
@@ -335,6 +340,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         p.crossColor = RGB(255,0,0);
         p.Save(GetAppStoragePath() + L"Default.json");
         g_allProfiles.push_back(p);
+    }
+
+    // If setup just ran, trust its in-memory sensitivityX/Y values over what was read from disk
+    // (GetProfiles re-parses the JSON which may have edge cases)
+    if (ranSetup && !setupProfiles.empty() && !g_allProfiles.empty()) {
+        g_allProfiles[0].sensitivityX = setupProfiles[0].sensitivityX;
+        g_allProfiles[0].sensitivityY = setupProfiles[0].sensitivityY;
+        // Re-save to ensure the correct values are on disk too
+        g_allProfiles[0].Save(GetAppStoragePath() + g_allProfiles[0].name + L".json");
     }
     
     // Sensitivity is loaded from the JSON profile; Do not blindly overwrite it here.

@@ -14,6 +14,10 @@ extern AngleLogic g_logic;
 extern double FetchFortniteSensitivity();
 
 BetterAngleBackend::BetterAngleBackend(QObject *parent) : QObject(parent) {
+    // Emit profileChanged once the Qt event loop starts so QML fields
+    // refresh with whatever sensitivityX is in g_allProfiles (set by setup or loaded from disk).
+    QTimer::singleShot(0, this, [this]() { emit profileChanged(); });
+
     QTimer* timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, [this]() {
         static bool lastChecking = false;
