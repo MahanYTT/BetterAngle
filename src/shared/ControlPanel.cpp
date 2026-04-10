@@ -190,7 +190,7 @@ void RenderImGuiFrame() {
                 }
             }
             ImGui::Spacing();
-            ImGui::Text("Diag | Angle = %.2f [deg] | Match = %.0f%%", g_currentAngle, g_detectionRatio * 100.0f);
+            ImGui::Text("Diag | Angle = %.2f° | Match = %.0f%%", g_currentAngle, g_detectionRatio * 100.0f);
             ImGui::EndTabItem();
         }
 
@@ -354,11 +354,11 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
             style.Colors[ImGuiCol_WindowBg]              = ImVec4(0.07f, 0.08f, 0.10f, 1.00f);
             style.Colors[ImGuiCol_ChildBg]               = ImVec4(0.12f, 0.13f, 0.15f, 1.00f);
             style.Colors[ImGuiCol_PopupBg]               = ImVec4(0.10f, 0.11f, 0.13f, 0.96f);
-            style.Colors[ImGuiCol_Border]                = ImVec4(0.18f, 0.20f, 0.25f, 0.50f);
+            style.Colors[ImGuiCol_Border]                = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
             style.Colors[ImGuiCol_BorderShadow]          = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
             style.Colors[ImGuiCol_FrameBg]               = ImVec4(0.13f, 0.15f, 0.19f, 1.00f);
             style.Colors[ImGuiCol_FrameBgHovered]        = ImVec4(0.18f, 0.21f, 0.26f, 1.00f);
-            style.Colors[ImGuiCol_FrameBgActive]         = ImVec4(0.23f, 0.25f, 0.31f, 1.00f);
+            style.Colors[ImGuiCol_FrameBgActive]         = ImVec4(0.30f, 0.30f, 0.30f, 1.00f);
             style.Colors[ImGuiCol_MenuBarBg]             = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
             style.Colors[ImGuiCol_CheckMark]             = ImVec4(0.80f, 0.80f, 0.80f, 1.00f);
             style.Colors[ImGuiCol_SliderGrab]            = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
@@ -368,12 +368,17 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
             style.Colors[ImGuiCol_ButtonActive]          = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
             style.Colors[ImGuiCol_Header]                = ImVec4(0.15f, 0.17f, 0.22f, 1.00f);
             style.Colors[ImGuiCol_HeaderHovered]         = ImVec4(0.20f, 0.23f, 0.28f, 1.00f);
-            style.Colors[ImGuiCol_HeaderActive]          = ImVec4(0.25f, 0.27f, 0.35f, 1.00f);
+            style.Colors[ImGuiCol_HeaderActive]          = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
             style.Colors[ImGuiCol_Tab]                   = ImVec4(0.11f, 0.12f, 0.16f, 1.00f);
-            style.Colors[ImGuiCol_TabHovered]            = ImVec4(0.17f, 0.19f, 0.25f, 1.00f);
+            style.Colors[ImGuiCol_TabHovered]            = ImVec4(0.30f, 0.30f, 0.30f, 1.00f);
             style.Colors[ImGuiCol_TabActive]             = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
             style.Colors[ImGuiCol_TabUnfocused]          = ImVec4(0.11f, 0.12f, 0.16f, 1.00f);
             style.Colors[ImGuiCol_TabUnfocusedActive]    = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
+            
+            // Explicit Separator Colors (No blue lines)
+            style.Colors[ImGuiCol_Separator]             = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
+            style.Colors[ImGuiCol_SeparatorHovered]      = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
+            style.Colors[ImGuiCol_SeparatorActive]       = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
 
             ImGui_ImplWin32_Init(hWnd);
             ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
@@ -420,7 +425,7 @@ HWND CreateControlPanel(HINSTANCE hInst) {
 
     HWND hPanel = CreateWindowEx(
         0, L"BetterAngleControlPanel", L"BetterAngle Pro | Global Command Center",
-        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600,
+        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 500, 450,
         nullptr, nullptr, hInst, nullptr
     );
     ShowWindow(hPanel, SW_SHOW);
