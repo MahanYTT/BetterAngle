@@ -246,6 +246,12 @@ LRESULT CALLBACK FirstTimeSetupProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
 }
 
 void ShowFirstTimeSetup(HINSTANCE hInstance) {
+    static HWND s_hFTS = NULL;
+    if (s_hFTS && IsWindow(s_hFTS)) {
+        SetForegroundWindow(s_hFTS);
+        return;
+    }
+
     // Reset state locally
     g_setupState = 2; g_setupSensX = L""; g_setupSensY = L"";
     g_focusedInput = 1; g_extractedConfig = false;
@@ -281,16 +287,16 @@ void ShowFirstTimeSetup(HINSTANCE hInstance) {
     }
 
     int W = 500, H = 310;
-    HWND hWnd = CreateWindowEx(WS_EX_TOPMOST | WS_EX_APPWINDOW, L"FTSWindowClass", L"BetterAngle Setup", WS_POPUP | WS_SYSMENU,
+    s_hFTS = CreateWindowEx(WS_EX_TOPMOST | WS_EX_APPWINDOW, L"FTSWindowClass", L"BetterAngle Setup", WS_POPUP | WS_SYSMENU,
         GetSystemMetrics(SM_CXSCREEN)/2 - W/2, GetSystemMetrics(SM_CYSCREEN)/2 - H/2, W, H, NULL, NULL, hInstance, NULL);
 
-    ShowWindow(hWnd, SW_SHOW);
-    UpdateWindow(hWnd);
+    ShowWindow(s_hFTS, SW_SHOW);
+    UpdateWindow(s_hFTS);
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
-        if (!IsWindow(hWnd)) break;
+        if (!IsWindow(s_hFTS)) break;
     }
 }

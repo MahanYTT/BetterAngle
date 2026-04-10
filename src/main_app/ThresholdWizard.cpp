@@ -115,7 +115,14 @@ LRESULT CALLBACK ThresholdWizProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 }
 
 void StartThresholdWizard(HINSTANCE hInstance) {
-    if (g_hWiz) return;
+    static bool s_wizardActive = false;
+    if (s_wizardActive || g_hWiz) return;
+    s_wizardActive = true;
+
+    struct GuardReset {
+        bool* active;
+        ~GuardReset() { *active = false; }
+    } resetter{&s_wizardActive};
     g_wizStep = 0;
     g_wizDxNormal = 0;
     g_wizDxFreefall = 0;

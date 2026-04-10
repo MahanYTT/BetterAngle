@@ -105,10 +105,10 @@ void RenderImGuiFrame() {
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(20, 20));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::Begin("BetterAngle Pro Command Center", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus);
 
     ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.00f), "BetterAngle Pro | Command Center");
-    ImGui::Separator();
     ImGui::Spacing();
 
     if (ImGui::BeginTabBar("MainTabs")) {
@@ -141,7 +141,7 @@ void RenderImGuiFrame() {
             BindRow("Secret Debug Tab", 5, g_keybinds.debugMod, g_keybinds.debugKey);
 
             ImGui::Spacing();
-            ImGui::SeparatorText("MANUAL SENSITIVITY");
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "MANUAL SENSITIVITY");
             ImGui::Spacing();
 
             if (!g_allProfiles.empty()) {
@@ -169,7 +169,7 @@ void RenderImGuiFrame() {
                 }
                 
                 ImGui::Spacing();
-                ImGui::SeparatorText("360° CALIBRATION ASSISTANT");
+                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "360° CALIBRATION ASSISTANT");
                 ImGui::TextWrapped("If the angle is drifting, use this to fix it perfectly.");
                 
                 if (!g_calibrating) {
@@ -230,7 +230,7 @@ void RenderImGuiFrame() {
             
             ImGui::Spacing();
             ImGui::Spacing();
-            ImGui::TextDisabled("COLOR TOLERANCE");
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "COLOR TOLERANCE");
             if (!g_allProfiles.empty()) {
                 int tol = g_allProfiles[g_selectedProfileIdx].tolerance;
                 if (ImGui::SliderInt("Tolerance", &tol, 0, 100)) {
@@ -321,7 +321,6 @@ void RenderImGuiFrame() {
         ImGui::EndTabBar();
     }
     
-    ImGui::PopStyleVar();
     ImGui::End();
     ImGui::Render();
     const float clear_color_with_alpha[4] = { 0.05f, 0.05f, 0.05f, 1.0f };
@@ -381,15 +380,21 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
             
             ImGuiStyle& style = ImGui::GetStyle();
             
-            // Modern Rounding Settings
-            style.WindowRounding    = 8.0f;
-            style.ChildRounding     = 6.0f;
-            style.FrameRounding     = 6.0f;
-            style.PopupRounding     = 6.0f;
-            style.ScrollbarRounding = 6.0f;
-            style.GrabRounding      = 6.0f;
-            style.TabRounding       = 6.0f;
+            // 2D Flat Style (No rounding, no borders, no 3D effects)
+            style.WindowRounding    = 0.0f;
+            style.ChildRounding     = 0.0f;
+            style.FrameRounding     = 0.0f;
+            style.PopupRounding     = 0.0f;
+            style.ScrollbarRounding = 0.0f;
+            style.GrabRounding      = 0.0f;
+            style.TabRounding       = 0.0f;
             
+            style.WindowBorderSize  = 0.0f;
+            style.FrameBorderSize   = 0.0f;
+            style.PopupBorderSize   = 0.0f;
+            style.ChildBorderSize   = 0.0f;
+            style.TabBorderSize     = 0.0f;
+
             // Padding & Sizing
             style.WindowPadding     = ImVec2(20.0f, 20.0f);
             style.FramePadding      = ImVec2(12.0f, 8.0f);
@@ -397,13 +402,13 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
             style.ItemInnerSpacing  = ImVec2(8.0f, 6.0f);
             style.ScrollbarSize     = 14.0f;
             
-            // Sleek Modern Dark Colors (No blue lines)
+            // Sleek Modern Dark 2D Colors (No blue, no lines)
             style.Colors[ImGuiCol_Text]                  = ImVec4(0.95f, 0.96f, 0.98f, 1.00f);
             style.Colors[ImGuiCol_TextDisabled]          = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
             style.Colors[ImGuiCol_WindowBg]              = ImVec4(0.07f, 0.08f, 0.10f, 1.00f);
             style.Colors[ImGuiCol_ChildBg]               = ImVec4(0.12f, 0.13f, 0.15f, 1.00f);
-            style.Colors[ImGuiCol_PopupBg]               = ImVec4(0.10f, 0.11f, 0.13f, 0.96f);
-            style.Colors[ImGuiCol_Border]                = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
+            style.Colors[ImGuiCol_PopupBg]               = ImVec4(0.10f, 0.11f, 0.13f, 1.00f);
+            style.Colors[ImGuiCol_Border]                = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
             style.Colors[ImGuiCol_BorderShadow]          = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
             style.Colors[ImGuiCol_FrameBg]               = ImVec4(0.13f, 0.15f, 0.19f, 1.00f);
             style.Colors[ImGuiCol_FrameBgHovered]        = ImVec4(0.18f, 0.21f, 0.26f, 1.00f);
@@ -423,11 +428,12 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
             style.Colors[ImGuiCol_TabActive]             = ImVec4(0.35f, 0.35f, 0.35f, 1.00f);
             style.Colors[ImGuiCol_TabUnfocused]          = ImVec4(0.11f, 0.12f, 0.16f, 1.00f);
             style.Colors[ImGuiCol_TabUnfocusedActive]    = ImVec4(0.18f, 0.18f, 0.18f, 1.00f);
-            
-            // Explicit Separator Colors (No blue lines)
-            style.Colors[ImGuiCol_Separator]             = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
-            style.Colors[ImGuiCol_SeparatorHovered]      = ImVec4(0.30f, 0.30f, 0.30f, 1.00f);
-            style.Colors[ImGuiCol_SeparatorActive]       = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
+            style.Colors[ImGuiCol_Separator]             = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+            style.Colors[ImGuiCol_SeparatorHovered]      = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+            style.Colors[ImGuiCol_SeparatorActive]       = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+            style.Colors[ImGuiCol_TitleBg]               = ImVec4(0.10f, 0.10f, 0.10f, 1.00f);
+            style.Colors[ImGuiCol_TitleBgActive]         = ImVec4(0.10f, 0.10f, 0.10f, 1.00f);
+            style.Colors[ImGuiCol_TitleBgCollapsed]      = ImVec4(0.10f, 0.10f, 0.10f, 1.00f);
 
             ImGui_ImplWin32_Init(hWnd);
             ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
