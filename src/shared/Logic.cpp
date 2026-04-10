@@ -7,28 +7,32 @@
 #include <shlobj.h>
 
 double FetchFortniteSensitivity() {
-    double fetchedSens = 0.05;
     wchar_t appdata[MAX_PATH];
-    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) {
-        std::wstring pPath = std::wstring(appdata) + L"\\FortniteGame\\Saved\\Config\\WindowsClient\\GameUserSettings.ini";
-        std::ifstream ifs(pPath.c_str());
-        if (ifs.is_open() && ifs.good()) {
-            std::string line;
-            while (std::getline(ifs, line)) {
-                if (line.find("MouseSensitivityX=") != std::string::npos) {
-                    size_t eqPos = line.find("=");
-                    if (eqPos != std::string::npos) {
-                        try {
-                            fetchedSens = std::stod(line.substr(eqPos + 1));
-                        } catch (...) { }
-                    }
-                    break;
-                }
+    if (!SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata)))
+        return -1.0;
+
+    // Fortnite stores settings in WindowsClient subfolder
+    std::wstring pPath = std::wstring(appdata) +
+        L"\\FortniteGame\\Saved\\Config\\WindowsClient\\GameUserSettings.ini";
+
+    std::ifstream ifs(pPath.c_str());
+    if (!ifs.is_open() || !ifs.good())
+        return -1.0; // File not found
+
+    std::string line;
+    while (std::getline(ifs, line)) {
+        if (line.find("MouseSensitivityX=") != std::string::npos) {
+            size_t eqPos = line.find('=');
+            if (eqPos != std::string::npos) {
+                try {
+                    double val = std::stod(line.substr(eqPos + 1));
+                    return (std::max)(val, 0.001); // Return actual value
+                } catch (...) { }
             }
-            ifs.close();
+            break;
         }
     }
-    return (std::max)(fetchedSens, 0.0001);
+    return -1.0; // Key not found in file
 }
 
 AngleLogic::AngleLogic(double sensX) : m_sensX(sensX), m_accumDx(0), m_isDiving(false), m_baseDx(0), m_baseAngle(0.0) {}
@@ -38,9 +42,10 @@ void AngleLogic::Update(int dx) {
 }
 
 double AngleLogic::GetAngle() const {
-    // 360 degrees rotation is approx 1 / sensitivity units? 
-    // This is a placeholder for the actual Fortnite scaling logic
-    return (m_accumDx.load() * m_sensX.load() * 0.022); 
+    // 0.05555 deg/tick * sens gives the real Fortnite FOV scale
+    double normalScale = 0.05555 * m_sensX.load();
+    double scale = m_isDiving.load() ? (normalScale * 1.0916) : normalScale;
+    return m_accumDx.load() * scale;
 }
 
 void AngleLogic::SetZero() {

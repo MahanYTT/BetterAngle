@@ -156,14 +156,15 @@ void RenderImGuiFrame() {
             double sY = p.sensitivityY;
 
                 ImGui::SetNextItemWidth(120);
-                if (ImGui::InputDouble("Sensitivity X", &sX, 0.0, 0.0, "%.4f")) {
-                    p.sensitivityX = (std::max)(0.0001, sX);
+                if (ImGui::InputDouble("Fortnite Sens X##sensX", &sX, 0.0, 0.0, "%.4f")) {
+                    p.sensitivityX = (std::max)(0.001, sX);
+                    g_logic.LoadProfile(p.sensitivityX);
                     p.Save(GetAppStoragePath() + p.name + L".json");
                 }
                 ImGui::SameLine();
                 ImGui::SetNextItemWidth(120);
-                if (ImGui::InputDouble("Sensitivity Y", &sY, 0.0, 0.0, "%.4f")) {
-                    p.sensitivityY = (std::max)(0.0001, sY);
+                if (ImGui::InputDouble("Fortnite Sens Y##sensY", &sY, 0.0, 0.0, "%.4f")) {
+                    p.sensitivityY = (std::max)(0.001, sY);
                     p.Save(GetAppStoragePath() + p.name + L".json");
                 }
                 
@@ -172,18 +173,22 @@ void RenderImGuiFrame() {
                 static ImVec4 syncColor = ImVec4(1,1,1,1);
                 if (ImGui::Button("SYNC SENSITIVITY WITH FORTNITE", ImVec2(-1, 35))) {
                     double synced = FetchFortniteSensitivity();
-                    if (synced != 0.05) { // 0.05 is our default fallback
+                    if (synced > 0.0) {
                         p.sensitivityX = synced;
+                        p.sensitivityY = synced;
+                        g_logic.LoadProfile(synced);
                         p.Save(GetAppStoragePath() + p.name + L".json");
-                        syncResult = "SYNC SUCCESSFUL!";
+                        syncResult = "SYNC SUCCESSFUL! (sens=" + std::to_string(synced).substr(0,6) + ")";
                         syncColor = ImVec4(0.2f, 0.8f, 0.5f, 1.0f);
                     } else {
-                        syncResult = "CONFIG NOT FOUND!";
+                        syncResult = "CONFIG NOT FOUND! Check: %LOCALAPPDATA%\\FortniteGame\\Saved\\Config\\WindowsClient\\";
                         syncColor = ImVec4(0.8f, 0.2f, 0.2f, 1.0f);
                     }
                 }
                 if (!syncResult.empty()) {
-                    ImGui::TextColored(syncColor, "%s", syncResult.c_str());
+                    ImGui::TextWrapped("%s", syncResult.c_str());
+                    ImGui::SameLine();
+                    ImGui::TextColored(syncColor, " ");
                 }
                 
             // v4.20.37: 360 Calibration Assistant Removed (Per User Request)
