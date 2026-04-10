@@ -190,6 +190,15 @@ Item {
                         }
                     }
 
+                    Button {
+                        text: backend.crossPulse ? "PULSE ANIMATION: ON" : "PULSE ANIMATION: OFF"
+                        width: parent.width
+                        height: 38
+                        contentItem: Text { text: parent.text; color: "white"; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                        background: Rectangle { color: backend.crossPulse ? "#4a3080" : "#333"; radius: 4; border.color: backend.crossPulse ? "#6644aa" : "#444"; border.width: 1 }
+                        onClicked: backend.crossPulse = !backend.crossPulse
+                    }
+
                     // ── HSV Spectrum Color Picker ──────────────────────
                     Text { text: "CROSSHAIR COLOUR"; color: "#666"; font.pixelSize: 11; font.bold: true }
 
@@ -387,19 +396,8 @@ Item {
                     // Pulse (removed from here)
 
                     // Fine Position  
-                    Row {
-                        width: parent.width
-                        Text { text: "FINE POSITION"; color: "#666"; font.pixelSize: 11; font.bold: true; verticalAlignment: Text.AlignVCenter; height: 32 }
-                        Item { Layout.fillWidth: true; height: 1 } // Spacer
-                        CheckBox {
-                            id: pulseChk
-                            text: "Pulse"
-                            checked: backend.crossPulse
-                            scale: 1.1
-                            onToggled: backend.crossPulse = checked
-                            contentItem: Text { text: parent.text; color: "white"; leftPadding: parent.indicator.width + 6; verticalAlignment: Text.AlignVCenter }
-                        }
-                    }
+                    Text { text: "FINE POSITION"; color: "#666"; font.pixelSize: 11; font.bold: true; verticalAlignment: Text.AlignVCenter; height: 32 }
+
 
                     Row {
                         spacing: 6; width: parent.width
