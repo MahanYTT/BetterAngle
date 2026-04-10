@@ -1,3 +1,9 @@
+### BetterAngle Pro v4.20.50
+- **Overlay Fix:** Rewrote `Overlay.cpp` using ASCII-safe source encoding, fixing corrupted box-drawing characters that rendered as pixel-dot squares and a capital T instead of the degree symbol. HUD now correctly shows `0.0°`, a working match bar, target colour swatch, and the `:: drag` hint.
+- **Control Panel:** Restored missing COLORS tab (target colour picker + tolerance slider), DEBUG tab (force diving/detection toggles + threshold sliders), CROSSHAIR pulse animation checkbox, and the full MANUAL SENSITIVITY section with Fortnite config auto-sync button.
+- **Sensitivity Calculation Fixed:** UI now accepts real Fortnite sensitivity values (e.g. `3.0`). Formula is `dx * 0.05555 * sens`. The old workaround of entering `0.3` instead of `3.0` is no longer needed.
+- **Config Auto-Detect Fixed:** `FetchFortniteSensitivity()` now returns `-1.0` on failure (file/key not found) instead of a fallback value that was indistinguishable from a valid sensitivity.
+
 ### BetterAngle Pro v4.20.19
 - **Architectural Overhaul:** Ripped out the custom Direct2D UI drawing engine and completely migrated the Settings Dashboard (`ControlPanel.cpp`) to the industry-standard **Dear ImGui** framework running on DirectX 11.
 - **UI Enhancements:** Replaced clunky + and - buttons with smooth sliders. Integrated massive UX upgrades with `ImGui::ColorEdit3` directly in the dashboard tabs instead of summoning external Windows Forms dialogs. Re-mapped all 5 internal visual tabs with hardware acceleration.

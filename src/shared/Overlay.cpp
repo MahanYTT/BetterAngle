@@ -1,4 +1,6 @@
-﻿#include "shared/State.h"
+// Overlay.cpp - BetterAngle Pro
+// All comments use ASCII only to avoid encoding issues across contributors.
+#include "shared/State.h"
 #include "shared/Logic.h"
 #include <gdiplus.h>
 #include <iostream>
@@ -26,7 +28,7 @@ static ULONGLONG s_fpsTimer      = 0;
 static void TickFPS() {
     ULONGLONG now = GetTickCount64();
     s_frameCount++;
-    if (now - s_fpsTimer >= 500) {          // update every 0.5s
+    if (now - s_fpsTimer >= 500) {
         s_fps = s_frameCount * 1000.0f / float(now - s_fpsTimer);
         s_frameCount = 0;
         s_fpsTimer   = now;
@@ -44,7 +46,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
     int sw = rect.right  - rect.left;
     int sh = rect.bottom - rect.top;
 
-    // ÔöÇÔöÇ Double-buffered drawing ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    // Double-buffered drawing
     HDC      hdcMem = CreateCompatibleDC(hdc);
     HBITMAP  hbmMem = CreateCompatibleBitmap(hdc, sw, sh);
     HGDIOBJ  hOld   = SelectObject(hdcMem, hbmMem);
@@ -54,7 +56,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
     graphics.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
     graphics.Clear(Color(0, 0, 0, 0));
 
-    // ÔöÇÔöÇ ROI selection snapshot background ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    // ROI selection snapshot background
     if (g_screenSnapshot && g_currentSelection != NONE) {
         HDC     hdcSnap  = CreateCompatibleDC(hdcMem);
         HGDIOBJ hOldSnap = SelectObject(hdcSnap, g_screenSnapshot);
@@ -63,7 +65,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
         DeleteDC(hdcSnap);
     }
 
-    // ÔöÇÔöÇ Two-stage selection overlay ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    // Two-stage selection overlay
     if (g_currentSelection != NONE) {
         SolidBrush dimBrush(Color(120, 0, 0, 0));
         graphics.FillRectangle(&dimBrush, 0, 0, sw, sh);
@@ -76,12 +78,11 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
         SolidBrush dimWhite  (Color(180, 220, 220, 220));
 
         if (g_currentSelection == SELECTING_ROI) {
-            graphics.DrawString(L"STAGE 1  ┬À  Drag to select the dive prompt area",
+            graphics.DrawString(L"STAGE 1  \xB7  Drag to select the dive prompt area",
                                 -1, &selFont, PointF(50.0f, 42.0f), &whiteBrush);
             graphics.DrawString(L"Press the hotkey again to cancel",
                                 -1, &selSub,  PointF(52.0f, 80.0f), &dimWhite);
 
-            // Live rubber-band rect while dragging
             if (g_selectionRect.right > g_selectionRect.left) {
                 Pen dashPen(Color(200, 255, 255, 255), 1.5f);
                 REAL dash[] = { 6.0f, 4.0f };
@@ -93,203 +94,153 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
             }
 
         } else if (g_currentSelection == SELECTING_COLOR) {
-            graphics.DrawString(L"STAGE 2  ┬À  Click to pick the prompt colour",
+            graphics.DrawString(L"STAGE 2  \xB7  Click to pick the prompt colour",
                                 -1, &selFont, PointF(50.0f, 42.0f), &whiteBrush);
             graphics.DrawString(L"Hover over the brightest part of the prompt text",
                                 -1, &selSub,  PointF(52.0f, 80.0f), &dimWhite);
 
-            // Magnifier scope
-            POINT mouse; GetCursorPos(&mouse);
-            int scopeSize = 210;
-            int offset    = 24;
-            int scopeX    = mouse.x + offset;
-            int scopeY    = mouse.y + offset;
-            if (scopeX + scopeSize > sw) scopeX = mouse.x - scopeSize - offset;
-            if (scopeY + scopeSize > sh) scopeY = mouse.y - scopeSize - offset;
+            // Live magnifier
+            POINT cur; GetCursorPos(&cur);
+            int mx = cur.x - 40, my = cur.y - 40, mw = 80, mh = 80;
+            HDC hdcScr = GetDC(NULL);
+            HDC hdcZoom = CreateCompatibleDC(hdcMem);
+            HBITMAP hbmZoom = CreateCompatibleBitmap(hdcMem, mw * 3, mh * 3);
+            SelectObject(hdcZoom, hbmZoom);
+            StretchBlt(hdcZoom, 0, 0, mw * 3, mh * 3, hdcScr, mx, my, mw, mh, SRCCOPY);
+            BitBlt(hdcMem, cur.x - hdcMem == NULL ? 0 : 0, cur.y, mw * 3, mh * 3, hdcZoom, 0, 0, SRCCOPY);
+            DeleteObject(hbmZoom); DeleteDC(hdcZoom); ReleaseDC(NULL, hdcScr);
+        }
 
-            // Shadow ring
-            graphics.DrawEllipse(&Pen(Color(80, 0, 0, 0), 6.0f), scopeX - 1, scopeY - 1, scopeSize + 2, scopeSize + 2);
+        BitBlt(hdc, 0, 0, sw, sh, hdcMem, 0, 0, SRCCOPY);
+        SelectObject(hdcMem, hOld); DeleteObject(hbmMem); DeleteDC(hdcMem);
+        EndPaint(hwnd, &ps);
+        return;
+    }
 
-            GraphicsPath scopePath;
-            scopePath.AddEllipse(scopeX, scopeY, scopeSize, scopeSize);
-            graphics.SetClip(&scopePath);
+    // ROI box visualizer
+    if (g_showROIBox && !g_allProfiles.empty()) {
+        auto& p = g_allProfiles[g_selectedProfileIdx];
+        if (p.roi_w > 0 && p.roi_h > 0) {
+            Color roiCol = g_isDiving
+                ? Color(200, 255, 60, 60)
+                : Color(200, 60, 220, 80);
+            Pen roiPen(roiCol, 2.0f);
+            REAL dash[] = { 8.0f, 4.0f };
+            roiPen.SetDashPattern(dash, 2);
+            graphics.DrawRectangle(&roiPen, p.roi_x, p.roi_y, p.roi_w, p.roi_h);
 
-            if (g_screenSnapshot) {
-                HDC     hdcSnap  = CreateCompatibleDC(hdcMem);
-                HGDIOBJ hOldSnap = SelectObject(hdcSnap, g_screenSnapshot);
-                StretchBlt(hdcMem, scopeX, scopeY, scopeSize, scopeSize,
-                           hdcSnap, mouse.x - 16, mouse.y - 16, 33, 33, SRCCOPY);
-                SelectObject(hdcSnap, hOldSnap);
-                DeleteDC(hdcSnap);
-            }
-
-            // Precision crosshair lines inside scope
-            int centerX = scopeX + scopeSize / 2;
-            int centerY = scopeY + scopeSize / 2;
-            Pen xhairPen(Color(200, 255, 50, 50), 1.0f);
-            graphics.DrawLine(&xhairPen, centerX - scopeSize/2, centerY, centerX + scopeSize/2, centerY);
-            graphics.DrawLine(&xhairPen, centerX, centerY - scopeSize/2, centerX, centerY + scopeSize/2);
-
-            // Red centre dot
-            graphics.ResetClip();
-            graphics.FillEllipse(&SolidBrush(Color(255, 255, 50, 50)), centerX - 3, centerY - 3, 6, 6);
-
-            // Scope ring  
-            Pen scopeRing(Color(220, 255, 255, 255), 2.5f);
-            graphics.DrawEllipse(&scopeRing, scopeX, scopeY, scopeSize, scopeSize);
+            FontFamily roiFF(L"Segoe UI");
+            Font roiFont(&roiFF, 10, FontStyleBold, UnitPixel);
+            SolidBrush roiLabel(roiCol);
+            graphics.DrawString(g_isDiving ? L"DIVING" : L"GLIDING",
+                                -1, &roiFont, PointF(float(p.roi_x + 4), float(p.roi_y + 4)), &roiLabel);
         }
     }
 
-    // ÔöÇÔöÇ Live ROI box (always visible) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-    if (g_showROIBox && g_selectionRect.right > g_selectionRect.left) {
-        // Colour: green idle, red diving, white during selection
-        Color boxColor = g_isDiving ? Color(220, 255, 60, 60) : Color(220, 60, 230, 80);
-        if (g_currentSelection != NONE) boxColor = Color(200, 255, 255, 255);
-        Pen roiPen(boxColor, 1.5f);
-        graphics.DrawRectangle(&roiPen,
-            g_selectionRect.left, g_selectionRect.top,
-            g_selectionRect.right  - g_selectionRect.left,
-            g_selectionRect.bottom - g_selectionRect.top);
-    }
-
-    // ÔöÇÔöÇ Precision crosshair ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    // Crosshair
     if (showCrosshair) {
-        float cx = sw / 2.0f + g_crossOffsetX;
-        float cy = sh / 2.0f + g_crossOffsetY;
+        float cx = sw * 0.5f + g_crossOffsetX;
+        float cy = sh * 0.5f + g_crossOffsetY;
+        float hw = g_crossThickness * 8.0f;
+        float hh = g_crossThickness * 8.0f;
 
-        float a = 255.0f;
+        float pulse = 1.0f;
         if (g_crossPulse) {
-            // High-frequency pulse using QueryPerformanceCounter for accuracy
-            LARGE_INTEGER freq, cnt;
-            QueryPerformanceFrequency(&freq);
-            QueryPerformanceCounter(&cnt);
-            float t = float(cnt.QuadPart % (freq.QuadPart * 2)) / float(freq.QuadPart);
-            float opacity = 0.5f + 0.5f * sinf(t * 3.14159265f * 2.0f);
-            if (opacity < 0.05f) opacity = 0.05f;
-            a = opacity * 255.0f;
+            ULONGLONG t = GetTickCount64();
+            pulse = 0.6f + 0.4f * sinf(float(t) * 0.005f);
         }
 
-        Color  crossC((BYTE)a, GetRValue(g_crossColor), GetGValue(g_crossColor), GetBValue(g_crossColor));
-        Pen    crossPen(crossC, g_crossThickness);
-        crossPen.SetLineJoin(LineJoinRound);
-
-        float rad  = g_crossAngle * (3.1415926535f / 180.0f);
-        float sinR = sinf(rad);
-        float cosR = cosf(rad);
-        float l    = (sw > sh ? sw : sh) * 3.0f;
-
-        graphics.DrawLine(&crossPen, cx - sinR*l, cy + cosR*l, cx + sinR*l, cy - cosR*l);
-        graphics.DrawLine(&crossPen, cx - cosR*l, cy - sinR*l, cx + cosR*l, cy + sinR*l);
+        BYTE alpha = BYTE(200 * pulse);
+        COLORREF cc = g_crossColor;
+        Pen cPen(Color(alpha, GetRValue(cc), GetGValue(cc), GetBValue(cc)), g_crossThickness);
+        Matrix rot;
+        rot.RotateAt(g_crossAngle, PointF(cx, cy));
+        graphics.SetTransform(&rot);
+        graphics.DrawLine(&cPen, cx - hw, cy, cx + hw, cy);
+        graphics.DrawLine(&cPen, cx, cy - hh, cx, cy + hh);
+        graphics.ResetTransform();
     }
 
-    // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
-    // ÔöÇÔöÇ Main Glass HUD ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-    // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
-    const int rx = g_hudX, ry = g_hudY, rw = 340, rh = 200;
-    const int RAD = 18;
+    // HUD box
+    int rw = 220, rh = 130;
+    int rx = g_hudX, ry = g_hudY;
 
-    // Outer glow  
-    {
-        Color glowCol = g_isDiving ? Color(60, 0, 200, 255) : Color(40, 100, 100, 120);
-        SolidBrush glowBrush(glowCol);
-        for (int g = 6; g >= 1; g--) {
-            GraphicsPath gp;
-            gp.AddArc(rx - g, ry - g, RAD, RAD, 180, 90);
-            gp.AddArc(rx + rw - RAD + g, ry - g, RAD, RAD, 270, 90);
-            gp.AddArc(rx + rw - RAD + g, ry + rh - RAD + g, RAD, RAD, 0, 90);
-            gp.AddArc(rx - g, ry + rh - RAD + g, RAD, RAD, 90, 90);
-            gp.CloseFigure();
-            graphics.FillPath(&SolidBrush(Color(BYTE(30 - g * 4), 0, 180, 255)), &gp);
-        }
-    }
-
-    // Panel body
+    // Background gradient
+    LinearGradientBrush bgBrush(
+        Point(rx, ry), Point(rx, ry + rh),
+        Color(210, 10, 14, 20), Color(210, 4, 6, 10));
     GraphicsPath path;
-    path.AddArc(rx,           ry,           RAD, RAD, 180, 90);
-    path.AddArc(rx + rw - RAD, ry,           RAD, RAD, 270, 90);
-    path.AddArc(rx + rw - RAD, ry + rh - RAD, RAD, RAD,   0, 90);
-    path.AddArc(rx,           ry + rh - RAD, RAD, RAD,  90, 90);
-    path.CloseFigure();
-
-    LinearGradientBrush bgBrush(Point(rx, ry), Point(rx, ry + rh),
-                                Color(210, 12, 15, 20), Color(210, 4, 5, 8));
+    path.AddRectangle(Rect(rx, ry, rw, rh));
     graphics.FillPath(&bgBrush, &path);
 
-    // Bright top highlight stripe
-    LinearGradientBrush topStripe(Point(rx, ry), Point(rx, ry + 40),
-                                  Color(30, 255, 255, 255), Color(0, 255, 255, 255));
-    graphics.FillPath(&topStripe, &path);   // clips to rounded rect naturally
-
-    // Border
-    Color borderCol = g_isDiving ? Color(160, 0, 200, 255) : Color(70, 200, 210, 220);
-    Pen borderPen(borderCol, 1.2f);
+    // Border: white when diving, subtle when not
+    Color borderCol = g_isDiving ? Color(255, 255, 255, 255) : Color(140, 50, 65, 80);
+    Pen borderPen(borderCol, 1.5f);
     graphics.DrawPath(&borderPen, &path);
 
+    // "CURRENT ANGLE" label
     FontFamily ff(L"Segoe UI");
+    Font labelFont(&ff, 9, FontStyleBold, UnitPixel);
+    SolidBrush labelBrush(Color(160, 180, 185, 195));
+    graphics.DrawString(L"CURRENT ANGLE", -1, &labelFont,
+                        PointF(float(rx + 14), float(ry + 8)), &labelBrush);
 
-    // ÔöÇÔöÇ Label row ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-    Font     labelFont(&ff, 10, FontStyleRegular, UnitPixel);
-    SolidBrush labelBrush(Color(180, 140, 155, 170));
-    graphics.DrawString(L"CURRENT ANGLE", -1, &labelFont, PointF(float(rx + 18), float(ry + 14)), &labelBrush);
-
-    // ÔöÇÔöÇ Angle text ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-    Font      angleFont(&ff, 68, FontStyleBold, UnitPixel);
-    std::wstring angleStr = FmtFloat(angle, 1) + L"┬░";
-    // Colour: teal idle, cyan when diving
+    // Angle text — L"\xB0" is the degree symbol (safe ASCII escape)
+    Font angleFont(&ff, 68, FontStyleBold, UnitPixel);
+    std::wstring angleStr = FmtFloat(angle, 1) + L"\xB0";
     Color angleCol = g_isDiving ? Color(255, 0, 220, 255) : Color(255, 0, 210, 140);
     SolidBrush angleBrush(angleCol);
-    graphics.DrawString(angleStr.c_str(), -1, &angleFont, PointF(float(rx + 14), float(ry + 26)), &angleBrush);
+    graphics.DrawString(angleStr.c_str(), -1, &angleFont,
+                        PointF(float(rx + 14), float(ry + 22)), &angleBrush);
 
-    // ÔöÇÔöÇ Match % label ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    // Match % label
     Font subFont(&ff, 12, FontStyleBold, UnitPixel);
     int matchPct = int(detectionRatio * 100.0f);
     std::wstring matchStr = L"Match  " + std::to_wstring(matchPct) + L"%";
     Color matchLabelCol(200, 160, 170, 185);
     graphics.DrawString(matchStr.c_str(), -1, &subFont,
-                        PointF(float(rx + 18), float(ry + rh - 56)), &SolidBrush(matchLabelCol));
+                        PointF(float(rx + 14), float(ry + rh - 52)), &SolidBrush(matchLabelCol));
 
-    // ÔöÇÔöÇ Match progress bar ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-    int barX = rx + 18, barY = ry + rh - 40, barW = rw - 36, barH = 9;
-    // Track
-    graphics.FillRectangle(&SolidBrush(Color(80, 255, 255, 255)), barX, barY, barW, barH);
-    // Fill ÔÇö colour-grade based on match level
+    // Match progress bar
+    int barX = rx + 14, barY = ry + rh - 38, barW = rw - 28, barH = 8;
+    graphics.FillRectangle(&SolidBrush(Color(60, 255, 255, 255)), barX, barY, barW, barH);
     float clampedRatio = detectionRatio > 1.0f ? 1.0f : detectionRatio;
     int fillW = int(clampedRatio * barW);
     if (fillW > 0) {
         BYTE r = BYTE((1.0f - clampedRatio) * 255);
         BYTE g = BYTE(clampedRatio * 255);
         LinearGradientBrush barFill(Point(barX, barY), Point(barX + fillW, barY),
-                                    Color(220, r, g, 40), Color(220, r / 2, g, 80));
+                                    Color(200, r, g, 40), Color(200, r / 2, g, 80));
         graphics.FillRectangle(&barFill, barX, barY, fillW, barH);
     }
-    // Bar border
-    graphics.DrawRectangle(&Pen(Color(50, 255, 255, 255), 1.0f), barX, barY, barW, barH);
+    graphics.DrawRectangle(&Pen(Color(40, 255, 255, 255), 1.0f), barX, barY, barW, barH);
 
-    // ÔöÇÔöÇ Target colour swatch (anchored to HUD, top-right corner) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-    int swatchX = rx + rw - 38, swatchY = ry + 14;
+    // Target colour swatch (top-right corner)
+    int swatchX = rx + rw - 28, swatchY = ry + 8;
     Color swatch(255, GetBValue(g_targetColor), GetGValue(g_targetColor), GetRValue(g_targetColor));
-    graphics.FillEllipse(&SolidBrush(swatch),        swatchX, swatchY, 18, 18);
-    graphics.DrawEllipse(&Pen(Color(120, 220, 220, 220), 1.0f), swatchX, swatchY, 18, 18);
+    graphics.FillEllipse(&SolidBrush(swatch), swatchX, swatchY, 16, 16);
+    graphics.DrawEllipse(&Pen(Color(100, 220, 220, 220), 1.0f), swatchX, swatchY, 16, 16);
 
-    // ÔöÇÔöÇ Drag hint ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    // Drag hint (plain ASCII — no special characters to avoid rendering as squares)
     Font tinyFont(&ff, 9, FontStyleRegular, UnitPixel);
-    SolidBrush tinyBrush(Color(g_isDraggingHUD ? 130 : 55, 200, 210, 220));
-    graphics.DrawString(L"Ôá┐ drag", -1, &tinyFont,
-                        PointF(float(rx + rw / 2 - 18), float(ry + rh - 14)), &tinyBrush);
+    SolidBrush tinyBrush(Color(g_isDraggingHUD ? 130 : 50, 200, 210, 220));
+    StringFormat sfCenter;
+    sfCenter.SetAlignment(StringAlignmentCenter);
+    graphics.DrawString(L":: drag", -1, &tinyFont,
+                        RectF(float(rx), float(ry + rh - 14), float(rw), 12.0f),
+                        &sfCenter, &tinyBrush);
 
-    // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
-    // ÔöÇÔöÇ Debug Dashboard (Ctrl+9) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-    // ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+    // =========================================================================
+    // Debug Dashboard (Ctrl+9)
+    // =========================================================================
     if (g_debugMode) {
         const int DBG_ROWS = 14;
         const int ROW_H    = 18;
         int dw = 370, dh = 28 + DBG_ROWS * ROW_H + 10;
         int dx = rx, dy = ry + rh + 10;
 
-        // Clamp to screen bottom
         if (dy + dh > sh) dy = ry - dh - 8;
 
-        // Background
         GraphicsPath dbgPath;
         dbgPath.AddRectangle(Rect(dx, dy, dw, dh));
         LinearGradientBrush dbgBg(Point(dx, dy), Point(dx, dy + dh),
@@ -297,31 +248,27 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
         graphics.FillPath(&dbgBg, &dbgPath);
         graphics.DrawPath(&Pen(Color(100, 0, 190, 255), 1.0f), &dbgPath);
 
-        // Title bar stripe
         graphics.FillRectangle(&SolidBrush(Color(60, 0, 160, 255)), dx, dy, dw, 22);
 
         Font dbgTitle(&ff, 11, FontStyleBold,    UnitPixel);
         Font dbgKey  (&ff, 10, FontStyleBold,    UnitPixel);
         Font dbgVal  (&ff, 10, FontStyleRegular, UnitPixel);
 
-        SolidBrush colTitle (Color(255, 255, 255, 255));
-        SolidBrush colKey   (Color(255, 120, 180, 255));   // blue-ish key
-        SolidBrush colVal   (Color(255, 220, 230, 240));   // light value
-        SolidBrush colGood  (Color(255,  60, 230, 100));   // green flag
-        SolidBrush colBad   (Color(255, 255,  70,  70));   // red flag
-        SolidBrush colWarn  (Color(255, 255, 210,  50));   // yellow warning
+        SolidBrush colTitle(Color(255, 255, 255, 255));
+        SolidBrush colKey  (Color(255, 120, 180, 255));
+        SolidBrush colVal  (Color(255, 220, 230, 240));
+        SolidBrush colGood (Color(255,  60, 230, 100));
+        SolidBrush colBad  (Color(255, 255,  70,  70));
+        SolidBrush colWarn (Color(255, 255, 210,  50));
 
         graphics.DrawString(L"  DEBUG DASHBOARD", -1, &dbgTitle,
                             PointF(float(dx + 4), float(dy + 5)), &colTitle);
 
-        // Helper lambda to draw a key=value row
         int row = 0;
         auto DrawRow = [&](const wchar_t* key, const std::wstring& val, SolidBrush* valBrush) {
             float y = float(dy + 28 + row * ROW_H);
             graphics.DrawString(key, -1, &dbgKey, PointF(float(dx + 8),  y), &colKey);
             graphics.DrawString(val.c_str(), -1, &dbgVal, PointF(float(dx + 175), y), valBrush);
-
-            // Subtle separator
             if (row > 0)
                 graphics.DrawLine(&Pen(Color(20, 255, 255, 255), 1.0f),
                                   dx + 4, int(y) - 1, dx + dw - 4, int(y) - 1);
@@ -330,77 +277,45 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
 
         bool fortFocused = IsFortniteFocused();
 
-        // ÔöÇÔöÇ Rows ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-        DrawRow(L"FPS",
-                FmtFloat(s_fps, 0),
-                s_fps >= 60.0f ? &colGood : &colWarn);
-
-        DrawRow(L"Angle (raw)",
-                FmtFloat(angle, 4) + L"┬░",
-                &colVal);
-
+        DrawRow(L"FPS",              FmtFloat(s_fps, 0),          s_fps >= 60.0f ? &colGood : &colWarn);
+        DrawRow(L"Angle (raw)",      FmtFloat(angle, 4) + L"\xB0", &colVal);
         DrawRow(L"Detection Ratio",
                 FmtFloat(detectionRatio * 100.0, 1) + L"% / match " + std::to_wstring(matchPct) + L"%",
                 matchPct > 5 ? &colGood : &colVal);
+        DrawRow(L"Diving",           g_isDiving ? L"YES" : L"NO",      g_isDiving ? &colGood : &colVal);
+        DrawRow(L"Fortnite Focused", fortFocused ? L"YES" : L"NO",     fortFocused ? &colGood : &colBad);
 
-        DrawRow(L"Diving",
-                g_isDiving ? L"YES" : L"NO",
-                g_isDiving ? &colGood : &colVal);
-
-        DrawRow(L"Fortnite Focused",
-                fortFocused ? L"YES" : L"NO",
-                fortFocused ? &colGood : &colBad);
-
-        // Profile name
-        std::wstring profName = !g_allProfiles.empty() ? g_allProfiles[g_selectedProfileIdx].name : L"ÔÇô";
+        std::wstring profName = !g_allProfiles.empty() ? g_allProfiles[g_selectedProfileIdx].name : L"-";
         DrawRow(L"Profile", profName, &colVal);
 
-        // ROI dimensions
         {
             std::wstring roiStr;
             if (!g_allProfiles.empty()) {
                 auto& p = g_allProfiles[g_selectedProfileIdx];
                 roiStr = L"x" + std::to_wstring(p.roi_x) +
                          L"  y" + std::to_wstring(p.roi_y) +
-                         L"  " + std::to_wstring(p.roi_w) + L"├ù" + std::to_wstring(p.roi_h);
-            } else { roiStr = L"ÔÇô"; }
+                         L"  " + std::to_wstring(p.roi_w) + L"x" + std::to_wstring(p.roi_h);
+            } else { roiStr = L"-"; }
             DrawRow(L"ROI", roiStr, &colVal);
         }
 
-        // HUD position
         DrawRow(L"HUD Position",
-                L"x" + std::to_wstring(g_hudX) + L"  y" + std::to_wstring(g_hudY),
-                &colVal);
-
-        // Thresholds
+                L"x" + std::to_wstring(g_hudX) + L"  y" + std::to_wstring(g_hudY), &colVal);
         DrawRow(L"Glide Threshold",
-                FmtFloat(g_glideThreshold * 100.0f, 1) + L"%",
-                &colVal);
+                FmtFloat(g_glideThreshold * 100.0f, 1) + L"%", &colVal);
         DrawRow(L"Freefall Threshold",
-                FmtFloat(g_freefallThreshold * 100.0f, 1) + L"%",
-                &colVal);
+                FmtFloat(g_freefallThreshold * 100.0f, 1) + L"%", &colVal);
+        DrawRow(L"Force Diving",    g_forceDiving ? L"ON" : L"OFF",    g_forceDiving    ? &colWarn : &colVal);
+        DrawRow(L"Force Detection", g_forceDetection ? L"ON" : L"OFF", g_forceDetection ? &colWarn : &colVal);
+        DrawRow(L"Cursor Visible",  g_isCursorVisible ? L"YES" : L"NO", &colVal);
 
-        // Force flags
-        DrawRow(L"Force Diving",
-                g_forceDiving ? L"ON" : L"OFF",
-                g_forceDiving ? &colWarn : &colVal);
-        DrawRow(L"Force Detection",
-                g_forceDetection ? L"ON" : L"OFF",
-                g_forceDetection ? &colWarn : &colVal);
-
-        // Cursor visible
-        DrawRow(L"Cursor Visible",
-                g_isCursorVisible ? L"YES" : L"NO",
-                &colVal);
-
-        // Selection state
-        const wchar_t* selStr = (g_currentSelection == NONE) ? L"NONE"
+        const wchar_t* selStr = (g_currentSelection == NONE)          ? L"NONE"
                               : (g_currentSelection == SELECTING_ROI) ? L"SELECTING ROI"
                               : L"SELECTING COLOR";
         DrawRow(L"Selection State", selStr, g_currentSelection != NONE ? &colWarn : &colVal);
     }
 
-    // ÔöÇÔöÇ Blit to screen ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    // Blit to screen
     BitBlt(hdc, 0, 0, sw, sh, hdcMem, 0, 0, SRCCOPY);
     SelectObject(hdcMem, hOld);
     DeleteObject(hbmMem);

@@ -121,25 +121,71 @@ void RenderImGuiFrame() {
                 ImGui::Text("%s", label);
                 ImGui::SameLine(200);
                 std::string btn = (g_listeningKey == id) ? "[ Press Key... ]" : "[ " + GetKeyNameStr(mod, vk) + " ]";
-                if (ImGui::Button((btn + "##" + std::to_string(id)).c_str(), ImVec2(150, 0))) {
-                    g_listeningKey = id;
+                if (g_listeningKey == id) {
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.35f, 0.35f, 0.10f, 1.0f));
+                    ImGui::Button((btn + "##" + std::to_string(id)).c_str(), ImVec2(150, 0));
+                    ImGui::PopStyleColor();
+                } else {
+                    if (ImGui::Button((btn + "##" + std::to_string(id)).c_str(), ImVec2(150, 0)))
+                        g_listeningKey = id;
                 }
             };
             
-            BindRow("Toggle Dashboard", 1, p.keybinds.toggleMod, p.keybinds.toggleKey);
-            BindRow("ROI Selector", 2, p.keybinds.roiMod, p.keybinds.roiKey);
-            BindRow("Crosshair", 3, p.keybinds.crossMod, p.keybinds.crossKey);
-            BindRow("Zero Angle Reset", 4, p.keybinds.zeroMod, p.keybinds.zeroKey);
+            BindRow("Toggle Dashboard",   1, p.keybinds.toggleMod, p.keybinds.toggleKey);
+            BindRow("ROI Selector",       2, p.keybinds.roiMod,    p.keybinds.roiKey);
+            BindRow("Crosshair",          3, p.keybinds.crossMod,  p.keybinds.crossKey);
+            BindRow("Zero Angle Reset",   4, p.keybinds.zeroMod,   p.keybinds.zeroKey);
 
             ImGui::Spacing();
             ImGui::Separator();
-            if (ImGui::Button("TERMINATE BetterAngle PRO", ImVec2(-1, 40))) PostQuitMessage(0);
+            ImGui::Spacing();
+            ImGui::TextDisabled("MANUAL SENSITIVITY");
+            ImGui::Spacing();
+
+            double sX = p.sensitivityX;
+            double sY = p.sensitivityY;
+            ImGui::SetNextItemWidth(120);
+            if (ImGui::InputDouble("Fortnite Sens X##sensX", &sX, 0.0, 0.0, "%.4f")) {
+                p.sensitivityX = (std::max)(0.001, sX);
+                g_logic.LoadProfile(p.sensitivityX);
+                p.Save(GetAppStoragePath() + p.name + L".json");
+            }
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(120);
+            if (ImGui::InputDouble("Fortnite Sens Y##sensY", &sY, 0.0, 0.0, "%.4f")) {
+                p.sensitivityY = (std::max)(0.001, sY);
+                p.Save(GetAppStoragePath() + p.name + L".json");
+            }
+
+            ImGui::Spacing();
+            static std::string syncResult = "";
+            static ImVec4 syncColor = ImVec4(1,1,1,1);
+            if (ImGui::Button("SYNC SENSITIVITY WITH FORTNITE", ImVec2(-1, 35))) {
+                double synced = FetchFortniteSensitivity();
+                if (synced > 0.0) {
+                    p.sensitivityX = synced;
+                    p.sensitivityY = synced;
+                    g_logic.LoadProfile(synced);
+                    p.Save(GetAppStoragePath() + p.name + L".json");
+                    syncResult = "SYNC OK! sens=" + std::to_string(synced).substr(0,6);
+                    syncColor = ImVec4(0.2f, 0.8f, 0.5f, 1.0f);
+                } else {
+                    syncResult = "CONFIG NOT FOUND! Check: %LOCALAPPDATA%\\FortniteGame\\Saved\\Config\\WindowsClient\\";
+                    syncColor = ImVec4(0.85f, 0.2f, 0.2f, 1.0f);
+                }
+            }
+            if (!syncResult.empty())
+                ImGui::TextColored(syncColor, "%s", syncResult.c_str());
+
+            ImGui::Spacing();
+            ImGui::Separator();
+            if (ImGui::Button("TERMINATE BetterAngle PRO", ImVec2(-1, 35))) PostQuitMessage(0);
             ImGui::EndTabItem();
         }
 
         if (ImGui::BeginTabItem("CROSSHAIR")) {
             ImGui::Spacing();
-            if (ImGui::Button("TOGGLE CROSSHAIR", ImVec2(-1, 40))) {
+            if (ImGui::Button(g_showCrosshair ? "CROSSHAIR: ON  (click to toggle)" : "CROSSHAIR: OFF (click to toggle)", ImVec2(-1, 35))) {
                 g_showCrosshair = !g_showCrosshair;
                 SaveSettings();
                 if (g_hHUD) { InvalidateRect(g_hHUD, NULL, FALSE); UpdateWindow(g_hHUD); }
@@ -159,33 +205,83 @@ void RenderImGuiFrame() {
             };
 
             PrecisionSlider("Thickness", &g_crossThickness, 1.0f, 10.0f, 0.5f);
-            PrecisionSlider("Offset X", &g_crossOffsetX, -500.0f, 500.0f, 0.5f);
-            PrecisionSlider("Offset Y", &g_crossOffsetY, -500.0f, 500.0f, 0.5f);
+            PrecisionSlider("Offset X",  &g_crossOffsetX,  -500.0f, 500.0f, 1.0f);
+            PrecisionSlider("Offset Y",  &g_crossOffsetY,  -500.0f, 500.0f, 1.0f);
 
             ImGui::Spacing();
             ImGui::TextDisabled("DIRECTIONAL NUDGE (PIXEL-PERFECT)");
             float nudgeW = 70.0f;
             float centerOffset = (ImGui::GetContentRegionAvail().x - nudgeW) * 0.5f;
             ImGui::SetCursorPosX(centerOffset);
-            if (ImGui::Button("UP", ImVec2(nudgeW, 35))) { g_crossOffsetY -= 1.0f; SaveSettings(); if (g_hHUD) InvalidateRect(g_hHUD, NULL, FALSE); }
+            if (ImGui::Button("UP",    ImVec2(nudgeW, 30))) { g_crossOffsetY -= 1.0f; SaveSettings(); if (g_hHUD) InvalidateRect(g_hHUD, NULL, FALSE); }
             ImGui::SetCursorPosX(centerOffset - nudgeW - 8);
-            if (ImGui::Button("LEFT", ImVec2(nudgeW, 35))) { g_crossOffsetX -= 1.0f; SaveSettings(); if (g_hHUD) InvalidateRect(g_hHUD, NULL, FALSE); }
+            if (ImGui::Button("LEFT",  ImVec2(nudgeW, 30))) { g_crossOffsetX -= 1.0f; SaveSettings(); if (g_hHUD) InvalidateRect(g_hHUD, NULL, FALSE); }
             ImGui::SameLine();
-            if (ImGui::Button("DOWN", ImVec2(nudgeW, 35))) { g_crossOffsetY += 1.0f; SaveSettings(); if (g_hHUD) InvalidateRect(g_hHUD, NULL, FALSE); }
+            if (ImGui::Button("DOWN",  ImVec2(nudgeW, 30))) { g_crossOffsetY += 1.0f; SaveSettings(); if (g_hHUD) InvalidateRect(g_hHUD, NULL, FALSE); }
             ImGui::SameLine();
-            if (ImGui::Button("RIGHT", ImVec2(nudgeW, 35))) { g_crossOffsetX += 1.0f; SaveSettings(); if (g_hHUD) InvalidateRect(g_hHUD, NULL, FALSE); }
+            if (ImGui::Button("RIGHT", ImVec2(nudgeW, 30))) { g_crossOffsetX += 1.0f; SaveSettings(); if (g_hHUD) InvalidateRect(g_hHUD, NULL, FALSE); }
+
+            ImGui::Spacing();
+            ImGui::Checkbox("Pulse Animation", &g_crossPulse);
+            ImGui::SameLine();
+            float col[3] = { GetRValue(g_crossColor)/255.f, GetGValue(g_crossColor)/255.f, GetBValue(g_crossColor)/255.f };
+            if (ImGui::ColorEdit3("Colour", col, ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoInputs))
+                g_crossColor = RGB(int(col[0]*255), int(col[1]*255), int(col[2]*255));
 
             ImGui::EndTabItem();
         }
 
+        if (ImGui::BeginTabItem("COLORS")) {
+            ImGui::Spacing();
+            ImGui::TextDisabled("TARGET COLOR (detection color)");
+            ImGui::Spacing();
+            float tc[3] = { GetRValue(g_targetColor)/255.f, GetGValue(g_targetColor)/255.f, GetBValue(g_targetColor)/255.f };
+            if (ImGui::ColorEdit3("Target Color##tc", tc)) {
+                g_targetColor = RGB(int(tc[0]*255), int(tc[1]*255), int(tc[2]*255));
+                if (!g_allProfiles.empty()) {
+                    p.target_color = g_targetColor;
+                    p.Save(GetAppStoragePath() + p.name + L".json");
+                }
+            }
+            ImGui::Spacing();
+            ImGui::TextDisabled("Tolerance (color match ±)");
+            if (!g_allProfiles.empty()) {
+                ImGui::SetNextItemWidth(-1);
+                if (ImGui::SliderInt("##tolerance", &p.tolerance, 0, 120))
+                    p.Save(GetAppStoragePath() + p.name + L".json");
+            }
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("DEBUG")) {
+            ImGui::Spacing();
+            ImGui::Checkbox("Debug Overlay (Ctrl+9)", &g_debugMode);
+            ImGui::Checkbox("Force Diving State",     &g_forceDiving);
+            ImGui::Checkbox("Force Detection Active", &g_forceDetection);
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+            ImGui::TextDisabled("DIVE THRESHOLDS");
+            ImGui::SetNextItemWidth(-1);
+            ImGui::SliderFloat("Glide Threshold##gt",    &g_glideThreshold,    0.01f, 0.5f, "%.3f");
+            ImGui::SetNextItemWidth(-1);
+            ImGui::SliderFloat("Freefall Threshold##ft", &g_freefallThreshold, 0.01f, 0.5f, "%.3f");
+            ImGui::Spacing();
+            if (ImGui::Button("SAVE THRESHOLDS", ImVec2(-1, 35))) SaveSettings();
+            ImGui::EndTabItem();
+        }
+
         if (ImGui::BeginTabItem("UPDATES")) {
+            ImGui::Spacing();
             ImGui::Text("Version: %s", VERSION_STR);
             if (g_hasCheckedForUpdates) {
                 ImGui::Text("Latest:  %s", g_latestVersionOnline.c_str());
                 if (g_updateAvailable && ImGui::Button("DOWNLOAD UPDATE NOW", ImVec2(-1, 40))) UpdateApp();
+                else if (!g_updateAvailable) ImGui::TextDisabled("You are up to date!");
             } else {
                 if (ImGui::Button("CHECK FOR UPDATES", ImVec2(-1, 35))) { std::thread([]() { CheckForUpdates(); }).detach(); }
             }
+            if (g_isDownloadingUpdate) ImGui::TextColored(ImVec4(0.3f,0.8f,1.0f,1.0f), "Downloading update...");
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
