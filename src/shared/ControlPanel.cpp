@@ -95,7 +95,7 @@ void RenderImGuiFrame() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(20, 20));
     ImGui::Begin("BetterAngle Pro Command Center", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus);
 
-    ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "BetterAngle Pro | Command Center");
+    ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.00f), "BetterAngle Pro | Command Center");
     ImGui::Separator();
     ImGui::Spacing();
 
@@ -112,7 +112,7 @@ void RenderImGuiFrame() {
                 ImGui::SameLine(200);
                 std::string btn = (g_listeningKey == id) ? "[ Press Key... ]" : "[ " + GetKeyNameStr(mod, vk) + " ]";
                 if (g_listeningKey == id) {
-                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
                     ImGui::Button((btn + "##" + std::to_string(id)).c_str(), ImVec2(150, 0));
                     ImGui::PopStyleColor();
                 } else {
@@ -163,38 +163,6 @@ void RenderImGuiFrame() {
             }
             ImGui::PopStyleColor(2);
 
-            ImGui::EndTabItem();
-        }
-
-        // TAB: UPDATES
-        if (ImGui::BeginTabItem("UPDATES")) {
-            ImGui::Spacing();
-            ImGui::TextDisabled("SOFTWARE DASHBOARD");
-            ImGui::Spacing();
-            std::wstring wsCur = VERSION_WSTR;
-            ImGui::Text("Installed: v%s", std::string(wsCur.begin(), wsCur.end()).c_str());
-            ImGui::Text("Latest: %s", g_latestVersionOnline.empty() ? "(not checked)" : g_latestVersionOnline.c_str());
-            
-            ImGui::Spacing();
-            if (g_isCheckingForUpdates) {
-                ImGui::TextColored(ImVec4(0.3f, 0.7f, 1.0f, 1.0f), "SYNCING WITH GITHUB...");
-            } else if (g_updateAvailable) {
-                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Update available! Click below to install.");
-                if (ImGui::Button("INSTALL UPDATE NOW", ImVec2(250, 40))) {
-                    std::thread([]() {
-                        wchar_t exeBuf[MAX_PATH] = {}; GetModuleFileNameW(NULL, exeBuf, MAX_PATH);
-                        std::wstring exePath = exeBuf; size_t slash = exePath.find_last_of(L"\\/");
-                        std::wstring tmpPath = exePath.substr(0, slash + 1) + L"update_tmp.exe";
-                        if (DownloadUpdate(L"AUTO", tmpPath)) ApplyUpdateAndRestart();
-                        else g_updateAvailable = true;
-                    }).detach();
-                }
-            } else {
-                if (ImGui::Button("CHECK / DOWNLOAD LATEST", ImVec2(250, 40))) {
-                    g_isCheckingForUpdates = true;
-                    std::thread(CheckForUpdates).detach();
-                }
-            }
             ImGui::EndTabItem();
         }
 
@@ -439,7 +407,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
             style.ItemInnerSpacing  = ImVec2(8.0f, 6.0f);
             style.ScrollbarSize     = 14.0f;
             
-            // Sleek Cyberpunk / Modern Dark Colors
+            // Sleek Modern Dark Colors (No blue lines)
             style.Colors[ImGuiCol_Text]                  = ImVec4(0.95f, 0.96f, 0.98f, 1.00f);
             style.Colors[ImGuiCol_TextDisabled]          = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
             style.Colors[ImGuiCol_WindowBg]              = ImVec4(0.07f, 0.08f, 0.10f, 1.00f);
@@ -451,20 +419,20 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
             style.Colors[ImGuiCol_FrameBgHovered]        = ImVec4(0.18f, 0.21f, 0.26f, 1.00f);
             style.Colors[ImGuiCol_FrameBgActive]         = ImVec4(0.23f, 0.25f, 0.31f, 1.00f);
             style.Colors[ImGuiCol_MenuBarBg]             = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
-            style.Colors[ImGuiCol_CheckMark]             = ImVec4(0.10f, 0.65f, 0.95f, 1.00f);
-            style.Colors[ImGuiCol_SliderGrab]            = ImVec4(0.10f, 0.55f, 0.90f, 1.00f);
-            style.Colors[ImGuiCol_SliderGrabActive]      = ImVec4(0.20f, 0.65f, 1.00f, 1.00f);
+            style.Colors[ImGuiCol_CheckMark]             = ImVec4(0.80f, 0.80f, 0.80f, 1.00f);
+            style.Colors[ImGuiCol_SliderGrab]            = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
+            style.Colors[ImGuiCol_SliderGrabActive]      = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
             style.Colors[ImGuiCol_Button]                = ImVec4(0.15f, 0.17f, 0.22f, 1.00f);
             style.Colors[ImGuiCol_ButtonHovered]         = ImVec4(0.20f, 0.23f, 0.28f, 1.00f);
-            style.Colors[ImGuiCol_ButtonActive]          = ImVec4(0.10f, 0.50f, 0.85f, 1.00f);
+            style.Colors[ImGuiCol_ButtonActive]          = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
             style.Colors[ImGuiCol_Header]                = ImVec4(0.15f, 0.17f, 0.22f, 1.00f);
             style.Colors[ImGuiCol_HeaderHovered]         = ImVec4(0.20f, 0.23f, 0.28f, 1.00f);
             style.Colors[ImGuiCol_HeaderActive]          = ImVec4(0.25f, 0.27f, 0.35f, 1.00f);
             style.Colors[ImGuiCol_Tab]                   = ImVec4(0.11f, 0.12f, 0.16f, 1.00f);
             style.Colors[ImGuiCol_TabHovered]            = ImVec4(0.17f, 0.19f, 0.25f, 1.00f);
-            style.Colors[ImGuiCol_TabActive]             = ImVec4(0.12f, 0.45f, 0.82f, 1.00f);
+            style.Colors[ImGuiCol_TabActive]             = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
             style.Colors[ImGuiCol_TabUnfocused]          = ImVec4(0.11f, 0.12f, 0.16f, 1.00f);
-            style.Colors[ImGuiCol_TabUnfocusedActive]    = ImVec4(0.13f, 0.25f, 0.42f, 1.00f);
+            style.Colors[ImGuiCol_TabUnfocusedActive]    = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
 
             ImGui_ImplWin32_Init(hWnd);
             ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);

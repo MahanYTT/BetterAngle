@@ -2,6 +2,9 @@
 #define LOGIC_H
 
 #include <windows.h>
+#include <string>
+
+double FetchFortniteSensitivity();
 
 class AngleLogic {
 public:

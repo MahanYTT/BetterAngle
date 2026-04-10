@@ -1,6 +1,31 @@
 #include "shared/Logic.h"
 #include <cmath>
 #include "shared/State.h"
+#include <shlobj.h>
+#include <fstream>
+#include <string>
+#include <algorithm>
+
+double FetchFortniteSensitivity() {
+    double fetchedSens = 0.05;
+    wchar_t appdata[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) {
+        std::wstring pPath = std::wstring(appdata) + L"\\FortniteGame\\Saved\\Config\\WindowsClient\\GameUserSettings.ini";
+        std::ifstream ifs(pPath.c_str());
+        if (ifs.good()) {
+            std::string line;
+            while (std::getline(ifs, line)) {
+                if (line.find("MouseSensitivityX=") != std::string::npos) {
+                    try {
+                        fetchedSens = std::stod(line.substr(line.find("=") + 1));
+                    } catch (...) { }
+                    break;
+                }
+            }
+        }
+    }
+    return (std::max)(fetchedSens, 0.0001);
+}
 
 bool IsFortniteFocused() {
     if (g_forceDetection) return true; // Safety fallback

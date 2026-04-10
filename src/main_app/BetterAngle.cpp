@@ -314,25 +314,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         g_allProfiles.push_back(p);
     }
     
-    // Auto-fetch Fortnite Sensitivity at launch
-    double fetchedSens = 0.05;
-    wchar_t appdata[MAX_PATH];
-    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) {
-        std::wstring pPath = std::wstring(appdata) + L"\\FortniteGame\\Saved\\Config\\WindowsClient\\GameUserSettings.ini";
-        std::ifstream ifs(pPath.c_str());
-        if (ifs.good()) {
-            std::string line;
-            while (std::getline(ifs, line)) {
-                if (line.find("MouseSensitivityX=") != std::string::npos) {
-                    try {
-                        fetchedSens = std::stod(line.substr(line.find("=") + 1));
-                    } catch (...) { }
-                    break;
-                }
-            }
-        }
-    }
-    g_allProfiles[g_selectedProfileIdx].sensitivityX = (std::max)(fetchedSens, 0.0001);
+    g_allProfiles[g_selectedProfileIdx].sensitivityX = FetchFortniteSensitivity();
     g_currentProfile = g_allProfiles[g_selectedProfileIdx];
     
     // Guard: if still empty after setup, something went wrong — exit cleanly
