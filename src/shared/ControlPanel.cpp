@@ -258,6 +258,36 @@ void RenderImGuiFrame() {
 }
 
 LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_KEYDOWN && g_listeningKey != -1) {
+        if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU || wParam == VK_ESCAPE) {
+            if (wParam == VK_ESCAPE) g_listeningKey = -1;
+            return 0;
+        }
+        UINT mod = 0;
+        if (GetAsyncKeyState(VK_CONTROL) & 0x8000) mod |= MOD_CONTROL;
+        if (GetAsyncKeyState(VK_SHIFT)   & 0x8000) mod |= MOD_SHIFT;
+        if (GetAsyncKeyState(VK_MENU)    & 0x8000) mod |= MOD_ALT;
+        
+        switch (g_listeningKey) {
+            case 1: g_keybinds.toggleMod = mod; g_keybinds.toggleKey = (UINT)wParam; break;
+            case 2: g_keybinds.roiMod    = mod; g_keybinds.roiKey    = (UINT)wParam; break;
+            case 3: g_keybinds.crossMod  = mod; g_keybinds.crossKey  = (UINT)wParam; break;
+            case 4: g_keybinds.zeroMod   = mod; g_keybinds.zeroKey   = (UINT)wParam; break;
+            case 5: g_keybinds.debugMod  = mod; g_keybinds.debugKey  = (UINT)wParam; break;
+        }
+        g_listeningKey = -1;
+        SaveSettings();
+        if (g_hHUD) {
+            for (int i = 1; i <= 5; i++) UnregisterHotKey(g_hHUD, i);
+            RegisterHotKey(g_hHUD, 1, g_keybinds.toggleMod, g_keybinds.toggleKey);
+            RegisterHotKey(g_hHUD, 2, g_keybinds.roiMod,    g_keybinds.roiKey);
+            RegisterHotKey(g_hHUD, 3, g_keybinds.crossMod,  g_keybinds.crossKey);
+            RegisterHotKey(g_hHUD, 4, g_keybinds.zeroMod,   g_keybinds.zeroKey);
+            RegisterHotKey(g_hHUD, 5, g_keybinds.debugMod,  g_keybinds.debugKey);
+        }
+        return 0;
+    }
+
     if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
         return true;
 
@@ -269,19 +299,56 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
             }
             IMGUI_CHECKVERSION();
             ImGui::CreateContext();
-            ImGuiIO& io = ImGui::GetIO(); (void)io;
-            io.IniFilename = NULL; // Disable ini settings
             ImGui::StyleColorsDark();
             
-            // Tweak the style to look professional
+            ImGuiIO& io = ImGui::GetIO();
+            io.IniFilename = NULL;
+            io.FontGlobalScale = 1.30f; // Scale up the default font for better readability
+            
             ImGuiStyle& style = ImGui::GetStyle();
-            style.WindowRounding = 0.0f;
-            style.FrameRounding = 4.0f;
-            style.GrabRounding = 4.0f;
-            style.Colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.07f, 0.08f, 1.0f);
-            style.Colors[ImGuiCol_Button] = ImVec4(0.18f, 0.22f, 0.28f, 1.0f);
-            style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.24f, 0.28f, 0.35f, 1.0f);
-            style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.15f, 0.18f, 0.22f, 1.0f);
+            
+            // Modern Rounding Settings
+            style.WindowRounding    = 8.0f;
+            style.ChildRounding     = 6.0f;
+            style.FrameRounding     = 6.0f;
+            style.PopupRounding     = 6.0f;
+            style.ScrollbarRounding = 6.0f;
+            style.GrabRounding      = 6.0f;
+            style.TabRounding       = 6.0f;
+            
+            // Padding & Sizing
+            style.WindowPadding     = ImVec2(20.0f, 20.0f);
+            style.FramePadding      = ImVec2(12.0f, 8.0f);
+            style.ItemSpacing       = ImVec2(12.0f, 12.0f);
+            style.ItemInnerSpacing  = ImVec2(8.0f, 6.0f);
+            style.ScrollbarSize     = 14.0f;
+            
+            // Sleek Cyberpunk / Modern Dark Colors
+            style.Colors[ImGuiCol_Text]                  = ImVec4(0.95f, 0.96f, 0.98f, 1.00f);
+            style.Colors[ImGuiCol_TextDisabled]          = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
+            style.Colors[ImGuiCol_WindowBg]              = ImVec4(0.07f, 0.08f, 0.10f, 1.00f);
+            style.Colors[ImGuiCol_ChildBg]               = ImVec4(0.12f, 0.13f, 0.15f, 1.00f);
+            style.Colors[ImGuiCol_PopupBg]               = ImVec4(0.10f, 0.11f, 0.13f, 0.96f);
+            style.Colors[ImGuiCol_Border]                = ImVec4(0.18f, 0.20f, 0.25f, 0.50f);
+            style.Colors[ImGuiCol_BorderShadow]          = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+            style.Colors[ImGuiCol_FrameBg]               = ImVec4(0.13f, 0.15f, 0.19f, 1.00f);
+            style.Colors[ImGuiCol_FrameBgHovered]        = ImVec4(0.18f, 0.21f, 0.26f, 1.00f);
+            style.Colors[ImGuiCol_FrameBgActive]         = ImVec4(0.23f, 0.25f, 0.31f, 1.00f);
+            style.Colors[ImGuiCol_MenuBarBg]             = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
+            style.Colors[ImGuiCol_CheckMark]             = ImVec4(0.10f, 0.65f, 0.95f, 1.00f);
+            style.Colors[ImGuiCol_SliderGrab]            = ImVec4(0.10f, 0.55f, 0.90f, 1.00f);
+            style.Colors[ImGuiCol_SliderGrabActive]      = ImVec4(0.20f, 0.65f, 1.00f, 1.00f);
+            style.Colors[ImGuiCol_Button]                = ImVec4(0.15f, 0.17f, 0.22f, 1.00f);
+            style.Colors[ImGuiCol_ButtonHovered]         = ImVec4(0.20f, 0.23f, 0.28f, 1.00f);
+            style.Colors[ImGuiCol_ButtonActive]          = ImVec4(0.10f, 0.50f, 0.85f, 1.00f);
+            style.Colors[ImGuiCol_Header]                = ImVec4(0.15f, 0.17f, 0.22f, 1.00f);
+            style.Colors[ImGuiCol_HeaderHovered]         = ImVec4(0.20f, 0.23f, 0.28f, 1.00f);
+            style.Colors[ImGuiCol_HeaderActive]          = ImVec4(0.25f, 0.27f, 0.35f, 1.00f);
+            style.Colors[ImGuiCol_Tab]                   = ImVec4(0.11f, 0.12f, 0.16f, 1.00f);
+            style.Colors[ImGuiCol_TabHovered]            = ImVec4(0.17f, 0.19f, 0.25f, 1.00f);
+            style.Colors[ImGuiCol_TabActive]             = ImVec4(0.12f, 0.45f, 0.82f, 1.00f);
+            style.Colors[ImGuiCol_TabUnfocused]          = ImVec4(0.11f, 0.12f, 0.16f, 1.00f);
+            style.Colors[ImGuiCol_TabUnfocusedActive]    = ImVec4(0.13f, 0.25f, 0.42f, 1.00f);
 
             ImGui_ImplWin32_Init(hWnd);
             ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
@@ -301,37 +368,9 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
         case WM_TIMER:
             RenderImGuiFrame();
             return 0;
-        case WM_KEYDOWN:
-            if (g_listeningKey != -1) {
-                if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) return 0;
-                UINT mod = 0;
-                if (GetAsyncKeyState(VK_CONTROL) & 0x8000) mod |= MOD_CONTROL;
-                if (GetAsyncKeyState(VK_SHIFT)   & 0x8000) mod |= MOD_SHIFT;
-                if (GetAsyncKeyState(VK_MENU)    & 0x8000) mod |= MOD_ALT;
-                
-                switch (g_listeningKey) {
-                    case 1: g_keybinds.toggleMod = mod; g_keybinds.toggleKey = (UINT)wParam; break;
-                    case 2: g_keybinds.roiMod    = mod; g_keybinds.roiKey    = (UINT)wParam; break;
-                    case 3: g_keybinds.crossMod  = mod; g_keybinds.crossKey  = (UINT)wParam; break;
-                    case 4: g_keybinds.zeroMod   = mod; g_keybinds.zeroKey   = (UINT)wParam; break;
-                    case 5: g_keybinds.debugMod  = mod; g_keybinds.debugKey  = (UINT)wParam; break;
-                }
-                g_listeningKey = -1;
-                SaveSettings();
-                if (g_hHUD) {
-                    for (int i = 1; i <= 5; i++) UnregisterHotKey(g_hHUD, i);
-                    RegisterHotKey(g_hHUD, 1, g_keybinds.toggleMod, g_keybinds.toggleKey);
-                    RegisterHotKey(g_hHUD, 2, g_keybinds.roiMod,    g_keybinds.roiKey);
-                    RegisterHotKey(g_hHUD, 3, g_keybinds.crossMod,  g_keybinds.crossKey);
-                    RegisterHotKey(g_hHUD, 4, g_keybinds.zeroMod,   g_keybinds.zeroKey);
-                    RegisterHotKey(g_hHUD, 5, g_keybinds.debugMod,  g_keybinds.debugKey);
-                }
-                return 0;
-            }
-            break;
-        case WM_SYSCOMMAND:
-            if ((wParam & 0xfff0) == SC_KEYMENU) return 0;
-            break;
+            case WM_SYSCOMMAND:
+                if ((wParam & 0xfff0) == SC_KEYMENU) return 0;
+                break;
         case WM_CLOSE:
             ShowWindow(hWnd, SW_MINIMIZE);
             return 0;
