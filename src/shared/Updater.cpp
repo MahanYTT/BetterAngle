@@ -179,7 +179,7 @@ void FetchCloudProfiles() {
 
 void DownloadCloudProfile(int index) {
     if (index >= 0 && index < g_cloudProfileNames.size()) {
-        std::wstring dest = L"profiles/" + g_cloudProfileNames[index];
+        std::wstring dest = GetAppStoragePath() + g_cloudProfileNames[index];
         URLDownloadToFileW(NULL, g_cloudProfileUrls[index].c_str(), dest.c_str(), 0, NULL);
     }
 }

@@ -12,10 +12,13 @@
 #define STRING_HELPER(x) #x
 #define TO_STRING(x) STRING_HELPER(x)
 #define TO_WSTRING(x) L"" TO_STRING(x)
+#include <string>
+
+std::wstring GetAppStoragePath();
 
 // Define the "raw" version if not passed by compiler flags
 #ifndef APP_VERSION
-#define APP_VERSION 4.11.1
+#define APP_VERSION 4.11.2
 #endif
 
 // This creates the actual strings "4.9.36" and L"4.9.36"

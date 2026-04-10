@@ -13,6 +13,7 @@
 #include "shared/Logic.h"
 #include "shared/Overlay.h"
 #include "shared/Profile.h"
+#include "shared/State.h"
 
 
 #pragma comment(lib, "dwmapi.lib")
@@ -105,12 +106,11 @@ LRESULT CALLBACK ConfigWndProc(HWND hWnd, UINT message, WPARAM wParam,
         g_wizardMsg = L"STEP 6: Done! Press 'S' to Save JSON.";
       }
     } else if (wParam == 'S' && g_step == 6) {
-      CreateDirectoryW(L"profiles", NULL);
       std::wstring safeFilename =
           L"SENS_" + g_sensInput + L"_DPI_" + g_dpiInput + L".json";
-      std::wstring path = L"profiles/" + safeFilename;
+      std::wstring path = GetAppStoragePath() + safeFilename;
       g_result.Save(path);
-      g_wizardMsg = L"DONE! Profile saved to 'profiles/" + safeFilename + L"'.";
+      g_wizardMsg = L"DONE! Profile saved to AppData.";
     }
     InvalidateRect(hWnd, NULL, FALSE);
     return 0;

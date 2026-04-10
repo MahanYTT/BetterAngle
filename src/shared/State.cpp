@@ -14,13 +14,30 @@ bool g_updateAvailable = false;
 
 Keybinds g_keybinds;
 std::wstring g_lastLoadedProfileName = L"";
-float g_promptThreshold = 0.05f;
+float g_glideThreshold = 0.05f;
+float g_freefallThreshold = 0.20f;
 
 #include <fstream>
 #include <string>
 
+#include <shlobj.h>
+#pragma comment(lib, "shell32.lib")
+
+std::wstring GetAppStoragePath() {
+    wchar_t out[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_APPDATA, NULL, 0, out))) {
+        std::wstring path = std::wstring(out) + L"\\BetterAngle";
+        CreateDirectoryW(path.c_str(), NULL);
+        path += L"\\profiles";
+        CreateDirectoryW(path.c_str(), NULL);
+        return path + L"\\";
+    }
+    return L"profiles\\"; // Fallback to local
+}
+
 void LoadSettings() {
-  std::ifstream ifs("profiles/settings.json");
+  std::wstring sp = GetAppStoragePath() + L"settings.json";
+  std::ifstream ifs(std::string(sp.begin(), sp.end()));
   if (!ifs.is_open())
     return;
   std::string content((std::istreambuf_iterator<char>(ifs)),
@@ -56,7 +73,8 @@ void LoadSettings() {
   g_keybinds.debugMod = eInt("debugMod", MOD_CONTROL);
   g_keybinds.debugKey = eInt("debugKey", '9');
 
-  g_promptThreshold = eFloat("promptThreshold", 0.05f);
+  g_glideThreshold = eFloat("glideThreshold", 0.05f);
+  g_freefallThreshold = eFloat("freefallThreshold", 0.20f);
 
   size_t pp = content.find("\"lastProfile\":\"");
   if (pp != std::string::npos) {
@@ -67,7 +85,8 @@ void LoadSettings() {
 }
 
 void SaveSettings() {
-  std::ofstream ofs("profiles/settings.json");
+  std::wstring sp = GetAppStoragePath() + L"settings.json";
+  std::ofstream ofs(std::string(sp.begin(), sp.end()));
   ofs << "{\n";
   ofs << "  \"toggleMod\": " << g_keybinds.toggleMod << ",\n";
   ofs << "  \"toggleKey\": " << g_keybinds.toggleKey << ",\n";
@@ -79,7 +98,8 @@ void SaveSettings() {
   ofs << "  \"zeroKey\": " << g_keybinds.zeroKey << ",\n";
   ofs << "  \"debugMod\": " << g_keybinds.debugMod << ",\n";
   ofs << "  \"debugKey\": " << g_keybinds.debugKey << ",\n";
-  ofs << "  \"promptThreshold\": " << g_promptThreshold << ",\n";
+  ofs << "  \"glideThreshold\": " << g_glideThreshold << ",\n";
+  ofs << "  \"freefallThreshold\": " << g_freefallThreshold << ",\n";
 
   std::string lp = "Fallback_Default";
   lp = "";

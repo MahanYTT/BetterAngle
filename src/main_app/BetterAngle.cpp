@@ -175,11 +175,11 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                     p.roi_h = abs(g_selectionRect.bottom - g_selectionRect.top);
                     
                     // Save to the actual profile path
-                    std::wstring profilePath = L"profiles/" + p.name + L".json";
+                    std::wstring profilePath = GetAppStoragePath() + p.name + L".json";
                     p.Save(profilePath);
                     
                     // Also maintain the legacy 'last_calibrated' for quick-load logic if needed
-                    p.Save(L"profiles/last_calibrated.json");
+                    p.Save(GetAppStoragePath() + L"last_calibrated.json");
                 }
             }
             return 0;
@@ -243,8 +243,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ShowSplashLoader(hInstance);
 
     LoadSettings();
-    CreateDirectoryW(L"profiles", NULL);
-    g_allProfiles = GetProfiles(L"profiles");
+    g_allProfiles = GetProfiles(GetAppStoragePath());
     if (g_allProfiles.empty()) {
         Profile defaultP;
         defaultP.name = L"Fallback_Default";
@@ -256,7 +255,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         defaultP.roi_h = 60;
         defaultP.target_color = RGB(150, 150, 150);
         defaultP.tolerance = 25;
-        defaultP.Save(L"profiles/Fallback_Default.json");
+        defaultP.Save(GetAppStoragePath() + L"Fallback_Default.json");
         g_allProfiles.push_back(defaultP);
     }
     

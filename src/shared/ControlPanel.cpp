@@ -42,13 +42,17 @@ void DrawD2DButton(ID2D1HwndRenderTarget* rt, D2D1_RECT_F rect, const wchar_t* t
     ID2D1SolidColorBrush* pBrush = NULL;
     rt->CreateSolidColorBrush(color, &pBrush);
 
-    rt->FillRoundedRectangle(D2D1::RoundedRect(rect, 8.0f, 8.0f), pBrush);
+    ID2D1SolidColorBrush* pStroke = NULL;
+    rt->CreateSolidColorBrush(D2D1::ColorF(color.r * 1.5f, color.g * 1.5f, color.b * 1.5f), &pStroke);
+
+    rt->FillRoundedRectangle(D2D1::RoundedRect(rect, 6.0f, 6.0f), pBrush);
+    rt->DrawRoundedRectangle(D2D1::RoundedRect(rect, 6.0f, 6.0f), pStroke, 1.0f);
 
     ID2D1SolidColorBrush* pWhite = NULL;
-    rt->CreateSolidColorBrush(ColorF(ColorF::White), &pWhite);
+    rt->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &pWhite);
 
     IDWriteTextFormat* pTextFormat = NULL;
-    g_pDWriteFactory->CreateTextFormat(L"Segoe UI Variable Display", NULL, DWRITE_FONT_WEIGHT_BOLD, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 14.0f, L"en-us", &pTextFormat);
+    g_pDWriteFactory->CreateTextFormat(L"Segoe UI Variable Display", NULL, DWRITE_FONT_WEIGHT_BOLD, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 13.0f, L"en-us", &pTextFormat);
     pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
     pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 
@@ -56,6 +60,7 @@ void DrawD2DButton(ID2D1HwndRenderTarget* rt, D2D1_RECT_F rect, const wchar_t* t
 
     pTextFormat->Release();
     pWhite->Release();
+    if (pStroke) pStroke->Release();
     pBrush->Release();
 }
 
@@ -176,7 +181,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                             SaveSettings();
                             
                             // Reload Profiles Array
-                            g_allProfiles = GetProfiles(L"profiles");
+                            g_allProfiles = GetProfiles(GetAppStoragePath());
                             g_selectedProfileIdx = 0;
                             for (size_t pidx = 0; pidx < g_allProfiles.size(); pidx++) {
                                 if (g_allProfiles[pidx].name == g_lastLoadedProfileName) {
@@ -202,13 +207,13 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
                 else if (x >= 40 && x <= 200 && y >= 350 && y <= 380) {
                     if (!g_allProfiles.empty()) {
                         g_allProfiles[g_selectedProfileIdx].tolerance = max(0, g_allProfiles[g_selectedProfileIdx].tolerance - 2);
-                        g_allProfiles[g_selectedProfileIdx].Save(L"profiles/" + g_allProfiles[g_selectedProfileIdx].name + L".json");
+                        g_allProfiles[g_selectedProfileIdx].Save(GetAppStoragePath() + g_allProfiles[g_selectedProfileIdx].name + L".json");
                     }
                 }
                 else if (x >= 220 && x <= 380 && y >= 350 && y <= 380) {
                     if (!g_allProfiles.empty()) {
                         g_allProfiles[g_selectedProfileIdx].tolerance += 2;
-                        g_allProfiles[g_selectedProfileIdx].Save(L"profiles/" + g_allProfiles[g_selectedProfileIdx].name + L".json");
+                        g_allProfiles[g_selectedProfileIdx].Save(GetAppStoragePath() + g_allProfiles[g_selectedProfileIdx].name + L".json");
                     }
                 }
                 else if (x >= 40 && x <= 380 && y >= 450 && y <= 480) {
@@ -248,7 +253,7 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
         case WM_PAINT: {
             if (!g_pRenderTarget) return 0;
             g_pRenderTarget->BeginDraw();
-            g_pRenderTarget->Clear(D2D1::ColorF(0.05f, 0.06f, 0.07f));
+            g_pRenderTarget->Clear(D2D1::ColorF(0.02f, 0.03f, 0.04f));
 
             ID2D1SolidColorBrush* pWhite = NULL;
             g_pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &pWhite);
