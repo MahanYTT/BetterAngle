@@ -470,40 +470,56 @@ void RenderImGuiFrame() {
 }
 
 LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    if (msg == WM_KEYDOWN && g_listeningKey != -1) {
-        if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU || wParam == VK_ESCAPE) {
-            if (wParam == VK_ESCAPE) g_listeningKey = -1;
+    if (msg == WM_KEYDOWN) {
+        // Keyboard Nudge Support for Crosshair (Tab Index 2)
+        if (g_currentTab == 2) {
+            float step = (GetAsyncKeyState(VK_SHIFT) & 0x8000) ? 5.0f : 1.0f;
+            bool changed = false;
+            if (wParam == VK_LEFT)  { g_crossOffsetX -= step; changed = true; }
+            if (wParam == VK_RIGHT) { g_crossOffsetX += step; changed = true; }
+            if (wParam == VK_UP)    { g_crossOffsetY -= step; changed = true; }
+            if (wParam == VK_DOWN)  { g_crossOffsetY += step; changed = true; }
+            
+            if (changed) {
+                SaveSettings();
+                if (g_hHUD) { InvalidateRect(g_hHUD, NULL, FALSE); UpdateWindow(g_hHUD); }
+                return 0;
+            }
+        }
+
+        if (g_listeningKey != -1) {
+            if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU || wParam == VK_ESCAPE) {
+                if (wParam == VK_ESCAPE) g_listeningKey = -1;
+                return 0;
+            }
+            UINT mod = 0;
+            if (GetAsyncKeyState(VK_CONTROL) & 0x8000) mod |= MOD_CONTROL;
+            if (GetAsyncKeyState(VK_SHIFT)   & 0x8000) mod |= MOD_SHIFT;
+            if (GetAsyncKeyState(VK_MENU)    & 0x8000) mod |= MOD_ALT;
+            
+            if (g_allProfiles.empty()) return 0;
+            Profile& p = g_allProfiles[g_selectedProfileIdx];
+            
+            switch (g_listeningKey) {
+                case 1: p.keybinds.toggleMod = mod; p.keybinds.toggleKey = (UINT)wParam; break;
+                case 2: p.keybinds.roiMod    = mod; p.keybinds.roiKey    = (UINT)wParam; break;
+                case 3: p.keybinds.crossMod  = mod; p.keybinds.crossKey  = (UINT)wParam; break;
+                case 4: p.keybinds.zeroMod   = mod; p.keybinds.zeroKey   = (UINT)wParam; break;
+                case 5: p.keybinds.debugMod  = mod; p.keybinds.debugKey  = (UINT)wParam; break;
+            }
+            g_listeningKey = -1;
+            p.Save(GetAppStoragePath() + p.name + L".json");
+
+            if (g_hHUD) {
+                UnregisterHotKey(g_hHUD, 1); RegisterHotKey(g_hHUD, 1, p.keybinds.toggleMod, p.keybinds.toggleKey);
+                UnregisterHotKey(g_hHUD, 2); RegisterHotKey(g_hHUD, 2, p.keybinds.roiMod,    p.keybinds.roiKey);
+                UnregisterHotKey(g_hHUD, 3); RegisterHotKey(g_hHUD, 3, p.keybinds.crossMod,  p.keybinds.crossKey);
+                UnregisterHotKey(g_hHUD, 4); RegisterHotKey(g_hHUD, 4, p.keybinds.zeroMod,   p.keybinds.zeroKey);
+                UnregisterHotKey(g_hHUD, 5); RegisterHotKey(g_hHUD, 5, p.keybinds.debugMod,  p.keybinds.debugKey);
+            }
             return 0;
         }
-        UINT mod = 0;
-        if (GetAsyncKeyState(VK_CONTROL) & 0x8000) mod |= MOD_CONTROL;
-        if (GetAsyncKeyState(VK_SHIFT)   & 0x8000) mod |= MOD_SHIFT;
-        if (GetAsyncKeyState(VK_MENU)    & 0x8000) mod |= MOD_ALT;
-        
-        if (g_allProfiles.empty()) return 0;
-        Profile& p = g_allProfiles[g_selectedProfileIdx];
-        
-        switch (g_listeningKey) {
-            case 1: p.keybinds.toggleMod = mod; p.keybinds.toggleKey = (UINT)wParam; break;
-            case 2: p.keybinds.roiMod    = mod; p.keybinds.roiKey    = (UINT)wParam; break;
-            case 3: p.keybinds.crossMod  = mod; p.keybinds.crossKey  = (UINT)wParam; break;
-            case 4: p.keybinds.zeroMod   = mod; p.keybinds.zeroKey   = (UINT)wParam; break;
-            case 5: p.keybinds.debugMod  = mod; p.keybinds.debugKey  = (UINT)wParam; break;
-        }
-        g_listeningKey = -1;
-        p.Save(GetAppStoragePath() + p.name + L".json");
-
-        if (g_hHUD) {
-            // Robust global hotkey re-registration (v4.20.47)
-            UnregisterHotKey(g_hHUD, 1); RegisterHotKey(g_hHUD, 1, p.keybinds.toggleMod, p.keybinds.toggleKey);
-            UnregisterHotKey(g_hHUD, 2); RegisterHotKey(g_hHUD, 2, p.keybinds.roiMod,    p.keybinds.roiKey);
-            UnregisterHotKey(g_hHUD, 3); RegisterHotKey(g_hHUD, 3, p.keybinds.crossMod,  p.keybinds.crossKey);
-            UnregisterHotKey(g_hHUD, 4); RegisterHotKey(g_hHUD, 4, p.keybinds.zeroMod,   p.keybinds.zeroKey);
-            UnregisterHotKey(g_hHUD, 5); RegisterHotKey(g_hHUD, 5, p.keybinds.debugMod,  p.keybinds.debugKey);
-        }
-        return 0;
     }
-}
 
     if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
         return true;
