@@ -82,8 +82,14 @@ void LoadSettings() {
   g_glideThreshold = eFloat("glideThreshold", 0.05f);
   g_freefallThreshold = eFloat("freefallThreshold", 0.20f);
   
-  g_hudX = eInt("hudX", 40);
   g_hudY = eInt("hudY", 40);
+
+  g_crossThickness = eFloat("crossThickness", 2.0f);
+  g_crossColor     = (COLORREF)eFloat("crossColor", (float)RGB(255, 0, 0));
+  g_crossOffsetX   = eFloat("crossOffsetX", 0.0f);
+  g_crossOffsetY   = eFloat("crossOffsetY", 0.0f);
+  g_crossAngle     = eFloat("crossAngle", 0.0f);
+  g_crossPulse     = eFloat("crossPulse", 0.0f) > 0.5f;
 
   size_t pp = content.find("\"lastProfile\":\"");
   if (pp != std::string::npos) {
@@ -111,6 +117,12 @@ void SaveSettings() {
   ofs << "  \"freefallThreshold\": " << g_freefallThreshold << ",\n";
   ofs << "  \"hudX\": " << g_hudX << ",\n";
   ofs << "  \"hudY\": " << g_hudY << ",\n";
+  ofs << "  \"crossThickness\": " << g_crossThickness << ",\n";
+  ofs << "  \"crossColor\": " << g_crossColor << ",\n";
+  ofs << "  \"crossOffsetX\": " << g_crossOffsetX << ",\n";
+  ofs << "  \"crossOffsetY\": " << g_crossOffsetY << ",\n";
+  ofs << "  \"crossAngle\": " << g_crossAngle << ",\n";
+  ofs << "  \"crossPulse\": " << (g_crossPulse ? 1 : 0) << ",\n";
 
   std::string lp = "Fallback_Default";
   lp = "";

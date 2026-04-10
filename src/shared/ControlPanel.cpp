@@ -231,6 +231,20 @@ void RenderImGuiFrame() {
             ImGui::Spacing();
             ImGui::TextDisabled("PRECISION CROSSHAIR CONFIG");
             ImGui::Spacing();
+
+            // Large Toggle Button (Java-style visibility control)
+            ImVec4 toggleCol = g_showCrosshair ? ImVec4(0.2f, 0.7f, 0.3f, 1.0f) : ImVec4(0.7f, 0.2f, 0.2f, 1.0f);
+            ImGui::PushStyleColor(ImGuiCol_Button, toggleCol);
+            if (ImGui::Button(g_showCrosshair ? "OVERLAY ACTIVE" : "OVERLAY HIDDEN", ImVec2(-1, 40))) {
+                g_showCrosshair = !g_showCrosshair;
+                SaveSettings();
+            }
+            ImGui::PopStyleColor();
+
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
             float cCol[3] = { GetRValue(g_crossColor)/255.f, GetGValue(g_crossColor)/255.f, GetBValue(g_crossColor)/255.f };
             if (ImGui::ColorEdit3("Crosshair Color", cCol)) {
                 g_crossColor = RGB((BYTE)(cCol[0]*255), (BYTE)(cCol[1]*255), (BYTE)(cCol[2]*255)); SaveSettings();
@@ -238,36 +252,54 @@ void RenderImGuiFrame() {
             if (ImGui::Checkbox("Pulse Animation", &g_crossPulse)) SaveSettings();
             
             ImGui::Spacing();
-            if (ImGui::SliderFloat("Thickness", &g_crossThickness, 1.0f, 10.0f)) SaveSettings();
-            if (ImGui::SliderFloat("Rotation", &g_crossAngle, -180.0f, 180.0f)) SaveSettings();
-            if (ImGui::SliderFloat("Offset X", &g_crossOffsetX, -500.0f, 500.0f)) SaveSettings();
-            if (ImGui::SliderFloat("Offset Y", &g_crossOffsetY, -500.0f, 500.0f)) SaveSettings();
+
+            // Precision Control Helper
+            auto PrecisionSlider = [](const char* label, float* val, float minV, float maxV, float step) {
+                ImGui::Text("%s", label);
+                if (ImGui::Button(("-##" + std::string(label)).c_str(), ImVec2(25, 25))) { *val -= step; SaveSettings(); }
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 35);
+                if (ImGui::SliderFloat(("##" + std::string(label)).c_str(), val, minV, maxV, "%.2f")) SaveSettings();
+                ImGui::SameLine();
+                if (ImGui::Button(("+##" + std::string(label)).c_str(), ImVec2(25, 25))) { *val += step; SaveSettings(); }
+            };
+
+            PrecisionSlider("Thickness", &g_crossThickness, 1.0f, 10.0f, 0.5f);
+            PrecisionSlider("Rotation", &g_crossAngle, -180.0f, 180.0f, 5.0f);
+            PrecisionSlider("Offset X", &g_crossOffsetX, -500.0f, 500.0f, 0.5f);
+            PrecisionSlider("Offset Y", &g_crossOffsetY, -500.0f, 500.0f, 0.5f);
             
             ImGui::Spacing();
-            if (ImGui::Button("RESET", ImVec2(100, 30))) {
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            if (ImGui::Button("RESET", ImVec2(100, 35))) {
                 g_crossThickness = 2.0f; g_crossOffsetX = 0.0f; g_crossOffsetY = 0.0f;
                 g_crossAngle = 0.0f; g_crossPulse = false; g_crossColor = RGB(255,0,0);
+                SaveSettings();
             }
             ImGui::SameLine();
-            if (ImGui::Button("SAVE POS", ImVec2(100, 30))) {
+            if (ImGui::Button("SAVE POS", ImVec2(100, 35))) {
                 if (!g_allProfiles.empty()) {
-                    g_allProfiles[g_selectedProfileIdx].crossOffsetX = g_crossOffsetX;
-                    g_allProfiles[g_selectedProfileIdx].crossOffsetY = g_crossOffsetY;
-                    g_allProfiles[g_selectedProfileIdx].Save(GetAppStoragePath() + g_allProfiles[g_selectedProfileIdx].name + L".json");
+                    Profile& p = g_allProfiles[g_selectedProfileIdx];
+                    p.crossOffsetX = g_crossOffsetX;
+                    p.crossOffsetY = g_crossOffsetY;
+                    p.Save(GetAppStoragePath() + p.name + L".json");
                 }
             }
             ImGui::SameLine();
-            if (ImGui::Button("SAVE ALL", ImVec2(100, 30))) {
+            if (ImGui::Button("SAVE ALL", ImVec2(100, 35))) {
                 if (!g_allProfiles.empty()) {
                     Profile& p = g_allProfiles[g_selectedProfileIdx];
                     p.crossThickness = g_crossThickness; p.crossColor = g_crossColor;
-                    p.crossOffsetX = g_crossOffsetX; p.crossOffsetY = g_crossOffsetY;
-                    p.crossAngle = g_crossAngle; p.crossPulse = g_crossPulse;
+                    p.crossOffsetX   = g_crossOffsetX;   p.crossOffsetY = g_crossOffsetY;
+                    p.crossAngle     = g_crossAngle;     p.crossPulse   = g_crossPulse;
                     p.Save(GetAppStoragePath() + p.name + L".json");
                 }
             }
             ImGui::EndTabItem();
         }
+
 
         ImGui::EndTabBar();
     }
