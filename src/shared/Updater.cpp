@@ -35,7 +35,7 @@ static std::vector<int> ParseVer(const std::string& v) {
 // Comparer
 static bool IsVersionHigher(const std::string& a, const std::string& b) {
     auto va = ParseVer(a), vb = ParseVer(b);
-    for (size_t i = 0; i < std::max(va.size(), vb.size()); i++) {
+    for (size_t i = 0; i < (std::max)(va.size(), vb.size()); i++) {
         int pa = i < va.size() ? va[i] : 0;
         int pb = i < vb.size() ? vb[i] : 0;
         if (pa != pb) return pa > pb;
