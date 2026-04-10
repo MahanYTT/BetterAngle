@@ -393,7 +393,7 @@ Item {
                     }
 
 
-                    // Pulse (removed from here)
+
 
                     // Fine Position  
                     Text { text: "FINE POSITION"; color: "#666"; font.pixelSize: 11; font.bold: true; verticalAlignment: Text.AlignVCenter; height: 32 }
