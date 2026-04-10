@@ -1,3 +1,6 @@
+### BetterAngle Pro v4.16.0: "Clean Minimal Setup UI Overhaul"
+v4.16.0: Completely redesigned the first-time setup wizard with a modern, minimal aesthetic inspired by premium SaaS onboarding flows (Linear, Vercel). Features centered layouts, rounded input fields with accent borders, step progress indicators, Tab key field switching, drag-from-title-area support, and a branded bottom watermark. The "Next" button is gated until a DPI value is entered.
+
 ### BetterAngle Pro v4.15.0: "Post-Setup Crash Recovery & Draggable Setup Window"
 v4.15.0: Fixed a critical startup crash that occurred immediately after the first-time setup wizard completed. The root cause was the main application indexing into `g_allProfiles` before reloading the profiles from disk following the wizard's save. A safety reload and empty-profile guard have been added. Additionally, the setup window is now draggable by clicking and holding the top title region, and the `PostQuitMessage` bug that was interfering with the main app's message loop has been resolved.
 
