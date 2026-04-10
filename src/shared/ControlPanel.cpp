@@ -187,9 +187,6 @@ void RenderImGuiFrame() {
                 }
                 
             // v4.20.37: 360 Calibration Assistant Removed (Per User Request)
-            } else {
-                ImGui::TextDisabled("No profiles available to adjust sensitivity.");
-            }
 
             ImGui::Spacing();
             if (ImGui::Button("RE-RUN INITIAL CALIBRATION", ImVec2(-1, 35))) {
@@ -449,22 +446,25 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
         if (GetAsyncKeyState(VK_SHIFT)   & 0x8000) mod |= MOD_SHIFT;
         if (GetAsyncKeyState(VK_MENU)    & 0x8000) mod |= MOD_ALT;
         
+        if (g_allProfiles.empty()) return 0;
+        Profile& p = g_allProfiles[g_selectedProfileIdx];
+        
         switch (g_listeningKey) {
-            case 1: g_keybinds.toggleMod = mod; g_keybinds.toggleKey = (UINT)wParam; break;
-            case 2: g_keybinds.roiMod    = mod; g_keybinds.roiKey    = (UINT)wParam; break;
-            case 3: g_keybinds.crossMod  = mod; g_keybinds.crossKey  = (UINT)wParam; break;
-            case 4: g_keybinds.zeroMod   = mod; g_keybinds.zeroKey   = (UINT)wParam; break;
-            case 5: g_keybinds.debugMod  = mod; g_keybinds.debugKey  = (UINT)wParam; break;
+            case 1: p.keybinds.toggleMod = mod; p.keybinds.toggleKey = (UINT)wParam; break;
+            case 2: p.keybinds.roiMod    = mod; p.keybinds.roiKey    = (UINT)wParam; break;
+            case 3: p.keybinds.crossMod  = mod; p.keybinds.crossKey  = (UINT)wParam; break;
+            case 4: p.keybinds.zeroMod   = mod; p.keybinds.zeroKey   = (UINT)wParam; break;
+            case 5: p.keybinds.debugMod  = mod; p.keybinds.debugKey  = (UINT)wParam; break;
         }
         g_listeningKey = -1;
-        SaveSettings();
+        p.Save(GetAppStoragePath() + p.name + L".json");
         if (g_hHUD) {
             for (int i = 1; i <= 5; i++) UnregisterHotKey(g_hHUD, i);
-            RegisterHotKey(g_hHUD, 1, g_keybinds.toggleMod, g_keybinds.toggleKey);
-            RegisterHotKey(g_hHUD, 2, g_keybinds.roiMod,    g_keybinds.roiKey);
-            RegisterHotKey(g_hHUD, 3, g_keybinds.crossMod,  g_keybinds.crossKey);
-            RegisterHotKey(g_hHUD, 4, g_keybinds.zeroMod,   g_keybinds.zeroKey);
-            RegisterHotKey(g_hHUD, 5, g_keybinds.debugMod,  g_keybinds.debugKey);
+            RegisterHotKey(g_hHUD, 1, p.keybinds.toggleMod, p.keybinds.toggleKey);
+            RegisterHotKey(g_hHUD, 2, p.keybinds.roiMod,    p.keybinds.roiKey);
+            RegisterHotKey(g_hHUD, 3, p.keybinds.crossMod,  p.keybinds.crossKey);
+            RegisterHotKey(g_hHUD, 4, p.keybinds.zeroMod,   p.keybinds.zeroKey);
+            RegisterHotKey(g_hHUD, 5, p.keybinds.debugMod,  p.keybinds.debugKey);
         }
         return 0;
     }
