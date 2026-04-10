@@ -183,10 +183,10 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // === Minimalist HUD (v4.20.40) =========================================
+    // === Minimalist HUD (v4.20.42) =========================================
     // ══════════════════════════════════════════════════════════════════════
-    const int rx = g_hudX, ry = g_hudY, rw = 220, rh = 100;
-    const int RAD = 12;
+    const int rx = g_hudX, ry = g_hudY, rw = 160, rh = 80;
+    const int RAD = 10;
 
     // Body
     GraphicsPath path;
@@ -196,12 +196,12 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
     path.AddArc(rx,           ry + rh - RAD, RAD, RAD,  90, 90);
     path.CloseFigure();
 
-    SolidBrush bgBrush(Color(220, 10, 10, 10)); // Solid minimalist black
+    SolidBrush bgBrush(Color(255, 0, 0, 0)); // Plain Solid Black
     graphics.FillPath(&bgBrush, &path);
 
     // Border
-    Color borderCol = g_isDiving ? Color(255, 255, 255, 255) : Color(120, 100, 100, 100);
-    Pen borderPen(borderCol, 1.2f);
+    Color borderCol = g_isDiving ? Color(255, 255, 255, 255) : Color(255, 50, 50, 50);
+    Pen borderPen(borderCol, 1.0f);
     graphics.DrawPath(&borderPen, &path);
 
     // Center Angle Text
@@ -211,31 +211,11 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
     sf.SetAlignment(StringAlignmentCenter);
     sf.SetLineAlignment(StringAlignmentCenter);
 
-    Color angleCol = g_isDiving ? Color(255, 255, 255, 255) : Color(255, 220, 220, 220);
+    Color angleCol = g_isDiving ? Color(255, 255, 255, 255) : Color(255, 240, 240, 240);
     SolidBrush angleBrush(angleCol);
     
     RectF textRect((REAL)rx, (REAL)ry, (REAL)rw, (REAL)rh);
     graphics.DrawString(angleStr.c_str(), -1, &Font_Large, textRect, &sf, &angleBrush);
-
-    // Relative Match Info (Top-Left)
-    int matchPct = int(detectionRatio * 100.0f);
-    std::wstring matchStr = std::to_wstring(matchPct) + L"% match";
-    SolidBrush matchBrush(Color(120, 180, 190, 200));
-    graphics.DrawString(matchStr.c_str(), -1, &Font_Tiny, PointF((REAL)rx + 8, (REAL)ry + 8), &matchBrush);
-
-    // Subtle Target Swatch (Top-Right)
-    int swatchSize = 12;
-    int swatchX = rx + rw - swatchSize - 10, swatchY = ry + 10;
-    Color swatch(255, GetBValue(g_targetColor), GetGValue(g_targetColor), GetRValue(g_targetColor));
-    graphics.FillEllipse(&SolidBrush(swatch), swatchX, swatchY, swatchSize, swatchSize);
-    graphics.DrawEllipse(&Pen(Color(100, 255, 255, 255), 1.0f), swatchX, swatchY, swatchSize, swatchSize);
-
-    // Subtle Drag Hint (Bottom-Center)
-    SolidBrush tinyBrush(Color(g_isDraggingHUD ? 130 : 55, 200, 210, 220));
-    StringFormat sfBottom;
-    sfBottom.SetAlignment(StringAlignmentCenter);
-    RectF hintRect((REAL)rx, (REAL)ry + rh - 14, (REAL)rw, 14.0f);
-    graphics.DrawString(L"⠿ drag", -1, &Font_Tiny, hintRect, &sfBottom, &tinyBrush);
 
     // ══════════════════════════════════════════════════════════════════════
     // ── Debug Dashboard (Ctrl+9) ──────────────────────────────────────────
