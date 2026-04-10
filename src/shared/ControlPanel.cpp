@@ -279,10 +279,18 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             // Check / Install button
             if (fx >= L.margin && fx <= L.W - L.margin && fy >= 0.45f * L.H && fy <= 0.56f * L.H) {
                 if (g_updateAvailable) {
-                    g_updateAvailable = false;
                     std::thread([]() {
-                        if (DownloadUpdate(L"AUTO", L"update_tmp.exe"))
+                        // Resolve absolute path next to the running exe
+                        wchar_t exeBuf[MAX_PATH] = {};
+                        GetModuleFileNameW(NULL, exeBuf, MAX_PATH);
+                        std::wstring exePath = exeBuf;
+                        size_t slash = exePath.find_last_of(L"\\/");
+                        std::wstring tmpPath = exePath.substr(0, slash + 1) + L"update_tmp.exe";
+
+                        if (DownloadUpdate(L"AUTO", tmpPath))
                             ApplyUpdateAndRestart();
+                        else
+                            g_updateAvailable = true; // restore flag so user can retry
                     }).detach();
                 } else {
                     g_isCheckingForUpdates = true;

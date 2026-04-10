@@ -288,15 +288,11 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-    // Phase 0: Silent Update & Relaunch Sequence
-    if (CheckForUpdates()) {
-        std::wstring verStr = std::wstring(g_latestVersionOnline.begin(), g_latestVersionOnline.end());
-        // User requested: Download the latest .exe from GitHub to update_tmp.exe
-        std::wstring downloadUrl = L"https://github.com/MahanYTT/BetterAngle/releases/latest/download/BetterAngle.exe";
-        if (DownloadUpdate(downloadUrl, L"update_tmp.exe")) {
-            ApplyUpdateAndRestart();
-        }
-    }
+    // Phase 0: Kick off version check in background — never blocks startup.
+    // g_updateAvailable will be set when done; the control panel UPDATES tab shows it.
+    std::thread([]() {
+        CheckForUpdates();
+    }).detach();
 
     GdiplusStartupInput gdiplusStartupInput;
     GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, NULL);
