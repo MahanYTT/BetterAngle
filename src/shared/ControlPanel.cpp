@@ -162,6 +162,12 @@ void RenderImGuiFrame() {
             }
 
             ImGui::Spacing();
+            if (ImGui::Button("RE-RUN INITIAL CALIBRATION", ImVec2(-1, 35))) {
+                extern void ShowFirstTimeSetup(HINSTANCE);
+                ShowFirstTimeSetup(GetModuleHandle(NULL));
+            }
+
+            ImGui::Spacing();
             ImGui::Separator();
             ImGui::Spacing();
 
@@ -333,6 +339,29 @@ void RenderImGuiFrame() {
                 }
             }
             ImGui::EndChild();
+            ImGui::EndTabItem();
+        }
+
+        // TAB: UPDATES
+        if (ImGui::BeginTabItem("UPDATES")) {
+            ImGui::Spacing();
+            ImGui::Text("BetterAngle Pro");
+            ImGui::TextDisabled("Version %s", VERSION_STR);
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+
+            if (g_updateAvailable) {
+                ImGui::TextColored(ImVec4(0.2f, 0.8f, 0.4f, 1.0f), "A NEW UPDATE IS AVAILABLE!");
+                if (ImGui::Button("DOWNLOAD & INSTALL NOW", ImVec2(-1, 40))) {
+                    UpdateApp();
+                }
+            } else {
+                ImGui::Text("Your software is up to date.");
+                if (ImGui::Button("CHECK FOR UPDATES", ImVec2(200, 30))) {
+                    std::thread([]() { CheckForUpdates(); }).detach();
+                }
+            }
             ImGui::EndTabItem();
         }
 

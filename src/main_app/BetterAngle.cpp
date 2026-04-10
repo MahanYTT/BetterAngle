@@ -80,6 +80,7 @@ void DetectorThread() {
                 g_logic.SetDivingState(false);
                 g_detectionRatio = 0.0f;
                 g_fortniteFocusedCache = false;
+                g_currentAngle = 0.0f; // Reset angle immediately when alt-tabbed
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -363,6 +364,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     // Phase 2: Create Control Panel (Interactive)
     g_hPanel = CreateControlPanel(hInstance);
+    
+    // Phase 2.5: Ensure Setup is Complete (v4.20.29 Wizard Restoration)
+    if (!g_setupComplete) {
+        ShowFirstTimeSetup(hInstance);
+    }
     
     // Phase 3: Create HUD Window (Transparent Overlay)
     WNDCLASS wc = { 0 };

@@ -58,6 +58,8 @@ void FinishSetup() {
         e.sensitivityY = p.sensitivityY;
         e.Save(GetAppStoragePath() + e.name + L".json");
     }
+    g_setupComplete = true; 
+    SaveSettings();
 }
 
 // ── Paint ────────────────────────────────────────────────────────────────

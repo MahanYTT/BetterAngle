@@ -13,6 +13,7 @@ bool g_hasCheckedForUpdates = false;
 float g_updateSpinAngle = 0.0f;
 bool g_updateAvailable = false;
 std::atomic<bool> g_fortniteFocusedCache(false);
+bool g_setupComplete = false;
 
 Profile g_currentProfile;
 std::vector<Profile> g_allProfiles;
@@ -90,6 +91,7 @@ void LoadSettings() {
   g_crossOffsetY   = eFloat("crossOffsetY", 0.0f);
   g_crossAngle     = eFloat("crossAngle", 0.0f);
   g_crossPulse     = eFloat("crossPulse", 0.0f) > 0.5f;
+  g_setupComplete  = eFloat("setupComplete", 0.0f) > 0.5f;
 
   size_t pp = content.find("\"lastProfile\":\"");
   if (pp != std::string::npos) {
@@ -123,6 +125,7 @@ void SaveSettings() {
   ofs << "  \"crossOffsetY\": " << g_crossOffsetY << ",\n";
   ofs << "  \"crossAngle\": " << g_crossAngle << ",\n";
   ofs << "  \"crossPulse\": " << (g_crossPulse ? 1 : 0) << ",\n";
+  ofs << "  \"setupComplete\": " << (g_setupComplete ? 1 : 0) << ",\n";
 
   std::string lp = "Fallback_Default";
   lp = "";
