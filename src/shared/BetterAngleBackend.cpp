@@ -139,6 +139,18 @@ void BetterAngleBackend::syncWithFortnite() {
 }
 
 void BetterAngleBackend::terminateApp() {
+    // Save everything before quitting so last position/preferences are preserved
+    if (!g_allProfiles.empty()) {
+        Profile& p = g_allProfiles[g_selectedProfileIdx];
+        p.crossThickness = g_crossThickness;
+        p.crossColor     = g_crossColor;
+        p.crossOffsetX   = g_crossOffsetX;
+        p.crossOffsetY   = g_crossOffsetY;
+        p.crossAngle     = g_crossAngle;
+        p.crossPulse     = g_crossPulse;
+        p.Save(GetAppStoragePath() + p.name + L".json");
+    }
+    SaveSettings();
     QGuiApplication::quit();
 }
 
@@ -152,4 +164,55 @@ void BetterAngleBackend::downloadUpdate() {
 
 void BetterAngleBackend::saveThresholds() {
     SaveSettings();
+}
+
+QStringList BetterAngleBackend::crosshairPresetNames() const {
+    QStringList list;
+    if (g_allProfiles.empty()) return list;
+    for (const auto& cp : g_allProfiles[g_selectedProfileIdx].crosshairPresets) {
+        list << QString::fromStdWString(cp.name) +
+                QString(" (%1, %2)").arg(cp.offsetX, 0, 'f', 1).arg(cp.offsetY, 0, 'f', 1);
+    }
+    return list;
+}
+
+void BetterAngleBackend::saveCrosshairPreset(const QString& name) {
+    if (g_allProfiles.empty()) return;
+    Profile& p = g_allProfiles[g_selectedProfileIdx];
+    CrosshairPreset cp;
+    cp.name    = name.toStdWString();
+    cp.offsetX = g_crossOffsetX;
+    cp.offsetY = g_crossOffsetY;
+    cp.angle   = g_crossAngle;
+    // Replace existing with same name, otherwise append
+    for (auto& existing : p.crosshairPresets) {
+        if (existing.name == cp.name) { existing = cp; p.Save(GetAppStoragePath() + p.name + L".json"); emit crosshairPresetsChanged(); return; }
+    }
+    p.crosshairPresets.push_back(cp);
+    p.Save(GetAppStoragePath() + p.name + L".json");
+    emit crosshairPresetsChanged();
+}
+
+void BetterAngleBackend::loadCrosshairPreset(int index) {
+    if (g_allProfiles.empty()) return;
+    Profile& p = g_allProfiles[g_selectedProfileIdx];
+    if (index < 0 || index >= (int)p.crosshairPresets.size()) return;
+    const CrosshairPreset& cp = p.crosshairPresets[index];
+    g_crossOffsetX = cp.offsetX;
+    g_crossOffsetY = cp.offsetY;
+    g_crossAngle   = cp.angle;
+    p.crossOffsetX = cp.offsetX;
+    p.crossOffsetY = cp.offsetY;
+    p.crossAngle   = cp.angle;
+    p.Save(GetAppStoragePath() + p.name + L".json");
+    emit crosshairChanged();
+}
+
+void BetterAngleBackend::deleteCrosshairPreset(int index) {
+    if (g_allProfiles.empty()) return;
+    Profile& p = g_allProfiles[g_selectedProfileIdx];
+    if (index < 0 || index >= (int)p.crosshairPresets.size()) return;
+    p.crosshairPresets.erase(p.crosshairPresets.begin() + index);
+    p.Save(GetAppStoragePath() + p.name + L".json");
+    emit crosshairPresetsChanged();
 }

@@ -2,6 +2,7 @@
 #include <QObject>
 #include <QString>
 #include <QColor>
+#include <QStringList>
 
 class BetterAngleBackend : public QObject {
     Q_OBJECT
@@ -86,12 +87,19 @@ public:
     Q_INVOKABLE void downloadUpdate();
     Q_INVOKABLE void saveThresholds();
 
+    // Crosshair preset management
+    Q_INVOKABLE QStringList crosshairPresetNames() const;
+    Q_INVOKABLE void saveCrosshairPreset(const QString& name);
+    Q_INVOKABLE void loadCrosshairPreset(int index);
+    Q_INVOKABLE void deleteCrosshairPreset(int index);
+
 signals:
     void profileChanged();
     void syncResultChanged();
     void crosshairChanged();
     void debugChanged();
     void updateStatusChanged();
+    void crosshairPresetsChanged();
 
 private:
     QString m_syncResult;
