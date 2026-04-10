@@ -1,3 +1,8 @@
+### BetterAngle Pro v4.20.19
+- **Architectural Overhaul:** Ripped out the custom Direct2D UI drawing engine and completely migrated the Settings Dashboard (`ControlPanel.cpp`) to the industry-standard **Dear ImGui** framework running on DirectX 11.
+- **UI Enhancements:** Replaced clunky + and - buttons with smooth sliders. Integrated massive UX upgrades with `ImGui::ColorEdit3` directly in the dashboard tabs instead of summoning external Windows Forms dialogs. Re-mapped all 5 internal visual tabs with hardware acceleration.
+- **Workflow Upgrades:** Added 14 core ImGui source dependencies strictly to local source tree and wired `d3d11.lib` successfully into the MSBuild CI/CD deployment pipeline.
+
 ### BetterAngle Pro v4.20.18
 - Performance Fix: Resolved the severe UI thread contention issue located entirely within the Win32 `WM_INPUT` message loop. Re-routed the blocking `IsFortniteFocused()` system cross-process polling hooks into the asynchronous DetectorThread, resolving the persistent raw mouse delta drops (which manifested as "coordinate system drift" to users when returning their physical mouse to position 0).
 
