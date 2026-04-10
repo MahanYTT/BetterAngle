@@ -1,3 +1,9 @@
+### BetterAngle Pro v4.14.0: "Top-Level App Integration & Focus Recovery"
+v4.14.0: Resolved persistent keyboard focus issues in the first-time setup by elevating the Setup Wizard to a primary Windows taskbar application (`WS_EX_APPWINDOW`). This ensures the Windows Focus Manager prioritizes the setup window for keyboard telemetry. Additionally, refined the mouse activation layer to allow standard OS activation pass-through, guaranteeing immediate input eligibility on the first click.
+
+### BetterAngle Pro v4.13.0: "Neon Pro Splash & GDI+ Scoping Cleanup"
+v4.13.0: Complete visual overhaul of the startup sequence. Introduced a premium "Neon Cyan" aesthetic with animated progress tracking. Under the hood, refactored the GDI+ Graphics engine scoping to ensure thread-safe resource termination, eliminating rare startup hangs and the "blue wheel of death" unresponsiveness during asset initialization.
+
 ### BetterAngle Pro v4.12.0: "Hyper-Minimal Setup Wizard & Asymmetrical Sensitivity Layer"
 v4.12.0: Completely rewrote the initial setup wrapper logic. The legacy 7-step wizard (which requested extraneous attributes like rendering resolution constraints and polling Windows pointer precision limits) has been utterly purged. Setup is now a lightning-fast 2-step process isolating strictly DPI and Fortnite Sensitivity. The backend parser directly hooks your `GameUserSettings.ini` on load to automatically detect custom `X/Y` sensitivity splits, rendering a clean dual-display fallback menu. Consequently, the memory structures, disk `.json` saving modules, and rendering algorithms were systematically modified to separate `sensitivity` into `SensitivityX` and `SensitivityY`, seamlessly passing `SensX` into the active physical 360-degree calculation math dynamically mapped against the new scaling constant of `0.5555`.
 

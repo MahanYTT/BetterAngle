@@ -137,8 +137,8 @@ LRESULT CALLBACK FirstTimeSetupProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
                 else if (x > 180 && x < 310) { g_focusedInput = 2; InvalidateRect(hWnd, NULL, FALSE); }
             }
         }
-        SetFocus(hWnd); // Ensure window gets focus on any click
-        return 0;
+        SetFocus(hWnd);
+        // Fall through to DefWindowProc for activation
     }
     if (message == WM_PAINT) {
         PAINTSTRUCT ps;
@@ -270,7 +270,7 @@ void ShowFirstTimeSetup(HINSTANCE hInstance) {
     RegisterClass(&wc);
 
     HWND hWnd = CreateWindowEx(
-        WS_EX_TOPMOST, L"FTSWindowClass", L"BetterAngle Setup", WS_POPUP,
+        WS_EX_TOPMOST | WS_EX_APPWINDOW, L"FTSWindowClass", L"BetterAngle Setup", WS_POPUP,
         GetSystemMetrics(SM_CXSCREEN) / 2 - 250, GetSystemMetrics(SM_CYSCREEN) / 2 - 175,
         500, 350, NULL, NULL, hInstance, NULL
     );
@@ -278,6 +278,7 @@ void ShowFirstTimeSetup(HINSTANCE hInstance) {
     ShowWindow(hWnd, SW_SHOW);
     UpdateWindow(hWnd);
     SetForegroundWindow(hWnd);
+    BringWindowToTop(hWnd);
     SetFocus(hWnd);
 
     StartModalSetupLoop(hWnd);
