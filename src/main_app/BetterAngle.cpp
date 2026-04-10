@@ -296,7 +296,15 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
+#include <QGuiApplication>
+
+// WinMain...
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    int argc = 1;
+    char* argv[] = { (char*)"BetterAngle.exe", nullptr };
+    QGuiApplication app(argc, argv);
+
     // Phase 0: Kick off version check in background — never blocks startup.
     // g_updateAvailable will be set when done; the control panel UPDATES tab shows it.
     std::thread([]() {
@@ -381,10 +389,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     HWND hMsgWnd = CreateWindowEx(0, L"BetterAngleMsgWnd", NULL, 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, hInstance, NULL);
     RegisterRawMouse(hMsgWnd);
 
-    // Phase 2: Create Control Panel (Interactive)
+    // Phase 2: Create Control Panel (Interactive) via Qt
     g_hPanel = CreateControlPanel(hInstance);
-    
-    // Phase 2.5: Setup already handled at top
     
     // Phase 3: Create HUD Window (Transparent Overlay)
     WNDCLASS wc = { 0 };
@@ -410,14 +416,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     std::thread detThread(DetectorThread);
 
-    MSG msg;
-    while (GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-        
-        // If Panel is closed by user (WM_QUIT from Panel should not happen but WM_DESTROY does)
-        if (!IsWindow(g_hPanel) && !IsWindow(g_hHUD)) break;
-    }
+    // Run Qt Event Loop
+    int exitCode = app.exec();
 
     g_running = false;
     if (detThread.joinable()) detThread.join();
@@ -430,5 +430,5 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     SaveSettings();
 
     GdiplusShutdown(g_gdiplusToken);
-    return (int)msg.wParam;
+    return exitCode;
 }

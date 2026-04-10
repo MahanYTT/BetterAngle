@@ -16,32 +16,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up MSVC
-        uses: ilammy/msvc-dev-cmd@v1
+      - name: Install Qt 6
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.3'
+          arch: 'win64_msvc2019_64'
+          setup-python: 'false'
+
+      - name: Configure CMake
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -GNinja
 
       - name: Build BetterAngle
         run: |
-          $ver = (Get-Content VERSION).Trim()
-          $v = $ver.Split('.')
-          $vDef = "/DV_MAJ=$($v[0]) /DV_MIN=$($v[1]) /DV_PAT=$($v[2])"
+          cd build
+          cmake --build . --config Release
+
+      - name: Deploy Qt Dependencies
+        run: |
+          cd build
+          windeployqt Release/BetterAngle.exe --qmldir ../src/gui
           
-          # 1. Ensure the output directory exists
-          if (!(Test-Path bin)) { New-Item -ItemType Directory -Path bin }
-          
-          cl.exe /EHsc /O2 /utf-8 /DUNICODE /D_UNICODE $vDef /Iinclude /Isrc /Isrc/shared/imgui `
-            src/main_app/BetterAngle.cpp src/main_app/ThresholdWizard.cpp `
-            src/shared/ControlPanel.cpp src/shared/Detector.cpp src/shared/FirstTimeSetup.cpp `
-            src/shared/Input.cpp src/shared/Logic.cpp src/shared/Overlay.cpp `
-            src/shared/Profile.cpp src/shared/Startup.cpp src/shared/State.cpp `
-            src/shared/Tray.cpp src/shared/Updater.cpp `
-            src/shared/imgui/imgui.cpp src/shared/imgui/imgui_draw.cpp `
-            src/shared/imgui/imgui_impl_dx11.cpp src/shared/imgui/imgui_impl_win32.cpp `
-            src/shared/imgui/imgui_tables.cpp src/shared/imgui/imgui_widgets.cpp `
-            /Fe:bin/BetterAngle.exe `
-            /link user32.lib gdi32.lib gdiplus.lib dwmapi.lib winhttp.lib shell32.lib `
-                  d2d1.lib dwrite.lib windowscodecs.lib comdlg32.lib `
-                  d3d11.lib d3dcompiler.lib advapi32.lib `
-            /SUBSYSTEM:WINDOWS
+      - name: Archive Build
+        run: |
+          cd build/Release
+          Compress-Archive -Path * -DestinationPath ../../bin/BetterAngle_Release.zip
       - name: Get Version
         id: get_version
         run: |
@@ -67,7 +68,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            bin/BetterAngle.exe
+            bin/BetterAngle_Release.zip
           tag_name: ${{ env.TAG }}
           name: BetterAngle Pro ${{ env.TAG }}
           body_path: CURRENT_RELEASE_NOTES.md

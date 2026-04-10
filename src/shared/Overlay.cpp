@@ -165,7 +165,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
     }
 
     // HUD box
-    int rw = 220, rh = 130;
+    int rw = 260, rh = 150;
     int rx = g_hudX, ry = g_hudY;
 
     // Background gradient
@@ -202,7 +202,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
     std::wstring matchStr = L"Match  " + std::to_wstring(matchPct) + L"%";
     Color matchLabelCol(200, 160, 170, 185);
     graphics.DrawString(matchStr.c_str(), -1, &subFont,
-                        PointF(float(rx + 14), float(ry + rh - 52)), &SolidBrush(matchLabelCol));
+                        PointF(float(rx + 14), float(ry + rh - 54)), &SolidBrush(matchLabelCol));
 
     // Match progress bar
     int barX = rx + 14, barY = ry + rh - 38, barW = rw - 28, barH = 8;

@@ -1,0 +1,6 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>src/gui/main.qml</file>
+    <file>src/gui/Dashboard.qml</file>
+</qresource>
+</RCC>
