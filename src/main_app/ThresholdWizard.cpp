@@ -56,7 +56,7 @@ LRESULT CALLBACK ThresholdWizProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
                 p.Load(path); 
                 
                 double normalScaleTested = 120.0 / (std::max)(1.0, diff_n);
-                p.sensitivityX = normalScaleTested / 0.00555;
+                p.sensitivityX = normalScaleTested / 0.05555;
                 
                 p.name = L"last_calibrated";
                 

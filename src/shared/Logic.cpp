@@ -26,7 +26,7 @@ void AngleLogic::Update(int dx) {
 }
 
 double AngleLogic::GetAngle() const {
-    double normalScale = 0.00555 * m_sensX;
+    double normalScale = 0.05555 * m_sensX;
     double scale = m_isDiving ? (normalScale * 1.0916) : normalScale;
     
     if (scale == 0.0) scale = 0.0031415; // Bullet-proof fallback
