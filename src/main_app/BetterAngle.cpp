@@ -258,10 +258,11 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
             if (GetCursorInfo(&ci)) g_isCursorVisible = (ci.flags & CURSOR_SHOWING);
             float ang = g_logic.GetAngle();
             
+            // Repaint whenever state changes OR crosshair/pulse is active
             bool pulseActive = (g_showCrosshair && g_crossPulse);
             
             if (ang != lastAngle || g_isDiving != lastDiving || g_isCursorVisible != lastCursor
-                || g_currentSelection != NONE || pulseActive) {
+                || g_currentSelection != NONE || g_showCrosshair || pulseActive) {
                 lastAngle  = ang;
                 lastDiving = g_isDiving;
                 lastCursor = g_isCursorVisible;
@@ -369,7 +370,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     );
     ShowWindow(g_hHUD, SW_SHOW);
     UpdateWindow(g_hHUD);
-    SetTimer(g_hHUD, 1, 30, NULL);
+    SetTimer(g_hHUD, 1, 8, NULL); // ~120fps for snappy crosshair & drag response
 
     std::thread detThread(DetectorThread);
 
