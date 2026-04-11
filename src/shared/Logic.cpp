@@ -49,18 +49,21 @@ double FetchFortniteSensitivity() {
     }
 
     std::wstring savedPath = std::wstring(appdata) + L"\\FortniteGame\\Saved";
-    if (!std::filesystem::exists(savedPath)) {
-        return -1.0;
-    }
-
-    // NEW: Priority search for common paths to avoid slow recursion if possible
-    std::vector<std::wstring> priorityPaths = {
-        savedPath + L"\\Config\\WindowsClient",
-        savedPath + L"\\Config\\WindowsNoEditor",
-        savedPath + L"\\Config"
-    };
-
+    
     std::vector<std::wstring> configFiles;
+
+    // MANDATORY FIRST CHECK: Use the exact path provided by the user
+    std::wstring exactPath = savedPath + L"\\Config\\WindowsClient\\GameUserSettings.ini";
+    std::error_code ec;
+    if (std::filesystem::exists(exactPath, ec) && std::filesystem::is_regular_file(exactPath, ec)) {
+        configFiles.push_back(exactPath);
+    } else {
+        // Fallback to searching if the exact path is missing or different
+        std::vector<std::wstring> priorityPaths = {
+            savedPath + L"\\Config\\WindowsClient",
+            savedPath + L"\\Config\\WindowsNoEditor",
+            savedPath + L"\\Config"
+        };
     for (const auto& p : priorityPaths) {
         std::error_code ec;
         if (std::filesystem::exists(p, ec)) {

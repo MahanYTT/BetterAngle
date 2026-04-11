@@ -363,10 +363,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     LoadSettings();
     CleanupUpdateJunk();
 
+    // Check for profiles early to determine if setup is truly required
+    g_allProfiles = GetProfiles(GetProfilesPath());
+
     bool ranSetup = false;
-    if (!g_setupComplete) {
+    if (!g_setupComplete || g_allProfiles.empty()) {
         ShowFirstTimeSetup(hInstance);
         LoadSettings(); // Reload after setup to sync settings flags
+        g_allProfiles = GetProfiles(GetProfilesPath()); // Reload profiles from setup
         ranSetup = true;
     }
 
