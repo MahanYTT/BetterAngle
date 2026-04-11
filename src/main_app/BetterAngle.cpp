@@ -36,12 +36,6 @@ ULONG_PTR g_gdiplusToken;
 std::atomic<bool> g_running(true);
 FovDetector g_detector;
 
-// Default settings: Neon Cyan (0, 255, 163), Enabled, Pulse Enabled, Tolerance 45
-COLORREF g_crosshairColor = RGB(0, 255, 163);
-bool g_showCrosshair = true;
-bool g_pulseEnabled = true;
-int g_colorTolerance = 45;
-
 // Only update sensitivity state when Fortnite is the foreground window
 
 // FOV Detector Thread

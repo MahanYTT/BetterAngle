@@ -190,13 +190,13 @@ void SaveSettings() {
 }
 
 
-bool g_showCrosshair = false;
+bool g_showCrosshair = true;
 float g_crossThickness = 2.0f;
-COLORREF g_crossColor = RGB(255, 0, 0);
+COLORREF g_crossColor = RGB(0, 255, 163); // Neon Cyan
 float g_crossOffsetX = 0.0f;
 float g_crossOffsetY = 0.0f;
 float g_crossAngle = 0.0f;
-bool g_crossPulse = false;
+bool g_crossPulse = true;
 
 COLORREF g_targetColor = RGB(255, 255, 255);
 COLORREF g_pickedColor = RGB(255, 255, 255);
