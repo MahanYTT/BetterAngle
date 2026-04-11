@@ -430,6 +430,11 @@ static UINT stringToVk(const QString& s) {
     if (upper == "TAB") return VK_TAB; if (upper == "SPACE") return VK_SPACE;
     if (upper == "ESC") return VK_ESCAPE; if (upper == "CTRL") return VK_CONTROL;
     if (upper == "SHIFT") return VK_SHIFT; if (upper == "ALT") return VK_MENU;
+    if (upper == "VOL-") return VK_VOLUME_DOWN;
+    if (upper == "VOL+") return VK_VOLUME_UP;
+    if (upper == "MUTE") return VK_VOLUME_MUTE;
+    if (upper == "PLAY") return VK_MEDIA_PLAY_PAUSE;
+    if (upper == "STOP") return VK_MEDIA_STOP;
     return 0;
 }
 

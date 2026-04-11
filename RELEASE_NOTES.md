@@ -1,3 +1,7 @@
+### BetterAngle Pro v4.23.1
+- **Hotkey Compatibility Fix:** Re-applied multimedia key support (Volume, Mute, Media) and hotkey reliability flags.
+- **Merge Consolidation:** Integrated engine load order fixes and uninstaller hardening into the main branch.
+
 ### BetterAngle Pro v4.23.0
 - **Hotfix: Invisible UI Rendering:** Resolved a critical race condition where the application would launch invisibly in the background. Corrected the Qt Engine initialization sequence to ensure C++ context properties are registered before QML files are loaded.
 - **Forced Visibility:** Standardized root `Window` properties to `visible: true` across all UI components and enforced `app.setQuitOnLastWindowClosed(false)` to prevent premature application termination during window transitions.

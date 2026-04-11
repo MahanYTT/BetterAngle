@@ -163,6 +163,11 @@ Item {
                             // Numpad Support
                             let names = ["0","1","2","3","4","5","6","7","8","9",".","/"];
                             key = "Num" + names[event.key - 0x01000020];
+                        } else if (event.key >= Qt.Key_VolumeDown && event.key <= Qt.Key_VolumeMute) {
+                            let names = ["Vol-", "Vol+", "Mute"];
+                            key = names[event.key - Qt.Key_VolumeDown];
+                        } else if (event.key === Qt.Key_MediaPlay || event.key === Qt.Key_MediaStop) {
+                            key = event.key === Qt.Key_MediaPlay ? "Play" : "Stop";
                         } else if (event.key === Qt.Key_Control || event.key === Qt.Key_Shift || event.key === Qt.Key_Alt) {
                             // Only modifiers pressed, don't finalize yet but show progress
                             return mods.substring(0, mods.length - 3);

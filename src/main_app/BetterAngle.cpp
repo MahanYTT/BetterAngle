@@ -115,7 +115,10 @@ void CaptureDesktop() {
 
 // Refreshes all global hotkeys for the HUD window
 void RefreshHotkeys(HWND hWnd) {
-    if (!hWnd) return;
+    if (!hWnd) {
+        qDebug() << "RefreshHotkeys: HUD window not ready yet.";
+        return;
+    }
     for (int i = 1; i <= 6; i++) UnregisterHotKey(hWnd, i);
 
     if (!g_allProfiles.empty()) {
@@ -123,8 +126,11 @@ void RefreshHotkeys(HWND hWnd) {
         
         auto reg = [&](int id, UINT mod, UINT key, const wchar_t* name) {
             if (key == 0) return;
-            if (!RegisterHotKey(hWnd, id, mod, key)) {
-                std::wcerr << L"HOTKEY ERROR: Failed to register " << name << L". Error: " << GetLastError() << std::endl;
+            // Add MOD_NOREPEAT to ensure hotkey works reliably on Win7+
+            if (!RegisterHotKey(hWnd, id, mod | MOD_NOREPEAT, key)) {
+                qDebug() << "HOTKEY ERROR: Failed to register" << name << "Key:" << key << "Error:" << GetLastError();
+            } else {
+                qDebug() << "HOTKEY OK:" << name << "Registered successfully.";
             }
         };
 
