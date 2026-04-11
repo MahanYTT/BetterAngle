@@ -1,7 +1,13 @@
 ### BetterAngle Pro v4.22.1
-- **Async Framework Optimization:** Implemented `QTimer::singleShot` deferral for heavy backend initialization, ensuring the Splash Screen renders instantaneously without being blocked by resource loading.
-- **QML Setup Workflow:** Replaced the legacy Win32 setup dialog with a modern, high-fidelity `FirstTimeSetup.qml` component featuring strict OS window flags to prevent "hide-to-tray" confusion during initial calibration.
-- **Safety Exit Policy:** Configured the Setup Wizard to quit the application entirely if closed prematurely, ensuring a consistent and clean state for first-time users.
+- **Multi-Monitor Crosshair Visibility:** Recalibrated crosshair centering to use the Primary Monitor's center instead of the entire desktop span, preventing it from being hidden between screens.
+- **Hotkey Reliability Fix:** Resolved a "tug-of-war" bug where background timers were resetting the crosshair state 60 times a second.
+- **Double-Toggle Prevention:** Cleaned up redundant key listeners to ensure a single F10 press only toggles the crosshair once.
+- **Persistence Hardening:** All crosshair and UI toggles now save immediately to the active profile on change.
+
+### BetterAngle Pro v4.22.0
+- **Keybind Customization Fix:** Resolved a focus bug where the input field would lose focus prematurely when pressing modifier keys (Ctrl/Shift/Alt).
+- **Usability Enhancement:** Added custom interaction zones (MouseArea) to all keybind fields for much more reliable click-to-edit behavior.
+- **Visual Feedback:** All keybind fields now provide real-time feedback ("Press key...") and highlight in gold when active.
 
 ### BetterAngle Pro v4.21.3
 - **Build System Patch:** Replaced `main()` with `WinMain()` in the uninstaller utility to resolve `LNK2019` entry point errors during compilation.

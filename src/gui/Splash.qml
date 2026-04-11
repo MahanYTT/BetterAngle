@@ -131,7 +131,7 @@ Window {
                         font.letterSpacing: 4
                     }
                     Text {
-                        text: "V E R S I O N  4 . 2 2 . 1"
+                        text: "V E R S I O N  4 . 2 2 . 2"
                         color: "#666"
                         font.pixelSize: 10
                         font.bold: true
