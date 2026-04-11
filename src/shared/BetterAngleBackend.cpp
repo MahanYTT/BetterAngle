@@ -245,10 +245,20 @@ void BetterAngleBackend::terminateApp() {
   QCoreApplication::quit();
 }
 void BetterAngleBackend::checkForUpdates() {
+  if (g_isCheckingForUpdates) return;
+  
   g_hasCheckedForUpdates = false; 
   g_updateAvailable = false;
   emit updateStatusChanged();
-  std::thread([]() { CheckForUpdates(); }).detach();
+  
+  // Run check in a background thread and notify backend when done
+  std::thread([this]() { 
+      CheckForUpdates(); 
+      // Use QMetaObject to safely emit signal back to UI thread
+      QMetaObject::invokeMethod(this, [this]() {
+          emit updateStatusChanged();
+      }, Qt::QueuedConnection);
+  }).detach();
 }
 
 void BetterAngleBackend::downloadUpdate() {

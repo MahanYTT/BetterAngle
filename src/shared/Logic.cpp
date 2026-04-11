@@ -42,27 +42,56 @@ size_t find_case_insensitive(const std::string& buffer, const std::string& key) 
 }
 
 double FetchFortniteSensitivity() {
-    wchar_t expPath[MAX_PATH] = {};
-    std::wstring basePath;
-    std::vector<std::wstring> potentialPaths;
+    wchar_t appdata[MAX_PATH] = {};
+    if (FAILED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) {
+        return -1.0;
+    }
 
-    // Search from 'Saved' instead of just 'Config' to be MORE aggressive (covers all edge cases)
-    if (ExpandEnvironmentStringsW(L"%LOCALAPPDATA%\\FortniteGame\\Saved", expPath, MAX_PATH) && expPath[0] != L'%') {
-        basePath = expPath;
-    } else {
-        wchar_t appdata[MAX_PATH] = {};
-        if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) {
-            basePath = std::wstring(appdata) + L"\\FortniteGame\\Saved";
-        } else {
-            return -1.0;
+    std::wstring savedPath = std::wstring(appdata) + L"\\FortniteGame\\Saved";
+    if (!std::filesystem::exists(savedPath)) {
+        return -1.0;
+    }
+
+    // NEW: Priority search for common paths to avoid slow recursion if possible
+    std::vector<std::wstring> priorityPaths = {
+        savedPath + L"\\Config\\WindowsClient",
+        savedPath + L"\\Config\\WindowsNoEditor"
+    };
+
+    std::vector<std::wstring> configFiles;
+    for (const auto& p : priorityPaths) {
+        if (std::filesystem::exists(p)) {
+            for (const auto& entry : std::filesystem::directory_iterator(p)) {
+                if (entry.is_regular_file() && entry.path().filename().wstring().find(L"GameUserSettings") != std::wstring::npos) {
+                    configFiles.push_back(entry.path().wstring());
+                }
+            }
         }
     }
 
-    // Crawl subdirectories looking for GameUserSettings.ini
-    FindGameUserSettingsRecursive(basePath, potentialPaths);
+    // Fallback: Full recursive crawl with error handling (skip restricted folders)
+    if (configFiles.empty()) {
+        std::error_code ec;
+        for (const auto& entry : std::filesystem::recursive_directory_iterator(savedPath, std::filesystem::directory_options::skip_permission_denied, ec)) {
+            if (ec) { ec.clear(); continue; }
+            if (entry.is_regular_file()) {
+                std::wstring fname = entry.path().filename().wstring();
+                std::wstring fext = entry.path().extension().wstring();
+                std::transform(fname.begin(), fname.end(), fname.begin(), ::towlower);
+                if (fname.find(L"gameusersettings") != std::wstring::npos && fext == L".ini") {
+                    configFiles.push_back(entry.path().wstring());
+                }
+            }
+        }
+    }
 
-    for (const auto& pPath : potentialPaths) {
-        std::ifstream ifs(pPath, std::ios::binary);
+    if (configFiles.empty()) {
+        return -1.0;
+    }
+
+    // Process all found configs
+    for (const auto& path : configFiles) {
+        std::ifstream ifs(path, std::ios::binary | std::ios::ate);
         if (!ifs.is_open()) continue;
 
         ifs.seekg(0, std::ios::end);
