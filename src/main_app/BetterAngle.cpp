@@ -54,8 +54,8 @@ void DetectorThread() {
             bool fortFocused = IsFortniteFocused();
             g_fortniteFocusedCache = fortFocused;
 
-            if (fortFocused || g_debugMode) {
-                // Only scan and change angle scale when Fortnite is in focus
+            if (fortFocused || g_currentSelection != NONE) {
+                // Only scan and change angle scale when Fortnite is in focus OR during ROI selection
                 RoiConfig cfg = { p.roi_x, p.roi_y, p.roi_w, p.roi_h, p.target_color, p.tolerance };
                 g_detectionRatio = g_detector.Scan(cfg);
                 if (g_forceDetection) g_detectionRatio = 1.0f;
