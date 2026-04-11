@@ -1,3 +1,7 @@
+### BetterAngle Pro v4.21.3
+- **Build System Patch:** Replaced `main()` with `WinMain()` in the uninstaller utility to resolve `LNK2019` entry point errors during compilation.
+- **CI/CD Reliability:** Verified `WIN32` executable flags for all binary targets to ensure headless execution on Windows.
+
 ### BetterAngle Pro v4.21.2
 - **Dynamic Bind Refresh:** Keybinds now re-apply instantly without requiring a software restart.
 - **Async Startup Sequence:** Refined the splash-to-dashboard transition to ensure the main window only appears after assets have fully loaded.
