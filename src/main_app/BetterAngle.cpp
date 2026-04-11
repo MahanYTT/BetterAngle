@@ -143,15 +143,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
             
         case WM_SYSKEYDOWN:
         case WM_KEYDOWN:
-            if (!g_allProfiles.empty()) {
-                Profile& p = g_allProfiles[g_selectedProfileIdx];
-                if (wParam == p.keybinds.crossKey) {
-                    g_showCrosshair = !g_showCrosshair;
-                    SaveSettings();
-                    InvalidateRect(hWnd, NULL, FALSE);
-                    return 0;
-                }
-            }
+            // Handled via WM_HOTKEY to avoid double-toggles
             break;
 
         case WM_HOTKEY:
@@ -177,8 +169,13 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                         InvalidateRect(hWnd, NULL, FALSE);
                     }
                     break;
-                case 3:
+                case 3: // Crosshair
                     g_showCrosshair = !g_showCrosshair;
+                    if (!g_allProfiles.empty()) {
+                        Profile& p = g_allProfiles[g_selectedProfileIdx];
+                        p.showCrosshair = g_showCrosshair;
+                        p.Save(GetProfilesPath() + p.name + L".json");
+                    }
                     SaveSettings();
                     if (g_hHUD) { InvalidateRect(g_hHUD, NULL, FALSE); UpdateWindow(g_hHUD); }
                     break;

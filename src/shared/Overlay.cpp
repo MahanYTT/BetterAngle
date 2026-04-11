@@ -178,10 +178,16 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrossha
 
     // Crosshair
     if (showCrosshair) {
-        float cx = sw * 0.5f + g_crossOffsetX;
-        float cy = sh * 0.5f + g_crossOffsetY;
-        // Make crosshair massive like the Java reference
-        float hw = (sw > sh ? sw : sh) * 3.0f;
+        // Center on Primary Monitor instead of the whole desktop span
+        int primW = GetSystemMetrics(SM_CXSCREEN);
+        int primH = GetSystemMetrics(SM_CYSCREEN);
+        
+        // Coords relative to the HUD window (which starts at g_virtScreenX)
+        float cx = (primW * 0.5f) - g_virtScreenX + g_crossOffsetX;
+        float cy = (primH * 0.5f) - g_virtScreenY + g_crossOffsetY;
+        
+        // Use primary monitor scale for the massive cross-span
+        float hw = (primW > primH ? primW : primH) * 2.0f;
         float hh = hw;
 
         float pulse = 1.0f;
