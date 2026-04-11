@@ -21,6 +21,8 @@
 #include "shared/Startup.h"
 #include "shared/ControlPanel.h"
 #include "shared/FirstTimeSetup.h"
+#include <QCoreApplication>
+#include <QGuiApplication>
 
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "gdiplus.lib")
@@ -325,8 +327,6 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-#include <QGuiApplication>
-#include <QCoreApplication>
 
 // WinMain...
 

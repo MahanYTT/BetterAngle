@@ -165,7 +165,8 @@ void SaveSettings() {
   
   oss << "  \"lastVersionRun\":\"" << VERSION_STR << "\",\n";
 
-  std::string lp(g_lastLoadedProfileName.begin(), g_lastLoadedProfileName.end());
+  std::string lp;
+  for (wchar_t c : g_lastLoadedProfileName) lp += (char)c;
   oss << "  \"lastProfile\":\"" << lp << "\"\n";
   oss << "}\n";
   
