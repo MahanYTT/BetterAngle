@@ -1,3 +1,6 @@
+### BetterAngle Pro v4.23.3
+- **Compilation Stability Patch:** Resolved multiple build failures in `BetterAngle.cpp` by correctly including backend headers and standardizing global pointer declarations. Fixed the `syntax error: missing ';' before '*'` and related undeclared identifier errors.
+
 ### BetterAngle Pro v4.23.2
 - **Boot Fail-Safe:** Implemented a C++ level fail-safe timer. If the Dashboard doesn't show up within 5 seconds of launch, the engine will now force-trigger the UI regardless of the Splash screen's status.
 - **Build Fix:** Resolved a critical `'EnsureEngineInitialized': identifier not found` error during compilation.

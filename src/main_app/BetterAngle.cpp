@@ -20,6 +20,7 @@
 #include "shared/Profile.h"
 #include "shared/Tray.h"
 #include "shared/ControlPanel.h"
+#include "shared/BetterAngleBackend.h"
 #include "shared/FirstTimeSetup.h"
 #include <QCoreApplication>
 #include <QGuiApplication>
@@ -37,6 +38,7 @@ using namespace Gdiplus;
 ULONG_PTR g_gdiplusToken;
 std::atomic<bool> g_running(true);
 FovDetector g_detector;
+extern BetterAngleBackend* g_backend; // Defined in ControlPanel.cpp
 
 // Verbose logging for QML and Startup
 void QtLogHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
@@ -422,7 +424,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
     
     // BOOT FAIL-SAFE: If Dashboard hasn't shown in 5 seconds, force it.
     QTimer::singleShot(5000, []() {
-        extern BetterAngleBackend* g_backend;
         if (g_backend) {
             qDebug() << "[BOOT] Fail-Safe Triggered: Forcing Dashboard Show.";
             g_backend->requestShowControlPanel();
