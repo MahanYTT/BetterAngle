@@ -230,10 +230,8 @@ void BetterAngleBackend::syncWithFortnite() {
     // More detailed diagnostic info for the user
     wchar_t appdata[MAX_PATH] = {};
     SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata);
-    QString path =
-        QString::fromWCharArray(appdata) + "\\FortniteGame\\Saved\\Config";
-    m_syncResult =
-        QString("ERROR: No config in %1 (Checked Client & NoEditor)").arg(path);
+    QString path = QString::fromWCharArray(appdata) + "\\FortniteGame\\Saved";
+    m_syncResult = QString("ERROR: No config found in %1 tree").arg(path);
   }
   emit syncResultChanged();
 }

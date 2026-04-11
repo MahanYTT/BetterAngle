@@ -31,23 +31,34 @@ void FindGameUserSettingsRecursive(const std::wstring& directory, std::vector<st
     FindClose(hFind);
 }
 
+// Case-insensitive string search helper
+size_t find_case_insensitive(const std::string& buffer, const std::string& key) {
+    auto it = std::search(
+        buffer.begin(), buffer.end(),
+        key.begin(), key.end(),
+        [](char ch1, char ch2) { return std::tolower(ch1) == std::tolower(ch2); }
+    );
+    return (it != buffer.end()) ? std::distance(buffer.begin(), it) : std::string::npos;
+}
+
 double FetchFortniteSensitivity() {
     wchar_t expPath[MAX_PATH] = {};
     std::wstring basePath;
     std::vector<std::wstring> potentialPaths;
 
-    if (ExpandEnvironmentStringsW(L"%LOCALAPPDATA%\\FortniteGame\\Saved\\Config", expPath, MAX_PATH) && expPath[0] != L'%') {
+    // Search from 'Saved' instead of just 'Config' to be MORE aggressive (covers all edge cases)
+    if (ExpandEnvironmentStringsW(L"%LOCALAPPDATA%\\FortniteGame\\Saved", expPath, MAX_PATH) && expPath[0] != L'%') {
         basePath = expPath;
     } else {
         wchar_t appdata[MAX_PATH] = {};
         if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) {
-            basePath = std::wstring(appdata) + L"\\FortniteGame\\Saved\\Config";
+            basePath = std::wstring(appdata) + L"\\FortniteGame\\Saved";
         } else {
             return -1.0;
         }
     }
 
-    // Crawl the entire config directory tree
+    // Crawl subdirectories looking for GameUserSettings.ini
     FindGameUserSettingsRecursive(basePath, potentialPaths);
 
     for (const auto& pPath : potentialPaths) {
@@ -69,14 +80,13 @@ double FetchFortniteSensitivity() {
             buffer.clear();
             for (wchar_t c : wbuf) buffer += (c < 128 ? (char)c : '?');
         } else {
-            // Strip any null bytes for robustness
             buffer.erase(std::remove(buffer.begin(), buffer.end(), '\0'), buffer.end());
         }
 
-        // Search for sensitivity keys with flexible spacing around '='
+        // Search for sensitivity keys (CASE-INSENSITIVE)
         const char* keys[] = { "MouseSensitivityX", "MouseSensitivity", "MouseX" };
         for (const char* key : keys) {
-            size_t pos = buffer.find(key);
+            size_t pos = find_case_insensitive(buffer, key);
             if (pos != std::string::npos) {
                 size_t eqPos = buffer.find('=', pos);
                 if (eqPos != std::string::npos && eqPos < pos + 50) {
@@ -85,7 +95,6 @@ double FetchFortniteSensitivity() {
                     if (valEnd == std::string::npos) valEnd = buffer.size();
 
                     std::string valStr = buffer.substr(valStart, valEnd - valStart);
-                    // Trim spaces and other characters
                     valStr.erase(0, valStr.find_first_not_of(" \t\r\n\"'"));
                     valStr.erase(valStr.find_last_not_of(" \t\r\n\"'") + 1);
 
