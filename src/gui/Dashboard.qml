@@ -159,6 +159,10 @@ Item {
                             key = String.fromCharCode(event.key);
                         } else if (event.key >= Qt.Key_0 && event.key <= Qt.Key_9) {
                             key = String.fromCharCode(event.key);
+                        } else if (event.key >= 0x01000020 && event.key <= 0x0100002b) {
+                            // Numpad Support
+                            let names = ["0","1","2","3","4","5","6","7","8","9",".","/"];
+                            key = "Num" + names[event.key - 0x01000020];
                         } else if (event.key === Qt.Key_Control || event.key === Qt.Key_Shift || event.key === Qt.Key_Alt) {
                             // Only modifiers pressed, don't finalize yet but show progress
                             return mods.substring(0, mods.length - 3);
@@ -183,45 +187,45 @@ Item {
                         RowLayout {
                             Text { text: "Toggle Dashboard:"; color: "white"; Layout.preferredWidth: 150 }
                             TextField { 
-                                text: backend.keyToggle; width: 120; color: "#00ffa3"; readOnly: true
-                                background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#00ffa3" : "#333"; border.width: 1 }
-                                Keys.onPressed: (event) => { let res = handleHotkey(event, (s) => backend.keyToggle = s); if (res !== "") text = res; event.accepted = true; }
+                                text: activeFocus ? "Press key..." : backend.keyToggle; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"; readOnly: true
+                                background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
+                                Keys.onPressed: (event) => { let res = handleHotkey(event, (s) => backend.keyToggle = s); if (res !== "") { text = res; focus = false; } event.accepted = true; }
                                 placeholderText: "Press key..."
                             }
                         }
                         RowLayout {
                             Text { text: "Selection Overlay:"; color: "white"; Layout.preferredWidth: 150 }
                             TextField { 
-                                text: backend.keyRoi; width: 120; color: "#00ffa3"; readOnly: true
-                                background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#00ffa3" : "#333"; border.width: 1 }
-                                Keys.onPressed: (event) => { let res = handleHotkey(event, (s) => backend.keyRoi = s); if (res !== "") text = res; event.accepted = true; }
+                                text: activeFocus ? "Press key..." : backend.keyRoi; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"; readOnly: true
+                                background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
+                                Keys.onPressed: (event) => { let res = handleHotkey(event, (s) => backend.keyRoi = s); if (res !== "") { text = res; focus = false; } event.accepted = true; }
                                 placeholderText: "Press key..."
                             }
                         }
                         RowLayout {
                             Text { text: "Toggle Crosshair:"; color: "white"; Layout.preferredWidth: 150 }
                             TextField { 
-                                text: backend.keyCross; width: 120; color: "#00ffa3"; readOnly: true
-                                background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#00ffa3" : "#333"; border.width: 1 }
-                                Keys.onPressed: (event) => { let res = handleHotkey(event, (s) => backend.keyCross = s); if (res !== "") text = res; event.accepted = true; }
+                                text: activeFocus ? "Press key..." : backend.keyCross; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"; readOnly: true
+                                background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
+                                Keys.onPressed: (event) => { let res = handleHotkey(event, (s) => backend.keyCross = s); if (res !== "") { text = res; focus = false; } event.accepted = true; }
                                 placeholderText: "Press key..."
                             }
                         }
                         RowLayout {
                             Text { text: "Zero Counter:"; color: "white"; Layout.preferredWidth: 150 }
                             TextField { 
-                                text: backend.keyZero; width: 120; color: "#00ffa3"; readOnly: true
-                                background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#00ffa3" : "#333"; border.width: 1 }
-                                Keys.onPressed: (event) => { let res = handleHotkey(event, (s) => backend.keyZero = s); if (res !== "") text = res; event.accepted = true; }
+                                text: activeFocus ? "Press key..." : backend.keyZero; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"; readOnly: true
+                                background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
+                                Keys.onPressed: (event) => { let res = handleHotkey(event, (s) => backend.keyZero = s); if (res !== "") { text = res; focus = false; } event.accepted = true; }
                                 placeholderText: "Press key..."
                             }
                         }
                         RowLayout {
                             Text { text: "Debug Overlay:"; color: "white"; Layout.preferredWidth: 150 }
                             TextField { 
-                                text: backend.keyDebug; width: 120; color: "#00ffa3"; readOnly: true
-                                background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#00ffa3" : "#333"; border.width: 1 }
-                                Keys.onPressed: (event) => { let res = handleHotkey(event, (s) => backend.keyDebug = s); if (res !== "") text = res; event.accepted = true; }
+                                text: activeFocus ? "Press key..." : backend.keyDebug; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"; readOnly: true
+                                background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
+                                Keys.onPressed: (event) => { let res = handleHotkey(event, (s) => backend.keyDebug = s); if (res !== "") { text = res; focus = false; } event.accepted = true; }
                                 placeholderText: "Press key..."
                             }
                         }

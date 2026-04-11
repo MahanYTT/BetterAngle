@@ -143,11 +143,14 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
             
         case WM_SYSKEYDOWN:
         case WM_KEYDOWN:
-            if (wParam == VK_F10) {
-                g_showCrosshair = !g_showCrosshair;
-                SaveSettings();
-                InvalidateRect(hWnd, NULL, FALSE);
-                return 0;
+            if (!g_allProfiles.empty()) {
+                Profile& p = g_allProfiles[g_selectedProfileIdx];
+                if (wParam == p.keybinds.crossKey) {
+                    g_showCrosshair = !g_showCrosshair;
+                    SaveSettings();
+                    InvalidateRect(hWnd, NULL, FALSE);
+                    return 0;
+                }
             }
             break;
 
@@ -276,8 +279,9 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                     bool lDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
                     POINT pt; GetCursorPos(&pt);
                     if (lDown && !g_isDraggingHUD) {
-                        if (pt.x >= g_hudX && pt.x <= g_hudX + 260 && 
-                            pt.y >= g_hudY && pt.y <= g_hudY + 150) {
+                        // Corrected hitbox: account for virtual screen offsets
+                        if (pt.x >= g_hudX + g_virtScreenX && pt.x <= g_hudX + g_virtScreenX + 260 && 
+                            pt.y >= g_hudY + g_virtScreenY && pt.y <= g_hudY + g_virtScreenY + 150) {
                             g_isDraggingHUD = true;
                             g_dragStartMouse = pt;
                             g_dragStartHUD.x = g_hudX;
