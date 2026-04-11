@@ -1,3 +1,6 @@
+### BetterAngle Pro v4.22.7
+- **Build System Patch:** Resolved a compilation error in `BetterAngle.cpp` by adding the missing `<filesystem>` header. This ensures the SHIFT-Reset settings recovery feature works as intended.
+
 ### BetterAngle Pro v4.22.6
 - **FIX: Critical Startup Failure:** Resolved a logic conflict where the application was skipping the Dashboard/Wizard loading if the Splash screen was enabled. UI elements are now guaranteed to load.
 - **NEW: Recovery Mode (SHIFT + Start):** Holding the **SHIFT** key while launching the application will now offer to reset all settings to defaults. Use this if the app is crashing or failing to start.

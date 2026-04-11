@@ -10,6 +10,7 @@
 #include <gdiplus.h>
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 
 #include "shared/Input.h"
 #include "shared/Overlay.h"
