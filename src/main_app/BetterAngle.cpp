@@ -252,53 +252,57 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
             return 0;
 
         case WM_TIMER: {
-            if (g_currentSelection == NONE) {
-                bool lDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
-                POINT pt; GetCursorPos(&pt);
-                if (lDown && !g_isDraggingHUD) {
-                    if (pt.x >= g_hudX && pt.x <= g_hudX + 160 && 
-                        pt.y >= g_hudY && pt.y <= g_hudY + 80) {
-                        g_isDraggingHUD = true;
-                        g_dragStartMouse = pt;
-                        g_dragStartHUD.x = g_hudX;
-                        g_dragStartHUD.y = g_hudY;
+            if (wParam == 1) { // 60fps HUD / Input processing timer
+                if (g_currentSelection == NONE) {
+                    bool lDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
+                    POINT pt; GetCursorPos(&pt);
+                    if (lDown && !g_isDraggingHUD) {
+                        if (pt.x >= g_hudX && pt.x <= g_hudX + 160 && 
+                            pt.y >= g_hudY && pt.y <= g_hudY + 80) {
+                            g_isDraggingHUD = true;
+                            g_dragStartMouse = pt;
+                            g_dragStartHUD.x = g_hudX;
+                            g_dragStartHUD.y = g_hudY;
+                        }
+                    } else if (!lDown && g_isDraggingHUD) {
+                        g_isDraggingHUD = false;
+                        SaveSettings();
                     }
-                } else if (!lDown && g_isDraggingHUD) {
-                    g_isDraggingHUD = false;
-                    SaveSettings();
+                    
+                    if (g_isDraggingHUD && lDown) {
+                        g_hudX = g_dragStartHUD.x + (pt.x - g_dragStartMouse.x);
+                        g_hudY = g_dragStartHUD.y + (pt.y - g_dragStartMouse.y);
+                        InvalidateRect(hWnd, NULL, FALSE);
+                    }
+
+                    // SAFETY GUARD: Enforce Click-Through
+                    long ex = GetWindowLong(hWnd, GWL_EXSTYLE);
+                    if (!(ex & WS_EX_TRANSPARENT)) {
+                        SetWindowLong(hWnd, GWL_EXSTYLE, ex | WS_EX_TRANSPARENT);
+                    }
                 }
+
+                static float lastAngle = -9999.0f;
+                static bool  lastDiving = false;
+                static bool  lastCursor = false;
+                CURSORINFO ci = { sizeof(CURSORINFO) };
+                if (GetCursorInfo(&ci)) g_isCursorVisible = (ci.flags & CURSOR_SHOWING);
+                float ang = g_logic.GetAngle();
                 
-                if (g_isDraggingHUD && lDown) {
-                    g_hudX = g_dragStartHUD.x + (pt.x - g_dragStartMouse.x);
-                    g_hudY = g_dragStartHUD.y + (pt.y - g_dragStartMouse.y);
+                bool pulseActive = (g_showCrosshair && g_crossPulse);
+                
+                if (ang != lastAngle || g_isDiving != lastDiving || g_isCursorVisible != lastCursor
+                    || g_currentSelection != NONE || g_showCrosshair || pulseActive) {
+                    lastAngle  = ang;
+                    lastDiving = g_isDiving;
+                    lastCursor = g_isCursorVisible;
                     InvalidateRect(hWnd, NULL, FALSE);
                 }
-
-                // SAFETY GUARD: Enforce Click-Through
-                // Occasionally Windows may lose the transparency bit after focus changes.
-                long ex = GetWindowLong(hWnd, GWL_EXSTYLE);
-                if (!(ex & WS_EX_TRANSPARENT)) {
-                    SetWindowLong(hWnd, GWL_EXSTYLE, ex | WS_EX_TRANSPARENT);
+            } else if (wParam == 2) { // 30s Auto-Save Periodic Timer
+                SaveSettings();
+                if (!g_allProfiles.empty() && g_selectedProfileIdx < (int)g_allProfiles.size()) {
+                    g_allProfiles[g_selectedProfileIdx].Save(GetProfilesPath() + g_allProfiles[g_selectedProfileIdx].name + L".json");
                 }
-            }
-
-            // Only repaint if the angle or diving state actually changed
-            static float lastAngle = -9999.0f;
-            static bool  lastDiving = false;
-            static bool  lastCursor = false;
-            CURSORINFO ci = { sizeof(CURSORINFO) };
-            if (GetCursorInfo(&ci)) g_isCursorVisible = (ci.flags & CURSOR_SHOWING);
-            float ang = g_logic.GetAngle();
-            
-            // Repaint whenever state changes OR crosshair/pulse is active
-            bool pulseActive = (g_showCrosshair && g_crossPulse);
-            
-            if (ang != lastAngle || g_isDiving != lastDiving || g_isCursorVisible != lastCursor
-                || g_currentSelection != NONE || g_showCrosshair || pulseActive) {
-                lastAngle  = ang;
-                lastDiving = g_isDiving;
-                lastCursor = g_isCursorVisible;
-                InvalidateRect(hWnd, NULL, FALSE);
             }
             return 0;
         }
@@ -388,11 +392,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
     
     g_selectedProfileIdx = 0;
+    bool foundProfile = false;
     for (size_t i = 0; i < g_allProfiles.size(); i++) {
         if (g_allProfiles[i].name == g_lastLoadedProfileName) {
-            g_selectedProfileIdx = i; break;
+            g_selectedProfileIdx = i; 
+            foundProfile = true;
+            break;
         }
     }
+    
+    // Safety: If last profile not found, fall back to what was in settings.json index
+    // if that index is valid.
+    if (!foundProfile && g_selectedProfileIdx < (int)g_allProfiles.size()) {
+       // Keep original g_selectedProfileIdx loaded from settings.json
+    } else if (!foundProfile) {
+        g_selectedProfileIdx = 0;
+    }
+    
     if (g_lastLoadedProfileName.empty() && !g_allProfiles.empty()) {
         g_lastLoadedProfileName = g_allProfiles[0].name;
     }
@@ -448,7 +464,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     AddSystrayIcon(g_hHUD);
     ShowWindow(g_hHUD, SW_SHOW);
     UpdateWindow(g_hHUD);
-    SetTimer(g_hHUD, 1, 16, NULL); // Throttled to 60fps (~16ms) to prevent message queue congestion
+    SetTimer(g_hHUD, 1, 16, NULL); // 60fps (~16ms) Repaint Timer
+    SetTimer(g_hHUD, 2, 30000, NULL); // 30s Auto-Save Timer
 
     std::thread detThread(DetectorThread);
 

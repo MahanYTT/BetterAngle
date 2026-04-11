@@ -141,10 +141,12 @@ bool Profile::Load(const std::wstring &path) {
 }
 
 bool Profile::Save(const std::wstring &path) {
+  std::wstring tempPath = path + L".tmp";
+  
   // Ensure file is not hidden before writing to avoid permission issues
   SetFileAttributesW(path.c_str(), FILE_ATTRIBUTE_NORMAL);
 
-  std::wofstream f(path, std::ios::trunc);
+  std::wofstream f(tempPath.c_str(), std::ios::trunc);
   if (!f.is_open())
     return false;
 
@@ -200,6 +202,10 @@ bool Profile::Save(const std::wstring &path) {
   f << oss.str();
   f.close();
   
+  // Atomic swap
+  DeleteFileW(path.c_str());
+  MoveFileW(tempPath.c_str(), path.c_str());
+
   SetFileAttributesW(path.c_str(), FILE_ATTRIBUTE_HIDDEN);
   return true;
 }

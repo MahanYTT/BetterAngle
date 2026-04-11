@@ -52,6 +52,7 @@ std::wstring GetProfilesPath() {
     if (root.empty()) return L"";
     std::wstring pPath = root + L"profiles";
     CreateDirectoryW(pPath.c_str(), NULL);
+    SetFileAttributesW(pPath.c_str(), FILE_ATTRIBUTE_HIDDEN);
     return pPath + L"\\";
 }
 
@@ -135,11 +136,12 @@ void LoadSettings() {
 
 void SaveSettings() {
   std::wstring sp = GetAppRootPath() + L"settings.json";
+  std::wstring tempPath = sp + L".tmp";
   
-  // Ensure file is not hidden before writing to avoid permission issues with some stream implementations
+  // Ensure file is not hidden before writing to avoid permission issues
   SetFileAttributesW(sp.c_str(), FILE_ATTRIBUTE_NORMAL);
 
-  std::ofstream ofs(sp.c_str(), std::ios::trunc);
+  std::ofstream ofs(tempPath.c_str(), std::ios::trunc);
   if (!ofs.is_open()) return;
 
   std::ostringstream oss;
@@ -172,6 +174,13 @@ void SaveSettings() {
   
   ofs << oss.str();
   ofs.close();
+
+  // Atomic swap: delete old, rename temp to real
+  DeleteFileW(sp.c_str());
+  MoveFileW(tempPath.c_str(), sp.c_str());
+
+  // Set to hidden after saving
+  SetFileAttributesW(sp.c_str(), FILE_ATTRIBUTE_HIDDEN);
 }
 
 
