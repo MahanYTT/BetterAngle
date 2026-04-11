@@ -13,20 +13,17 @@
 
 using namespace Gdiplus;
 
-static int g_setupState    = 2;
-static std::wstring g_setupSensX = L"";
-static std::wstring g_setupSensY = L"";
-static bool g_extractedConfig    = false;
-static bool g_isEditingManual    = false; 
+// Use persistent state from shared/State.h
+static std::wstring g_setupSensX = L"0.05";
+static std::wstring g_setupSensY = L"0.05";
+static bool g_isEditingManual    = true; 
 static int  g_focusedInput       = 1;
 
 extern std::vector<Profile> g_allProfiles;
 extern int g_selectedProfileIdx;
 
-// ── Profile save ─────────────────────────────────────────────────────────
 void FinishSetup() {
     Profile p;
-    // Set sensible defaults first
     p.name = L"Default"; 
     p.tolerance = 25;
     p.roi_x = 760; p.roi_y = 640; p.roi_w = 400; p.roi_h = 70;
@@ -36,7 +33,6 @@ void FinishSetup() {
     p.resolutionHeight = GetSystemMetrics(SM_CYSCREEN);
     p.renderScale = 100.0f;
 
-    // Parse numeric values safely
     double sensX = 0.05, sensY = 0.05;
     try { if (!g_setupSensX.empty()) sensX  = std::stod(g_setupSensX); } catch(...) {}
     try { if (!g_setupSensY.empty()) sensY  = std::stod(g_setupSensY); } catch(...) {}
@@ -49,7 +45,6 @@ void FinishSetup() {
         g_allProfiles.push_back(p);
         g_selectedProfileIdx = 0;
     } else {
-        // Update existing selected profile safely
         if (g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) {
             g_selectedProfileIdx = 0;
         }
@@ -60,10 +55,9 @@ void FinishSetup() {
     }
 
     g_setupComplete = true; 
-    SaveSettings();
+    SaveSettings(); // Force atomic save now
 }
 
-// ── Paint ────────────────────────────────────────────────────────────────
 static void PaintSetup(HWND hWnd) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hWnd, &ps);
@@ -78,97 +72,54 @@ static void PaintSetup(HWND hWnd) {
     graphics.SetSmoothingMode(SmoothingModeAntiAlias);
     graphics.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
 
-    // Background Gradient (Matched to ImGui Dashboard)
-    LinearGradientBrush bgBrush(Point(0,0), Point(0, H), Color(255, 12, 14, 18), Color(255, 5, 5, 5));
+    // Modern Background
+    LinearGradientBrush bgBrush(Point(0,0), Point(0, H), Color(255, 10, 12, 20), Color(255, 5, 5, 10));
     graphics.FillRectangle(&bgBrush, 0, 0, W, H);
 
     FontFamily ff(L"Segoe UI");
-    Font fTit(&ff, 28, FontStyleBold, UnitPixel);
+    Font fTit(&ff, 24, FontStyleBold, UnitPixel);
     Font fSub(&ff, 11, FontStyleRegular, UnitPixel);
-    Font fInp(&ff, 20, FontStyleBold, UnitPixel);
+    Font fInp(&ff, 18, FontStyleBold, UnitPixel);
     Font fBod(&ff, 13, FontStyleRegular, UnitPixel);
 
     SolidBrush bWhite(Color(255, 255, 255, 255));
-    SolidBrush bAccent(Color(255, 59, 130, 246));
-    SolidBrush bDim(Color(255, 80, 85, 105));
-    SolidBrush bCyan(Color(255, 34, 211, 238));
+    SolidBrush bAccent(Color(255, 0, 204, 204)); // Cyan
+    SolidBrush bDim(Color(255, 100, 110, 130));
 
     StringFormat fmtC; fmtC.SetAlignment(StringAlignmentCenter); fmtC.SetLineAlignment(StringAlignmentCenter);
     StringFormat fmtL; fmtL.SetAlignment(StringAlignmentNear);   fmtL.SetLineAlignment(StringAlignmentCenter);
-    StringFormat fmtR; fmtR.SetAlignment(StringAlignmentFar);    fmtR.SetLineAlignment(StringAlignmentCenter);
 
-    // Header Glow Bar
-    LinearGradientBrush glw(Point(0,0), Point(W,0), Color(0,0,0,0), Color(80, 59, 130, 246));
-    glw.SetWrapMode(WrapModeTileFlipX);
-    graphics.FillRectangle(&glw, 0, 0, W, 48);
+    graphics.DrawString(L"CALIBRATION WIZARD", -1, &fSub, RectF(0, 30, (float)W, 18), &fmtC, &bAccent);
+    graphics.DrawString(L"Set In-Game Sensitivity", -1, &fTit, RectF(0, 60, (float)W, 34), &fmtC, &bWhite);
+    graphics.DrawString(L"Enter your Fortnite sensitivity below to ensure accuracy.", -1, &fBod, RectF(0, 100, (float)W, 20), &fmtC, &bDim);
 
-    // Progress
-    int pilX = (W - 148) / 2;
-    SolidBrush bp1(g_setupState >= 1 ? Color(255, 59, 130, 246) : Color(255, 45, 50, 65));
-    SolidBrush bp2(g_setupState >= 2 ? Color(255, 59, 130, 246) : Color(255, 45, 50, 65));
-    graphics.FillRectangle(&bp1, pilX, 22, 70, 3);
-    graphics.FillRectangle(&bp2, pilX + 78, 22, 70, 3);
+    // Inputs
+    int fw = 180, fxA = (W/2) - fw - 10, fxB = (W/2) + 10, fy = 150, fh = 40;
 
-    if (g_extractedConfig && !g_isEditingManual) {
-        // --- STAGE 1: CONFIRMATION ---
-        graphics.DrawString(L"CONFIRM SENSITIVITY", -1, &fSub, RectF(0, 36, (float)W, 18), &fmtC, &bAccent);
-        graphics.DrawString(L"Is this correct?",      -1, &fTit, RectF(0, 64, (float)W, 34), &fmtC, &bWhite);
+    auto field = [&](float fx, int foc, const wchar_t* lab, const std::wstring& val) {
+        graphics.DrawString(lab, -1, &fSub, RectF(fx, (float)fy-20, (float)fw, 18), &fmtL, &bDim);
+        SolidBrush inBg(Color(255, 20, 25, 35));
+        graphics.FillRectangle(&inBg, fx, (float)fy, (float)fw, (float)fh);
+        Pen border(g_focusedInput == foc ? Color(255, 0, 204, 204) : Color(255, 50, 60, 80), 1.0f);
+        graphics.DrawRectangle(&border, fx, (float)fy, (float)fw, (float)fh);
         
-        std::wstring msg = L"We found your Fortnite settings: " + g_setupSensX + L" x " + g_setupSensY;
-        graphics.DrawString(msg.c_str(), -1, &fBod, RectF(0, 108, (float)W, 20), &fmtC, &bCyan);
+        std::wstring d = val + (g_focusedInput==foc ? L"|" : L"");
+        graphics.DrawString(d.c_str(), -1, &fInp, RectF(fx+10, (float)fy, (float)fw-20, (float)fh), &fmtL, &bWhite);
+    };
+    field((float)fxA, 1, L"SENSITIVITY X", g_setupSensX);
+    field((float)fxB, 2, L"SENSITIVITY Y", g_setupSensY);
 
-        // Big Cyan Checkmark
-        Font fCheck(&ff, 60, FontStyleBold, UnitPixel);
-        graphics.DrawString(L"\x2713", -1, &fCheck, RectF(0, 130, (float)W, 80), &fmtC, &bCyan);
-
-        // Buttons
-        int bx = (W-210)/2, by = H-84, bw = 210, bh = 42;
-        LinearGradientBrush bB(Point(bx, by), Point(bx, by+bh), Color(255, 60, 140, 250), Color(255, 30, 90, 200));
-        graphics.FillRectangle(&bB, bx, by, bw, bh);
-        graphics.DrawString(L"YES, LOCK IT IN", -1, &fBod, RectF((float)bx, (float)by, (float)bw, (float)bh), &fmtC, &bWhite);
-
-        graphics.DrawString(L"NO, LET ME EDIT", -1, &fSub, RectF(0, (float)H-38, (float)W, 20), &fmtC, &bDim);
-    } else {
-        // --- STAGE 2: MANUAL EDITING ---
-        graphics.DrawString(L"PRO CALIBRATION WIZARD", -1, &fSub, RectF(0, 36, (float)W, 18), &fmtC, &bAccent);
-        graphics.DrawString(L"In-Game Sensitivity",   -1, &fTit, RectF(0, 64, (float)W, 34), &fmtC, &bWhite);
-
-        const wchar_t* sub = g_extractedConfig ? L"Edit your auto-detected sensitivity below." : L"Manually set your mouse sensitivity below.";
-        graphics.DrawString(sub, -1, &fBod, RectF(0, 108, (float)W, 20), &fmtC, g_extractedConfig ? &bCyan : &bDim);
-
-        // Input fields
-        int fw = (W - 90) / 2, fxA = 40, fxB = fxA + fw + 10, fy = 166, fh = 44;
-
-        auto field = [&](float fx, int foc, const wchar_t* lab, const std::wstring& val) {
-            graphics.DrawString(lab, -1, &fSub, RectF(fx, (float)fy-20, (float)fw, 18), &fmtL, &bDim);
-            SolidBrush inBg(Color(255, 20, 22, 28));
-            graphics.FillRectangle(&inBg, fx, (float)fy, (float)fw, (float)fh);
-            Pen border(g_focusedInput == foc ? Color(255, 59, 130, 246) : Color(255, 45, 50, 60), 1.5f);
-            graphics.DrawRectangle(&border, fx, (float)fy, (float)fw, (float)fh);
-            
-            std::wstring d = val.empty() ? L"0.00" : val + (g_focusedInput==foc ? L"_" : L"");
-            SolidBrush tx(val.empty() ? Color(255, 50, 55, 75) : Color(255, 255, 255, 255));
-            graphics.DrawString(d.c_str(), -1, &fInp, RectF(fx+12, (float)fy, (float)fw-24, (float)fh), &fmtL, &tx);
-        };
-        field((float)fxA, 1, L"SENSITIVITY X", g_setupSensX);
-        field((float)fxB, 2, L"SENSITIVITY Y", g_setupSensY);
-
-        // Button
-        int bx = (W-200)/2, by = H-74, bw = 200, bh = 42;
-        LinearGradientBrush bB(Point(bx, by), Point(bx, by+bh), Color(255, 30, 90, 200), Color(255, 60, 140, 250));
-        graphics.FillRectangle(&bB, bx, by, bw, bh);
-        graphics.DrawString(L"SAVE CONFIG  \x2713", -1, &fBod, RectF((float)bx, (float)by, (float)bw, (float)bh), &fmtC, &bWhite);
-    }
-
-    graphics.DrawString(L"PRO SUITE ACTIVE", -1, &fSub, RectF(20, (float)H-28, 150, 20), &fmtL, &bAccent);
-    graphics.DrawString(L"DRAG HEADER TO MOVE", -1, &fSub, RectF((float)W-170, (float)H-28, 150, 20), &fmtR, &bDim);
+    // Save Button
+    int bx = (W-180)/2, by = H-70, bw = 180, bh = 40;
+    SolidBrush btnBg(Color(255, 0, 163, 163));
+    graphics.FillRectangle(&btnBg, bx, by, bw, bh);
+    graphics.DrawString(L"FINISH SETUP", -1, &fBod, RectF((float)bx, (float)by, (float)bw, (float)bh), &fmtC, &bWhite);
 
     BitBlt(hdc, 0, 0, W, H, hdcMem, 0, 0, SRCCOPY);
     SelectObject(hdcMem, hOld); DeleteObject(hbmMem); DeleteDC(hdcMem);
     EndPaint(hWnd, &ps);
 }
 
-// ── Window Procedure ──────────────────────────────────────────────────────
 LRESULT CALLBACK FirstTimeSetupProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
     case WM_NCHITTEST: {
@@ -180,8 +131,6 @@ LRESULT CALLBACK FirstTimeSetupProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
         }
         return hit;
     }
-    case WM_ERASEBKGND: return 1;
-
     case WM_KEYDOWN:
         if (wParam == VK_TAB) {
             g_focusedInput = (g_focusedInput == 1) ? 2 : 1;
@@ -189,26 +138,19 @@ LRESULT CALLBACK FirstTimeSetupProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
             return 0;
         }
         if (wParam == VK_RETURN) {
-            bool canFinish = true; // Allow finishing with defaults or current values
-            if (canFinish) {
-                if (g_setupSensX.empty()) g_setupSensX = L"0.05";
-                if (g_setupSensY.empty()) g_setupSensY = L"0.05";
-                FinishSetup(); 
-                DestroyWindow(hWnd);
-                return 0;
-            }
+            FinishSetup(); 
+            DestroyWindow(hWnd);
+            return 0;
         }
         break;
-
 
     case WM_CHAR: {
         std::wstring* cur = (g_focusedInput == 1) ? &g_setupSensX : &g_setupSensY;
         if (wParam == VK_BACK) {
             if (!cur->empty()) cur->pop_back();
         } else if (iswdigit((wchar_t)wParam) || (wchar_t)wParam == L'.') {
-            // Basic validation: only allow one dot
-            if ((wchar_t)wParam == L'.' && cur->find(L'.') != std::wstring::npos) return 0;
-            if (cur->length() < 10) cur->push_back((wchar_t)wParam);
+             if ((wchar_t)wParam == L'.' && cur->find(L'.') != std::wstring::npos) return 0;
+             if (cur->length() < 10) cur->push_back((wchar_t)wParam);
         }
         InvalidateRect(hWnd, NULL, FALSE);
         return 0;
@@ -218,132 +160,26 @@ LRESULT CALLBACK FirstTimeSetupProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
         int mx = GET_X_LPARAM(lParam), my = GET_Y_LPARAM(lParam);
         RECT rc; GetClientRect(hWnd, &rc);
         int W = rc.right, H = rc.bottom;
-
-        if (g_extractedConfig && !g_isEditingManual) {
-            // Confirm stage buttons
-            int bx = (W-210)/2, by = H-84, bw = 210, bh = 42;
-            if (mx>=bx && mx<=bx+bw && my>=by && my<=by+bh) {
-                FinishSetup(); DestroyWindow(hWnd);
-            }
-            // "NO, LET ME EDIT" link area
-            if (my >= H-40 && my <= H-10) {
-                g_isEditingManual = true;
-            }
-        } else {
-            // Manual stage buttons
-            int fw = (W-90)/2, fxA = 40, fxB = fxA+fw+10, fy = 166, fh = 44;
-            if (my >= fy && my <= fy+fh) {
-                if      (mx>=fxA && mx<=fxA+fw) g_focusedInput=1;
-                else if (mx>=fxB && mx<=fxB+fw) g_focusedInput=2;
-            }
-            int bx=(W-200)/2, by=H-74;
-            if (mx>=bx && mx<=bx+200 && my>=by && my<=by+42) {
-                FinishSetup(); DestroyWindow(hWnd);
-            }
+        int fw = 180, fxA = (W/2) - fw - 10, fxB = (W/2) + 10, fy = 150, fh = 40;
+        if (my >= fy && my <= fy+fh) {
+            if      (mx>=fxA && mx<=fxA+fw) g_focusedInput=1;
+            else if (mx>=fxB && mx<=fxB+fw) g_focusedInput=2;
+        }
+        int bx=(W-180)/2, by=H-70;
+        if (mx>=bx && mx<=bx+180 && my>=by && my<=by+40) {
+            FinishSetup(); DestroyWindow(hWnd);
         }
         InvalidateRect(hWnd, NULL, FALSE);
         return 0;
     }
-
     case WM_PAINT: PaintSetup(hWnd); return 0;
     case WM_CLOSE: DestroyWindow(hWnd); return 0;
-    case WM_DESTROY: PostQuitMessage(0); return 0;
+    case WM_DESTROY: return 0; // Don't call PostQuitMessage(0) here as it kills the main app thread
     }
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
 void ShowFirstTimeSetup(HINSTANCE hInstance) {
-    static HWND s_hFTS = NULL;
-    if (s_hFTS && IsWindow(s_hFTS)) {
-        SetForegroundWindow(s_hFTS);
-        return;
-    }
-
-    // Reset state locally
-    g_setupState = 2; g_setupSensX = L""; g_setupSensY = L"";
-    g_focusedInput = 1; g_extractedConfig = false;
-
-    // Fast GameUserSettings.ini extraction (Expanded Robust Search)
-    wchar_t appdata[MAX_PATH];
-    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) {
-        std::wstring basePath = std::wstring(appdata) + L"\\FortniteGame\\Saved\\Config";
-        
-        std::vector<std::wstring> potentialPaths;
-        potentialPaths.push_back(basePath + L"\\WindowsClient\\GameUserSettings.ini");
-        potentialPaths.push_back(basePath + L"\\WindowsNoEditor\\GameUserSettings.ini");
-        potentialPaths.push_back(basePath + L"\\WindowClient\\GameUserSettings.ini");
-        potentialPaths.push_back(basePath + L"\\Windows\\GameUserSettings.ini");
-
-        // Dynamic search
-        WIN32_FIND_DATAW fd;
-        HANDLE hF = FindFirstFileW((basePath + L"\\*").c_str(), &fd);
-        if (hF != INVALID_HANDLE_VALUE) {
-            do {
-                if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-                    if (wcscmp(fd.cFileName, L".") != 0 && wcscmp(fd.cFileName, L"..") != 0) {
-                        potentialPaths.push_back(basePath + L"\\" + fd.cFileName + L"\\GameUserSettings.ini");
-                    }
-                }
-            } while (FindNextFileW(hF, &fd));
-            FindClose(hF);
-        }
-        
-        for (const auto& pPath : potentialPaths) {
-            std::ifstream ifs(pPath.c_str(), std::ios::binary);
-            if (ifs.is_open()) {
-                ifs.seekg(0, std::ios::end);
-                std::streamsize size = ifs.tellg();
-                ifs.seekg(0, std::ios::beg);
-                if (size <= 0 || size > 5 * 1024 * 1024) continue;
-
-                std::string buffer(static_cast<size_t>(size), '\0');
-                if (!ifs.read(&buffer[0], size)) continue;
-
-                // Better handling for UTF-16 LE
-                if (size >= 2 && (unsigned char)buffer[0] == 0xFF && (unsigned char)buffer[1] == 0xFE) {
-                    std::wstring wbuf((size - 2) / 2, L'\0');
-                    memcpy(&wbuf[0], buffer.data() + 2, size - 2);
-                    buffer.clear();
-                    for (wchar_t c : wbuf) buffer += (c < 128 ? (char)c : '?');
-                } else {
-                    buffer.erase(std::remove(buffer.begin(), buffer.end(), '\0'), buffer.end());
-                }
-
-                const char* keysX[] = { "MouseSensitivityX=", "MouseX=", "MouseSensitivity=" };
-                const char* keysY[] = { "MouseSensitivityY=", "MouseY=", "MouseSensitivity=" };
-
-                auto extractVal = [&](const char** keys, size_t count) -> std::wstring {
-                    for (size_t i = 0; i < count; i++) {
-                        size_t pos = buffer.find(keys[i]);
-                        if (pos != std::string::npos) {
-                            size_t start = pos + strlen(keys[i]);
-                            size_t end = buffer.find_first_of("\r\n", start);
-                            if (end == std::string::npos) end = buffer.size();
-                            std::string valStr = buffer.substr(start, end - start);
-                            while (!valStr.empty() && (valStr.back() == ' ' || valStr.back() == '\t')) valStr.pop_back();
-                            return std::wstring(valStr.begin(), valStr.end());
-                        }
-                    }
-                    return L"";
-                };
-
-                if (g_setupSensX.empty()) g_setupSensX = extractVal(keysX, 3);
-                if (g_setupSensY.empty()) g_setupSensY = extractVal(keysY, 3);
-
-                if (!g_setupSensX.empty() || !g_setupSensY.empty()) {
-                    g_extractedConfig = true;
-                    break;
-                }
-            }
-        }
-        
-        // Final fallback if nothing found
-        if (!g_extractedConfig && (g_setupSensX.empty() || g_setupSensY.empty())) {
-            g_setupSensX = L"0.05";
-            g_setupSensY = L"0.05";
-        }
-    }
-
     WNDCLASS wc = { 0 };
     if (!GetClassInfo(hInstance, L"FTSWindowClass", &wc)) {
         wc.lpfnWndProc = FirstTimeSetupProc;
@@ -353,17 +189,16 @@ void ShowFirstTimeSetup(HINSTANCE hInstance) {
         RegisterClass(&wc);
     }
 
-    int W = 500, H = 310;
-    s_hFTS = CreateWindowEx(WS_EX_TOPMOST | WS_EX_APPWINDOW, L"FTSWindowClass", L"BetterAngle Setup", WS_POPUP | WS_SYSMENU,
+    int W = 500, H = 320;
+    HWND hWnd = CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW, L"FTSWindowClass", L"BetterAngle Setup", WS_POPUP,
         GetSystemMetrics(SM_CXSCREEN)/2 - W/2, GetSystemMetrics(SM_CYSCREEN)/2 - H/2, W, H, NULL, NULL, hInstance, NULL);
 
-    ShowWindow(s_hFTS, SW_SHOW);
-    UpdateWindow(s_hFTS);
+    ShowWindow(hWnd, SW_SHOW);
+    UpdateWindow(hWnd);
 
     MSG msg;
-    while (GetMessage(&msg, NULL, 0, 0)) {
+    while (IsWindow(hWnd) && GetMessage(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
-        if (!IsWindow(s_hFTS)) break;
     }
 }

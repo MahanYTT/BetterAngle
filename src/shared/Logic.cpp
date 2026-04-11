@@ -8,7 +8,6 @@
 #include <vector>
 
 double FetchFortniteSensitivity() {
-    // Build path via ExpandEnvironmentStrings (%LOCALAPPDATA%)
     wchar_t expPath[MAX_PATH] = {};
     std::wstring basePath;
     std::vector<std::wstring> potentialPaths;
@@ -16,28 +15,21 @@ double FetchFortniteSensitivity() {
     if (ExpandEnvironmentStringsW(L"%LOCALAPPDATA%\\FortniteGame\\Saved\\Config", expPath, MAX_PATH) && expPath[0] != L'%') {
         basePath = expPath;
     } else {
-        // Fallback 1: SHGetFolderPath
         wchar_t appdata[MAX_PATH] = {};
         if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) {
             basePath = std::wstring(appdata) + L"\\FortniteGame\\Saved\\Config";
         } else {
-            // Fallback 2: Direct path construction from USERPROFILE
-            wchar_t userProfile[MAX_PATH] = {};
-            if (ExpandEnvironmentStringsW(L"%USERPROFILE%\\AppData\\Local\\FortniteGame\\Saved\\Config", userProfile, MAX_PATH)) {
-                basePath = userProfile;
-            } else {
-                return -1.0;
-            }
+            return -1.0;
         }
     }
 
-    potentialPaths.push_back(basePath + L"\\WindowsClient\\GameUserSettings.ini");
-    potentialPaths.push_back(basePath + L"\\WindowsNoEditor\\GameUserSettings.ini");
-    potentialPaths.push_back(basePath + L"\\WindowClient\\GameUserSettings.ini");
-    potentialPaths.push_back(basePath + L"\\Windows\\GameUserSettings.ini");
+    // Common subdirectories for Fortnite settings
+    const wchar_t* subDirs[] = { L"WindowsClient", L"WindowsNoEditor", L"Windows", L"WindowClient" };
+    for (const auto& sd : subDirs) {
+        potentialPaths.push_back(basePath + L"\\" + sd + L"\\GameUserSettings.ini");
+    }
 
-
-    // Dynamic search fallback
+    // Dynamic search fallback for any other subdirectories
     WIN32_FIND_DATAW findData;
     std::wstring searchPattern = basePath + L"\\*";
     HANDLE hFind = FindFirstFileW(searchPattern.c_str(), &findData);
@@ -52,7 +44,6 @@ double FetchFortniteSensitivity() {
         FindClose(hFind);
     }
 
-
     for (const auto& pPath : potentialPaths) {
         std::ifstream ifs(pPath, std::ios::binary);
         if (!ifs.is_open()) continue;
@@ -65,35 +56,40 @@ double FetchFortniteSensitivity() {
         std::string buffer(static_cast<size_t>(size), '\0');
         if (!ifs.read(&buffer[0], size)) continue;
 
-        // Strip null bytes — handles UTF-16 LE INI files
-        // Better handling for UTF-16 LE
+        // Handle UTF-16 LE
         if (size >= 2 && (unsigned char)buffer[0] == 0xFF && (unsigned char)buffer[1] == 0xFE) {
             std::wstring wbuf((size - 2) / 2, L'\0');
             memcpy(&wbuf[0], buffer.data() + 2, size - 2);
             buffer.clear();
             for (wchar_t c : wbuf) buffer += (c < 128 ? (char)c : '?');
         } else {
+            // Strip any null bytes for robustness
             buffer.erase(std::remove(buffer.begin(), buffer.end(), '\0'), buffer.end());
         }
 
-        // Search for sensitivity keys in priority order
-        const char* keys[] = { "MouseSensitivityX=", "MouseSensitivity=", "MouseX=" };
+        // Search for sensitivity keys with flexible spacing around '='
+        const char* keys[] = { "MouseSensitivityX", "MouseSensitivity", "MouseX" };
         for (const char* key : keys) {
             size_t pos = buffer.find(key);
             if (pos != std::string::npos) {
-                size_t valStart = pos + strlen(key);
-                size_t valEnd   = buffer.find_first_of("\r\n", valStart);
-                if (valEnd == std::string::npos) valEnd = buffer.size();
+                size_t eqPos = buffer.find('=', pos);
+                if (eqPos != std::string::npos && eqPos < pos + 50) {
+                    size_t valStart = eqPos + 1;
+                    size_t valEnd   = buffer.find_first_of("\r\n", valStart);
+                    if (valEnd == std::string::npos) valEnd = buffer.size();
 
-                std::string valStr = buffer.substr(valStart, valEnd - valStart);
-                // Trim trailing spaces/CR/LF
-                while (!valStr.empty() && (valStr.back() == ' ' || valStr.back() == '\r' || valStr.back() == '\n' || valStr.back() == '\t'))
-                    valStr.pop_back();
+                    std::string valStr = buffer.substr(valStart, valEnd - valStart);
+                    // Trim spaces and other characters
+                    valStr.erase(0, valStr.find_first_not_of(" \t\r\n\"'"));
+                    valStr.erase(valStr.find_last_not_of(" \t\r\n\"'") + 1);
 
-                try {
-                    double val = std::stod(valStr);
-                    if (val > 0.0) return val;
-                } catch (...) {}
+                    if (!valStr.empty()) {
+                        try {
+                            double val = std::stod(valStr);
+                            if (val > 0.0) return val;
+                        } catch (...) {}
+                    }
+                }
             }
         }
     }
