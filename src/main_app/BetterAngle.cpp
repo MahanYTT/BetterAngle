@@ -162,6 +162,23 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
         case 5:
             g_debugMode = !g_debugMode;
             break;
+
+        case WM_TRAYICON:
+            if (lParam == WM_RBUTTONUP) {
+                ShowTrayContextMenu(hWnd);
+            } else if (lParam == WM_LBUTTONDBLCLK) {
+                if (IsIconic(g_hPanel)) ShowWindow(g_hPanel, SW_RESTORE);
+                else ShowWindow(g_hPanel, SW_SHOW);
+                SetForegroundWindow(g_hPanel);
+            }
+            return 0;
+
+        case WM_COMMAND:
+            if (LOWORD(wParam) == ID_TRAY_EXIT) {
+                g_running = false;
+                QCoreApplication::quit();
+            }
+            return 0;
     }
     return 0;
         case WM_LBUTTONDOWN:
@@ -299,7 +316,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 
         case WM_DESTROY:
             g_running = false;
-            PostQuitMessage(0);
+            QCoreApplication::quit();
             return 0;
 
         default:
@@ -309,6 +326,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 }
 
 #include <QGuiApplication>
+#include <QCoreApplication>
 
 // WinMain...
 
@@ -430,6 +448,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         screenX, screenY, screenW, screenH,
         NULL, NULL, hInstance, NULL
     );
+
+    AddSystrayIcon(g_hHUD);
     ShowWindow(g_hHUD, SW_SHOW);
     UpdateWindow(g_hHUD);
     SetTimer(g_hHUD, 1, 16, NULL); // Throttled to 60fps (~16ms) to prevent message queue congestion
@@ -451,6 +471,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     SaveSettings();
 
+    RemoveSystrayIcon(g_hHUD);
     GdiplusShutdown(g_gdiplusToken);
     return exitCode;
 }

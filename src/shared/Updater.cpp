@@ -50,8 +50,9 @@ bool CheckForUpdates() {
     if (DownloadFile(VERSION_URL, tempRes)) {
         std::ifstream ifs(tempRes);
         std::string json((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+        ifs.close();
         
-        // Simple JSON parsing for "tag_name": "vX.Y.Z"
+        // Simple but robust JSON parsing for "tag_name": "vX.Y.Z"
         size_t tagPos = json.find("\"tag_name\":");
         if (tagPos != std::string::npos) {
             size_t start = json.find("\"", tagPos + 11);
@@ -68,15 +69,22 @@ bool CheckForUpdates() {
 
                     g_latestVersionOnline = latestVerStr;
                     
-                    if (!normLatest.empty() && normLatest != VERSION_STR) {
+                    // Strip 'v' from current version for comparison if it exists
+                    std::string currentVer = VERSION_STR;
+                    if (!currentVer.empty() && (currentVer[0] == 'v' || currentVer[0] == 'V')) {
+                        currentVer = currentVer.substr(1);
+                    }
+
+                    if (!normLatest.empty() && normLatest != currentVer) {
                         g_updateAvailable = true;
-                        g_updateHistory = std::string(VERSION_STR) + " -> " + latestVerStr;
+                        g_updateHistory = "Latest: " + latestVerStr + " (Current: " + VERSION_STR + ")";
                     } else {
                         g_updateAvailable = false;
                     }
                 }
             }
         }
+        DeleteFileW(tempRes.c_str());
     }
 
     g_isCheckingForUpdates = false;

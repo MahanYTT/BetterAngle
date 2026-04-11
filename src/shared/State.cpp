@@ -139,42 +139,38 @@ void SaveSettings() {
   // Ensure file is not hidden before writing to avoid permission issues with some stream implementations
   SetFileAttributesW(sp.c_str(), FILE_ATTRIBUTE_NORMAL);
 
-  std::wofstream ofs(sp.c_str(), std::ios::trunc);
+  std::ofstream ofs(sp.c_str(), std::ios::trunc);
   if (!ofs.is_open()) return;
 
-  std::wostringstream oss;
+  std::ostringstream oss;
   oss.imbue(std::locale("C"));
 
-  oss << L"{\n";
-  oss << L"  \"glideThreshold\": " << g_glideThreshold << L",\n";
-  oss << L"  \"freefallThreshold\": " << g_freefallThreshold << L",\n";
-  oss << L"  \"hudX\": " << g_hudX << L",\n";
-  oss << L"  \"hudY\": " << g_hudY << L",\n";
-  oss << L"  \"crossThickness\": " << g_crossThickness << L",\n";
-  oss << L"  \"crossColor\": " << (float)g_crossColor << L",\n";
-  oss << L"  \"crossOffsetX\": " << g_crossOffsetX << L",\n";
-  oss << L"  \"crossOffsetY\": " << g_crossOffsetY << L",\n";
-  oss << L"  \"crossAngle\": " << g_crossAngle << L",\n";
-  oss << L"  \"crossPulse\": " << (g_crossPulse ? 1 : 0) << L",\n";
-  oss << L"  \"setupComplete\": " << (g_setupComplete ? 1 : 0) << L",\n";
-  oss << L"  \"showCrosshair\": " << (g_showCrosshair ? 1 : 0) << L",\n";
-  oss << L"  \"debugMode\": " << (g_debugMode ? 1 : 0) << L",\n";
-  oss << L"  \"forceDiving\": " << (g_forceDiving ? 1 : 0) << L",\n";
-  oss << L"  \"forceDetection\": " << (g_forceDetection ? 1 : 0) << L",\n";
-  oss << L"  \"selectedProfileIdx\": " << g_selectedProfileIdx << L",\n";
+  oss << "{\n";
+  oss << "  \"glideThreshold\": " << g_glideThreshold << ",\n";
+  oss << "  \"freefallThreshold\": " << g_freefallThreshold << ",\n";
+  oss << "  \"hudX\": " << g_hudX << ",\n";
+  oss << "  \"hudY\": " << g_hudY << ",\n";
+  oss << "  \"crossThickness\": " << g_crossThickness << ",\n";
+  oss << "  \"crossColor\": " << (float)g_crossColor << ",\n";
+  oss << "  \"crossOffsetX\": " << g_crossOffsetX << ",\n";
+  oss << "  \"crossOffsetY\": " << g_crossOffsetY << ",\n";
+  oss << "  \"crossAngle\": " << g_crossAngle << ",\n";
+  oss << "  \"crossPulse\": " << (g_crossPulse ? 1 : 0) << ",\n";
+  oss << "  \"setupComplete\": " << (g_setupComplete ? 1 : 0) << ",\n";
+  oss << "  \"showCrosshair\": " << (g_showCrosshair ? 1 : 0) << ",\n";
+  oss << "  \"debugMode\": " << (g_debugMode ? 1 : 0) << ",\n";
+  oss << "  \"forceDiving\": " << (g_forceDiving ? 1 : 0) << ",\n";
+  oss << "  \"forceDetection\": " << (g_forceDetection ? 1 : 0) << ",\n";
+  oss << "  \"selectedProfileIdx\": " << g_selectedProfileIdx << ",\n";
   
-  std::string vs = VERSION_STR;
-  std::wstring wvs(vs.begin(), vs.end());
-  oss << L"  \"lastVersionRun\":\"" << wvs << L"\",\n";
+  oss << "  \"lastVersionRun\":\"" << VERSION_STR << "\",\n";
 
-  std::wstring lp = g_lastLoadedProfileName;
-  oss << L"  \"lastProfile\":\"" << lp << L"\"\n";
-  oss << L"}\n";
+  std::string lp(g_lastLoadedProfileName.begin(), g_lastLoadedProfileName.end());
+  oss << "  \"lastProfile\":\"" << lp << "\"\n";
+  oss << "}\n";
   
   ofs << oss.str();
   ofs.close();
-  
-  SetFileAttributesW(sp.c_str(), FILE_ATTRIBUTE_HIDDEN);
 }
 
 

@@ -31,9 +31,10 @@ double FetchFortniteSensitivity() {
         }
     }
 
-    potentialPaths.push_back(basePath + L"\\WindowClient\\GameUserSettings.ini");
     potentialPaths.push_back(basePath + L"\\WindowsClient\\GameUserSettings.ini");
     potentialPaths.push_back(basePath + L"\\WindowsNoEditor\\GameUserSettings.ini");
+    potentialPaths.push_back(basePath + L"\\WindowClient\\GameUserSettings.ini");
+    potentialPaths.push_back(basePath + L"\\Windows\\GameUserSettings.ini");
 
 
     // Dynamic search fallback
@@ -65,7 +66,15 @@ double FetchFortniteSensitivity() {
         if (!ifs.read(&buffer[0], size)) continue;
 
         // Strip null bytes — handles UTF-16 LE INI files
-        buffer.erase(std::remove(buffer.begin(), buffer.end(), '\0'), buffer.end());
+        // Better handling for UTF-16 LE
+        if (size >= 2 && (unsigned char)buffer[0] == 0xFF && (unsigned char)buffer[1] == 0xFE) {
+            std::wstring wbuf((size - 2) / 2, L'\0');
+            memcpy(&wbuf[0], buffer.data() + 2, size - 2);
+            buffer.clear();
+            for (wchar_t c : wbuf) buffer += (c < 128 ? (char)c : '?');
+        } else {
+            buffer.erase(std::remove(buffer.begin(), buffer.end(), '\0'), buffer.end());
+        }
 
         // Search for sensitivity keys in priority order
         const char* keys[] = { "MouseSensitivityX=", "MouseSensitivity=", "MouseX=" };

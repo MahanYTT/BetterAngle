@@ -61,13 +61,6 @@ void FinishSetup() {
 
     g_setupComplete = true; 
     SaveSettings();
-    
-    // Final verification save to ensure it's on disk before returning to WinMain
-    LoadSettings(); 
-    if (!g_setupComplete) {
-        g_setupComplete = true;
-        SaveSettings();
-    }
 }
 
 // ── Paint ────────────────────────────────────────────────────────────────
@@ -196,15 +189,10 @@ LRESULT CALLBACK FirstTimeSetupProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
             return 0;
         }
         if (wParam == VK_RETURN) {
-            bool canFinish = false;
-            if (g_extractedConfig && !g_isEditingManual) {
-                canFinish = true;
-            } else {
-                if (!g_setupSensX.empty() && !g_setupSensY.empty()) {
-                    canFinish = true;
-                }
-            }
+            bool canFinish = true; // Allow finishing with defaults or current values
             if (canFinish) {
+                if (g_setupSensX.empty()) g_setupSensX = L"0.05";
+                if (g_setupSensY.empty()) g_setupSensY = L"0.05";
                 FinishSetup(); 
                 DestroyWindow(hWnd);
                 return 0;
@@ -259,7 +247,7 @@ LRESULT CALLBACK FirstTimeSetupProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
 
     case WM_PAINT: PaintSetup(hWnd); return 0;
     case WM_CLOSE: DestroyWindow(hWnd); return 0;
-    case WM_DESTROY: return 0;
+    case WM_DESTROY: PostQuitMessage(0); return 0;
     }
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
@@ -284,6 +272,7 @@ void ShowFirstTimeSetup(HINSTANCE hInstance) {
         potentialPaths.push_back(basePath + L"\\WindowsClient\\GameUserSettings.ini");
         potentialPaths.push_back(basePath + L"\\WindowsNoEditor\\GameUserSettings.ini");
         potentialPaths.push_back(basePath + L"\\WindowClient\\GameUserSettings.ini");
+        potentialPaths.push_back(basePath + L"\\Windows\\GameUserSettings.ini");
 
         // Dynamic search
         WIN32_FIND_DATAW fd;
@@ -310,11 +299,18 @@ void ShowFirstTimeSetup(HINSTANCE hInstance) {
                 std::string buffer(static_cast<size_t>(size), '\0');
                 if (!ifs.read(&buffer[0], size)) continue;
 
-                // Robust handling for UTF-16 LE
-                buffer.erase(std::remove(buffer.begin(), buffer.end(), '\0'), buffer.end());
+                // Better handling for UTF-16 LE
+                if (size >= 2 && (unsigned char)buffer[0] == 0xFF && (unsigned char)buffer[1] == 0xFE) {
+                    std::wstring wbuf((size - 2) / 2, L'\0');
+                    memcpy(&wbuf[0], buffer.data() + 2, size - 2);
+                    buffer.clear();
+                    for (wchar_t c : wbuf) buffer += (c < 128 ? (char)c : '?');
+                } else {
+                    buffer.erase(std::remove(buffer.begin(), buffer.end(), '\0'), buffer.end());
+                }
 
-                const char* keysX[] = { "MouseSensitivityX=", "MouseX=" };
-                const char* keysY[] = { "MouseSensitivityY=", "MouseY=" };
+                const char* keysX[] = { "MouseSensitivityX=", "MouseX=", "MouseSensitivity=" };
+                const char* keysY[] = { "MouseSensitivityY=", "MouseY=", "MouseSensitivity=" };
 
                 auto extractVal = [&](const char** keys, size_t count) -> std::wstring {
                     for (size_t i = 0; i < count; i++) {
@@ -331,8 +327,8 @@ void ShowFirstTimeSetup(HINSTANCE hInstance) {
                     return L"";
                 };
 
-                if (g_setupSensX.empty()) g_setupSensX = extractVal(keysX, 2);
-                if (g_setupSensY.empty()) g_setupSensY = extractVal(keysY, 2);
+                if (g_setupSensX.empty()) g_setupSensX = extractVal(keysX, 3);
+                if (g_setupSensY.empty()) g_setupSensY = extractVal(keysY, 3);
 
                 if (!g_setupSensX.empty() || !g_setupSensY.empty()) {
                     g_extractedConfig = true;
