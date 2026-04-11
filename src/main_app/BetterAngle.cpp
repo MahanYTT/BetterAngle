@@ -375,9 +375,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }).detach();
 
     GdiplusStartupInput gdiplusStartupInput;
-    GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, NULL);
-
-    // Phase 4: Launch UI (Splash first)
+    GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, NULL);    // Phase 4: Launch UI (Splash first)
     ShowSplashScreen();
 
     // 2. Defer heavy initialization so the Qt Event Loop can draw the Splash immediately
@@ -398,6 +396,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             def.showCrosshair = true;
             def.crossThickness = 2.0f;
             def.crossColor = RGB(0, 255, 204);
+            def.tolerance = 2;
             g_allProfiles.push_back(def);
             g_selectedProfileIdx = 0;
         }

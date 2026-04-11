@@ -27,7 +27,7 @@ extern int g_selectedProfileIdx;
 void FinishSetup() {
     Profile p;
     p.name = L"Default"; 
-    p.tolerance = 25;
+    p.tolerance = 2;
     p.roi_x = 760; p.roi_y = 640; p.roi_w = 400; p.roi_h = 70;
     p.target_color = RGB(150, 150, 150);
     p.fov = 80.0f;

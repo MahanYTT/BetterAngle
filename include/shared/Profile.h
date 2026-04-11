@@ -37,9 +37,9 @@ struct Profile {
   float renderScale;
 
   // Detector Logic
-  int roi_x, roi_y, roi_w, roi_h;
-  COLORREF target_color;
-  int tolerance;
+  int roi_x = 0, roi_y = 0, roi_w = 0, roi_h = 0;
+  COLORREF target_color = 0;
+  int tolerance = 2;
 
   // Crosshair Settings
   bool showCrosshair;
