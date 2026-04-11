@@ -144,24 +144,28 @@ void BetterAngleBackend::setCrossColor(const QColor &c) {
 bool BetterAngleBackend::debugMode() const { return g_debugMode; }
 void BetterAngleBackend::setDebugMode(bool v) {
   g_debugMode = v;
+  SaveSettings();
   emit debugChanged();
 }
 
 bool BetterAngleBackend::forceDiving() const { return g_forceDiving; }
 void BetterAngleBackend::setForceDiving(bool v) {
   g_forceDiving = v;
+  SaveSettings();
   emit debugChanged();
 }
 
 bool BetterAngleBackend::forceDetection() const { return g_forceDetection; }
 void BetterAngleBackend::setForceDetection(bool v) {
   g_forceDetection = v;
+  SaveSettings();
   emit debugChanged();
 }
 
 float BetterAngleBackend::glideThreshold() const { return g_glideThreshold; }
 void BetterAngleBackend::setGlideThreshold(float v) {
   g_glideThreshold = v;
+  SaveSettings();
   emit debugChanged();
 }
 
@@ -170,6 +174,7 @@ float BetterAngleBackend::freefallThreshold() const {
 }
 void BetterAngleBackend::setFreefallThreshold(float v) {
   g_freefallThreshold = v;
+  SaveSettings();
   emit debugChanged();
 }
 

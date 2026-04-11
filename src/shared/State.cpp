@@ -100,6 +100,9 @@ void LoadSettings() {
     g_crossPulse     = eFloat("crossPulse", 0.0f) > 0.5f;
     g_setupComplete  = eFloat("setupComplete", 0.0f) > 0.5f;
     g_showCrosshair  = eFloat("showCrosshair", 1.0f) > 0.5f;
+    g_debugMode      = eFloat("debugMode", 0.0f) > 0.5f;
+    g_forceDiving    = eFloat("forceDiving", 0.0f) > 0.5f;
+    g_forceDetection = eFloat("forceDetection", 0.0f) > 0.5f;
     g_selectedProfileIdx = eInt("selectedProfileIdx", 0);
 
     size_t vp = content.find("\"lastVersionRun\":\"");
@@ -155,6 +158,9 @@ void SaveSettings() {
   oss << L"  \"crossPulse\": " << (g_crossPulse ? 1 : 0) << L",\n";
   oss << L"  \"setupComplete\": " << (g_setupComplete ? 1 : 0) << L",\n";
   oss << L"  \"showCrosshair\": " << (g_showCrosshair ? 1 : 0) << L",\n";
+  oss << L"  \"debugMode\": " << (g_debugMode ? 1 : 0) << L",\n";
+  oss << L"  \"forceDiving\": " << (g_forceDiving ? 1 : 0) << L",\n";
+  oss << L"  \"forceDetection\": " << (g_forceDetection ? 1 : 0) << L",\n";
   oss << L"  \"selectedProfileIdx\": " << g_selectedProfileIdx << L",\n";
   
   std::string vs = VERSION_STR;
