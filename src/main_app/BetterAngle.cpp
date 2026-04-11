@@ -36,6 +36,12 @@ ULONG_PTR g_gdiplusToken;
 std::atomic<bool> g_running(true);
 FovDetector g_detector;
 
+// Default settings: Neon Cyan (0, 255, 163), Enabled, Pulse Enabled, Tolerance 45
+COLORREF g_crosshairColor = RGB(0, 255, 163);
+bool g_showCrosshair = true;
+bool g_pulseEnabled = true;
+int g_colorTolerance = 45;
+
 // Only update sensitivity state when Fortnite is the foreground window
 
 // FOV Detector Thread
@@ -375,13 +381,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (g_allProfiles.empty()) {
         Profile p;
         p.name = L"Default";
-        p.tolerance = 25;
+        p.tolerance = 45; // Enhanced for Euclidean matching
         p.roi_x = 760; p.roi_y = 640; p.roi_w = 400; p.roi_h = 70;
         p.target_color = RGB(150, 150, 150);
         p.sensitivityX = 0.05;
         p.sensitivityY = 0.05;
+        p.showCrosshair = true;
         p.crossThickness = 2.0f;
-        p.crossColor = RGB(255,0,0);
+        p.crossColor = RGB(0, 255, 163); // Neon Cyan
+        p.crossPulse = true;
         p.Save(GetProfilesPath() + L"Default.json");
 
         g_allProfiles.push_back(p);
