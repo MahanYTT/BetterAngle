@@ -73,6 +73,7 @@ jobs:
         with:
           files: |
             bin/BetterAngle_Setup.exe
+            build/Release/uninstaller.exe
           tag_name: ${{ env.TAG }}
           name: BetterAngle Pro ${{ env.TAG }}
           body_path: CURRENT_RELEASE_NOTES.md

@@ -1,5 +1,9 @@
 #include "shared/State.h"
 #include "shared/Logic.h"
+#include <windows.h>
+
+extern HWND g_hHUD;
+extern void RefreshHotkeys(HWND hWnd);
 
 SelectionState g_currentSelection = NONE;
 bool g_isSelectionActive = false;
@@ -187,6 +191,9 @@ void SaveSettings() {
 
   // Set to hidden after saving
   SetFileAttributesW(sp.c_str(), FILE_ATTRIBUTE_HIDDEN);
+
+  // Task A Fix: Refresh hotkeys immediately when settings are saved (v4.21.2)
+  if (g_hHUD) RefreshHotkeys(g_hHUD);
 }
 
 

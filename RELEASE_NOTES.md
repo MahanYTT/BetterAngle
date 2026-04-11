@@ -1,4 +1,11 @@
-### BetterAngle Pro v4.20.54
+### BetterAngle Pro v4.21.2
+- **Dynamic Bind Refresh:** Keybinds now re-apply instantly without requiring a software restart.
+- **Async Startup Sequence:** Refined the splash-to-dashboard transition to ensure the main window only appears after assets have fully loaded.
+- **Installer Stability:** Patched setup wizard crashes by enforcing AppData directory creation prior to file deployment.
+- **Remote Build Pipeline:** Offloaded all compilation to GitHub Actions for secure, environment-consistent binaries.
+- **Professional Uninstaller:** Added a standalone cleanup utility to completely remove all application data and user profiles.
+
+### BetterAngle Pro v4.21.1
 - **Qt 6 Framework Upgrade**: Replaced the entire ImGui / DirectX 11 interface with a modern Qt Quick (QML) GUI featuring silky smooth transitions, responsive tabs, and a massive reduction in boilerplate size.
 - **Inno Setup Installer Module**: Removed `.zip` packaging. The software now distributes exclusively as a `.exe` setup wizard that automatically injects dependencies, assigns Desktop shortcuts, and provides clean Windows uninstallation.
 - **Aesthetics Overhaul**: Shrunk the command center to a sleek `650x480`. Smooth 8px rounded corners gracefully frame the GDI+ Game Overlay and Debug tools. Dropped their alpha transparency limits to eliminate visual obstruction during gameplay.

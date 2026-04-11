@@ -57,10 +57,8 @@ BetterAngleBackend::BetterAngleBackend(QObject *parent) : QObject(parent) {
       }
   });
 
-  // Force show Dashboard shortly after startup
-  QTimer::singleShot(500, this, [this]() {
-      requestShowControlPanel();
-  });
+  // Task B Fix: Removed the 500ms auto-show timer. 
+  // The control panel is now explicitly requested via Splash.qml when its animation finishes.
 }
 
 double BetterAngleBackend::sensX() const {
