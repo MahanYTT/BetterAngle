@@ -387,7 +387,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
     // Use robust Win32 arguments for Qt
     qInstallMessageHandler(QtLogHandler);
     QGuiApplication app(__argc, __argv);
-    app.setQuitOnLastWindowClosed(false); 
 
     // Phase 0: Kick off version check in background
     qDebug() << "BetterAngle Starting... Version:" << VERSION_STR;
@@ -406,8 +405,11 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
     GdiplusStartupInput gdiplusStartupInput;
     GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, NULL);
-    
-    // Phase 4: Launch UI
+
+    // Phase 1: Engine and Backend Setup
+    EnsureEngineInitialized(); // Creates g_qmlEngine and registers "backend"
+
+    // Phase 4: Launch UI (Splash first)
     ShowSplashScreen(); 
     
     // DELAY Dashboard load to prevent CPU/GPU contention
@@ -483,5 +485,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
     });
 
     // 4. Start the event loop (this draws the splash immediately)
+    app.setQuitOnLastWindowClosed(false);
     return app.exec();
 }
