@@ -348,7 +348,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     int argc = 1;
     char* argv[] = { (char*)"BetterAngle.exe", nullptr };
     QGuiApplication app(argc, argv);
-    app.setQuitOnLastWindowClosed(true);
+    app.setQuitOnLastWindowClosed(false); // Prevent premature exit if windows are still initializing
 
     // Phase 0: Kick off version check in background — never blocks startup.
     // g_updateAvailable will be set when done; the control panel UPDATES tab shows it.
@@ -476,6 +476,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     );
 
     AddSystrayIcon(g_hHUD);
+    ShowControlPanel(); // Force Dashboard to show on startup
     ShowWindow(g_hHUD, SW_SHOW);
     UpdateWindow(g_hHUD);
     SetTimer(g_hHUD, 1, 16, NULL); // 60fps (~16ms) Repaint Timer

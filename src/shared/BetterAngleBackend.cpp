@@ -53,6 +53,11 @@ BetterAngleBackend::BetterAngleBackend(QObject *parent) : QObject(parent) {
           checkForUpdates();
       }
   });
+
+  // Force show Dashboard shortly after startup
+  QTimer::singleShot(500, this, [this]() {
+      requestShowControlPanel();
+  });
 }
 
 double BetterAngleBackend::sensX() const {

@@ -16,6 +16,9 @@ HWND CreateControlPanel(HINSTANCE hInstance) {
         g_qmlEngine->rootContext()->setContextProperty("backend", g_backend);
         
         g_qmlEngine->load(QUrl(QStringLiteral("qrc:/src/gui/main.qml")));
+        if (g_qmlEngine->rootObjects().isEmpty()) {
+            MessageBoxW(NULL, L"Failed to load user interface (main.qml). Please check installation.", L"BetterAngle Error", MB_OK | MB_ICONERROR);
+        }
     }
     
     // Qt manages its own windows, we return a dummy HWND to satisfy the existing architecture 
