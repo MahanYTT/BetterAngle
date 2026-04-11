@@ -30,6 +30,7 @@ class BetterAngleBackend : public QObject {
     Q_PROPERTY(bool downloadComplete READ downloadComplete NOTIFY updateStatusChanged)
     Q_PROPERTY(QString updateHistory READ updateHistory NOTIFY updateStatusChanged)
     Q_PROPERTY(QString updateStatus READ updateStatus NOTIFY updateStatusChanged)
+    Q_PROPERTY(bool hasCheckedForUpdates READ hasCheckedForUpdates NOTIFY updateStatusChanged)
 
 
 public:
@@ -86,6 +87,7 @@ public:
     bool downloadComplete() const;
     QString updateHistory() const;
     QString updateStatus() const;
+    bool hasCheckedForUpdates() const;
 
 
     Q_INVOKABLE void syncWithFortnite();

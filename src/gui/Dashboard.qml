@@ -614,19 +614,67 @@ Item {
                     }
                 }
 
-                Text {
-                    text: backend.updateStatus
-                    color: {
-                        if (backend.downloadComplete) return "#6a4cff"
-                        if (backend.updateAvailable) return "#00cca3"
-                        if (backend.isDownloading) return "#00ccff"
-                        if (backend.isCheckingForUpdates) return "#aaa"
-                        return "white"
-                    }
-                    font.bold: true
-                    horizontalAlignment: Text.AlignHCenter
+                Row {
+                    spacing: 10
                     width: parent.width
-                    visible: backend.updateStatus !== ""
+                    horizontalAlignment: Text.AlignHCenter
+
+                    Text {
+                        id: spinCog
+                        text: "\uf013" // Font Awesome / Unicode Cog placeholder
+                        font.family: "Segoe UI Symbol"
+                        font.pixelSize: 20
+                        color: "#00cca3"
+                        visible: backend.isCheckingForUpdates || backend.isDownloading
+                        
+                        RotationAnimation on rotation {
+                            from: 0; to: 360; duration: 1500; loops: Animation.Infinite
+                            running: spinCog.visible
+                        }
+                    }
+
+                    Text {
+                        text: backend.updateStatus
+                        color: {
+                            if (backend.downloadComplete) return "#6a4cff"
+                            if (backend.updateAvailable) return "#00cca3"
+                            if (backend.isDownloading) return "#00ccff"
+                            if (backend.isCheckingForUpdates) return "#aaa"
+                            return "white"
+                        }
+                        font.bold: true
+                        font.pixelSize: 14
+                        verticalAlignment: Text.AlignVCenter
+                        height: spinCog.height
+                    }
+                }
+
+                // Confirm Latest Version Details
+                Rectangle {
+                    width: parent.width
+                    height: 60
+                    color: "#161625"
+                    radius: 8
+                    border.color: "#222"
+                    visible: backend.hasCheckedForUpdates
+                    
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 4
+                        Text { 
+                            text: backend.updateAvailable ? "New Version Found!" : "Up to Date"
+                            color: backend.updateAvailable ? "#00cca3" : "#888"
+                            font.bold: true
+                            font.pixelSize: 12
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                        Text { 
+                            text: "Online: " + backend.latestVersion + "  |  Local: " + backend.versionStr
+                            color: "#ccc"
+                            font.pixelSize: 11
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                    }
                 }
 
                 Text {
