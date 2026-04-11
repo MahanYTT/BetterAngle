@@ -384,6 +384,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         p.tolerance = 25;
         p.roi_x = 760; p.roi_y = 640; p.roi_w = 400; p.roi_h = 70;
         p.target_color = RGB(150, 150, 150);
+        p.sensitivityX = 0.05;
+        p.sensitivityY = 0.05;
         p.crossThickness = 2.0f;
         p.crossColor = RGB(255,0,0);
         p.Save(GetProfilesPath() + L"Default.json");

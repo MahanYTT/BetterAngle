@@ -205,7 +205,7 @@ void ShowFirstTimeSetup(HINSTANCE hInstance) {
     }
 
     int W = 500, H = 320;
-    HWND hWnd = CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW, L"FTSWindowClass", L"BetterAngle Setup", WS_POPUP,
+    HWND hWnd = CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW, L"FTSWindowClass", L"BetterAngle Pro HUD Calibration", WS_POPUP,
         GetSystemMetrics(SM_CXSCREEN)/2 - W/2, GetSystemMetrics(SM_CYSCREEN)/2 - H/2, W, H, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hWnd, SW_SHOW);

@@ -7,14 +7,14 @@ Window {
     width: 650
     height: 480
     visible: true
-    title: qsTr("BetterAngle Pro Command Center")
+    title: qsTr("BetterAngle Pro Angle HUD")
     color: "#0a0a0f"
 
     // Frameless window style for a custom sleek look
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowSystemMenuHint | Qt.WindowMinimizeButtonHint
 
     onVisibleChanged: {
-        backend.showCrosshair = visible
+        // No longer forcing crosshair state here to allow user preference to persist
     }
 
     Connections {

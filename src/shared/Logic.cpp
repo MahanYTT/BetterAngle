@@ -78,6 +78,7 @@ double FetchFortniteSensitivity() {
                 }
             }
         }
+        }
     }
 
     // Fallback: Full recursive crawl with error handling (skip restricted folders)

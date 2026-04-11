@@ -72,7 +72,7 @@ Window {
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 Text {
-                    text: "STATE-OF-THE-ART AIM ASSIST"
+                    text: "STATE-OF-THE-ART ANGLE HUB"
                     color: "#00ffa3"
                     font.pixelSize: 10
                     font.bold: true
