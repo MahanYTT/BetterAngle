@@ -1,3 +1,8 @@
+### BetterAngle Pro v4.23.2
+- **Boot Fail-Safe:** Implemented a C++ level fail-safe timer. If the Dashboard doesn't show up within 5 seconds of launch, the engine will now force-trigger the UI regardless of the Splash screen's status.
+- **Build Fix:** Resolved a critical `'EnsureEngineInitialized': identifier not found` error during compilation.
+- **Diagnostic Logging:** Added verbose `[BOOT]` markers to the debug log to pinpoint initialization bottlenecks.
+
 ### BetterAngle Pro v4.23.1
 - **Hotkey Compatibility Fix:** Re-applied multimedia key support (Volume, Mute, Media) and hotkey reliability flags.
 - **Merge Consolidation:** Integrated engine load order fixes and uninstaller hardening into the main branch.

@@ -413,14 +413,25 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
     GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, NULL);
 
     // Phase 1: Engine and Backend Setup
+    qDebug() << "[BOOT] Phase 1: Initializing QML Engine...";
     EnsureEngineInitialized(); // Creates g_qmlEngine and registers "backend"
 
     // Phase 4: Launch UI (Splash first)
+    qDebug() << "[BOOT] Phase 4: Showing Splash Screen...";
     ShowSplashScreen(); 
     
+    // BOOT FAIL-SAFE: If Dashboard hasn't shown in 5 seconds, force it.
+    QTimer::singleShot(5000, []() {
+        extern BetterAngleBackend* g_backend;
+        if (g_backend) {
+            qDebug() << "[BOOT] Fail-Safe Triggered: Forcing Dashboard Show.";
+            g_backend->requestShowControlPanel();
+        }
+    });
+
     // DELAY Dashboard load to prevent CPU/GPU contention
     QTimer::singleShot(1500, []() {
-        qDebug() << "Loading Main Dashboard components...";
+        qDebug() << "[BOOT] Phase 5: Loading Main Dashboard components...";
         CreateControlPanel(GetModuleHandle(NULL)); 
     });
 
