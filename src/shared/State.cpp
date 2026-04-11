@@ -100,6 +100,12 @@ void LoadSettings() {
     g_crossAngle     = eFloat("crossAngle", 0.0f);
     g_crossPulse     = eFloat("crossPulse", 0.0f) > 0.5f;
     g_setupComplete  = eFloat("setupComplete", 0.0f) > 0.5f;
+
+    // Reliability Fallback: Check for hidden marker file
+    std::wstring marker = GetAppRootPath() + L".setup_done";
+    if (GetFileAttributesW(marker.c_str()) != INVALID_FILE_ATTRIBUTES) {
+        g_setupComplete = true;
+    }
     g_showCrosshair  = eFloat("showCrosshair", 1.0f) > 0.5f;
     g_debugMode      = eFloat("debugMode", 0.0f) > 0.5f;
     g_forceDiving    = eFloat("forceDiving", 0.0f) > 0.5f;

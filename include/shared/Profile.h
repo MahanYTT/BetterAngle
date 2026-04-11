@@ -9,7 +9,7 @@ struct Keybinds {
   UINT toggleMod = MOD_CONTROL;
   UINT toggleKey = 'U';
   UINT roiMod = MOD_CONTROL;
-  UINT roiKey = 'R';
+  UINT roiKey = '8';
   UINT crossMod = 0;
   UINT crossKey = VK_F10;
   UINT zeroMod = MOD_CONTROL;

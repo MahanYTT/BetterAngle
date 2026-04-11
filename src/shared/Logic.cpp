@@ -7,6 +7,30 @@
 #include <shlobj.h>
 #include <vector>
 
+void FindGameUserSettingsRecursive(const std::wstring& directory, std::vector<std::wstring>& outPaths) {
+    if (outPaths.size() > 20) return; // Limit search to prevent hangs
+
+    WIN32_FIND_DATAW findData;
+    std::wstring searchPattern = directory + L"\\*";
+    HANDLE hFind = FindFirstFileW(searchPattern.c_str(), &findData);
+    if (hFind == INVALID_HANDLE_VALUE) return;
+
+    do {
+        if (wcscmp(findData.cFileName, L".") == 0 || wcscmp(findData.cFileName, L"..") == 0) continue;
+
+        std::wstring fullPath = directory + L"\\" + findData.cFileName;
+        if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            FindGameUserSettingsRecursive(fullPath, outPaths);
+        } else {
+            if (_wcsicmp(findData.cFileName, L"GameUserSettings.ini") == 0) {
+                outPaths.push_back(fullPath);
+            }
+        }
+    } while (FindNextFileW(hFind, &findData));
+
+    FindClose(hFind);
+}
+
 double FetchFortniteSensitivity() {
     wchar_t expPath[MAX_PATH] = {};
     std::wstring basePath;
@@ -23,26 +47,8 @@ double FetchFortniteSensitivity() {
         }
     }
 
-    // Common subdirectories for Fortnite settings
-    const wchar_t* subDirs[] = { L"WindowsClient", L"WindowsNoEditor", L"Windows", L"WindowClient" };
-    for (const auto& sd : subDirs) {
-        potentialPaths.push_back(basePath + L"\\" + sd + L"\\GameUserSettings.ini");
-    }
-
-    // Dynamic search fallback for any other subdirectories
-    WIN32_FIND_DATAW findData;
-    std::wstring searchPattern = basePath + L"\\*";
-    HANDLE hFind = FindFirstFileW(searchPattern.c_str(), &findData);
-    if (hFind != INVALID_HANDLE_VALUE) {
-        do {
-            if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-                if (wcscmp(findData.cFileName, L".") != 0 && wcscmp(findData.cFileName, L"..") != 0) {
-                    potentialPaths.push_back(basePath + L"\\" + findData.cFileName + L"\\GameUserSettings.ini");
-                }
-            }
-        } while (FindNextFileW(hFind, &findData));
-        FindClose(hFind);
-    }
+    // Crawl the entire config directory tree
+    FindGameUserSettingsRecursive(basePath, potentialPaths);
 
     for (const auto& pPath : potentialPaths) {
         std::ifstream ifs(pPath, std::ios::binary);

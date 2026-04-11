@@ -56,6 +56,11 @@ void FinishSetup() {
 
     g_setupComplete = true; 
     SaveSettings(); // Force atomic save now
+
+    // Create a hidden marker file for absolute persistence (even if JSON is lost)
+    std::wstring marker = GetAppRootPath() + L".setup_done";
+    HANDLE h = CreateFileW(marker.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_HIDDEN, NULL);
+    if (h != INVALID_HANDLE_VALUE) CloseHandle(h);
 }
 
 static void PaintSetup(HWND hWnd) {

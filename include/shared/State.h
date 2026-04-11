@@ -89,4 +89,6 @@ extern POINT g_dragStartMouse;
 extern HWND g_hHUD; 
 extern HWND g_hPanel;
 
+void RefreshHotkeys(HWND hWnd);
+
 #endif // STATE_H

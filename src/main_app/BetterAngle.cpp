@@ -98,6 +98,22 @@ void CaptureDesktop() {
     DeleteDC(hdcMem);
 }
 
+// Refreshes all global hotkeys for the HUD window
+void RefreshHotkeys(HWND hWnd) {
+    if (!hWnd) return;
+    for (int i = 1; i <= 6; i++) UnregisterHotKey(hWnd, i);
+
+    if (!g_allProfiles.empty()) {
+        Profile& p = g_allProfiles[g_selectedProfileIdx];
+        // Use standard registration without MOD_NOREPEAT for maximum compatibility
+        RegisterHotKey(hWnd, 1, p.keybinds.toggleMod, p.keybinds.toggleKey);
+        RegisterHotKey(hWnd, 2, p.keybinds.roiMod,    p.keybinds.roiKey);
+        RegisterHotKey(hWnd, 3, p.keybinds.crossMod,  p.keybinds.crossKey);
+        RegisterHotKey(hWnd, 4, p.keybinds.zeroMod,   p.keybinds.zeroKey);
+        RegisterHotKey(hWnd, 5, p.keybinds.debugMod,  p.keybinds.debugKey);
+    }
+}
+
 // Message-Only Window for Bullet-Proof Raw Input
 LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     if (message == WM_INPUT) {
@@ -116,15 +132,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
     switch (message) {
         case WM_CREATE:
             SetLayeredWindowAttributes(hWnd, RGB(0, 0, 0), 0, LWA_COLORKEY);
-            if (!g_allProfiles.empty()) {
-                Profile& p = g_allProfiles[g_selectedProfileIdx];
-                // MOD_NOREPEAT prevents F10 system-key conflicts and double-fire
-                RegisterHotKey(hWnd, 1, p.keybinds.toggleMod | MOD_NOREPEAT, p.keybinds.toggleKey);
-                RegisterHotKey(hWnd, 2, p.keybinds.roiMod    | MOD_NOREPEAT, p.keybinds.roiKey);
-                RegisterHotKey(hWnd, 3, p.keybinds.crossMod  | MOD_NOREPEAT, p.keybinds.crossKey);
-                RegisterHotKey(hWnd, 4, p.keybinds.zeroMod   | MOD_NOREPEAT, p.keybinds.zeroKey);
-                RegisterHotKey(hWnd, 5, p.keybinds.debugMod  | MOD_NOREPEAT, p.keybinds.debugKey);
-            }
+            RefreshHotkeys(hWnd);
             return 0;
 
         case WM_HOTKEY:
