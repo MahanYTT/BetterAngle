@@ -64,9 +64,9 @@ float FovDetector::Scan(const RoiConfig& cfg) {
         BYTE g = (p >> 8) & 0xFF;
         BYTE r = (p >> 16) & 0xFF;
 
-        if (abs(r - tr) <= cfg.tolerance && 
-            abs(g - tg) <= cfg.tolerance && 
-            abs(b - tb) <= cfg.tolerance) {
+        if (std::abs((int)r - (int)tr) <= cfg.tolerance && 
+            std::abs((int)g - (int)tg) <= cfg.tolerance && 
+            std::abs((int)b - (int)tb) <= cfg.tolerance) {
             match++;
         }
     }
