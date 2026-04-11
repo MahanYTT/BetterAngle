@@ -28,7 +28,7 @@ void KillProcessByName(const std::wstring& filename) {
     CloseHandle(hSnap);
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
     // 1. Kill any running BetterAngle processes
     KillProcessByName(L"BetterAngle.exe");
     Sleep(1000); // Give it time to close
