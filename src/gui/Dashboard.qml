@@ -189,7 +189,14 @@ Item {
                             TextField { 
                                 text: activeFocus ? "Press key..." : backend.keyToggle; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"; readOnly: true
                                 background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
-                                Keys.onPressed: (event) => { let res = handleHotkey(event, (s) => backend.keyToggle = s); if (res !== "") { text = res; focus = false; } event.accepted = true; }
+                                Keys.onPressed: (event) => { 
+                                    let res = handleHotkey(event, (s) => backend.keyToggle = s); 
+                                    if (res !== "" && event.key !== Qt.Key_Control && event.key !== Qt.Key_Shift && event.key !== Qt.Key_Alt) { 
+                                        text = res; focus = false; 
+                                    } 
+                                    event.accepted = true; 
+                                }
+                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
                                 placeholderText: "Press key..."
                             }
                         }
@@ -198,7 +205,14 @@ Item {
                             TextField { 
                                 text: activeFocus ? "Press key..." : backend.keyRoi; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"; readOnly: true
                                 background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
-                                Keys.onPressed: (event) => { let res = handleHotkey(event, (s) => backend.keyRoi = s); if (res !== "") { text = res; focus = false; } event.accepted = true; }
+                                Keys.onPressed: (event) => { 
+                                    let res = handleHotkey(event, (s) => backend.keyRoi = s); 
+                                    if (res !== "" && event.key !== Qt.Key_Control && event.key !== Qt.Key_Shift && event.key !== Qt.Key_Alt) { 
+                                        text = res; focus = false; 
+                                    } 
+                                    event.accepted = true; 
+                                }
+                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
                                 placeholderText: "Press key..."
                             }
                         }
@@ -207,7 +221,14 @@ Item {
                             TextField { 
                                 text: activeFocus ? "Press key..." : backend.keyCross; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"; readOnly: true
                                 background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
-                                Keys.onPressed: (event) => { let res = handleHotkey(event, (s) => backend.keyCross = s); if (res !== "") { text = res; focus = false; } event.accepted = true; }
+                                Keys.onPressed: (event) => { 
+                                    let res = handleHotkey(event, (s) => backend.keyCross = s); 
+                                    if (res !== "" && event.key !== Qt.Key_Control && event.key !== Qt.Key_Shift && event.key !== Qt.Key_Alt) { 
+                                        text = res; focus = false; 
+                                    } 
+                                    event.accepted = true; 
+                                }
+                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
                                 placeholderText: "Press key..."
                             }
                         }
@@ -216,7 +237,14 @@ Item {
                             TextField { 
                                 text: activeFocus ? "Press key..." : backend.keyZero; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"; readOnly: true
                                 background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
-                                Keys.onPressed: (event) => { let res = handleHotkey(event, (s) => backend.keyZero = s); if (res !== "") { text = res; focus = false; } event.accepted = true; }
+                                Keys.onPressed: (event) => { 
+                                    let res = handleHotkey(event, (s) => backend.keyZero = s); 
+                                    if (res !== "" && event.key !== Qt.Key_Control && event.key !== Qt.Key_Shift && event.key !== Qt.Key_Alt) { 
+                                        text = res; focus = false; 
+                                    } 
+                                    event.accepted = true; 
+                                }
+                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
                                 placeholderText: "Press key..."
                             }
                         }
@@ -225,7 +253,14 @@ Item {
                             TextField { 
                                 text: activeFocus ? "Press key..." : backend.keyDebug; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"; readOnly: true
                                 background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
-                                Keys.onPressed: (event) => { let res = handleHotkey(event, (s) => backend.keyDebug = s); if (res !== "") { text = res; focus = false; } event.accepted = true; }
+                                Keys.onPressed: (event) => { 
+                                    let res = handleHotkey(event, (s) => backend.keyDebug = s); 
+                                    if (res !== "" && event.key !== Qt.Key_Control && event.key !== Qt.Key_Shift && event.key !== Qt.Key_Alt) { 
+                                        text = res; focus = false; 
+                                    } 
+                                    event.accepted = true; 
+                                }
+                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
                                 placeholderText: "Press key..."
                             }
                         }
