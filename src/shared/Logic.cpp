@@ -56,15 +56,22 @@ double FetchFortniteSensitivity() {
     // NEW: Priority search for common paths to avoid slow recursion if possible
     std::vector<std::wstring> priorityPaths = {
         savedPath + L"\\Config\\WindowsClient",
-        savedPath + L"\\Config\\WindowsNoEditor"
+        savedPath + L"\\Config\\WindowsNoEditor",
+        savedPath + L"\\Config"
     };
 
     std::vector<std::wstring> configFiles;
     for (const auto& p : priorityPaths) {
-        if (std::filesystem::exists(p)) {
-            for (const auto& entry : std::filesystem::directory_iterator(p)) {
-                if (entry.is_regular_file() && entry.path().filename().wstring().find(L"GameUserSettings") != std::wstring::npos) {
-                    configFiles.push_back(entry.path().wstring());
+        std::error_code ec;
+        if (std::filesystem::exists(p, ec)) {
+            for (const auto& entry : std::filesystem::directory_iterator(p, ec)) {
+                if (ec) break;
+                if (entry.is_regular_file()) {
+                    std::wstring fname = entry.path().filename().wstring();
+                    std::transform(fname.begin(), fname.end(), fname.begin(), ::towlower);
+                    if (fname.find(L"gameusersettings") != std::wstring::npos) {
+                        configFiles.push_back(entry.path().wstring());
+                    }
                 }
             }
         }

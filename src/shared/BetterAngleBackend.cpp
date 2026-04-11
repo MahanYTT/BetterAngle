@@ -243,7 +243,7 @@ void BetterAngleBackend::syncWithFortnite() {
     wchar_t appdata[MAX_PATH] = {};
     SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata);
     QString path = QString::fromWCharArray(appdata) + "\\FortniteGame\\Saved";
-    m_syncResult = QString("ERROR: No config found in %1 tree").arg(path);
+    m_syncResult = QString("NOT FOUND: Scanned %1 tree").arg(path);
   }
   emit syncResultChanged();
 }
