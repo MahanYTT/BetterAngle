@@ -3,6 +3,7 @@
 #include "shared/Profile.h"
 #include "shared/State.h"
 #include "shared/Updater.h"
+#include "shared/FirstTimeSetup.h"
 #include <QGuiApplication>
 #include <QTimer>
 #include <thread>
@@ -286,7 +287,22 @@ void BetterAngleBackend::downloadUpdate() {
 void BetterAngleBackend::saveThresholds() { SaveSettings(); }
 
 void BetterAngleBackend::requestShowControlPanel() {
-    emit showControlPanelRequested();
+    // Transition stage: Splash timer just ended.
+    // Ensure we have a profile. If not, trigger the blocking native Wizard.
+    if (g_allProfiles.empty()) {
+        ShowFirstTimeSetup(GetModuleHandle(NULL));
+        LoadSettings();
+        g_allProfiles = GetProfiles(GetProfilesPath());
+    }
+
+    // Now that setup is done (or was already done), show the Overlay and Dashboard
+    if (!g_allProfiles.empty()) {
+        if (g_hHUD) {
+            ShowWindow(g_hHUD, SW_SHOW);
+            UpdateWindow(g_hHUD);
+        }
+        emit showControlPanelRequested();
+    }
 }
 
 void BetterAngleBackend::requestToggleControlPanel() {

@@ -18,7 +18,6 @@
 #include "shared/Updater.h"
 #include "shared/Profile.h"
 #include "shared/Tray.h"
-#include "shared/Startup.h"
 #include "shared/ControlPanel.h"
 #include "shared/FirstTimeSetup.h"
 #include <QCoreApplication>
@@ -367,12 +366,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     g_allProfiles = GetProfiles(GetProfilesPath());
 
     bool ranSetup = false;
-    if (!g_setupComplete || g_allProfiles.empty()) {
-        ShowFirstTimeSetup(hInstance);
-        LoadSettings(); // Reload after setup to sync settings flags
-        g_allProfiles = GetProfiles(GetProfilesPath()); // Reload profiles from setup
-        ranSetup = true;
-    }
+    // Moved ShowFirstTimeSetup to happen after Splash or via Backend to prevent blocking WinMain startup
 
     // Cache the profiles set by setup (have correct sens in memory)
     std::vector<Profile> setupProfiles = g_allProfiles;
@@ -483,10 +477,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     AddSystrayIcon(g_hHUD);
     // Phase 4: Launch UI (Splash first)
-    CreateControlPanel(hInstance);
     ShowSplashScreen();
-    ShowWindow(g_hHUD, SW_SHOW);
-    UpdateWindow(g_hHUD);
+    // HUD and Control Panel now show up only after Splash/Wizard finish via backend.requestShowControlPanel()
+    
     SetTimer(g_hHUD, 1, 16, NULL); // 60fps (~16ms) Repaint Timer
     SetTimer(g_hHUD, 2, 30000, NULL); // 30s Auto-Save Timer
 

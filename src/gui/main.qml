@@ -6,7 +6,7 @@ Window {
     id: mainWindow
     width: 650
     height: 480
-    visible: true
+    visible: false
     title: qsTr("BetterAngle Pro Angle HUD")
     color: "#0a0a0f"
 
