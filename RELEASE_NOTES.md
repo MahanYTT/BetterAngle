@@ -1,5 +1,9 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.37] - 2026-04-12
+### Fixed
+- **Build Rescue**: Fixed a critical MSVC compilation error (`C3861: SHGetFolderPathW identifier not found`) by adding the missing Windows Shell headers.
+
 ## [v4.27.36] - 2026-04-12
 ### Added
 - **Portable Master Zip**: Now providing a `BetterAngle_Portable.zip` in the release. This standalone version includes 100% of required Qt DLLs and plugins.

@@ -8,6 +8,7 @@
 #include <atomic>
 #include <algorithm>
 #include <vector>
+#include <shlobj.h>
 #include <mutex>
 
 #include <fstream>
