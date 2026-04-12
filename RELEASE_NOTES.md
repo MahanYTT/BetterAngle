@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.43] - 2026-04-12
+### Fixed
+- **Deadlock Resolution**: Upgraded the internal synchronization engine to use `std::recursive_mutex`. This eliminates "Resource Deadlock" errors during startup and migration.
+- **Deep-Clean Migration**: Rewrote the directory unification routine to use the Windows Shell API (`SHFileOperationW`). This ensures a 100% successful merge of legacy data into `BetterAngle Pro` and forces the removal of the redundant folder.
+
 ## [v4.27.42] - 2026-04-12
 ### Fixed
 - **Steel-Wall Startup**: Resolved a critical boot hang by moving all window registration and creation logic into the synchronous startup flow. This prevents the "Timer Deadlock" observed on some hardware configurations.

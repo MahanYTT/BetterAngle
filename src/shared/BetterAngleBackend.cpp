@@ -22,7 +22,7 @@ extern HWND g_hPanel;
 #include "shared/ControlPanel.h"
 extern void __cdecl RefreshHotkeys(HWND hWnd);
 
-std::mutex g_profileMutex;
+std::recursive_mutex g_profileMutex;
 
 BetterAngleBackend::BetterAngleBackend(QObject *parent) : QObject(parent) {
   // Emit profileChanged once the Qt event loop starts so QML fields

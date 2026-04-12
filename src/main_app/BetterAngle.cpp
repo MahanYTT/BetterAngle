@@ -42,7 +42,7 @@ std::atomic<bool> g_winInitialized{false};
 extern BetterAngleBackend* g_backend;
 extern AngleLogic          g_logic;
 extern std::atomic<int>    g_loadingProgress;
-extern std::mutex          g_profileMutex;
+extern std::recursive_mutex   g_profileMutex;
 
 // Startup Diagnostic Logger
 void LogStartup(const std::string& msg) {
@@ -176,7 +176,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
         QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 
-        LogStartup(">>> STARTUP INITIATED (v4.27.36) <<<");
+        LogStartup(">>> STARTUP INITIATED (v" + std::string(VERSION_STR) + ") <<<");
         MigrateLegacyData();
 
         // ── Modern DPI Awareness (V2) for Windows 10/11 ──────────────

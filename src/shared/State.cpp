@@ -38,8 +38,10 @@ float g_freefallThreshold = 0.20f;
 #include <sstream>
 #include <string>
 
+#include <shellapi.h>
 #pragma comment(lib, "shell32.lib")
-#include <shlobj.h>
+
+extern std::recursive_mutex g_profileMutex;
 
 std::wstring GetAppRootPath() {
     wchar_t appdata[MAX_PATH];
@@ -94,9 +96,25 @@ void MigrateLegacyData() {
     }
 
     // 5. Cleanup legacy root
-    // Note: This won't work if folder is not empty. We should ideally use SHFileOperation for recursive delete
-    // but simple RemoveDirectory for now if we moved everything.
-    RemoveDirectoryW(legacyRoot.c_str());
+    // Using SHFileOperationW for recursive move/merge/delete - the proper Windows way
+    SHFILEOPSTRUCTW fileOp = { 0 };
+    fileOp.hwnd = NULL;
+    fileOp.wFunc = FO_MOVE;
+    
+    // Paths must be double-null terminated for SHFileOperation
+    wchar_t from[MAX_PATH + 2] = { 0 };
+    wchar_t to[MAX_PATH + 2] = { 0 };
+    wcscpy_s(from, legacyRoot.c_str());
+    wcscpy_s(to, proRoot.c_str());
+    
+    fileOp.pFrom = from;
+    fileOp.pTo = to;
+    fileOp.fFlags = FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI | FOF_NOCONFIRMMKDIR;
+    
+    int result = SHFileOperationW(&fileOp);
+    if (result == 0) {
+        RemoveDirectoryW(legacyRoot.c_str()); // Final cleanup attempt
+    }
 }
 
 std::wstring GetProfilesPath() {
@@ -196,14 +214,6 @@ void LoadSettings() {
         std::string n = content.substr(valS, end - valS);
         g_lastLoadedProfileName = std::wstring(n.begin(), n.end());
       }
-    }
-  } else {
-    // Migration: Check if it exists in the OLD path (profiles/settings.json)
-    std::wstring oldPath = GetProfilesPath() + L"settings.json";
-    if (GetFileAttributesW(oldPath.c_str()) != INVALID_FILE_ATTRIBUTES) {
-      MoveFileW(oldPath.c_str(), sp.c_str());
-      LoadSettings();
-      return;
     }
   }
 }
