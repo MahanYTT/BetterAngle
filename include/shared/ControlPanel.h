@@ -10,4 +10,6 @@ void ShowSplashScreen();
 void EnsureEngineInitialized();
 LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
+extern HINSTANCE g_hInstance;
+
 #endif

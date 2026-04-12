@@ -15,6 +15,8 @@ extern int g_selectedProfileIdx;
 extern AngleLogic g_logic;
 extern double FetchFortniteSensitivity();
 extern HWND g_hHUD;
+extern HWND g_hPanel;
+#include "shared/ControlPanel.h"
 extern void __cdecl RefreshHotkeys(HWND hWnd);
 
 BetterAngleBackend::BetterAngleBackend(QObject *parent) : QObject(parent) {
@@ -341,21 +343,22 @@ void BetterAngleBackend::requestShowControlPanel() {
   }
 
   // Transition stage: Splash timer just ended.
-  // Ensure we have a profile. If not, trigger the QML Wizard.
+  // 1. Ensure the engine and root objects (main.qml) are fully loaded.
+  CreateControlPanel(g_hInstance);
+
+  // 2. Decide where to route the user.
   if (g_needsSetup || g_allProfiles.empty()) {
+    qDebug() << "[BOOT] Setup needed. Routing to Wizard.";
     emit showSetupRequested();
     return;
   }
 
-  // Now that setup is done (or was already done), show the Overlay and
-  // Dashboard
-  if (!g_allProfiles.empty()) {
-    if (g_hHUD) {
-      ShowWindow(g_hHUD, SW_SHOW);
-      UpdateWindow(g_hHUD);
-    }
-    emit showControlPanelRequested();
+  // 3. Normal boot: show HUD and Dashboard
+  if (g_hHUD) {
+    ShowWindow(g_hHUD, SW_SHOW);
+    UpdateWindow(g_hHUD);
   }
+  emit showControlPanelRequested();
 }
 
 void BetterAngleBackend::requestToggleControlPanel() {

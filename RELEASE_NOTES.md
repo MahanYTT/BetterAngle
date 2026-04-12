@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.25.1] - 2026-04-12
+### Fixed
+- **Serial Boot Overhaul**: Fixed a bug where the Splash Screen was being hidden by the Dashboard/Wizard. The app now strictly displays the Splash Screen for 3 seconds before loading the engine.
+- **One-Time Wizard Persistence**: Hardened the logic that tracks first-time setup. The Calibration Wizard will now correctly mark itself as "Complete" and never appear again after the first run.
+- **Improved Startup Stability**: Centralized the boot-loading sequence in the Backend for better focus management and window layering.
+
 ## [v4.25.0] - 2026-04-12
 ### Improved
 - **Hotkey & UI Synchronization**: Major overhaul to the communication bridge.

@@ -46,6 +46,7 @@ ULONG_PTR g_gdiplusToken;
 std::atomic<bool> g_running(true);
 FovDetector g_detector;
 extern BetterAngleBackend* g_backend; // defined in ControlPanel.cpp
+HINSTANCE g_hInstance = NULL;
 
 // ── Logging ──────────────────────────────────────────────────────────────────
 void QtLogHandler(QtMsgType type, const QMessageLogContext&, const QString& msg) {
@@ -279,6 +280,7 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 // ── Entry point ───────────────────────────────────────────────────────────────
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
+    g_hInstance = hInstance;
 
     // Use static argc/argv — QGuiApplication requires them but doesn't
     // actually use argv[0] in windowless Qt builds.
@@ -383,20 +385,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
 
     qDebug() << "[BOOT] Loading Splash...";
     ShowSplashScreen();
-
-    // Load main UI 1.5s after splash (gives splash time to render)
-    QTimer::singleShot(1500, [hInstance]() {
-        qDebug() << "[BOOT] Loading main UI...";
-        CreateControlPanel(hInstance);
-    });
-
-    // Fail-safe: if nothing showed after 6s, force the panel
-    QTimer::singleShot(6000, []() {
-        if (g_backend) {
-            qDebug() << "[BOOT] Fail-safe: forcing panel.";
-            g_backend->requestShowControlPanel();
-        }
-    });
 
     qDebug() << "[BOOT] Entering event loop.";
     return app.exec();
