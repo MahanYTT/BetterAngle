@@ -11,6 +11,7 @@ std::wstring g_qmlErrors;
 
 void EnsureEngineInitialized() {
     if (!g_qmlEngine) {
+        LogStartup("Engine: Initializing QQmlApplicationEngine...");
         g_qmlEngine = new QQmlApplicationEngine();
         if (!g_qmlEngine) {
             MessageBoxW(NULL, L"FATAL: Failed to allocate QQmlApplicationEngine.\nQt initialization has failed.", L"BetterAngle Engine Error", MB_OK | MB_ICONERROR);
@@ -21,6 +22,7 @@ void EnsureEngineInitialized() {
         QObject::connect(g_qmlEngine, &QQmlApplicationEngine::warnings, [](const QList<QQmlError> &errors) {
             for (const auto& err : errors) {
                 std::string s = err.toString().toStdString();
+                LogStartup("QML_WARNING: " + s);
                 g_qmlErrors += std::wstring(s.begin(), s.end()) + L"\n";
             }
         });
@@ -50,6 +52,7 @@ HWND CreateControlPanel(HINSTANCE hInstance) {
         g_qmlEngine->load(QUrl(QStringLiteral("qrc:/src/gui/main.qml")));
 
         if (g_qmlEngine->rootObjects().isEmpty()) {
+            LogStartup("PANEL_FATAL: main.qml failed to load.");
             std::wstring err = L"CRITICAL ERROR: BetterAngle Main UI failed to load.\n\n";
             err += L"Diagnostics:\n";
             if (!g_qmlErrors.empty()) {
@@ -63,7 +66,7 @@ HWND CreateControlPanel(HINSTANCE hInstance) {
             MessageBoxW(NULL, err.c_str(), L"BetterAngle Engine Failure", MB_OK | MB_ICONERROR);
             exit(1);
         }
-        qDebug() << "[BOOT] Dashboard UI loaded successfully.";
+        LogStartup("Panel: Dashboard UI loaded successfully.");
     }
 
     return (HWND)1;
@@ -77,6 +80,7 @@ void ShowSplashScreen() {
 
     g_qmlEngine->load(QUrl(QStringLiteral("qrc:/src/gui/Splash.qml")));
     if (g_qmlEngine->rootObjects().isEmpty()) {
+        LogStartup("SPLASH_FATAL: Splash.qml failed to load.");
         qDebug() << "[ERROR] Splash.qml failed to load.";
         
         std::wstring err = L"CRITICAL ERROR: Splash resources failed to load.\n\n";

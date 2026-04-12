@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.35] - 2026-04-12
+### Added
+- **Black-Box Diagnostics**: Implemented a comprehensive startup logger that records every milestone of the boot sequence to `%APPDATA%/BetterAngle Pro/startup.log`.
+- **Fatal Error Interception**: Wrapped the core application loop in a global exception handler. If the app fails to start, it will now pop a "Diagnostic Crash" window with the exact error details.
+- **Trace Points**: Added line-by-line breadcrumbs for GDI+, Qt, QML, and Window creation to pinpoint the exact "Physical Block" preventing startup.
+
 ## [v4.27.34] - 2026-04-12
 ### Fixed
 - **Build Rescue**: Fixed a critical MSVC compilation error (`C2039: mutex is not a member of std`) by adding missing headers and correcting threading-lock linkage.

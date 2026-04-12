@@ -15,4 +15,6 @@ LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 extern HINSTANCE g_hInstance;
 extern QQmlApplicationEngine* g_qmlEngine;
 
+void LogStartup(const std::string& msg);
+
 #endif
