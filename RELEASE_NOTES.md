@@ -1,5 +1,12 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.16] - 2026-04-12
+### Fixed
+- **Final Linker Recovery**: Restored missing `CaptureScreen` and `GetPixelColor` utility functions in `BetterAngle.cpp`.
+- **Logic Sync**: Updated `AngleLogic` call to the correct name (`Update`).
+- **Build Stability**: Included `<algorithm>` and `<vector>` to resolve remaining compiler errors.
+- **Full Operational Integrity**: Restored all Stage 1/2 selection tools.
+
 ## [v4.27.15] - 2026-04-12
 ### Fixed
 - **Linker Rescue**: Re-implemented missing `HUDWndProc` and `MsgWndProc` procedures that were accidentally deleted during the v4.27.13 restructure. This restores hotkey, tray, and mouse tracking functionality.
