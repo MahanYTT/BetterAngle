@@ -8,30 +8,6 @@
 #include <vector>
 #include <filesystem>
 
-void FindGameUserSettingsRecursive(const std::wstring& directory, std::vector<std::wstring>& outPaths) {
-    if (outPaths.size() > 20) return; // Limit search to prevent hangs
-
-    WIN32_FIND_DATAW findData;
-    std::wstring searchPattern = directory + L"\\*";
-    HANDLE hFind = FindFirstFileW(searchPattern.c_str(), &findData);
-    if (hFind == INVALID_HANDLE_VALUE) return;
-
-    do {
-        if (wcscmp(findData.cFileName, L".") == 0 || wcscmp(findData.cFileName, L"..") == 0) continue;
-
-        std::wstring fullPath = directory + L"\\" + findData.cFileName;
-        if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-            FindGameUserSettingsRecursive(fullPath, outPaths);
-        } else {
-            if (_wcsicmp(findData.cFileName, L"GameUserSettings.ini") == 0) {
-                outPaths.push_back(fullPath);
-            }
-        }
-    } while (FindNextFileW(hFind, &findData));
-
-    FindClose(hFind);
-}
-
 // Case-insensitive string search helper
 size_t find_case_insensitive(const std::string& buffer, const std::string& key) {
     auto it = std::search(
@@ -48,98 +24,107 @@ double FetchFortniteSensitivity() {
         return -1.0;
     }
 
-    std::wstring localPath = std::wstring(appdata) + L"\\FortniteGame\\Saved";
-    
+    // FIX 1: Start at FortniteGame\ not FortniteGame\Saved\ so search still works
+    // if Saved\ is missing or named differently
+    std::wstring localPath = std::wstring(appdata) + L"\\FortniteGame";
+
     wchar_t userDoc[MAX_PATH] = {};
     SHGetFolderPathW(NULL, CSIDL_MYDOCUMENTS, NULL, 0, userDoc);
-    std::wstring docPath = std::wstring(userDoc) + L"\\FortniteGame\\Saved";
+    std::wstring docPath = std::wstring(userDoc) + L"\\FortniteGame";
 
     std::vector<std::wstring> configFiles;
 
-    // MANDATORY SEARCH TRIAGE
     std::vector<std::wstring> rootPaths = { localPath, docPath };
     for (const auto& root : rootPaths) {
         if (root.empty()) continue;
-        
-        // Priority check
-        std::wstring exact = root + L"\\Config\\WindowsClient\\GameUserSettings.ini";
+
+        // Priority: check the known exact path first
+        std::wstring exact = root + L"\\Saved\\Config\\WindowsClient\\GameUserSettings.ini";
         std::error_code ec;
-        if (std::filesystem::exists(exact, ec)) {
+        if (std::filesystem::exists(exact, ec) && !ec) {
             configFiles.push_back(exact);
         }
     }
 
     if (configFiles.empty()) {
         for (const auto& root : rootPaths) {
-            if (configFiles.size() > 5) break; // Don't over-scan
+            if (configFiles.size() > 5) break;
 
-            // Fallback: Full recursive crawl with error handling (skip restricted folders)
+            // FIX 2: Check root exists before iterating to avoid silent failures
             std::error_code ec;
-            for (const auto& entry : std::filesystem::recursive_directory_iterator(root, std::filesystem::directory_options::skip_permission_denied, ec)) {
-                if (ec) { ec.clear(); continue; }
+            if (!std::filesystem::exists(root, ec) || ec) {
+                std::wcerr << L"FORTNITE DETECT: Root not accessible: " << root << std::endl;
+                continue;
+            }
+
+            for (const auto& entry : std::filesystem::recursive_directory_iterator(
+                root, std::filesystem::directory_options::skip_permission_denied)) {
                 if (entry.is_regular_file()) {
                     std::wstring fname = entry.path().filename().wstring();
-                    std::wstring fext = entry.path().extension().wstring();
-                    std::wstring fpath = entry.path().wstring();
-                    std::transform(fname.begin(), fname.end(), fname.begin(), ::towlower);
-                    
-                    // Search for GameUserSettings.ini in any casing
-                    if (fname.find(L"gameusersettings") != std::wstring::npos && (fext == L".ini" || fext == L".INI")) {
-                        configFiles.push_back(fpath);
+                    std::wstring fext  = entry.path().extension().wstring();
+
+                    std::wstring fnameLower = fname;
+                    std::transform(fnameLower.begin(), fnameLower.end(), fnameLower.begin(), ::towlower);
+
+                    if (fnameLower.find(L"gameusersettings") != std::wstring::npos &&
+                        (fext == L".ini" || fext == L".INI")) {
+                        configFiles.push_back(entry.path().wstring());
                     }
                 }
             }
         }
     }
 
-    // Diagnostic if still empty
     if (configFiles.empty()) {
-        std::wcerr << L"FORTNITE DETECT: Scanned " << localPath << L" and " << docPath << L" clusters, no .ini found." << std::endl;
-    }
-
-    if (configFiles.empty()) {
+        // Diagnostic: show exact path being checked
+        std::wstring diagPath = localPath + L"\\Saved\\Config\\WindowsClient\\GameUserSettings.ini";
+        std::wcerr << L"FORTNITE DETECT: File not found. Checked: " << diagPath << std::endl;
         return -1.0;
     }
 
-    // Process all found configs
     for (const auto& path : configFiles) {
         std::ifstream ifs(path, std::ios::binary | std::ios::ate);
         if (!ifs.is_open()) continue;
 
-        ifs.seekg(0, std::ios::end);
         std::streamsize size = ifs.tellg();
         ifs.seekg(0, std::ios::beg);
-        if (size <= 0 || size > 10 * 1024 * 1024) continue; 
+        if (size <= 0 || size > 10 * 1024 * 1024) continue;
 
         std::string buffer(static_cast<size_t>(size), '\0');
         if (!ifs.read(&buffer[0], size)) continue;
 
-        // Handle UTF-16 LE (Common for Fortnite configs)
+        // Handle UTF-16 LE
         if (size >= 2 && (unsigned char)buffer[0] == 0xFF && (unsigned char)buffer[1] == 0xFE) {
             std::wstring wbuf((size - 2) / 2, L'\0');
             memcpy(&wbuf[0], buffer.data() + 2, size - 2);
             buffer.clear();
             for (wchar_t c : wbuf) {
-                if (c == 0) continue; // Skip inner nulls
+                if (c == 0) break; // FIX 3: break instead of continue on null wchar
                 buffer += (c < 128 ? (char)c : ' ');
             }
         } else {
-            // Clean up possible null characters in standard ASCII files
             buffer.erase(std::remove(buffer.begin(), buffer.end(), '\0'), buffer.end());
         }
 
-        // Search for sensitivity keys (CASE-INSENSITIVE) - MouseMouseSensitivity is the current Fortnite key
-        const char* keys[] = { "MouseMouseSensitivity", "MouseSensitivityX", "MouseSensitivity", "MouseX" };
+        // FIX 4: Narrow search to the correct INI section so we don't grab
+        // a MouseSensitivity value from the wrong section
+        size_t sectionPos = find_case_insensitive(buffer, "[/Script/FortniteGame.FortGameUserSettings]");
+        std::string searchArea = (sectionPos != std::string::npos)
+            ? buffer.substr(sectionPos)
+            : buffer; // fallback to full file if section not found
+
+        // FIX 5: Removed "MouseMouseSensitivity" typo, correct priority order
+        const char* keys[] = { "MouseSensitivity", "MouseSensitivityX", "MouseX" };
         for (const char* key : keys) {
-            size_t pos = find_case_insensitive(buffer, key);
+            size_t pos = find_case_insensitive(searchArea, key);
             if (pos != std::string::npos) {
-                size_t eqPos = buffer.find('=', pos);
+                size_t eqPos = searchArea.find('=', pos);
                 if (eqPos != std::string::npos && eqPos < pos + 50) {
                     size_t valStart = eqPos + 1;
-                    size_t valEnd   = buffer.find_first_of("\r\n", valStart);
-                    if (valEnd == std::string::npos) valEnd = buffer.size();
+                    size_t valEnd   = searchArea.find_first_of("\r\n", valStart);
+                    if (valEnd == std::string::npos) valEnd = searchArea.size();
 
-                    std::string valStr = buffer.substr(valStart, valEnd - valStart);
+                    std::string valStr = searchArea.substr(valStart, valEnd - valStart);
                     valStr.erase(0, valStr.find_first_not_of(" \t\r\n\"'"));
                     valStr.erase(valStr.find_last_not_of(" \t\r\n\"'") + 1);
 
@@ -153,6 +138,7 @@ double FetchFortniteSensitivity() {
             }
         }
     }
+
     return -1.0;
 }
 
@@ -167,7 +153,7 @@ bool IsFortniteFocused() {
     return wcsstr(title, L"Fortnite") != nullptr;
 }
 
-AngleLogic::AngleLogic(double sensX) 
+AngleLogic::AngleLogic(double sensX)
     : m_sensX(sensX), m_isDiving(false), m_accumDx(0), m_baseDx(0), m_baseAngle(0.0) {}
 
 void AngleLogic::Update(int dx) {
@@ -176,40 +162,35 @@ void AngleLogic::Update(int dx) {
 
 double AngleLogic::GetAngle() const {
     double currentSens = m_sensX.load();
-    // 0.00555555 deg/tick * sens is the true Fortnite pitch/yaw scale
     double scale = 0.00555555 * currentSens;
     if (m_isDiving.load()) {
-        scale *= 1.0916; // Diving multiplier
+        scale *= 1.0916;
     }
-
     double delta = (double)(m_accumDx.load() - m_baseDx.load());
     return m_baseAngle.load() + (delta * scale);
 }
 
 void AngleLogic::SetZero() {
     m_accumDx = 0;
-    m_baseDx = 0;
+    m_baseDx  = 0;
     m_baseAngle = 0.0;
 }
 
 void AngleLogic::LoadProfile(double sensX) {
-    // Before updating sensitivity, bake in the current angle to prevent jumping
     m_baseAngle = GetAngle();
-    m_baseDx = m_accumDx.load();
-    m_sensX = sensX;
+    m_baseDx    = m_accumDx.load();
+    m_sensX     = sensX;
 }
 
 void AngleLogic::SetDivingState(bool diving) {
     if (diving == m_isDiving.load()) return;
-
-    // Bake in the current angle before switching scales
     m_baseAngle = GetAngle();
-    m_baseDx = m_accumDx.load();
-    m_isDiving = diving;
+    m_baseDx    = m_accumDx.load();
+    m_isDiving  = diving;
 }
 
 double AngleLogic::Norm360(double a) const {
     while (a >= 360.0) a -= 360.0;
-    while (a < 0.0) a += 360.0;
+    while (a < 0.0)    a += 360.0;
     return a;
 }

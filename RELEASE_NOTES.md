@@ -1,5 +1,14 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.24.6] - 2026-04-12
+### Fixed
+- **Hardened Fortnite Sync**: Completely overhauled the sensitivity detection logic to be more resilient.
+    - Added INI section filtering to ensure the correct values are read.
+    - Fixed UTF-16 decoding bugs that caused file parsing failures on some systems.
+    - Improved search path coverage to find `GameUserSettings.ini` even in non-standard installations.
+    - Corrected sensitivity key priority (MouseSensitivity > MouseSensitivityX > MouseX).
+    - Removed unused legacy code to reduce binary size and complexity.
+
 ## [v4.24.5] - 2026-04-12
 ### Fixed
 - **HUD Transparency**: Migrated overlay window to `UpdateLayeredWindow` with per-pixel alpha. This resolves the bug where transparent areas of the HUD would render as solid black on some systems.
