@@ -1,5 +1,13 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.25.2] - 2026-04-12
+### Improved
+- **Definitive Fortnite Sync**: Replaced the flaky recursive scanner with a direct path check using `%LOCALAPPDATA%`. Sensitivity is now pulled instantly and reliably.
+- **Wizard UI Overhaul**:
+    - **Draggable Window**: Added a title bar that allows you to drag the Calibration Wizard anywhere on your screen.
+    - **Scrollable Content**: Wrapped the form in a `Flickable` container, so it handles different screen sizes and laptop displays without cutting off buttons.
+    - **Modern Aesthetic**: Added gradients and hover effects for a more premium, stable feel.
+
 ## [v4.25.1] - 2026-04-12
 ### Fixed
 - **Serial Boot Overhaul**: Fixed a bug where the Splash Screen was being hidden by the Dashboard/Wizard. The app now strictly displays the Splash Screen for 3 seconds before loading the engine.
