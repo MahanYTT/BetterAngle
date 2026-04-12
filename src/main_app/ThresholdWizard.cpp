@@ -1,11 +1,11 @@
-// windows.h must come before gdiplus.h for GDI+ compatibility
+﻿// windows.h must come before gdiplus.h for GDI+ compatibility
 #include <algorithm>
 #include <cmath>
 #include <gdiplus.h>
+#include <objidl.h>
 #include <string>
 #include <vector>
 #include <windows.h>
-
 
 #include "shared/Input.h"
 #include "shared/Profile.h"

@@ -1,5 +1,6 @@
 // windows.h must come before gdiplus.h for GDI+ compatibility
 #include <gdiplus.h>
+#include <objidl.h>
 #include <windows.h>
 
 

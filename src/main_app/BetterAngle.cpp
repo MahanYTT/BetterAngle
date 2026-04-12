@@ -1,4 +1,4 @@
-// Windows headers must be included in correct order for GDI+
+﻿// Windows headers must be included in correct order for GDI+
 // windows.h must come before gdiplus.h, and WIN32_LEAN_AND_MEAN must not
 // exclude GDI definitions
 #include <gdiplus.h>
@@ -279,7 +279,8 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
   try {
-    // ── GPU Stabilization Hints (Safe-Rendering Mode) ───────────
+    // â”€â”€ GPU Stabilization Hints (Safe-Rendering Mode)
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
     QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
     QQuickStyle::setStyle("Basic");
@@ -287,7 +288,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     LogStartup(">>> STARTUP INITIATED (v" + std::string(VERSION_STR) + ") <<<");
     MigrateLegacyData();
 
-    // ── Modern DPI Awareness (V2) for Windows 10/11 ──────────────
+    // â”€â”€ Modern DPI Awareness (V2) for Windows 10/11
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     LogStartup("Init: DPI Awareness V2...");
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
@@ -315,7 +317,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     g_hInstance = hInstance;
 
     LogStartup("Init: Starting Atomic Boot Thread...");
-    // ── Atomic Boot Thread (Starts BEFORE Splash/Engine) ───────────────
+    // â”€â”€ Atomic Boot Thread (Starts BEFORE Splash/Engine)
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     std::thread([hInstance]() {
       auto startTime = std::chrono::steady_clock::now();
       try {
@@ -399,7 +402,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     EnsureEngineInitialized();
     ShowSplashScreen();
 
-    // ── Nuclear Backup (Fail-safe) ───────────────────────────────────
+    // â”€â”€ Nuclear Backup (Fail-safe)
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     QTimer::singleShot(8000, []() {
       if (g_backend) {
         LogStartup("Fail-Safe: Forcing transition to Dashboard.");
