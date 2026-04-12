@@ -72,7 +72,7 @@ Window {
                             placeholderText: "0.050000"
                             text: backend.sensX.toFixed(6)
                             color: "white"
-                            validator: DoubleValidator { bottom: 0.00001; top: 2.0; decimals: 6; notation: DoubleValidator.StandardNotation }
+                            validator: DoubleValidator { bottom: 0.00001; top: 2.0; decimals: 6 }
                             background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#00ffa3" : "#333" }
                         }
                     }
@@ -87,7 +87,7 @@ Window {
                             placeholderText: "0.050000"
                             text: backend.sensY.toFixed(6)
                             color: "white"
-                            validator: DoubleValidator { bottom: 0.00001; top: 2.0; decimals: 6; notation: DoubleValidator.StandardNotation }
+                            validator: DoubleValidator { bottom: 0.00001; top: 2.0; decimals: 6 }
                             background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#00ffa3" : "#333" }
                         }
                     }

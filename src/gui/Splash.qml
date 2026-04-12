@@ -127,7 +127,7 @@ Window {
                         font.letterSpacing: 6
                     }
                     Text {
-                        text: "VERSION 4.24.7"
+                        text: "VERSION 4.24.8"
                         color: "#00ffa3"
                         font.pixelSize: 10
                         font.bold: true

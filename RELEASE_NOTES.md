@@ -1,5 +1,12 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.24.8] - 2026-04-12
+### Fixed
+- **UI Stability Patch**: Fixed a critical "Could not load Main UI" error.
+    - Reverted modern JavaScript arrow functions to standard anonymous functions to ensure compatibility with older QML engines.
+    - Simplified `DoubleValidator` properties to resolve enum resolution failures on certain systems.
+    - Hardened the Splash-to-MainUI handoff logic for more reliable startup.
+
 ## [v4.24.7] - 2026-04-12
 ### Added
 - **Premium Splash Overhaul**: Re-imagined the startup experience.

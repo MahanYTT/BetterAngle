@@ -75,7 +75,7 @@ Item {
                             // Re-read when profile changes so value always shows on startup
                             text: backend.sensX.toFixed(6)
                             color: "white"
-                            validator: DoubleValidator { bottom: 0.00001; top: 2.0; decimals: 6; notation: DoubleValidator.StandardNotation }
+                            validator: DoubleValidator { bottom: 0.00001; top: 2.0; decimals: 6 }
                             background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: "#333"; border.width: 1 }
                             onEditingFinished: backend.sensX = parseFloat(text)
                             Connections {
@@ -95,7 +95,7 @@ Item {
                             width: parent.width
                             text: backend.sensY.toFixed(6)
                             color: "white"
-                            validator: DoubleValidator { bottom: 0.00001; top: 2.0; decimals: 6; notation: DoubleValidator.StandardNotation }
+                            validator: DoubleValidator { bottom: 0.00001; top: 2.0; decimals: 6 }
                             background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: "#333"; border.width: 1 }
                             onEditingFinished: backend.sensY = parseFloat(text)
                             Connections {
@@ -143,12 +143,12 @@ Item {
                     
                     // NEW: Hotkey Recording Logic
                     function handleHotkey(event, targetSetter) {
-                        let mods = "";
+                        var mods = "";
                         if (event.modifiers & Qt.ControlModifier) mods += "Ctrl + ";
                         if (event.modifiers & Qt.ShiftModifier) mods += "Shift + ";
                         if (event.modifiers & Qt.AltModifier)   mods += "Alt + ";
                         
-                        let key = "";
+                        var key = "";
                         if (event.key >= Qt.Key_F1 && event.key <= Qt.Key_F12) {
                             key = "F" + (event.key - Qt.Key_F1 + 1);
                         } else if (event.key === Qt.Key_Space) {
@@ -162,24 +162,21 @@ Item {
                         } else if (event.key >= Qt.Key_0 && event.key <= Qt.Key_9) {
                             key = String.fromCharCode(event.key);
                         } else if (event.key >= 0x01000020 && event.key <= 0x0100002b) {
-                            // Numpad Support
-                            let names = ["0","1","2","3","4","5","6","7","8","9",".","/"];
+                            var names = ["0","1","2","3","4","5","6","7","8","9",".","/"];
                             key = "Num" + names[event.key - 0x01000020];
                         } else if (event.key >= Qt.Key_VolumeDown && event.key <= Qt.Key_VolumeMute) {
-                            let names = ["Vol-", "Vol+", "Mute"];
+                            var names = ["Vol-", "Vol+", "Mute"];
                             key = names[event.key - Qt.Key_VolumeDown];
                         } else if (event.key === Qt.Key_MediaPlay || event.key === Qt.Key_MediaStop) {
-                            key = event.key === Qt.Key_MediaPlay ? "Play" : "Stop";
+                            key = (event.key === Qt.Key_MediaPlay ? "Play" : "Stop");
                         } else if (event.key === Qt.Key_Control || event.key === Qt.Key_Shift || event.key === Qt.Key_Alt) {
-                            // Only modifiers pressed, don't finalize yet but show progress
-                            return mods.substring(0, mods.length - 3);
+                            return mods.substring(0, mods.length > 3 ? mods.length - 3 : 0);
                         } else {
-                            // Fallback to key text
                             key = event.text.toUpperCase();
                         }
                         
                         if (key !== "") {
-                            let finalBind = mods + key;
+                            var finalBind = mods + key;
                             targetSetter(finalBind);
                             backend.saveKeybinds();
                             return finalBind;
@@ -196,8 +193,8 @@ Item {
                             TextField { 
                                 text: activeFocus ? "Press key..." : backend.keyToggle; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"; readOnly: true
                                 background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
-                                Keys.onPressed: (event) => { 
-                                    let res = handleHotkey(event, (s) => backend.keyToggle = s); 
+                                Keys.onPressed: function(event) { 
+                                    var res = genCol.handleHotkey(event, function(s) { backend.keyToggle = s; }); 
                                     if (res !== "" && event.key !== Qt.Key_Control && event.key !== Qt.Key_Shift && event.key !== Qt.Key_Alt) { 
                                         text = res; focus = false; 
                                     } 
@@ -212,8 +209,8 @@ Item {
                             TextField { 
                                 text: activeFocus ? "Press key..." : backend.keyRoi; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"; readOnly: true
                                 background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
-                                Keys.onPressed: (event) => { 
-                                    let res = handleHotkey(event, (s) => backend.keyRoi = s); 
+                                Keys.onPressed: function(event) { 
+                                    var res = genCol.handleHotkey(event, function(s) { backend.keyRoi = s; }); 
                                     if (res !== "" && event.key !== Qt.Key_Control && event.key !== Qt.Key_Shift && event.key !== Qt.Key_Alt) { 
                                         text = res; focus = false; 
                                     } 
@@ -228,8 +225,8 @@ Item {
                             TextField { 
                                 text: activeFocus ? "Press key..." : backend.keyCross; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"; readOnly: true
                                 background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
-                                Keys.onPressed: (event) => { 
-                                    let res = handleHotkey(event, (s) => backend.keyCross = s); 
+                                Keys.onPressed: function(event) { 
+                                    var res = genCol.handleHotkey(event, function(s) { backend.keyCross = s; }); 
                                     if (res !== "" && event.key !== Qt.Key_Control && event.key !== Qt.Key_Shift && event.key !== Qt.Key_Alt) { 
                                         text = res; focus = false; 
                                     } 
@@ -244,8 +241,8 @@ Item {
                             TextField { 
                                 text: activeFocus ? "Press key..." : backend.keyZero; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"; readOnly: true
                                 background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
-                                Keys.onPressed: (event) => { 
-                                    let res = handleHotkey(event, (s) => backend.keyZero = s); 
+                                Keys.onPressed: function(event) { 
+                                    var res = genCol.handleHotkey(event, function(s) { backend.keyZero = s; }); 
                                     if (res !== "" && event.key !== Qt.Key_Control && event.key !== Qt.Key_Shift && event.key !== Qt.Key_Alt) { 
                                         text = res; focus = false; 
                                     } 
@@ -260,8 +257,8 @@ Item {
                             TextField { 
                                 text: activeFocus ? "Press key..." : backend.keyDebug; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"; readOnly: true
                                 background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
-                                Keys.onPressed: (event) => { 
-                                    let res = handleHotkey(event, (s) => backend.keyDebug = s); 
+                                Keys.onPressed: function(event) { 
+                                    var res = genCol.handleHotkey(event, function(s) { backend.keyDebug = s; }); 
                                     if (res !== "" && event.key !== Qt.Key_Control && event.key !== Qt.Key_Shift && event.key !== Qt.Key_Alt) { 
                                         text = res; focus = false; 
                                     } 
