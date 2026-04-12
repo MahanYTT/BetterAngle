@@ -344,30 +344,9 @@ void BetterAngleBackend::downloadUpdate() {
 void BetterAngleBackend::saveThresholds() { SaveSettings(); }
 
 void BetterAngleBackend::requestShowControlPanel() {
-  qDebug() << "[BOOT] Master Timer triggered. Finalizing transition...";
-
-  // 0. Signal UI to close Splash (Standard Qt method)
-  // Instead of hunting the window down (which looks suspicious to AV),
-  // we just ask the UI to close the splash screen naturally.
   emit closeSplashRequested();
-
-  // Stage 1: Silent Auto-Update Check (REMOVED: Manual-only policy)
-  // We no longer auto-apply updates on boot. User must use the UI button.
-
-  // Stage 2: Ensure Dashboard is loaded
-  qDebug() << "[BOOT] Ensuring Main Dashboard is ready...";
   CreateControlPanel(g_hInstance);
-
-  // Stage 3: Decide where to route the user.
-  if (g_needsSetup || g_allProfiles.empty()) {
-    qDebug() << "[BOOT] Routing to Setup Wizard.";
-    emit showSetupRequested();
-    return;
-  }
-
-  qDebug() << "[BOOT] Routing to Main Dashboard.";
-
-  // 3. Normal boot: show HUD and Dashboard
+  
   if (g_hHUD) {
     ShowWindow(g_hHUD, SW_SHOW);
     UpdateWindow(g_hHUD);

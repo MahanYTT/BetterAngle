@@ -27,11 +27,6 @@ Window {
             mainWindow.requestActivate()
             mainWindow.forceActiveFocus()
         }
-        onShowSetupRequested: {
-            setupWindow.show()
-            setupWindow.raise()
-            setupWindow.requestActivate()
-        }
         onToggleControlPanelRequested: {
             if (mainWindow.visible) mainWindow.hide()
             else {
@@ -42,9 +37,6 @@ Window {
         }
     }
 
-    FirstTimeSetup {
-        id: setupWindow
-    }
 
     Rectangle {
         id: titleBar

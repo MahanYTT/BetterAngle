@@ -1,5 +1,13 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.22] - 2026-04-12
+### Deleted
+- **First-Time Setup Wizard**: Removed the setup wizard entirely for a more streamlined "Straight-to-Work" experience.
+### Added
+- **Silent Initialization**: New installations now automatically create a "Default" profile without user intervention.
+### Optimized
+- **Transition Flow**: App now goes directly from Splash (2.5s) to the Dashboard.
+
 ## [v4.27.21] - 2026-04-12
 ### Fixed
 - **Visual Polish**: Added a 2.5-second minimum duration for the Splash screen to provide consistent visual feedback during ultra-fast startups.

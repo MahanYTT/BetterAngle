@@ -168,12 +168,13 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
                 // DATA READY - WAIT FOR WINDOW BARRIER
                 while (!g_winInitialized) std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 
-                if (g_allProfiles.empty() || g_needsSetup) {
-                    g_needsSetup = true; g_allProfiles.clear();
+                if (g_allProfiles.empty()) {
                     Profile def; def.name = L"Default"; def.sensitivityX = 0.05; def.sensitivityY = 0.05;
                     def.showCrosshair = true; def.crossThickness = 2.0f;
                     def.crossColor = RGB(0, 255, 204); def.tolerance = 2;
                     g_allProfiles.push_back(def); g_selectedProfileIdx = 0;
+                    def.Save(GetProfilesPath() + L"Default.json");
+                    SaveSettings();
                 }
                 if (g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) g_selectedProfileIdx = 0;
                 g_currentProfile = g_allProfiles[g_selectedProfileIdx];
