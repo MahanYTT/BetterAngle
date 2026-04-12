@@ -29,7 +29,7 @@ using namespace Gdiplus;
 
 // Global Definitions
 HINSTANCE g_hInstance = NULL;
-extern ULONG_PTR g_gdiplusToken;
+ULONG_PTR g_gdiplusToken = 0;
 
 // External Globals
 extern BetterAngleBackend* g_backend;

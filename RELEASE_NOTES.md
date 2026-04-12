@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.17] - 2026-04-12
+### Fixed
+- **GDI Token Fix**: Physically defined `g_gdiplusToken` in `BetterAngle.cpp` to resolve the final `LNK2019` unresolved external symbol error.
+- **100% Build Success**: Achieved a clean build and link for the Brain-First architecture.
+
 ## [v4.27.16] - 2026-04-12
 ### Fixed
 - **Final Linker Recovery**: Restored missing `CaptureScreen` and `GetPixelColor` utility functions in `BetterAngle.cpp`.
