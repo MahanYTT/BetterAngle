@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.11] - 2026-04-12
+### Fixed
+- **Synchro-Launch**: Linked the Dashboard transition directly to the background loading completion. The app now opens the exact millisecond it is ready, rather than relying on a hardcoded 3-second 'guess.'
+- **Perfect Timing**: If your computer loads in 1 second, the app opens in 1 second. No time is wasted.
+- **Fail-Safe Integrity**: Maintained the 5-second fail-safe as a secondary defense to ensure a 100% startup success rate on all PCs.
+
 ## [v4.27.10] - 2026-04-12
 ### Fixed
 - **God Mode Recovery**: Resolved a missing property binding that kept the splash progress bar at 0%. 

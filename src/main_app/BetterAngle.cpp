@@ -379,7 +379,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         g_logic.LoadProfile(g_currentProfile.sensitivityX);
         
         g_loadingProgress = 100;
-        qDebug() << "[BOOT] Background Thread: Done.";
+        qDebug() << "[BOOT] Background Thread: Done. Triggering UI transition...";
+        
+        // Synchro-Launch (v4.27.11): Trigger transition on the main thread
+        QMetaObject::invokeMethod(g_backend, "requestShowControlPanel", Qt::QueuedConnection);
     }).detach();
 
     // Create message-only window for raw mouse input
@@ -408,14 +411,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         SetTimer(g_hHUD, 1, 32, NULL);    
         SetTimer(g_hHUD, 2, 30000, NULL); // auto-save
         RefreshHotkeys(g_hHUD);
-    });
-
-    // MASTER BOOT TRANSITION
-    QTimer::singleShot(3000, []() {
-        qDebug() << "[BOOT] 3S Splash Expired. Triggering transition...";
-        if (g_backend) {
-            g_backend->requestShowControlPanel();
-        }
     });
 
     // FAIL-SAFE (v4.27.9): Force transition after 5s no matter what
