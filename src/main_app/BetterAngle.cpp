@@ -38,6 +38,13 @@ extern AngleLogic          g_logic;
 extern std::atomic<int>    g_loadingProgress;
 
 // Helper Functions
+void SetHUDClickable(HWND hWnd, bool clickable) {
+    LONG_PTR exStyle = GetWindowLongPtr(hWnd, GWL_EXSTYLE);
+    if (clickable) exStyle &= ~WS_EX_TRANSPARENT; else exStyle |= WS_EX_TRANSPARENT;
+    SetWindowLongPtr(hWnd, GWL_EXSTYLE, exStyle);
+    SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_NOACTIVATE);
+}
+
 HBITMAP CaptureScreen() {
     HDC hdc = GetDC(NULL);
     HDC hdcMem = CreateCompatibleDC(hdc);
@@ -137,13 +144,6 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
     return DefWindowProc(hWnd, msg, wp, lp);
 }
 
-void SetHUDClickable(HWND hWnd, bool clickable) {
-    LONG_PTR exStyle = GetWindowLongPtr(hWnd, GWL_EXSTYLE);
-    if (clickable) exStyle &= ~WS_EX_TRANSPARENT; else exStyle |= WS_EX_TRANSPARENT;
-    SetWindowLongPtr(hWnd, GWL_EXSTYLE, exStyle);
-    SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_NOACTIVATE);
-}
-
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     Gdiplus::GdiplusStartupInput gsi; Gdiplus::GdiplusStartup(&g_gdiplusToken, &gsi, NULL);
     HANDLE hMutex = CreateMutexW(NULL, TRUE, L"BetterAnglePro_MainInstance_Mutex");
@@ -156,6 +156,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     EnsureEngineInitialized(); ShowSplashScreen();
 
     QTimer::singleShot(0, [hInstance]() {
+        SetProcessDPIAware();
         WNDCLASS wc = { 0 }; wc.lpfnWndProc = HUDWndProc; wc.hInstance = hInstance;
         wc.hCursor = LoadCursor(NULL, IDC_CROSS); wc.lpszClassName = L"BetterAngleHUD"; RegisterClass(&wc);
         WNDCLASS wcMsg = { 0 }; wcMsg.lpfnWndProc = MsgWndProc; wcMsg.hInstance = hInstance;
@@ -192,7 +193,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
 
         HWND hMsgWnd = CreateWindowEx(0, L"BetterAngleMsgWnd", NULL, 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, hInstance, NULL); RegisterRawMouse(hMsgWnd);
         int sw = GetSystemMetrics(SM_CXVIRTUALSCREEN), sh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-        g_hHUD = CreateWindowEx(WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE, L"BetterAngleHUD", L"BetterAngle HUD", WS_POPUP, GetSystemMetrics(SM_XVIRTUALSCREEN), GetSystemMetrics(SM_YVIRTUALSCREEN), sw, sh, NULL, NULL, hInstance, NULL);
+        g_hHUD = CreateWindowEx(WS_EX_TOPMOST|WS_EX_LAYERED|WS_EX_TRANSPARENT|WS_EX_TOOLWINDOW|WS_EX_NOACTIVATE, L"BetterAngleHUD", L"BetterAngle HUD", WS_POPUP, GetSystemMetrics(SM_XVIRTUALSCREEN), GetSystemMetrics(SM_YVIRTUALSCREEN), sw, sh, NULL, NULL, hInstance, NULL);
         SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA);
         g_winInitialized = true;
 

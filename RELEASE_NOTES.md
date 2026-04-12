@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.24] - 2026-04-12
+### Fixed
+- **Build Integrity**: Resolved the 'identifier not found' error by correctly ordering function prototypes in the main engine.
+- **Display Optimization**: Restored high-DPI awareness to ensure the UI scales correctly on 4K and high-res monitors.
+
 ## [v4.27.23] - 2026-04-12
 ### Fixed
 - **Iron-Sight Stability**: Resolved the 'UI Freeze' by correctly implementing `SetLayeredWindowAttributes` for a 100% click-through HUD.
