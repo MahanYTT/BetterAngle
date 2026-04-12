@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.54] - 2026-04-12
+### Fixed
+- **GDI+ Compilation Errors**: Fixed Windows SDK 10.0.26100.0 compatibility issues by correcting include order (windows.h before gdiplus.h) and adding objidl.h include.
+- **Build System**: Resolved GitHub Actions build failures caused by GDI+ header conflicts in newer Windows SDK versions.
+
 ## [v4.27.53] - 2026-04-12
 ### Fixed
 - **Infinite Splash Loading & High CPU Usage**: Fixed multiple infinite animation loops in splash screen causing 10% CPU usage on high-end systems. Added animation cleanup when splash closes.
