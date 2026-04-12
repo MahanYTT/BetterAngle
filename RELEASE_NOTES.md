@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.45] - 2026-04-12
+### Improved
+- **Premium UI Styling**: Now enforcing the 'Basic' Qt Quick style to enable high-end background customization and gradients, significantly improving visual consistency across Windows versions.
+- **Splash Polish**: Re-centered the version number and positioned the branding banner at the top for a cleaner, more proportional first impression.
+- **Logic Stabilization**: Resolved "Binding Loop" warnings in the Dashboard sliders, ensuring jitter-free performance when adjusting sensitivity.
+
 ## [v4.27.44] - 2026-04-12
 ### Fixed
 - **Build Integrity**: Synchronized all `lock_guard` templates with the new `std::recursive_mutex` architecture and added missing headers to `State.cpp`.

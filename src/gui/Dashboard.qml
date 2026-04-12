@@ -125,16 +125,16 @@ Item {
                     RowLayout {
                         Text { text: "Glide if match <"; color: "white"; Layout.preferredWidth: 100 }
                         Slider { 
-                            from: 1; to: 100; value: backend.glideThreshold * 100
-                            onValueChanged: backend.glideThreshold = value / 100.0
+                            from: 1; to: 100; value: Math.round(backend.glideThreshold * 100)
+                            onMoved: backend.glideThreshold = value / 100.0
                         }
                         Text { text: Math.round(backend.glideThreshold * 100).toString() + "%"; color: "#aaa" }
                     }
                     RowLayout {
                         Text { text: "Dive if match >"; color: "white"; Layout.preferredWidth: 100 }
                         Slider { 
-                            from: 1; to: 100; value: backend.freefallThreshold * 100
-                            onValueChanged: backend.freefallThreshold = value / 100.0
+                            from: 1; to: 100; value: Math.round(backend.freefallThreshold * 100)
+                            onMoved: backend.freefallThreshold = value / 100.0
                         }
                         Text { text: Math.round(backend.freefallThreshold * 100).toString() + "%"; color: "#aaa" }
                     }

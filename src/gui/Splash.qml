@@ -156,16 +156,24 @@ Window {
                     }
                 }
 
-                // Centered Version Number (Clean Typography)
-                Text {
-                    text: "VERSION 4.27.44"
-                    color: "#00ffa3"
-                    font.pixelSize: 12
-                    font.bold: true
-                    font.letterSpacing: 3
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    opacity: 0.8
-                }
+        }
+        
+        // Centered Version Number (Exact Window Center v4.27.45)
+        Text {
+            text: "VERSION 4.27.45"
+            color: "#00ffa3"
+            font.pixelSize: 13
+            font.bold: true
+            font.letterSpacing: 4
+            anchors.centerIn: parent
+            opacity: 0.9
+            z: 10 // Ensure it stays above animation layers
+        }
+
+        // ── Content Wrapper (Shifted down below top-banner v4.27.45) ────────
+        Item {
+            anchors.fill: parent
+            anchors.topMargin: 100
 
                 // Brand Main Text (Balanced)
                 Text {

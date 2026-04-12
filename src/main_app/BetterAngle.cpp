@@ -22,6 +22,7 @@ using namespace Gdiplus;
 #include <QQmlContext>
 #include <QTimer>
 #include <QDebug>
+#include <QQuickStyle>
 
 #include "shared/State.h"
 #include "shared/Profile.h"
@@ -175,6 +176,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         // ── GPU Stabilization Hints (Safe-Rendering Mode) ───────────
         QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
         QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
+        QQuickStyle::setStyle("Basic");
 
         LogStartup(">>> STARTUP INITIATED (v" + std::string(VERSION_STR) + ") <<<");
         MigrateLegacyData();
