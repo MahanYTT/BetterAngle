@@ -69,7 +69,6 @@ Window {
             Column {
                 anchors.centerIn: parent
                 spacing: 24
-                horizontalAlignment: Text.AlignHCenter
 
                 // Rotating Brand Icon
                 Item {
@@ -127,7 +126,7 @@ Window {
                         font.letterSpacing: 6
                     }
                     Text {
-                        text: "VERSION 4.25.5"
+                        text: "VERSION 4.25.6"
                         color: "#00ffa3"
                         font.pixelSize: 10
                         font.bold: true

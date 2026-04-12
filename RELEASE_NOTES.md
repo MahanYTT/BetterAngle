@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.25.6] - 2026-04-12
+### Fixed
+- **Splash Syntax Fix**: Resolved a critical syntax error in `Splash.qml` (invalid `horizontalAlignment` property) that was identified by the new diagnostic trap. This finally allows the UI to load and display correctly on launch.
+- **Improved Boot Stability**: Verified that the startup UI sequence (Splash -> Dashboard) is fully functional and free of parsing errors.
+
 ## [v4.25.5] - 2026-04-12
 ### Fixed
 - **Resource Path Hardening**: Standardized all internal QRC paths with explicit prefixes and forced resource initialization at boot. This resolves the recurring "Splash resources failed to load" error.
