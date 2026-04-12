@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.31] - 2026-04-12
+### Fixed
+- **The Steel-Wall**: Hardened every single internal data accessor (Colors, Presets, Offsets, Keybinds) with strict bounds checking. This prevents the "UI breaking the code" crash where the dashboard tried to read user data before the background thread had finished loading it.
+- **Preset Stability**: Fixed a specific memory crash when loading the "Saved Positions" list on a fresh install.
+
 ## [v4.27.30] - 2026-04-12
 ### Fixed
 - **Safety Lock**: Upgraded the startup sequence to detect and handle "Ghost Processes" (hung background instances). The app now warns you if an old version is stuck in memory.

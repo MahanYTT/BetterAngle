@@ -147,67 +147,81 @@ void BetterAngleBackend::syncAndSaveProfile() {
   SaveSettings();
 }
 
-bool BetterAngleBackend::crosshairOn() const { return g_showCrosshair; }
+bool BetterAngleBackend::crosshairOn() const {
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) return true;
+  return g_allProfiles[g_selectedProfileIdx].showCrosshair;
+}
 void BetterAngleBackend::setCrosshairOn(bool v) {
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) return;
+  g_allProfiles[g_selectedProfileIdx].showCrosshair = v;
   g_showCrosshair = v;
   syncAndSaveProfile();
-  if (g_hHUD) {
-    InvalidateRect(g_hHUD, NULL, FALSE);
-    UpdateWindow(g_hHUD);
-  }
+  if (g_hHUD) { InvalidateRect(g_hHUD, NULL, FALSE); UpdateWindow(g_hHUD); }
   emit crosshairChanged();
 }
 
-float BetterAngleBackend::crossThickness() const { return g_crossThickness; }
+float BetterAngleBackend::crossThickness() const {
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) return 2.0f;
+  return g_allProfiles[g_selectedProfileIdx].crossThickness;
+}
 void BetterAngleBackend::setCrossThickness(float v) {
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) return;
+  g_allProfiles[g_selectedProfileIdx].crossThickness = v;
   g_crossThickness = v;
   syncAndSaveProfile();
-  if (g_hHUD) {
-    InvalidateRect(g_hHUD, NULL, FALSE);
-    UpdateWindow(g_hHUD);
-  }
+  if (g_hHUD) { InvalidateRect(g_hHUD, NULL, FALSE); UpdateWindow(g_hHUD); }
   emit crosshairChanged();
 }
 
-float BetterAngleBackend::crossOffsetX() const { return g_crossOffsetX; }
+float BetterAngleBackend::crossOffsetX() const {
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) return 0.0f;
+  return g_allProfiles[g_selectedProfileIdx].crossOffsetX;
+}
 void BetterAngleBackend::setCrossOffsetX(float v) {
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) return;
+  g_allProfiles[g_selectedProfileIdx].crossOffsetX = v;
   g_crossOffsetX = v;
   syncAndSaveProfile();
-  if (g_hHUD) {
-    InvalidateRect(g_hHUD, NULL, FALSE);
-    UpdateWindow(g_hHUD);
-  }
+  if (g_hHUD) { InvalidateRect(g_hHUD, NULL, FALSE); UpdateWindow(g_hHUD); }
   emit crosshairChanged();
 }
 
-float BetterAngleBackend::crossOffsetY() const { return g_crossOffsetY; }
+float BetterAngleBackend::crossOffsetY() const {
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) return 0.0f;
+  return g_allProfiles[g_selectedProfileIdx].crossOffsetY;
+}
 void BetterAngleBackend::setCrossOffsetY(float v) {
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) return;
+  g_allProfiles[g_selectedProfileIdx].crossOffsetY = v;
   g_crossOffsetY = v;
   syncAndSaveProfile();
-  if (g_hHUD) {
-    InvalidateRect(g_hHUD, NULL, FALSE);
-    UpdateWindow(g_hHUD);
-  }
+  if (g_hHUD) { InvalidateRect(g_hHUD, NULL, FALSE); UpdateWindow(g_hHUD); }
   emit crosshairChanged();
 }
 
-bool BetterAngleBackend::crossPulse() const { return g_crossPulse; }
+bool BetterAngleBackend::crossPulse() const {
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) return false;
+  return g_allProfiles[g_selectedProfileIdx].crossPulse;
+}
 void BetterAngleBackend::setCrossPulse(bool v) {
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) return;
+  g_allProfiles[g_selectedProfileIdx].crossPulse = v;
   g_crossPulse = v;
   syncAndSaveProfile();
-  if (g_hHUD) {
-    InvalidateRect(g_hHUD, NULL, FALSE);
-    UpdateWindow(g_hHUD);
-  }
+  if (g_hHUD) { InvalidateRect(g_hHUD, NULL, FALSE); UpdateWindow(g_hHUD); }
   emit crosshairChanged();
 }
 
 QColor BetterAngleBackend::crossColor() const {
-  return QColor(GetRValue(g_crossColor), GetGValue(g_crossColor),
-                GetBValue(g_crossColor));
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) return QColor(0, 255, 204);
+  COLORREF c = g_allProfiles[g_selectedProfileIdx].crossColor;
+  return QColor(GetRValue(c), GetGValue(c), GetBValue(c));
 }
 void BetterAngleBackend::setCrossColor(const QColor &c) {
-  g_crossColor = RGB(c.red(), c.green(), c.blue());
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) return;
+  COLORREF cr = RGB(c.red(), c.green(), c.blue());
+  g_allProfiles[g_selectedProfileIdx].crossColor = cr;
+  g_crossColor = cr;
   syncAndSaveProfile();
   emit crosshairChanged();
 }
@@ -385,7 +399,7 @@ void BetterAngleBackend::finishSetup() {
 
 QStringList BetterAngleBackend::crosshairPresetNames() const {
   QStringList list;
-  if (g_allProfiles.empty())
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return list;
   for (const auto &cp : g_allProfiles[g_selectedProfileIdx].crosshairPresets) {
     list << QString::fromStdWString(cp.name) + QString(" (%1, %2)")
@@ -396,7 +410,7 @@ QStringList BetterAngleBackend::crosshairPresetNames() const {
 }
 
 void BetterAngleBackend::saveCrosshairPreset(const QString &name) {
-  if (g_allProfiles.empty())
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return;
   Profile &p = g_allProfiles[g_selectedProfileIdx];
   CrosshairPreset cp;
@@ -415,12 +429,11 @@ void BetterAngleBackend::saveCrosshairPreset(const QString &name) {
   }
   p.crosshairPresets.push_back(cp);
   p.Save(GetProfilesPath() + p.name + L".json");
-
   emit crosshairPresetsChanged();
 }
 
 void BetterAngleBackend::loadCrosshairPreset(int index) {
-  if (g_allProfiles.empty())
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return;
   Profile &p = g_allProfiles[g_selectedProfileIdx];
   if (index < 0 || index >= (int)p.crosshairPresets.size())
@@ -437,7 +450,7 @@ void BetterAngleBackend::loadCrosshairPreset(int index) {
 }
 
 void BetterAngleBackend::deleteCrosshairPreset(int index) {
-  if (g_allProfiles.empty())
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return;
   Profile &p = g_allProfiles[g_selectedProfileIdx];
   if (index < 0 || index >= (int)p.crosshairPresets.size())
@@ -603,13 +616,13 @@ static void parseFullKey(const QString &s, UINT &outMod, UINT &outKey) {
 }
 
 QString BetterAngleBackend::keyToggle() const {
-  if (g_allProfiles.empty())
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return "Ctrl + U";
   const auto &k = g_allProfiles[g_selectedProfileIdx].keybinds;
   return fullKeyToString(k.toggleMod, k.toggleKey);
 }
 void BetterAngleBackend::setKeyToggle(const QString &s) {
-  if (!g_allProfiles.empty()) {
+  if (!g_allProfiles.empty() && g_selectedProfileIdx >= 0 && g_selectedProfileIdx < (int)g_allProfiles.size()) {
     parseFullKey(s, g_allProfiles[g_selectedProfileIdx].keybinds.toggleMod,
                  g_allProfiles[g_selectedProfileIdx].keybinds.toggleKey);
     syncAndSaveProfile();
@@ -619,13 +632,13 @@ void BetterAngleBackend::setKeyToggle(const QString &s) {
 }
 
 QString BetterAngleBackend::keyRoi() const {
-  if (g_allProfiles.empty())
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return "Ctrl + 8";
   const auto &k = g_allProfiles[g_selectedProfileIdx].keybinds;
   return fullKeyToString(k.roiMod, k.roiKey);
 }
 void BetterAngleBackend::setKeyRoi(const QString &s) {
-  if (!g_allProfiles.empty()) {
+  if (!g_allProfiles.empty() && g_selectedProfileIdx >= 0 && g_selectedProfileIdx < (int)g_allProfiles.size()) {
     parseFullKey(s, g_allProfiles[g_selectedProfileIdx].keybinds.roiMod,
                  g_allProfiles[g_selectedProfileIdx].keybinds.roiKey);
     syncAndSaveProfile();
@@ -635,13 +648,13 @@ void BetterAngleBackend::setKeyRoi(const QString &s) {
 }
 
 QString BetterAngleBackend::keyCross() const {
-  if (g_allProfiles.empty())
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return "F10";
   const auto &k = g_allProfiles[g_selectedProfileIdx].keybinds;
   return fullKeyToString(k.crossMod, k.crossKey);
 }
 void BetterAngleBackend::setKeyCross(const QString &s) {
-  if (!g_allProfiles.empty()) {
+  if (!g_allProfiles.empty() && g_selectedProfileIdx >= 0 && g_selectedProfileIdx < (int)g_allProfiles.size()) {
     parseFullKey(s, g_allProfiles[g_selectedProfileIdx].keybinds.crossMod,
                  g_allProfiles[g_selectedProfileIdx].keybinds.crossKey);
     syncAndSaveProfile();
@@ -651,13 +664,13 @@ void BetterAngleBackend::setKeyCross(const QString &s) {
 }
 
 QString BetterAngleBackend::keyZero() const {
-  if (g_allProfiles.empty())
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return "Ctrl + G";
   const auto &k = g_allProfiles[g_selectedProfileIdx].keybinds;
   return fullKeyToString(k.zeroMod, k.zeroKey);
 }
 void BetterAngleBackend::setKeyZero(const QString &s) {
-  if (!g_allProfiles.empty()) {
+  if (!g_allProfiles.empty() && g_selectedProfileIdx >= 0 && g_selectedProfileIdx < (int)g_allProfiles.size()) {
     parseFullKey(s, g_allProfiles[g_selectedProfileIdx].keybinds.zeroMod,
                  g_allProfiles[g_selectedProfileIdx].keybinds.zeroKey);
     syncAndSaveProfile();
@@ -667,13 +680,13 @@ void BetterAngleBackend::setKeyZero(const QString &s) {
 }
 
 QString BetterAngleBackend::keyDebug() const {
-  if (g_allProfiles.empty())
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return "Ctrl + 9";
   const auto &k = g_allProfiles[g_selectedProfileIdx].keybinds;
   return fullKeyToString(k.debugMod, k.debugKey);
 }
 void BetterAngleBackend::setKeyDebug(const QString &s) {
-  if (!g_allProfiles.empty()) {
+  if (!g_allProfiles.empty() && g_selectedProfileIdx >= 0 && g_selectedProfileIdx < (int)g_allProfiles.size()) {
     parseFullKey(s, g_allProfiles[g_selectedProfileIdx].keybinds.debugMod,
                  g_allProfiles[g_selectedProfileIdx].keybinds.debugKey);
     syncAndSaveProfile();
@@ -683,7 +696,7 @@ void BetterAngleBackend::setKeyDebug(const QString &s) {
 }
 
 void BetterAngleBackend::saveKeybinds() {
-  if (g_allProfiles.empty())
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return;
   Profile &p = g_allProfiles[g_selectedProfileIdx];
   p.Save(GetProfilesPath() + p.name + L".json");
