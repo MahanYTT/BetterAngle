@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.2] - 2026-04-12
+### Fixed
+- **Startup Sequence**: Restored the 3-second 'Master Boot Transition' timer and system tray integration. This ensures the splash screen correctly waits for 3 seconds before routing users to the setup wizard or dashboard.
+- **Hotkeys**: Re-enabled startup hotkey registration for immediate toggle access.
+- **Timing Accuracy**: Synchronized the Win32 timers with the QML engine initialization for a smoother boot flow.
+
 ## [v4.27.1] - 2026-04-12
 ### Fixed
 - **Boot Reliability**: Deferred all background processing (Detector/Updater) until 2 seconds after startup to ensure 0% CPU usage during engine load. This resolves "Smart" AV security suspensions and the '9MB RAM hang' issue.

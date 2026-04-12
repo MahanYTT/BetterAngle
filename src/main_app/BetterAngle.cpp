@@ -419,8 +419,14 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         g_virtScreenX, g_virtScreenY, sw, sh,
         NULL, NULL, hInstance, NULL);
 
-    // Ensure the HUD is truly transparent and click-through
     SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA);
+
+    // Restore critical Win32 logic (Tray, Timers, Hotkeys)
+    AddSystrayIcon(g_hHUD);
+    SetTimer(g_hHUD, 1, 16, NULL);    // ~60 fps repaint
+    SetTimer(g_hHUD, 2, 30000, NULL); // auto-save
+    SetTimer(g_hHUD, 3, 3000, NULL);  // Master Boot Transition (3s splash)
+    RefreshHotkeys(g_hHUD);
 
     // QML Init
     EnsureEngineInitialized();
