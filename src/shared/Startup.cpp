@@ -1,8 +1,13 @@
 // windows.h must come before gdiplus.h for GDI+ compatibility
-#include <gdiplus.h>
 #include <objidl.h>
 #include <windows.h>
 
+// Define GDIPLUS_OLDEST_SUPPORTED_VERSION for Windows SDK 10.0.26100.0
+// compatibility
+#ifndef GDIPLUS_OLDEST_SUPPORTED_VERSION
+#define GDIPLUS_OLDEST_SUPPORTED_VERSION 0x0110
+#endif
+#include <gdiplus.h>
 
 #include <chrono>
 #include <string>

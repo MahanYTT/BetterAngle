@@ -6,7 +6,6 @@
 #include <shlobj.h>
 #include <windows.h>
 
-
 #include <algorithm>
 #include <atomic>
 #include <chrono>
