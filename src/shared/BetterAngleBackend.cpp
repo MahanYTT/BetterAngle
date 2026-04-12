@@ -497,6 +497,21 @@ static UINT stringToVk(const QString &s) {
     return VK_MEDIA_PLAY_PAUSE;
   if (upper == "STOP")
     return VK_MEDIA_STOP;
+  if (upper.startsWith("NUM")) {
+      QString numStr = upper.mid(3);
+      if (numStr == "0") return VK_NUMPAD0;
+      if (numStr == "1") return VK_NUMPAD1;
+      if (numStr == "2") return VK_NUMPAD2;
+      if (numStr == "3") return VK_NUMPAD3;
+      if (numStr == "4") return VK_NUMPAD4;
+      if (numStr == "5") return VK_NUMPAD5;
+      if (numStr == "6") return VK_NUMPAD6;
+      if (numStr == "7") return VK_NUMPAD7;
+      if (numStr == "8") return VK_NUMPAD8;
+      if (numStr == "9") return VK_NUMPAD9;
+      if (numStr == ".") return VK_DECIMAL;
+      if (numStr == "/") return VK_DIVIDE;
+  }
   return 0;
 }
 
@@ -541,6 +556,12 @@ static QString vkToString(UINT vk) {
     return "SHIFT";
   if (vk == VK_MENU)
     return "ALT";
+  if (vk >= VK_NUMPAD0 && vk <= VK_NUMPAD9)
+    return "Num" + QString::number(vk - VK_NUMPAD0);
+  if (vk == VK_DECIMAL)
+    return "Num.";
+  if (vk == VK_DIVIDE)
+    return "Num/";
   return "";
 }
 

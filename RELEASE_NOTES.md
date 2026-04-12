@@ -1,5 +1,15 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.24.9] - 2026-04-12
+### Added
+- **Ultra-Responsive Hotkey Overhaul**:
+    - **Live Recording**: You can now see combinations (e.g., `Ctrl + Alt + ...`) build up in real-time as you hold the keys.
+    - **Expanded Mapping**: Added full support for Numpad keys (`Num0`-`Num9`, `Num.`, `Num/`).
+    - **Automatic Formatting**: Binds now automatically space and join with the ` + ` sign as you type.
+- **Reliability Fixes**:
+    - Removed `readOnly` restrictions that were preventing key detection on some systems.
+    - Added `Keys.onReleased` tracking to keep visual feedback in sync with your fingers.
+
 ## [v4.24.8] - 2026-04-12
 ### Fixed
 - **UI Stability Patch**: Fixed a critical "Could not load Main UI" error.
