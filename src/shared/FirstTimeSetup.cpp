@@ -39,10 +39,12 @@ void FinishSetup() {
     try { if (!g_setupSensX.empty()) sensX  = std::stod(g_setupSensX); } catch(...) {}
     try { if (!g_setupSensY.empty()) sensY  = std::stod(g_setupSensY); } catch(...) {}
     
-    p.sensitivityX = (std::max)(0.0001, sensX);
-    p.sensitivityY = (std::max)(0.0001, sensY);
-
+    // Only update sensitivity if we're definitively in the initial setup flow
+    // or if the profile is brand new. If it's already set (e.g. by QML Backend), 
+    // we take the existing values.
     if (g_allProfiles.empty()) {
+        p.sensitivityX = (std::max)(0.0001, sensX);
+        p.sensitivityY = (std::max)(0.0001, sensY);
         p.Save(GetProfilesPath() + L"Default.json");
         g_allProfiles.push_back(p);
         g_selectedProfileIdx = 0;
@@ -51,12 +53,15 @@ void FinishSetup() {
             g_selectedProfileIdx = 0;
         }
         Profile& e = g_allProfiles[g_selectedProfileIdx];
-        e.sensitivityX = p.sensitivityX;
-        e.sensitivityY = p.sensitivityY;
+        // If they are STILL at default 0.05, then we try the detected/typed ones
+        if (e.sensitivityX == 0.05) e.sensitivityX = (std::max)(0.0001, sensX);
+        if (e.sensitivityY == 0.05) e.sensitivityY = (std::max)(0.0001, sensY);
         e.Save(GetProfilesPath() + e.name + L".json");
     }
 
     g_setupComplete = true; 
+    extern bool g_needsSetup;
+    g_needsSetup = false;
     SaveSettings(); // Force atomic save now
 
     // Create a hidden marker file for absolute persistence (even if JSON is lost)

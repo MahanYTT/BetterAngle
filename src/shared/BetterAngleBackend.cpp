@@ -351,22 +351,28 @@ void BetterAngleBackend::requestToggleControlPanel() {
 }
 
 void BetterAngleBackend::finishSetup() {
-  extern void FinishSetup(); // from FirstTimeSetup.cpp
+  // 1. Sync current state (from QML fields) into the profile
+  syncAndSaveProfile();
+
+  // 2. Call the legacy helper (now safeguarded) for marker/atomic persistence
+  extern void FinishSetup(); 
   FinishSetup();
 
-  // Refresh profiles
-  g_allProfiles = GetProfiles(GetProfilesPath());
+  // 3. Mark setup as definitively done in persistent state
+  g_setupComplete = true;
   g_needsSetup = false;
+  
+  // 4. Force atomic save of settings.json
   SaveSettings();
 
-  // Now show the Overlay and Dashboard
-  if (!g_allProfiles.empty()) {
-    if (g_hHUD) {
-      ShowWindow(g_hHUD, SW_SHOW);
-      UpdateWindow(g_hHUD);
-    }
-    emit showControlPanelRequested();
+  // 5. Final HUD/Dashboard reveal
+  if (g_hHUD) {
+    ShowWindow(g_hHUD, SW_SHOW);
+    UpdateWindow(g_hHUD);
+    InvalidateRect(g_hHUD, NULL, FALSE);
   }
+  emit profileChanged();
+  emit showControlPanelRequested();
 }
 
 QStringList BetterAngleBackend::crosshairPresetNames() const {

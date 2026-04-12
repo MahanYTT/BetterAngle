@@ -2,6 +2,11 @@
 - **Compilation Stability Patch:** Resolved `undeclared identifier` errors for `HUDWndProc`, `MsgWndProc`, and `DetectorThread`.
 - **Project Cleanup:** Deduplicated source entries in `CMakeLists.txt` for a cleaner build structure.
 
+### BetterAngle Pro v4.24.4
+- **Calibration Wizard Completion Fix:** Fixed a critical synchronization issue where the "Finish Setup" button was being overwritten by legacy default values.
+- **Unified Setup Flags:** Synchronized `g_needsSetup` and `g_setupComplete` to ensure the wizard never reappears once finished.
+- **Atomics & Persistence:** Optimized the profile save routine to ensure user settings are preserved across restarts.
+
 ### BetterAngle Pro v4.24.3
 - **Linker Error Fix:** Resolved unresolved external symbol `RefreshHotkeys` (LNK2019/LNK1120) by ensuring consistent `__cdecl` calling convention and removing redundant forward declarations.
 

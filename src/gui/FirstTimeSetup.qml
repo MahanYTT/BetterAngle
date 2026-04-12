@@ -108,10 +108,10 @@ Window {
                 width: parent.width
                 height: 44
                 onClicked: {
+                    setupWindow.visible = false
                     backend.setSensX(parseFloat(sensXInput.text))
                     backend.setSensY(parseFloat(sensYInput.text))
                     backend.finishSetup()
-                    setupWindow.visible = false
                 }
                 contentItem: Text { text: parent.text; color: "white"; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                 background: Rectangle { color: "#0080ff"; radius: 4 }
