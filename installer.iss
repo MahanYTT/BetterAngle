@@ -35,6 +35,13 @@ Name: "{autoprograms}\BetterAngle Pro"; Filename: "{app}\BetterAngle.exe"
 Name: "{autodesktop}\BetterAngle Pro"; Filename: "{app}\BetterAngle.exe"; IconFilename: "{app}\app_icon.ico"; IconIndex: 0; Tasks: desktopicon
 Name: "{autoprograms}\BetterAngle Pro\Uninstall BetterAngle"; Filename: "{app}\uninstaller.exe"
 
+[UninstallDelete]
+; Remove all application data from AppData directories
+Type: filesandordirs; Name: "{localappdata}\BetterAngle"
+Type: filesandordirs; Name: "{localappdata}\BetterAngle Pro"
+Type: filesandordirs; Name: "{userappdata}\BetterAngle"
+Type: filesandordirs; Name: "{userappdata}\BetterAngle Pro"
+
 [Run]
 ; Install Visual C++ Runtime silently before launching the app.
 ; Required on clean systems without Visual Studio installed.

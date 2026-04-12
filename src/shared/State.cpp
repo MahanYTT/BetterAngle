@@ -45,67 +45,96 @@ float g_freefallThreshold = 0.20f;
 extern std::recursive_mutex g_profileMutex;
 
 std::wstring GetAppRootPath() {
-    wchar_t appdata[MAX_PATH];
-    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) {
-        std::wstring path = std::wstring(appdata) + L"\\BetterAngle Pro";
-        CreateDirectoryW(path.c_str(), NULL);
-        return path + L"\\";
+  // Check for portable mode - if "portable.flag" exists in executable directory
+  wchar_t exePath[MAX_PATH];
+  if (GetModuleFileNameW(NULL, exePath, MAX_PATH)) {
+    std::wstring exeDir = exePath;
+    size_t lastSlash = exeDir.find_last_of(L"\\/");
+    if (lastSlash != std::wstring::npos) {
+      exeDir = exeDir.substr(0, lastSlash + 1);
+      std::wstring flagPath = exeDir + L"portable.flag";
+
+      DWORD attrs = GetFileAttributesW(flagPath.c_str());
+      if (attrs != INVALID_FILE_ATTRIBUTES &&
+          !(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
+        // Portable mode: use executable directory for data
+        std::wstring dataDir = exeDir + L"Data\\";
+        CreateDirectoryW(dataDir.c_str(), NULL);
+        return dataDir;
+      }
     }
-    return L"";
+  }
+
+  // Normal mode: use AppData
+  wchar_t appdata[MAX_PATH];
+  if (SUCCEEDED(
+          SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) {
+    std::wstring path = std::wstring(appdata) + L"\\BetterAngle Pro";
+    CreateDirectoryW(path.c_str(), NULL);
+    return path + L"\\";
+  }
+  return L"";
 }
 
 #include <filesystem>
 namespace fs = std::filesystem;
 
-void LogStartup(const std::string& msg); // Forward declaration
+void LogStartup(const std::string &msg); // Forward declaration
 
 void MigrateLegacyData() {
-    wchar_t appdata[MAX_PATH];
-    if (FAILED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) return;
+  wchar_t appdata[MAX_PATH];
+  if (FAILED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata)))
+    return;
 
-    std::wstring legacyRootStr = std::wstring(appdata) + L"\\BetterAngle";
-    std::wstring proRootStr = std::wstring(appdata) + L"\\BetterAngle Pro";
+  std::wstring legacyRootStr = std::wstring(appdata) + L"\\BetterAngle";
+  std::wstring proRootStr = std::wstring(appdata) + L"\\BetterAngle Pro";
 
-    fs::path legacyRoot(legacyRootStr);
-    fs::path proRoot(proRootStr);
+  fs::path legacyRoot(legacyRootStr);
+  fs::path proRoot(proRootStr);
 
-    if (!fs::exists(legacyRoot)) return;
+  if (!fs::exists(legacyRoot))
+    return;
 
-    try {
-        LogStartup("Migration: Initiating Safe-Harbor verified copy...");
-        if (!fs::exists(proRoot)) fs::create_directories(proRoot);
+  try {
+    LogStartup("Migration: Initiating Safe-Harbor verified copy...");
+    if (!fs::exists(proRoot))
+      fs::create_directories(proRoot);
 
-        // Recursive Copy with Merge support
-        int movedCount = 0;
-        for (const auto& entry : fs::recursive_directory_iterator(legacyRoot)) {
-            if (entry.is_regular_file()) {
-                fs::path relative = fs::relative(entry.path(), legacyRoot);
-                fs::path destPath = proRoot / relative;
+    // Recursive Copy with Merge support
+    int movedCount = 0;
+    for (const auto &entry : fs::recursive_directory_iterator(legacyRoot)) {
+      if (entry.is_regular_file()) {
+        fs::path relative = fs::relative(entry.path(), legacyRoot);
+        fs::path destPath = proRoot / relative;
 
-                if (!fs::exists(destPath.parent_path())) {
-                    fs::create_directories(destPath.parent_path());
-                }
-
-                fs::copy_file(entry.path(), destPath, fs::copy_options::overwrite_existing);
-                movedCount++;
-            }
+        if (!fs::exists(destPath.parent_path())) {
+          fs::create_directories(destPath.parent_path());
         }
 
-        LogStartup("Migration: Verified " + std::to_string(movedCount) + " files. Cleanup initiated...");
-
-        // Safety check: Ensure the critical settings file exists in the new home before deleting the old home
-        if (movedCount > 0 || fs::exists(proRoot / "settings.json")) {
-            fs::remove_all(legacyRoot);
-            LogStartup("Migration: Safe-Harbor complete. Legacy data purged.");
-        } else {
-            LogStartup("Migration Warning: Verification failed. Legacy data preserved.");
-        }
-
-    } catch (const fs::filesystem_error& e) {
-        LogStartup("Migration Error: " + std::string(e.what()));
-    } catch (...) {
-        LogStartup("Migration Error: Unknown failure during Safe-Harbor move.");
+        fs::copy_file(entry.path(), destPath,
+                      fs::copy_options::overwrite_existing);
+        movedCount++;
+      }
     }
+
+    LogStartup("Migration: Verified " + std::to_string(movedCount) +
+               " files. Cleanup initiated...");
+
+    // Safety check: Ensure the critical settings file exists in the new home
+    // before deleting the old home
+    if (movedCount > 0 || fs::exists(proRoot / "settings.json")) {
+      fs::remove_all(legacyRoot);
+      LogStartup("Migration: Safe-Harbor complete. Legacy data purged.");
+    } else {
+      LogStartup(
+          "Migration Warning: Verification failed. Legacy data preserved.");
+    }
+
+  } catch (const fs::filesystem_error &e) {
+    LogStartup("Migration Error: " + std::string(e.what()));
+  } catch (...) {
+    LogStartup("Migration Error: Unknown failure during Safe-Harbor move.");
+  }
 }
 
 std::wstring GetProfilesPath() {

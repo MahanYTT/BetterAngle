@@ -99,6 +99,13 @@ jobs:
       - name: Create Portable Zip
         shell: pwsh
         run: |
+          # Create portable.flag file in the release directory
+          $portableFlag = "build/Release/portable.flag"
+          "Portable Mode - Data stored in Data/ folder" | Out-File -FilePath $portableFlag -Encoding ascii
+          
+          # Create Data directory for portable mode
+          New-Item -ItemType Directory -Force -Path "build/Release/Data"
+          
           Compress-Archive -Path build/Release/* -DestinationPath bin/BetterAngle_Portable.zip
 
       - name: Create GitHub Release
@@ -107,7 +114,6 @@ jobs:
           files: |
             bin/BetterAngle_Setup.exe
             bin/BetterAngle_Portable.zip
-            build/Release/BetterAngle.exe
           tag_name: ${{ env.TAG }}
           name: BetterAngle Pro ${{ env.TAG }}
           body_path: CURRENT_RELEASE_NOTES.md

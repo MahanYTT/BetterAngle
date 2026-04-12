@@ -1,5 +1,15 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.52] - 2026-04-12
+### Added
+- **Portable Mode Support**: Added detection of 'portable.flag' file to store all application data in 'Data/' folder within executable directory.
+- **Clean Uninstallation**: Installer now removes all AppData traces during uninstallation (BetterAngle and BetterAngle Pro folders).
+
+### Changed
+- **Release Artifacts**: Removed standalone BetterAngle.exe from GitHub releases. Now only provides:
+  - `BetterAngle_Setup.exe` - Full installer with clean uninstall
+  - `BetterAngle_Portable.zip` - Portable version with self-contained data storage
+
 ## [v4.27.51] - 2026-04-12
 ### Fixed
 - **GetTickCount() Wrap-Around Bug**: Fixed potential infinite loop in splash screen when system timer wraps after 49.7 days. Added proper handling for 32-bit timer overflow.
