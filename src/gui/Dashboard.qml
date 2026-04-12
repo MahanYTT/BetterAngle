@@ -80,7 +80,7 @@ Item {
                             onEditingFinished: backend.sensX = parseFloat(text)
                             Connections {
                                 target: backend
-                                onProfileChanged: sensXField.text = backend.sensX.toFixed(1)
+                                function onProfileChanged() { sensXField.text = backend.sensX.toFixed(1) }
                             }
                         }
                     }
@@ -100,7 +100,7 @@ Item {
                             onEditingFinished: backend.sensY = parseFloat(text)
                             Connections {
                                 target: backend
-                                onProfileChanged: sensYField.text = backend.sensY.toFixed(1)
+                                function onProfileChanged() { sensYField.text = backend.sensY.toFixed(1) }
                             }
                         }
                     }
@@ -644,7 +644,7 @@ Item {
 
                         Connections {
                             target: backend
-                            onCrosshairPresetsChanged: presetList.model = backend.crosshairPresetNames()
+                            function onCrosshairPresetsChanged() { presetList.model = backend.crosshairPresetNames() }
                         }
 
                         ListView {
@@ -699,8 +699,8 @@ Item {
                 Text { text: "Tolerance (color match ±)"; color: "white" }
                 Slider {
                     width: parent.width
-                    from: 0; to: 120; value: backend.tolerance
-                    onValueChanged: backend.tolerance = Math.round(value)
+                    from: 0.1; to: 1.0; value: backend.transparency
+                    onMoved: backend.transparency = value
                 }
                 Text { text: "Value: " + backend.tolerance; color: "#aaa" }
             }
@@ -730,10 +730,10 @@ Item {
                 Text { text: "DIVE THRESHOLDS"; color: "#666"; font.pixelSize: 12; topPadding: 10 }
                 
                 Text { text: "Glide Threshold"; color: "white" }
-                Slider { width: parent.width; from: 0.01; to: 0.5; value: backend.glideThreshold; onValueChanged: backend.glideThreshold = value }
+                Slider { width: parent.width; from: 0.01; to: 0.5; value: backend.glideThreshold; onMoved: backend.glideThreshold = value }
 
                 Text { text: "Freefall Threshold"; color: "white" }
-                Slider { width: parent.width; from: 0.01; to: 0.5; value: backend.freefallThreshold; onValueChanged: backend.freefallThreshold = value }
+                Slider { width: parent.width; from: 0.01; to: 0.5; value: backend.freefallThreshold; onMoved: backend.freefallThreshold = value }
 
                 Button {
                     text: "SAVE THRESHOLDS"

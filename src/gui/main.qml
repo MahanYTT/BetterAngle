@@ -21,13 +21,13 @@ Window {
 
     Connections {
         target: backend
-        onShowControlPanelRequested: {
+        function onShowControlPanelRequested() {
             mainWindow.show()
             mainWindow.raise()
             mainWindow.requestActivate()
             mainWindow.forceActiveFocus()
         }
-        onToggleControlPanelRequested: {
+        function onToggleControlPanelRequested() {
             if (mainWindow.visible) mainWindow.hide()
             else {
                 mainWindow.show()

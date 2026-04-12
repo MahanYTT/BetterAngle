@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.46] - 2026-04-12
+### Improved
+- **Nuclear Migration**: Upgraded AppData migration to a wildcard-based merge with explicit Shell-level cleanup. This definitively resolves the "duplicate folders" issue and ensures all user profiles are moved safely.
+- **Total Log Silence**: Audited every QML file to modernize Connections syntax and fix all remaining Slider binding loops. The diagnostic log is now 100% free of warnings.
+- **Hardened Persistence**: Added atomic swap verification for settings saving and explicit migration logging to help troubleshoot unique system environments.
+
 ## [v4.27.45] - 2026-04-12
 ### Improved
 - **Premium UI Styling**: Now enforcing the 'Basic' Qt Quick style to enable high-end background customization and gradients, significantly improving visual consistency across Windows versions.

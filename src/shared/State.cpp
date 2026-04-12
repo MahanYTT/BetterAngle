@@ -54,6 +54,8 @@ std::wstring GetAppRootPath() {
     return L"";
 }
 
+void LogStartup(const std::string& msg); // Forward declaration
+
 void MigrateLegacyData() {
     wchar_t appdata[MAX_PATH];
     if (FAILED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) return;
@@ -61,60 +63,42 @@ void MigrateLegacyData() {
     std::wstring legacyRoot = std::wstring(appdata) + L"\\BetterAngle";
     std::wstring proRoot = std::wstring(appdata) + L"\\BetterAngle Pro";
 
-    if (GetFileAttributesW(legacyRoot.c_str()) == INVALID_FILE_ATTRIBUTES) return; // No legacy folder
+    if (GetFileAttributesW(legacyRoot.c_str()) == INVALID_FILE_ATTRIBUTES) return; 
 
-    // 1. Ensure Pro folder exists
+    LogStartup("Migration: Found legacy data. Initiating nuclear merge...");
     CreateDirectoryW(proRoot.c_str(), NULL);
 
-    // 2. Move main settings
-    std::wstring oldSettings = legacyRoot + L"\\settings.json";
-    std::wstring newSettings = proRoot + L"\\settings.json";
-    if (GetFileAttributesW(oldSettings.c_str()) != INVALID_FILE_ATTRIBUTES) {
-        MoveFileW(oldSettings.c_str(), newSettings.c_str());
-    }
-
-    // 3. Move Profiles folder
-    std::wstring oldProfiles = legacyRoot + L"\\profiles";
-    std::wstring newProfiles = proRoot + L"\\profiles";
-    if (GetFileAttributesW(oldProfiles.c_str()) != INVALID_FILE_ATTRIBUTES) {
-        // MoveFileW only works on directories if they are on the same volume and the target doesn't exist.
-        // If newProfiles exists, we might need a more robust merge, but for now, simple move:
-        if (GetFileAttributesW(newProfiles.c_str()) == INVALID_FILE_ATTRIBUTES) {
-            MoveFileW(oldProfiles.c_str(), newProfiles.c_str());
-        }
-    }
-
-    // 4. Move startup log if present
-    std::wstring oldLog = legacyRoot + L"\\startup.log";
-    std::wstring newLog = proRoot + L"\\startup.log";
-    if (GetFileAttributesW(oldLog.c_str()) != INVALID_FILE_ATTRIBUTES) {
-        // Append or replace? Let's just move it if Pro log doesn't exist yet
-        if (GetFileAttributesW(newLog.c_str()) == INVALID_FILE_ATTRIBUTES) {
-            MoveFileW(oldLog.c_str(), newLog.c_str());
-        } else {
-            DeleteFileW(oldLog.c_str()); // Already have a pro log, discard legacy
-        }
-    }
-
-    // 5. Cleanup legacy root
-    // Using SHFileOperationW for recursive move/merge/delete - the proper Windows way
     SHFILEOPSTRUCTW fileOp = { 0 };
     fileOp.hwnd = NULL;
     fileOp.wFunc = FO_MOVE;
     
-    // Paths must be double-null terminated for SHFileOperation
+    // Wildcard: move everything inside BetterAngle to BetterAngle Pro
+    std::wstring fromPath = legacyRoot + L"\\*";
     wchar_t from[MAX_PATH + 2] = { 0 };
     wchar_t to[MAX_PATH + 2] = { 0 };
-    wcscpy_s(from, legacyRoot.c_str());
+    wcscpy_s(from, fromPath.c_str());
     wcscpy_s(to, proRoot.c_str());
     
     fileOp.pFrom = from;
     fileOp.pTo = to;
-    fileOp.fFlags = FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI | FOF_NOCONFIRMMKDIR;
+    fileOp.fFlags = FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI | FOF_NOCONFIRMMKDIR | FOF_RENAMEONCOLLISION;
     
     int result = SHFileOperationW(&fileOp);
     if (result == 0) {
-        RemoveDirectoryW(legacyRoot.c_str()); // Final cleanup attempt
+        LogStartup("Migration: Shell merge complete. Cleaning roots...");
+        
+        // Nuclear Delete: Ensure the legacy folder is completely gone
+        SHFILEOPSTRUCTW delOp = { 0 };
+        delOp.wFunc = FO_DELETE;
+        wchar_t delPath[MAX_PATH + 2] = { 0 };
+        wcscpy_s(delPath, legacyRoot.c_str());
+        delOp.pFrom = delPath;
+        delOp.fFlags = FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI;
+        SHFileOperationW(&delOp);
+        
+        LogStartup("Migration: Nuclear cleanup success.");
+    } else {
+        LogStartup("Migration: Shell merge failed (Code: " + std::to_string(result) + ")");
     }
 }
 
