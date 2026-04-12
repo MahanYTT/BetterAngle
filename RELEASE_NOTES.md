@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.32] - 2026-04-12
+### Fixed
+- **Atomic Sync**: Resolved the "5% Splash Hang" by implementing a master threading-lock between the loading thread and the UI.
+- **Branding Perfection**: Forced the new transparent circular logo onto the desktop shortcut and start menu to bypass Windows icon caching.
+- **Build Integrity**: Ensured all icon assets are correctly exported to the installer payload.
+
 ## [v4.27.31] - 2026-04-12
 ### Fixed
 - **The Steel-Wall**: Hardened every single internal data accessor (Colors, Presets, Offsets, Keybinds) with strict bounds checking. This prevents the "UI breaking the code" crash where the dashboard tried to read user data before the background thread had finished loading it.

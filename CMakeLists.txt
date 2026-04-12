@@ -21,6 +21,9 @@ list(GET VER_LIST 2 V_PAT)
 add_definitions(-DUNICODE -D_UNICODE
                -DV_MAJ=${V_MAJ} -DV_MIN=${V_MIN} -DV_PAT=${V_PAT})
 
+# Copy Icon for Installer
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/app_icon.ico" DESTINATION "${CMAKE_BINARY_DIR}/Release")
+
 set(SRC_FILES
     src/main_app/BetterAngle.cpp
     src/main_app/ThresholdWizard.cpp

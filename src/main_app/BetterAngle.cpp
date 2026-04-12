@@ -36,6 +36,7 @@ std::atomic<bool> g_winInitialized{false};
 extern BetterAngleBackend* g_backend;
 extern AngleLogic          g_logic;
 extern std::atomic<int>    g_loadingProgress;
+extern std::mutex          g_profileMutex;
 
 // Helper Functions
 void SetHUDClickable(HWND hWnd, bool clickable) {
@@ -161,23 +162,35 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     std::thread([hInstance]() {
         auto startTime = std::chrono::steady_clock::now();
         try {
-            g_loadingProgress = 10; LoadSettings();
-            g_loadingProgress = 30; CleanupUpdateJunk();
-            g_loadingProgress = 40; g_allProfiles = GetProfiles(GetProfilesPath());
-            g_loadingProgress = 70;
+            g_loadingProgress = 10;
+            { std::lock_guard<std::mutex> lock(g_profileMutex); LoadSettings(); }
             
-            if (g_allProfiles.empty()) {
-                Profile def; def.name = L"Default"; def.sensitivityX = 0.05; def.sensitivityY = 0.05;
-                def.showCrosshair = true; def.crossThickness = 2.0f;
-                def.crossColor = RGB(0, 255, 204); def.tolerance = 2;
-                g_allProfiles.push_back(def); g_selectedProfileIdx = 0;
-                def.Save(GetProfilesPath() + L"Default.json"); SaveSettings();
+            g_loadingProgress = 30;
+            CleanupUpdateJunk();
+            
+            g_loadingProgress = 40;
+            { 
+                std::lock_guard<std::mutex> lock(g_profileMutex); 
+                g_allProfiles = GetProfiles(GetProfilesPath()); 
+                if (g_allProfiles.empty()) {
+                    Profile def; def.name = L"Default"; def.sensitivityX = 0.05; def.sensitivityY = 0.05;
+                    def.showCrosshair = true; def.crossThickness = 2.0f;
+                    def.crossColor = RGB(0, 255, 204); def.tolerance = 2;
+                    g_allProfiles.push_back(def); g_selectedProfileIdx = 0;
+                    def.Save(GetProfilesPath() + L"Default.json"); SaveSettings();
+                }
+                if (g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) g_selectedProfileIdx = 0;
+                g_currentProfile = g_allProfiles[g_selectedProfileIdx];
             }
-            if (g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) g_selectedProfileIdx = 0;
-            g_currentProfile = g_allProfiles[g_selectedProfileIdx];
-            g_crossThickness = g_currentProfile.crossThickness; g_crossColor = g_currentProfile.crossColor;
-            g_crossOffsetX = g_currentProfile.crossOffsetX; g_crossOffsetY = g_currentProfile.crossOffsetY;
-            g_crossPulse = g_currentProfile.crossPulse; g_logic.LoadProfile(g_currentProfile.sensitivityX);
+            
+            g_loadingProgress = 70;
+            {
+                std::lock_guard<std::mutex> lock(g_profileMutex);
+                g_crossThickness = g_currentProfile.crossThickness; g_crossColor = g_currentProfile.crossColor;
+                g_crossOffsetX = g_currentProfile.crossOffsetX; g_crossOffsetY = g_currentProfile.crossOffsetY;
+                g_crossPulse = g_currentProfile.crossPulse; g_logic.LoadProfile(g_currentProfile.sensitivityX);
+            }
+            
             g_loadingProgress = 100;
             std::this_thread::sleep_until(startTime + std::chrono::milliseconds(2500));
             if (g_backend) QMetaObject::invokeMethod(g_backend, "requestShowControlPanel", Qt::QueuedConnection);

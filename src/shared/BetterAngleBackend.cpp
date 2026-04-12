@@ -21,6 +21,8 @@ extern HWND g_hPanel;
 #include "shared/ControlPanel.h"
 extern void __cdecl RefreshHotkeys(HWND hWnd);
 
+static std::mutex g_profileMutex;
+
 BetterAngleBackend::BetterAngleBackend(QObject *parent) : QObject(parent) {
   // Emit profileChanged once the Qt event loop starts so QML fields
   // refresh with whatever sensitivityX is in g_allProfiles (set by setup or
@@ -85,47 +87,50 @@ BetterAngleBackend::BetterAngleBackend(QObject *parent) : QObject(parent) {
 }
 
 double BetterAngleBackend::sensX() const {
+  std::lock_guard<std::mutex> lock(g_profileMutex);
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
-    return 1.0;
+    return 0.05;
   return g_allProfiles[g_selectedProfileIdx].sensitivityX;
 }
 void BetterAngleBackend::setSensX(double v) {
+  std::lock_guard<std::mutex> lock(g_profileMutex);
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return;
-  Profile &p = g_allProfiles[g_selectedProfileIdx];
-  p.sensitivityX = (std::max)(0.00001, v);
-  g_logic.LoadProfile(p.sensitivityX);
-  p.Save(GetProfilesPath() + p.name + L".json");
+  g_allProfiles[g_selectedProfileIdx].sensitivityX = (std::max)(0.00001, v);
+  g_allProfiles[g_selectedProfileIdx].Save(GetProfilesPath() + g_allProfiles[g_selectedProfileIdx].name + L".json");
   SaveSettings();
+  g_logic.LoadProfile(v);
   emit profileChanged();
 }
 
 double BetterAngleBackend::sensY() const {
+  std::lock_guard<std::mutex> lock(g_profileMutex);
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
-    return 1.0;
+    return 0.05;
   return g_allProfiles[g_selectedProfileIdx].sensitivityY;
 }
 void BetterAngleBackend::setSensY(double v) {
+  std::lock_guard<std::mutex> lock(g_profileMutex);
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return;
-  Profile &p = g_allProfiles[g_selectedProfileIdx];
-  p.sensitivityY = (std::max)(0.00001, v);
-  p.Save(GetProfilesPath() + p.name + L".json");
+  g_allProfiles[g_selectedProfileIdx].sensitivityY = (std::max)(0.00001, v);
+  g_allProfiles[g_selectedProfileIdx].Save(GetProfilesPath() + g_allProfiles[g_selectedProfileIdx].name + L".json");
   SaveSettings();
   emit profileChanged();
 }
 
 int BetterAngleBackend::tolerance() const {
+  std::lock_guard<std::mutex> lock(g_profileMutex);
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return 2;
   return g_allProfiles[g_selectedProfileIdx].tolerance;
 }
 void BetterAngleBackend::setTolerance(int v) {
+  std::lock_guard<std::mutex> lock(g_profileMutex);
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return;
-  Profile &p = g_allProfiles[g_selectedProfileIdx];
-  p.tolerance = v;
-  p.Save(GetProfilesPath() + p.name + L".json");
+  g_allProfiles[g_selectedProfileIdx].tolerance = v;
+  g_allProfiles[g_selectedProfileIdx].Save(GetProfilesPath() + g_allProfiles[g_selectedProfileIdx].name + L".json");
   SaveSettings();
   emit profileChanged();
 }
@@ -133,7 +138,8 @@ void BetterAngleBackend::setTolerance(int v) {
 QString BetterAngleBackend::syncResult() const { return m_syncResult; }
 
 void BetterAngleBackend::syncAndSaveProfile() {
-  if (g_allProfiles.empty())
+  std::lock_guard<std::mutex> lock(g_profileMutex);
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return;
   Profile &p = g_allProfiles[g_selectedProfileIdx];
   p.showCrosshair = g_showCrosshair;
@@ -142,20 +148,23 @@ void BetterAngleBackend::syncAndSaveProfile() {
   p.crossOffsetX = g_crossOffsetX;
   p.crossOffsetY = g_crossOffsetY;
   p.crossPulse = g_crossPulse;
-  // Keybinds are already updated in the profile struct via the setters
   p.Save(GetProfilesPath() + p.name + L".json");
   SaveSettings();
 }
 
 bool BetterAngleBackend::crosshairOn() const {
+  std::lock_guard<std::mutex> lock(g_profileMutex);
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) return true;
   return g_allProfiles[g_selectedProfileIdx].showCrosshair;
 }
 void BetterAngleBackend::setCrosshairOn(bool v) {
+  std::lock_guard<std::mutex> lock(g_profileMutex);
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) return;
   g_allProfiles[g_selectedProfileIdx].showCrosshair = v;
   g_showCrosshair = v;
-  syncAndSaveProfile();
+  // Note: syncAndSaveProfile is not called here to avoid recursive lock if it also locks g_profileMutex
+  g_allProfiles[g_selectedProfileIdx].Save(GetProfilesPath() + g_allProfiles[g_selectedProfileIdx].name + L".json");
+  SaveSettings();
   if (g_hHUD) { InvalidateRect(g_hHUD, NULL, FALSE); UpdateWindow(g_hHUD); }
   emit crosshairChanged();
 }
@@ -398,6 +407,7 @@ void BetterAngleBackend::finishSetup() {
 }
 
 QStringList BetterAngleBackend::crosshairPresetNames() const {
+  std::lock_guard<std::mutex> lock(g_profileMutex);
   QStringList list;
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return list;

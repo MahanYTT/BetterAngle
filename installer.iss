@@ -32,7 +32,7 @@ Source: "build\Release\uninstaller.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\BetterAngle Pro"; Filename: "{app}\BetterAngle.exe"
-Name: "{autodesktop}\BetterAngle Pro"; Filename: "{app}\BetterAngle.exe"; Tasks: desktopicon
+Name: "{autodesktop}\BetterAngle Pro"; Filename: "{app}\BetterAngle.exe"; IconFilename: "{app}\app_icon.ico"; IconIndex: 0; Tasks: desktopicon
 Name: "{autoprograms}\BetterAngle Pro\Uninstall BetterAngle"; Filename: "{app}\uninstaller.exe"
 
 [Run]
