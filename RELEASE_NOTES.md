@@ -1,5 +1,13 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.25.4] - 2026-04-12
+### Fixed
+- **Rendering Compatibility**: Restored `opengl32sw.dll` to the distribution. This ensures the app can launch and render on systems that lack full GPU hardware acceleration, eliminating the "silent crash" on boot.
+- **Startup Resilience**: 
+    - Moved the **Recovery Mode (Shift-Launch)** check to the very top of the boot sequence. This guarantees you can reset settings even if the UI or core logic fails.
+    - Added **Profile Safety Guard**: If a corrupted settings file points to an invalid profile index, the app now clamps back to the default profile instead of crashing.
+- **Improved Diagnostics**: Added low-level Qt initialization checks. If the engine fails to start, a detailed Win32 error box will now appear.
+
 ## [v4.25.3] - 2026-04-12
 ### Fixed
 - **Build Integrity Overhaul**: Fixed a critical issue where binaries were being corrupted (the "16-Bit Application" error). Added automated file-size checks to the CI/CD pipeline to catch malformed files.

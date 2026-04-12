@@ -11,7 +11,16 @@ BetterAngleBackend* g_backend = nullptr;
 void EnsureEngineInitialized() {
     if (!g_qmlEngine) {
         g_qmlEngine = new QQmlApplicationEngine();
+        if (!g_qmlEngine) {
+            MessageBoxW(NULL, L"FATAL: Failed to allocate QQmlApplicationEngine.\nQt initialization has failed.", L"BetterAngle Engine Error", MB_OK | MB_ICONERROR);
+            exit(1);
+        }
+
         g_backend = new BetterAngleBackend(g_qmlEngine);
+        if (!g_backend) {
+            MessageBoxW(NULL, L"FATAL: Failed to create BetterAngleBackend.\nLogic initialization failed.", L"BetterAngle Engine Error", MB_OK | MB_ICONERROR);
+            exit(1);
+        }
 
         // Register "backend" context property BEFORE any load() call.
         g_qmlEngine->rootContext()->setContextProperty("backend", g_backend);

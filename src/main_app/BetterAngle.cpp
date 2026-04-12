@@ -282,22 +282,7 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     g_hInstance = hInstance;
 
-    // Use static argc/argv — QGuiApplication requires them but doesn't
-    // actually use argv[0] in windowless Qt builds.
-    static int   argc = 1;
-    static char* arg0 = const_cast<char*>("BetterAngle");
-    static char* argv_arr[] = { arg0, nullptr };
-    char**       argv = argv_arr;
-
-    qInstallMessageHandler(QtLogHandler);
-
-    {   // Write first log line before QGuiApplication so we can tell if it crashes
-        std::wstring logPath = GetAppRootPath() + L"debug.log";
-        std::wofstream out(logPath, std::ios::app);
-        if (out.is_open()) out << L"[BOOT] --- BetterAngle " << VERSION_WSTR << L" starting ---" << std::endl;
-    }
-
-    // Recovery mode (SHIFT held)
+    // 1. IMMEDIATE Recovery mode (SHIFT held) — Top priority before ANY logic
     if (GetKeyState(VK_SHIFT) & 0x8000) {
         if (MessageBoxW(NULL,
             L"BetterAngle Recovery Mode\n\nReset all settings to defaults?",
@@ -307,9 +292,22 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         }
     }
 
+    // Use static argc/argv
+    static int   argc = 1;
+    static char* arg0 = const_cast<char*>("BetterAngle");
+    static char* argv_arr[] = { arg0, nullptr };
+    char**       argv = argv_arr;
+
+    qInstallMessageHandler(QtLogHandler);
+
+    {   // Write first log line
+        std::wstring logPath = GetAppRootPath() + L"debug.log";
+        std::wofstream out(logPath, std::ios::app);
+        if (out.is_open()) out << L"[BOOT] --- BetterAngle " << VERSION_WSTR << L" starting ---" << std::endl;
+    }
+
     QGuiApplication app(argc, argv);
     app.setQuitOnLastWindowClosed(false);
-    qDebug() << "[BOOT] QGuiApplication created.";
 
     // GDI+
     GdiplusStartupInput gsi;
@@ -329,10 +327,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     wcMsg.lpszClassName = L"BetterAngleMsgWnd";
     RegisterClass(&wcMsg);
 
-    // Load settings synchronously (fast file reads)
+    // Load settings synchronously
     LoadSettings();
     CleanupUpdateJunk();
     g_allProfiles = GetProfiles(GetProfilesPath());
+    
+    // Safety Guard: Force setup if profiles are missing
     if (g_allProfiles.empty() || g_needsSetup) {
         g_needsSetup = true;
         g_allProfiles.clear();
@@ -343,6 +343,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         g_allProfiles.push_back(def);
         g_selectedProfileIdx = 0;
     }
+
+    // SAFETY CLAMPING: Ensure index is never out of bounds
+    if (g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) {
+        g_selectedProfileIdx = 0;
+    }
+
     g_currentProfile  = g_allProfiles[g_selectedProfileIdx];
     g_crossThickness  = g_currentProfile.crossThickness;
     g_crossColor      = g_currentProfile.crossColor;
