@@ -1,5 +1,9 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.47] - 2026-04-12
+### Improved
+- **Log Refresh**: The `startup.log` is now automatically truncated on every application launch, ensuring that you always have a fresh report of the current session's initialization sequence.
+
 ## [v4.27.46] - 2026-04-12
 ### Improved
 - **Nuclear Migration**: Upgraded AppData migration to a wildcard-based merge with explicit Shell-level cleanup. This definitively resolves the "duplicate folders" issue and ensures all user profiles are moved safely.

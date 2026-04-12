@@ -48,13 +48,17 @@ extern std::recursive_mutex   g_profileMutex;
 // Startup Diagnostic Logger
 void LogStartup(const std::string& msg) {
     try {
+        static bool s_isFirstLog = true;
         wchar_t path[MAX_PATH];
-        // 0x001c is CSIDL_LOCAL_APPDATA - Syncing with installer manifest
         if (SUCCEEDED(SHGetFolderPathW(NULL, 0x001c, NULL, 0, path))) {
             std::wstring logDir = std::wstring(path) + L"\\BetterAngle Pro";
             CreateDirectoryW(logDir.c_str(), NULL);
             std::wstring logPath = logDir + L"\\startup.log";
-            std::ofstream ofs(logPath, std::ios::app);
+            
+            // Re-creating the stream: Truncate ONLY on the first call of this session
+            std::ofstream ofs(logPath, s_isFirstLog ? std::ios::trunc : std::ios::app);
+            s_isFirstLog = false;
+
             if (ofs.is_open()) {
                 auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
                 ofs << std::put_time(std::localtime(&now), "[%Y-%m-%d %H:%M:%S] ") << msg << std::endl;
