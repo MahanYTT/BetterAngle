@@ -154,7 +154,7 @@ Window {
 
                 // Centered Version Number
                 Text {
-                    text: "VERSION 4.27.27"
+                    text: "VERSION 4.27.28"
                     color: "#00ffa3"
                     font.pixelSize: 14
                     font.bold: true
@@ -174,7 +174,7 @@ Window {
 
                 // The Quote
                 Text {
-                    text: "\"The best drops begin with the best wins\""
+                    text: "\"The best wins begin with the best drops\""
                     color: "#666"
                     font.pixelSize: 13
                     font.italic: true

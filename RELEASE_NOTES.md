@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.28] - 2026-04-12
+### Fixed
+- **Hardlock Fix**: Re-architected the boot sequence to prevent thread starvation. The Dashboard now loads in the background after the Splash is visible, ensuring the progress bar moves immediately.
+- **Branding Correction**: Updated the quote to "The best wins begin with the best drops".
+
 ## [v4.27.27] - 2026-04-12
 ### Changed
 - **Branding Perfection**: Introduced 100% transparent circular logos, removing all black backgrounds from the startup experience.

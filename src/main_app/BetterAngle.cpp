@@ -174,7 +174,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
                 g_loadingProgress = 30; CleanupUpdateJunk();
                 g_loadingProgress = 40; g_allProfiles = GetProfiles(GetProfilesPath());
                 g_loadingProgress = 70;
-                while (!g_winInitialized) std::this_thread::sleep_for(std::chrono::milliseconds(20));
                 
                 if (g_allProfiles.empty()) {
                     Profile def; def.name = L"Default"; def.sensitivityX = 0.05; def.sensitivityY = 0.05;
@@ -202,10 +201,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA);
         g_winInitialized = true;
 
-        QTimer::singleShot(500, []() {
+        QTimer::singleShot(500, [hInstance]() {
             AddSystrayIcon(g_hHUD); SetTimer(g_hHUD, 1, 32, NULL); SetTimer(g_hHUD, 2, 30000, NULL); RefreshHotkeys(g_hHUD);
+            CreateControlPanel(hInstance); // Load the main UI after splash is visible.
         });
-        CreateControlPanel(hInstance); // Load the main UI in parallel.
     });
     return app.exec();
 }
