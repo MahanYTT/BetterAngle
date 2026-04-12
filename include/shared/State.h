@@ -27,9 +27,9 @@ extern bool g_needsSetup;
 extern bool g_setupComplete;
 extern std::string g_lastVersionRun;
 
-
-#define VERSION_STR  APP_STR_Y(V_MAJ) "." APP_STR_Y(V_MIN) "." APP_STR_Y(V_PAT)
-#define VERSION_WSTR APP_WSTR_Y(V_MAJ) L"." APP_WSTR_Y(V_MIN) L"." APP_WSTR_Y(V_PAT)
+#define VERSION_STR APP_STR_Y(V_MAJ) "." APP_STR_Y(V_MIN) "." APP_STR_Y(V_PAT)
+#define VERSION_WSTR                                                           \
+  APP_WSTR_Y(V_MAJ) L"." APP_WSTR_Y(V_MIN) L"." APP_WSTR_Y(V_PAT)
 
 // Global Profile Management
 extern Profile g_currentProfile;
@@ -58,7 +58,6 @@ extern float g_glideThreshold;
 // Keybinds struct moved to Profile.h (v4.20.37)
 void LoadSettings();
 void SaveSettings();
-
 
 extern bool g_showCrosshair;
 extern float g_crossThickness;
@@ -89,9 +88,9 @@ extern int g_virtScreenY;
 extern bool g_isDraggingHUD;
 extern POINT g_dragStartHUD;
 extern POINT g_dragStartMouse;
-extern HWND g_hHUD; 
+extern HWND g_hHUD;
 extern HWND g_hPanel;
 
-void RefreshHotkeys(HWND hWnd);
+void __cdecl RefreshHotkeys(HWND hWnd);
 
 #endif // STATE_H

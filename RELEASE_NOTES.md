@@ -2,6 +2,9 @@
 - **Compilation Stability Patch:** Resolved `undeclared identifier` errors for `HUDWndProc`, `MsgWndProc`, and `DetectorThread`.
 - **Project Cleanup:** Deduplicated source entries in `CMakeLists.txt` for a cleaner build structure.
 
+### BetterAngle Pro v4.24.3
+- **Linker Error Fix:** Resolved unresolved external symbol `RefreshHotkeys` (LNK2019/LNK1120) by ensuring consistent `__cdecl` calling convention and removing redundant forward declarations.
+
 ### BetterAngle Pro v4.24.1
 - **Architectural Recovery:** Unified the 'Lean Boot' refactor with UI stability logic. Resolved build failures caused by entry point mismatches and multiple engine handling.
 - **Phased Startup Restored:** Re-integrated the 1.5s delay between the Splash screen and Dashboard load to prevent CPU/GPU contention.
