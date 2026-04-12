@@ -337,12 +337,19 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     wcMsg.lpszClassName = L"BetterAngleMsgWnd";
     RegisterClass(&wcMsg);
 
-    // 4. DEFERRED BACKGROUND LOADING (Wait until Splash is rendering)
-    QTimer::singleShot(100, []() {
-        qDebug() << "[BOOT] Background Loading Settings & Profiles...";
+    // 4. ZERO-BLOCK BACKGROUND LOADING (v4.27.8 - Dedicated Thread)
+    std::thread([hInstance]() {
+        qDebug() << "[BOOT] Background Thread: Loading Settings & Profiles...";
+        g_loadingProgress = 10;
+        
         LoadSettings();
+        g_loadingProgress = 30;
+        
         CleanupUpdateJunk();
+        g_loadingProgress = 40;
+        
         g_allProfiles = GetProfiles(GetProfilesPath());
+        g_loadingProgress = 70;
         
         // Safety Guard: Force setup if profiles are missing
         if (g_allProfiles.empty() || g_needsSetup) {
@@ -369,7 +376,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         g_crossAngle      = g_currentProfile.crossAngle;
         g_crossPulse      = g_currentProfile.crossPulse;
         g_logic.LoadProfile(g_currentProfile.sensitivityX);
-    });
+        
+        g_loadingProgress = 100;
+        qDebug() << "[BOOT] Background Thread: Done.";
+    }).detach();
 
     // Create message-only window for raw mouse input
     HWND hMsgWnd = CreateWindowEx(0, L"BetterAngleMsgWnd", NULL, 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, hInstance, NULL);

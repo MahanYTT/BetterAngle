@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.8] - 2026-04-12
+### Fixed
+- **Zero-Block Recovery**: Moved all settings and profile loading to a dedicated background thread. This ensures the Splash screen animations are 100% fluid and the UI never enters a "Not Responding" state during startup.
+- **Fluid Initialization**: The "Loading Engine..." progress bar now updates in real-time as background tasks complete, without blocking the main event loop.
+
 ## [v4.27.7] - 2026-04-12
 ### Fixed
 - **Clean Slate Recovery**: Rebuilt the startup sequence from scratch to resolve the 12.8% CPU "Silent Hang."
