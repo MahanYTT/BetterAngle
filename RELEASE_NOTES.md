@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.60] - 2026-04-12
+### Fixed
+- **Splash Screen QML Loading Error**: Fixed "Cannot assign to non-existent property 'property'" error in Splash.qml by removing invalid `property: "y"` from YAnimator.
+- **Main Window Focus Error**: Fixed "Property 'forceActiveFocus' of object QQuickWindowQmlImpl is not a function" error in main.qml by removing invalid forceActiveFocus() calls.
+- **Application Stability**: Resolved QML warnings that were preventing proper splash screen loading and dashboard transition.
+
 ## [v4.27.59] - 2026-04-12
 ### Fixed
 - **GDI+ Header Order Final Verification**: Corrected windows.h before objidl.h include order in all source files (BetterAngle.cpp, ThresholdWizard.cpp, Startup.cpp, Overlay.cpp) to ensure proper GDI+ compatibility with Windows SDK 10.0.26100.0.

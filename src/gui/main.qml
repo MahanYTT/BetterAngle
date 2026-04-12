@@ -25,7 +25,6 @@ Window {
             mainWindow.showNormal()
             mainWindow.raise()
             mainWindow.requestActivate()
-            mainWindow.forceActiveFocus()
         }
         function onToggleControlPanelRequested() {
             if (mainWindow.visible && mainWindow.visibility !== Window.Minimized) {
@@ -34,7 +33,6 @@ Window {
                 mainWindow.showNormal()
                 mainWindow.raise()
                 mainWindow.requestActivate()
-                mainWindow.forceActiveFocus()
             }
         }
     }

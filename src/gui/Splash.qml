@@ -123,7 +123,6 @@ Window {
                 YAnimator {
                     id: yAnim
                     target: lineAnimator
-                    property: "y"
                     from: 0; to: 80; duration: 3000; loops: Animation.Infinite
                     running: true
                 }
