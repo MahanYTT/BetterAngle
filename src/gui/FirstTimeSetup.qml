@@ -69,9 +69,10 @@ Window {
                             id: sensXInput
                             width: 180
                             height: 40
-                            placeholderText: "0.05"
-                            text: backend.sensX.toFixed(4)
+                            placeholderText: "0.050000"
+                            text: backend.sensX.toFixed(6)
                             color: "white"
+                            validator: DoubleValidator { bottom: 0.00001; top: 2.0; decimals: 6; notation: DoubleValidator.StandardNotation }
                             background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#00ffa3" : "#333" }
                         }
                     }
@@ -83,9 +84,10 @@ Window {
                             id: sensYInput
                             width: 180
                             height: 40
-                            placeholderText: "0.05"
-                            text: backend.sensY.toFixed(4)
+                            placeholderText: "0.050000"
+                            text: backend.sensY.toFixed(6)
                             color: "white"
+                            validator: DoubleValidator { bottom: 0.00001; top: 2.0; decimals: 6; notation: DoubleValidator.StandardNotation }
                             background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#00ffa3" : "#333" }
                         }
                     }

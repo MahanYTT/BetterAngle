@@ -70,7 +70,7 @@ void BetterAngleBackend::setSensX(double v) {
   if (g_allProfiles.empty())
     return;
   Profile &p = g_allProfiles[g_selectedProfileIdx];
-  p.sensitivityX = (std::max)(0.001, v);
+  p.sensitivityX = (std::max)(0.00001, v);
   g_logic.LoadProfile(p.sensitivityX);
   p.Save(GetProfilesPath() + p.name + L".json");
   SaveSettings();
@@ -86,7 +86,7 @@ void BetterAngleBackend::setSensY(double v) {
   if (g_allProfiles.empty())
     return;
   Profile &p = g_allProfiles[g_selectedProfileIdx];
-  p.sensitivityY = (std::max)(0.001, v);
+  p.sensitivityY = (std::max)(0.00001, v);
   p.Save(GetProfilesPath() + p.name + L".json");
   SaveSettings();
   emit profileChanged();

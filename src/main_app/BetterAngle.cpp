@@ -361,7 +361,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         g_virtScreenX, g_virtScreenY, sw, sh,
         NULL, NULL, hInstance, NULL);
 
-    SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA);
+    // SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA); // REMOVED: Switching to UpdateLayeredWindow
     AddSystrayIcon(g_hHUD);
     SetTimer(g_hHUD, 1, 16, NULL);    // ~60 fps repaint
     SetTimer(g_hHUD, 2, 30000, NULL); // auto-save

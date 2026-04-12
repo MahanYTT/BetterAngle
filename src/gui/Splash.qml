@@ -97,7 +97,7 @@ Window {
                         font.letterSpacing: 4
                     }
                     Text {
-                        text: "V E R S I O N  4 . 2 4 . 4"
+                        text: "VERSION 4.24.5"
                         color: "#666"
                         font.pixelSize: 10
                         font.bold: true

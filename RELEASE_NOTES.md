@@ -1,4 +1,12 @@
-### BetterAngle Pro v4.24.2
+### BetterAngle Pro - Release Notes
+
+## [v4.24.5] - 2026-04-12
+### Fixed
+- **HUD Transparency**: Migrated overlay window to `UpdateLayeredWindow` with per-pixel alpha. This resolves the bug where transparent areas of the HUD would render as solid black on some systems.
+- **Sensitivity Precision**: Increased display and internal precision to **6 decimal places** to support ultra-fine Fortnite sensitivity tuning.
+- **UI Robustness**: Added strict `DoubleValidator` to sensitivity input fields and lowered the safety floor to `0.00001`.
+
+## [v4.24.4] - 2026-04-12
 - **Compilation Stability Patch:** Resolved `undeclared identifier` errors for `HUDWndProc`, `MsgWndProc`, and `DetectorThread`.
 - **Project Cleanup:** Deduplicated source entries in `CMakeLists.txt` for a cleaner build structure.
 

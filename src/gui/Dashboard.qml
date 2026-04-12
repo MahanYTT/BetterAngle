@@ -73,13 +73,14 @@ Item {
                             id: sensXField
                             width: parent.width
                             // Re-read when profile changes so value always shows on startup
-                            text: backend.sensX.toFixed(4)
+                            text: backend.sensX.toFixed(6)
                             color: "white"
+                            validator: DoubleValidator { bottom: 0.00001; top: 2.0; decimals: 6; notation: DoubleValidator.StandardNotation }
                             background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: "#333"; border.width: 1 }
                             onEditingFinished: backend.sensX = parseFloat(text)
                             Connections {
                                 target: backend
-                                onProfileChanged: sensXField.text = backend.sensX.toFixed(4)
+                                onProfileChanged: sensXField.text = backend.sensX.toFixed(6)
                             }
                         }
                     }
@@ -92,13 +93,14 @@ Item {
                         TextField {
                             id: sensYField
                             width: parent.width
-                            text: backend.sensY.toFixed(4)
+                            text: backend.sensY.toFixed(6)
                             color: "white"
+                            validator: DoubleValidator { bottom: 0.00001; top: 2.0; decimals: 6; notation: DoubleValidator.StandardNotation }
                             background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: "#333"; border.width: 1 }
                             onEditingFinished: backend.sensY = parseFloat(text)
                             Connections {
                                 target: backend
-                                onProfileChanged: sensYField.text = backend.sensY.toFixed(4)
+                                onProfileChanged: sensYField.text = backend.sensY.toFixed(6)
                             }
                         }
                     }

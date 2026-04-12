@@ -1,1 +1,1 @@
-4.24.4
+project(BetterAngle VERSION 4.24.5 LANGUAGES CXX)
