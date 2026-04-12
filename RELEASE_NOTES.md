@@ -1,5 +1,9 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.34] - 2026-04-12
+### Fixed
+- **Build Rescue**: Fixed a critical MSVC compilation error (`C2039: mutex is not a member of std`) by adding missing headers and correcting threading-lock linkage.
+
 ## [v4.27.33] - 2026-04-12
 ### Fixed
 - **Anti-Suicide**: Removed the rigid "Root Object Count" check that was causing the app to exit silently if the splash screen closed too fast.

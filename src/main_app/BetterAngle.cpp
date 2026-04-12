@@ -8,6 +8,7 @@
 #include <atomic>
 #include <algorithm>
 #include <vector>
+#include <mutex>
 
 using namespace Gdiplus;
 
