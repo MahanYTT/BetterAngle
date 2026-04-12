@@ -1,4 +1,4 @@
-IDI_ICON1 ICON "icon.ico"
+IDI_ICON1 ICON "app_icon.ico"
 
 #include <windows.h>
 
@@ -21,12 +21,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "BetterAngle Pro"
             VALUE "FileDescription", "BetterAngle Pro - Precision Gaming HUD"
-            VALUE "FileVersion", "4.27.28.0"
+            VALUE "FileVersion", "4.27.29.0"
             VALUE "InternalName", "BetterAngle.exe"
             VALUE "LegalCopyright", "Copyright (C) 2026 BetterAngle Pro"
             VALUE "OriginalFilename", "BetterAngle.exe"
             VALUE "ProductName", "BetterAngle Pro"
-            VALUE "ProductVersion", "4.27.28.0"
+            VALUE "ProductVersion", "4.27.29.0"
         END
     END
     BLOCK "VarFileInfo"

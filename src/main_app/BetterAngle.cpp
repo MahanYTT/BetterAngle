@@ -145,19 +145,51 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 }
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
-    SetProcessDPIAware(); // Must be called PRE-ENGINE to avoid "Splash Hang" deadlock.
+    SetProcessDPIAware(); 
     Gdiplus::GdiplusStartupInput gsi; Gdiplus::GdiplusStartup(&g_gdiplusToken, &gsi, NULL);
     HANDLE hMutex = CreateMutexW(NULL, TRUE, L"BetterAnglePro_MainInstance_Mutex");
     if (GetLastError() == ERROR_ALREADY_EXISTS) { if (hMutex) CloseHandle(hMutex); return 0; }
 
+    g_loadingProgress = 5; // Instant 5% to break the 0% hang.
+    g_hInstance = hInstance;
+
+    // ── Atomic Boot Thread (Starts BEFORE Splash/Engine) ───────────────
+    std::thread([hInstance]() {
+        auto startTime = std::chrono::steady_clock::now();
+        try {
+            g_loadingProgress = 10; LoadSettings();
+            g_loadingProgress = 30; CleanupUpdateJunk();
+            g_loadingProgress = 40; g_allProfiles = GetProfiles(GetProfilesPath());
+            g_loadingProgress = 70;
+            
+            if (g_allProfiles.empty()) {
+                Profile def; def.name = L"Default"; def.sensitivityX = 0.05; def.sensitivityY = 0.05;
+                def.showCrosshair = true; def.crossThickness = 2.0f;
+                def.crossColor = RGB(0, 255, 204); def.tolerance = 2;
+                g_allProfiles.push_back(def); g_selectedProfileIdx = 0;
+                def.Save(GetProfilesPath() + L"Default.json"); SaveSettings();
+            }
+            if (g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) g_selectedProfileIdx = 0;
+            g_currentProfile = g_allProfiles[g_selectedProfileIdx];
+            g_crossThickness = g_currentProfile.crossThickness; g_crossColor = g_currentProfile.crossColor;
+            g_crossOffsetX = g_currentProfile.crossOffsetX; g_crossOffsetY = g_currentProfile.crossOffsetY;
+            g_crossPulse = g_currentProfile.crossPulse; g_logic.LoadProfile(g_currentProfile.sensitivityX);
+            g_loadingProgress = 100;
+            std::this_thread::sleep_until(startTime + std::chrono::milliseconds(2500));
+            if (g_backend) QMetaObject::invokeMethod(g_backend, "requestShowControlPanel", Qt::QueuedConnection);
+        } catch (...) {
+            g_loadingProgress = 100; if (g_backend) QMetaObject::invokeMethod(g_backend, "requestShowControlPanel", Qt::QueuedConnection);
+        }
+    }).detach();
+
     static int argc = 1; static char* arg0 = const_cast<char*>("BetterAngle"); static char* argv_arr[] = { arg0, nullptr };
     QGuiApplication app(argc, argv_arr); app.setQuitOnLastWindowClosed(false);
-    Q_INIT_RESOURCE(qml); g_hInstance = hInstance;
+    Q_INIT_RESOURCE(qml);
 
     EnsureEngineInitialized(); ShowSplashScreen();
 
-    // ── Nuclear Backup (Scheduled BEFORE engine load) ──────────────────
-    QTimer::singleShot(5000, []() { 
+    // ── Nuclear Backup (Fail-safe) ───────────────────────────────────
+    QTimer::singleShot(6000, []() { 
         if (g_backend) QMetaObject::invokeMethod(g_backend, "requestShowControlPanel", Qt::QueuedConnection); 
     });
 
@@ -167,34 +199,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         WNDCLASS wcMsg = { 0 }; wcMsg.lpfnWndProc = MsgWndProc; wcMsg.hInstance = hInstance;
         wcMsg.lpszClassName = L"BetterAngleMsgWnd"; RegisterClass(&wcMsg);
 
-        std::thread([hInstance]() {
-            auto startTime = std::chrono::steady_clock::now();
-            try {
-                g_loadingProgress = 10; LoadSettings();
-                g_loadingProgress = 30; CleanupUpdateJunk();
-                g_loadingProgress = 40; g_allProfiles = GetProfiles(GetProfilesPath());
-                g_loadingProgress = 70;
-                
-                if (g_allProfiles.empty()) {
-                    Profile def; def.name = L"Default"; def.sensitivityX = 0.05; def.sensitivityY = 0.05;
-                    def.showCrosshair = true; def.crossThickness = 2.0f;
-                    def.crossColor = RGB(0, 255, 204); def.tolerance = 2;
-                    g_allProfiles.push_back(def); g_selectedProfileIdx = 0;
-                    def.Save(GetProfilesPath() + L"Default.json"); SaveSettings();
-                }
-                if (g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) g_selectedProfileIdx = 0;
-                g_currentProfile = g_allProfiles[g_selectedProfileIdx];
-                g_crossThickness = g_currentProfile.crossThickness; g_crossColor = g_currentProfile.crossColor;
-                g_crossOffsetX = g_currentProfile.crossOffsetX; g_crossOffsetY = g_currentProfile.crossOffsetY;
-                g_crossPulse = g_currentProfile.crossPulse; g_logic.LoadProfile(g_currentProfile.sensitivityX);
-                g_loadingProgress = 100;
-                std::this_thread::sleep_until(startTime + std::chrono::milliseconds(2500));
-                if (g_backend) QMetaObject::invokeMethod(g_backend, "requestShowControlPanel", Qt::QueuedConnection);
-            } catch (...) {
-                g_loadingProgress = 100; if (g_backend) QMetaObject::invokeMethod(g_backend, "requestShowControlPanel", Qt::QueuedConnection);
-            }
-        }).detach();
-
         HWND hMsgWnd = CreateWindowEx(0, L"BetterAngleMsgWnd", NULL, 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, hInstance, NULL); RegisterRawMouse(hMsgWnd);
         int sw = GetSystemMetrics(SM_CXVIRTUALSCREEN), sh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
         g_hHUD = CreateWindowEx(WS_EX_TOPMOST|WS_EX_LAYERED|WS_EX_TRANSPARENT|WS_EX_TOOLWINDOW|WS_EX_NOACTIVATE, L"BetterAngleHUD", L"BetterAngle HUD", WS_POPUP, GetSystemMetrics(SM_XVIRTUALSCREEN), GetSystemMetrics(SM_YVIRTUALSCREEN), sw, sh, NULL, NULL, hInstance, NULL);
@@ -203,7 +207,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
 
         QTimer::singleShot(500, [hInstance]() {
             AddSystrayIcon(g_hHUD); SetTimer(g_hHUD, 1, 32, NULL); SetTimer(g_hHUD, 2, 30000, NULL); RefreshHotkeys(g_hHUD);
-            CreateControlPanel(hInstance); // Load the main UI after splash is visible.
+            CreateControlPanel(hInstance);
         });
     });
     return app.exec();

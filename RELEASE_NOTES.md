@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.29] - 2026-04-12
+### Fixed
+- **Atomic Boot**: Forced the initialization thread to start before any windows are created, ensuring the 0% hang is physically impossible.
+- **Instant Response**: Added immediate 5% progress feedback upon launch.
+- **Correct Branding Icon**: Re-mapped the application icon to one that specifically uses the refined circular logo, bypassing Windows caching issues.
+
 ## [v4.27.28] - 2026-04-12
 ### Fixed
 - **Hardlock Fix**: Re-architected the boot sequence to prevent thread starvation. The Dashboard now loads in the background after the Splash is visible, ensuring the progress bar moves immediately.
