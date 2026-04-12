@@ -49,19 +49,18 @@ HWND CreateControlPanel(HINSTANCE hInstance) {
         qDebug() << "[BOOT] Attempting to load main.qml...";
         g_qmlEngine->load(QUrl(QStringLiteral("qrc:/src/gui/main.qml")));
 
-        // Splash is index 0, so Dashboard should be index 1+
-        if (g_qmlEngine->rootObjects().isEmpty() || g_qmlEngine->rootObjects().size() < 2) {
-            std::wstring err = L"CRITICAL: BetterAngle could not load the Main UI (main.qml).\n\n";
-            err += L"Error Details:\n";
+        if (g_qmlEngine->rootObjects().isEmpty()) {
+            std::wstring err = L"CRITICAL ERROR: BetterAngle Main UI failed to load.\n\n";
+            err += L"Diagnostics:\n";
             if (!g_qmlErrors.empty()) {
                 err += g_qmlErrors;
             } else {
-                err += L"- No root objects found.\n";
-                err += L"- Resource URL: qrc:/src/gui/main.qml\n";
+                err += L"- No root objects were created.\n";
+                err += L"- File Path: qrc:/src/gui/main.qml\n";
             }
-            err += L"\nThis usually happens if the binary is corrupted or resources are blocked.";
+            err += L"\nThis failure is usually due to missing graphics drivers or corrupted installation.";
 
-            MessageBoxW(NULL, err.c_str(), L"BetterAngle Error", MB_OK | MB_ICONERROR);
+            MessageBoxW(NULL, err.c_str(), L"BetterAngle Engine Failure", MB_OK | MB_ICONERROR);
             exit(1);
         }
         qDebug() << "[BOOT] Dashboard UI loaded successfully.";

@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.33] - 2026-04-12
+### Fixed
+- **Anti-Suicide**: Removed the rigid "Root Object Count" check that was causing the app to exit silently if the splash screen closed too fast.
+- **Physical Manifestation**: Upgraded to modern Windows DPI Awareness V2 to ensure the HUD and Control Panel are physically rendered by the GPU without transparency or blurring issues.
+- **Engine Resilience**: Improved error reporting in the QML engine to provide clear diagnostics if a resource fails to load.
+
 ## [v4.27.32] - 2026-04-12
 ### Fixed
 - **Atomic Sync**: Resolved the "5% Splash Hang" by implementing a master threading-lock between the loading thread and the UI.
