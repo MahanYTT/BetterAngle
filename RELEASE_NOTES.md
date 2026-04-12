@@ -1,5 +1,9 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.3] - 2026-04-12
+### Changed
+- **UI Precision**: Simplified sensitivity displays across the Dashboard and Setup Wizard to show only 1 decimal place. This provides a cleaner, more professional interface while maintaining full internal precision for mouse movements.
+
 ## [v4.27.2] - 2026-04-12
 ### Fixed
 - **Startup Sequence**: Restored the 3-second 'Master Boot Transition' timer and system tray integration. This ensures the splash screen correctly waits for 3 seconds before routing users to the setup wizard or dashboard.

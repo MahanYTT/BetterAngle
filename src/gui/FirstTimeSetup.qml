@@ -174,12 +174,12 @@ Window {
                             id: sensXInput
                             width: parent.width
                             height: 44
-                            placeholderText: "0.050000"
-                            text: backend.sensX.toFixed(6)
+                            placeholderText: "0.1"
+                            text: backend.sensX.toFixed(1)
                             color: "white"
                             font.pixelSize: 16
                             font.family: "Consolas"
-                            validator: DoubleValidator { bottom: 0.00001; top: 2.0; decimals: 6 }
+                            validator: DoubleValidator { bottom: 0.00001; top: 2.0; decimals: 1 }
                             background: Rectangle { 
                                 color: "#13131a"
                                 radius: 6
@@ -197,12 +197,12 @@ Window {
                             id: sensYInput
                             width: parent.width
                             height: 44
-                            placeholderText: "0.050000"
-                            text: backend.sensY.toFixed(6)
+                            placeholderText: "0.1"
+                            text: backend.sensY.toFixed(1)
                             color: "white"
                             font.pixelSize: 16
                             font.family: "Consolas"
-                            validator: DoubleValidator { bottom: 0.00001; top: 2.0; decimals: 6 }
+                            validator: DoubleValidator { bottom: 0.00001; top: 2.0; decimals: 1 }
                             background: Rectangle { 
                                 color: "#13131a"
                                 radius: 6
