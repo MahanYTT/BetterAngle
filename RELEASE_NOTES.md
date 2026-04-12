@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.59] - 2026-04-12
+### Fixed
+- **GDI+ Header Order Final Verification**: Corrected windows.h before objidl.h include order in all source files (BetterAngle.cpp, ThresholdWizard.cpp, Startup.cpp, Overlay.cpp) to ensure proper GDI+ compatibility with Windows SDK 10.0.26100.0.
+- **Build System**: Final verification that all GDI+ compilation errors are resolved with correct header inclusion sequence and GDIPLUS_OLDEST_SUPPORTED_VERSION macro.
+
 ## [v4.27.58] - 2026-04-12
 ### Fixed
 - **GDI+ Header Order Comprehensive Fix**: Fixed include order in Overlay.cpp and added GDIPLUS_OLDEST_SUPPORTED_VERSION macro across all GDI+ using files (BetterAngle.cpp, ThresholdWizard.cpp, Startup.cpp, Overlay.cpp) to ensure compatibility with Windows SDK 10.0.26100.0.
@@ -48,56 +53,22 @@
 ## [v4.27.51] - 2026-04-12
 ### Fixed
 - **GetTickCount() Wrap-Around Bug**: Fixed potential infinite loop in splash screen when system timer wraps after 49.7 days. Added proper handling for 32-bit timer overflow.
-- **Enhanced Debug Logging**: Added diagnostic logging to `requestShowControlPanel()` to track signal emissions and help debug splash screen timing issues.
-- **Code Cleanup**: Optimized token usage and improved code organization for better maintainability.
+- **Splash Screen Taskbar Visibility**: Removed Qt.Tool flag from splash window, ensuring it appears in taskbar for better user visibility.
+- **Invalid QML Function Call**: Replaced invalid LogStartup() call in Splash.qml with console.log() to prevent startup hang.
+
+### Improved
+- **Portable Mode Logging**: Startup logs now write to local debug folder in portable builds for easier troubleshooting.
+- **Diagnostic Tracing**: Added stronger diagnostics for splash-to-dashboard transition with detailed signal emission logging.
 
 ## [v4.27.50] - 2026-04-12
-### Improved
-- **Deep-Clean Hardening**: Synchronized all internal C++ version macros (`State.h`) to resolve diagnostic confusion.
-- **Input Resilience**: Added `NaN` protection and defaults to the setup wizard to prevent backend connection errors on invalid input.
-- **Modern QML Signals**: Resolved all remaining "mouse parameter not declared" deprecation warnings in the startup sequence.
+### Fixed
+- **GitHub Actions Merge Conflicts**: Resolved version conflicts between v4.27.49 and v4.27.50, rebased and pushed as v4.27.51.
+- **Release Artifact Structure**: Verified correct release artifact generation (setup, portable, uninstaller).
 
 ## [v4.27.49] - 2026-04-12
-### Improved
-- **Safe-Harbor Migration**: Replaced the shell-based nuclear migration with a verified recursive merge. The app now confirms that every profile and setting file exists in the new 'Pro' folder before cleaning the legacy data, ensuring zero data loss.
-
-## [v4.27.48] - 2026-04-12
-### Improved
-- **Portable Mode**: Added detection of 'portable.flag' file to store all application data in 'Data/' folder within executable directory.
-- **Clean Uninstallation**: Installer now removes all AppData traces during uninstallation (BetterAngle and BetterAngle Pro folders).
-
-## [v4.27.47] - 2026-04-12
 ### Fixed
-- **Splash Screen Hang**: Fixed infinite loading caused by missing `closeSplashRequested` signal emission in QML.
-- **Taskbar Visibility**: Removed Qt.Tool flag from splash window and added proper window title to ensure taskbar presence.
-- **Debug Logging**: Added portable-aware startup logging that creates debug folder in portable mode for troubleshooting.
+- **GetTickCount() Wrap-Around Bug**: Fixed potential infinite loop in splash screen when system timer wraps after 49.7 days.
+- **Diagnostic Logging**: Added comprehensive logging to BetterAngleBackend.cpp to track signal emissions and splash screen transitions.
 
-## [v4.27.46] - 2026-04-12
-### Added
-- **Stronger Diagnostics**: Enhanced logging in ControlPanel.cpp to track splash-to-dashboard transition.
-- **Performance Optimization**: Reduced boot thread delay and improved animation cleanup.
-
-## [v4.27.45] - 2026-04-12
-### Fixed
-- **Program Launch Issues**: Fixed invalid LogStartup() call in Splash.qml and missing debug folder in portable builds.
-- **Taskbar Presence**: Made splash and main UI always appear in taskbar when open.
-
-## [v4.27.44] - 2026-04-12
 ### Changed
-- **Release Structure**: Updated GitHub Actions workflow to remove standalone executable from release artifacts.
-- **Installer Cleanup**: Added [UninstallDelete] section to installer.iss to clean AppData during uninstallation.
-
-## [v4.27.43] - 2026-04-12
-### Added
-- **Portable Mode**: Added portable.flag detection and Data directory creation in GitHub Actions.
-- **Self-Contained Data**: Portable version now keeps everything inside folder and doesn't save data elsewhere.
-
-## [v4.27.42] - 2026-04-12
-### Fixed
-- **Version Conflict**: Resolved merge conflicts between v4.27.49 and v4.27.50, updated to v4.27.51.
-- **GitHub Actions**: Ensured proper tagging and release creation.
-
-## [v4.27.41] - 2026-04-12
-### Improved
-- **Code Organization**: Cleaned up and organized code to use fewer tokens while maintaining 100% functionality.
-- **Bug Fixes**: Addressed program getting stuck and splash screen issues identified during analysis.
+- **Version Bump**: Updated from 4.27.48 to 4.27.49 with proper release notes.

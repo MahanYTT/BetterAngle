@@ -7,6 +7,7 @@
 #include <objidl.h>
 #include <windows.h>
 
+
 // Define GDIPLUS_OLDEST_SUPPORTED_VERSION for Windows SDK 10.0.26100.0
 // compatibility
 #ifndef GDIPLUS_OLDEST_SUPPORTED_VERSION
@@ -17,7 +18,6 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-
 
 using namespace Gdiplus;
 
