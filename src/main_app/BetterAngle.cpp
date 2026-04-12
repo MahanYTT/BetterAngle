@@ -158,6 +158,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         wcMsg.lpszClassName = L"BetterAngleMsgWnd"; RegisterClass(&wcMsg);
 
         std::thread([hInstance]() {
+            auto startTime = std::chrono::steady_clock::now();
             try {
                 g_loadingProgress = 10; LoadSettings();
                 g_loadingProgress = 30; CleanupUpdateJunk();
@@ -180,6 +181,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
                 g_crossOffsetX = g_currentProfile.crossOffsetX; g_crossOffsetY = g_currentProfile.crossOffsetY;
                 g_crossPulse = g_currentProfile.crossPulse; g_logic.LoadProfile(g_currentProfile.sensitivityX);
                 g_loadingProgress = 100;
+                
+                // ENSURE SPLASH MINIMUM VISIBILITY (2.5s)
+                std::this_thread::sleep_until(startTime + std::chrono::milliseconds(2500));
+
                 if (g_backend) QMetaObject::invokeMethod(g_backend, "requestShowControlPanel", Qt::QueuedConnection);
             } catch (...) {
                 g_loadingProgress = 100; if (g_backend) QMetaObject::invokeMethod(g_backend, "requestShowControlPanel", Qt::QueuedConnection);

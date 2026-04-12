@@ -220,6 +220,7 @@ Window {
                     width: parent.width
                     height: 54
                     onClicked: {
+                        setupWindow.hide()
                         backend.sensX = parseFloat(sensXInput.text)
                         backend.sensY = parseFloat(sensYInput.text)
                         backend.finishSetup()

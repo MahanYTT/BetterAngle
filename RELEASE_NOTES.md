@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.21] - 2026-04-12
+### Fixed
+- **Visual Polish**: Added a 2.5-second minimum duration for the Splash screen to provide consistent visual feedback during ultra-fast startups.
+- **Wizard Auto-Close**: Integrated an explicit `hide()` command in the Setup Wizard to ensure a clean transition to the main Dashboard.
+
 ## [v4.27.20] - 2026-04-12
 ### Fixed
 - **Wizard Unlock**: Resolved the unresponsive 'Finish Setup' button by correcting the QML property assignment syntax.
