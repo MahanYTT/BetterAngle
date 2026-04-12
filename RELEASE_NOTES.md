@@ -1,5 +1,13 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.25.0] - 2026-04-12
+### Improved
+- **Hotkey & UI Synchronization**: Major overhaul to the communication bridge.
+    - **Physical-to-Visual Sync**: Toggling Debug or Crosshair via hotkeys now automatically updates the toggles in the Dashboard UI.
+    - **Reliable Red-Box Selection**: Hardened the ROI selection overlay. It now reliably captures the mouse, comes to the front, and clears transparency when activated.
+    - **Dashboard Toggle Stability**: Improved the 'Toggle Dashboard' hotkey to be more responsive and handle window activation better.
+    - **Zero Confirmation**: Internal logic for 'Zero Counter' now forces a UI refresh so you see the reset instantly.
+
 ## [v4.24.9] - 2026-04-12
 ### Added
 - **Ultra-Responsive Hotkey Overhaul**:

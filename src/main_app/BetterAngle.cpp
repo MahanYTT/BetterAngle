@@ -139,27 +139,33 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     }
 
     case WM_HOTKEY:
-        // Delegate to State.cpp's RefreshHotkeys logic by re-using
-        // the hotkey ID dispatch that was previously inline.
         if ((int)wParam == 1) { // Toggle panel
             ShowControlPanel();
         } else if ((int)wParam == 2) { // Toggle ROI selection
             if (g_currentSelection == NONE) {
                 CaptureScreenSnapshot();
                 g_currentSelection = SELECTING_ROI;
+                // Remove transparency and ensure top-most
                 SetWindowLong(hWnd, GWL_EXSTYLE,
                     GetWindowLong(hWnd, GWL_EXSTYLE) & ~WS_EX_TRANSPARENT);
+                SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+                SetCapture(hWnd);
             } else {
                 g_currentSelection = NONE;
+                ReleaseCapture();
                 SetWindowLong(hWnd, GWL_EXSTYLE,
                     GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
             }
+            InvalidateRect(hWnd, NULL, FALSE);
         } else if ((int)wParam == 3) { // Toggle crosshair
             g_showCrosshair = !g_showCrosshair;
+            InvalidateRect(hWnd, NULL, FALSE);
         } else if ((int)wParam == 4) { // Zero angle
             g_logic.SetZero();
+            InvalidateRect(hWnd, NULL, FALSE);
         } else if ((int)wParam == 5) { // Toggle debug
             g_debugMode = !g_debugMode;
+            InvalidateRect(hWnd, NULL, FALSE);
         }
         break;
 

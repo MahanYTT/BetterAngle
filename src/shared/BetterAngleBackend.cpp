@@ -29,6 +29,18 @@ BetterAngleBackend::BetterAngleBackend(QObject *parent) : QObject(parent) {
     static bool lastDownloading = false;
     static bool lastComplete = false;
     static bool lastChecked = false;
+    static bool lastCross = g_showCrosshair;
+    static bool lastDebug = g_debugMode;
+
+    if (g_showCrosshair != lastCross) {
+      lastCross = g_showCrosshair;
+      emit crosshairChanged();
+    }
+    if (g_debugMode != lastDebug) {
+      lastDebug = g_debugMode;
+      emit debugChanged();
+    }
+
     if (g_hasCheckedForUpdates != lastChecked) {
       lastChecked = g_hasCheckedForUpdates;
       emit updateStatusChanged();
