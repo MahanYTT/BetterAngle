@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.18] - 2026-04-12
+### Fixed
+- **Sync-Lock Stability**: Introduced an atomic synchronization barrier between the background thread and window creation to eliminate boot-time race conditions.
+- **Early GDI+ Init**: Moved graphics engine startup to the very beginning of wWinMain for thread-safety.
+- **Reduced Latency**: Optimized the deferred system startup delay for near-instant (500ms) tray icon and HUD visibility.
+
 ## [v4.27.17] - 2026-04-12
 ### Fixed
 - **GDI Token Fix**: Physically defined `g_gdiplusToken` in `BetterAngle.cpp` to resolve the final `LNK2019` unresolved external symbol error.

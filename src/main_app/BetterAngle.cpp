@@ -30,30 +30,12 @@ using namespace Gdiplus;
 // Global Definitions
 HINSTANCE g_hInstance = NULL;
 ULONG_PTR g_gdiplusToken = 0;
+std::atomic<bool> g_winInitialized{false};
 
 // External Globals
 extern BetterAngleBackend* g_backend;
 extern AngleLogic          g_logic;
 extern std::atomic<int>    g_loadingProgress;
-
-// Helper Functions
-HBITMAP CaptureScreen() {
-    HDC hdc = GetDC(NULL);
-    HDC hdcMem = CreateCompatibleDC(hdc);
-    int w = GetSystemMetrics(SM_CXVIRTUALSCREEN), h = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-    HBITMAP hbm = CreateCompatibleBitmap(hdc, w, h);
-    SelectObject(hdcMem, hbm);
-    BitBlt(hdcMem, 0, 0, w, h, hdc, GetSystemMetrics(SM_XVIRTUALSCREEN), GetSystemMetrics(SM_YVIRTUALSCREEN), SRCCOPY);
-    DeleteDC(hdcMem); ReleaseDC(NULL, hdc);
-    return hbm;
-}
-
-COLORREF GetPixelColor(int x, int y) {
-    HDC hdc = GetDC(NULL);
-    COLORREF c = GetPixel(hdc, x, y);
-    ReleaseDC(NULL, hdc);
-    return c;
-}
 
 // Window Procedures
 LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -135,6 +117,10 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 }
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
+    // 0. GDI+ STARTUP EARLY (Priority v4.27.18)
+    Gdiplus::GdiplusStartupInput gsi; 
+    Gdiplus::GdiplusStartup(&g_gdiplusToken, &gsi, NULL);
+
     HANDLE hMutex = CreateMutexW(NULL, TRUE, L"BetterAnglePro_MainInstance_Mutex");
     if (GetLastError() == ERROR_ALREADY_EXISTS) { if (hMutex) CloseHandle(hMutex); return 0; }
 
@@ -146,7 +132,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
 
     QTimer::singleShot(0, [hInstance]() {
         SetProcessDPIAware();
-        Gdiplus::GdiplusStartupInput gsi; Gdiplus::GdiplusStartup(&g_gdiplusToken, &gsi, NULL);
 
         WNDCLASS wc = {}; wc.lpfnWndProc = HUDWndProc; wc.hInstance = hInstance;
         wc.hCursor = LoadCursor(NULL, IDC_ARROW); wc.lpszClassName = L"BetterAngleHUD"; RegisterClass(&wc);
@@ -159,6 +144,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
                 g_loadingProgress = 30; CleanupUpdateJunk();
                 g_loadingProgress = 40; g_allProfiles = GetProfiles(GetProfilesPath());
                 g_loadingProgress = 70;
+                
+                // DATA READY - WAIT FOR WINDOW BARRIER
+                while (!g_winInitialized) std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                
                 if (g_allProfiles.empty() || g_needsSetup) {
                     g_needsSetup = true; g_allProfiles.clear();
                     Profile def; def.name = L"Default"; def.sensitivityX = 0.05; def.sensitivityY = 0.05;
@@ -181,9 +170,11 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         HWND hMsgWnd = CreateWindowEx(0, L"BetterAngleMsgWnd", NULL, 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, hInstance, NULL); RegisterRawMouse(hMsgWnd);
         int sw = GetSystemMetrics(SM_CXVIRTUALSCREEN), sh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
         g_hHUD = CreateWindowEx(WS_EX_TOPMOST|WS_EX_LAYERED|WS_EX_TRANSPARENT|WS_EX_TOOLWINDOW|WS_EX_NOACTIVATE, L"BetterAngleHUD", L"BetterAngle HUD", WS_POPUP, GetSystemMetrics(SM_XVIRTUALSCREEN), GetSystemMetrics(SM_YVIRTUALSCREEN), sw, sh, NULL, NULL, hInstance, NULL);
-        SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA);
+        
+        // SIGNAL WINDOW READY BARRIER
+        g_winInitialized = true;
 
-        QTimer::singleShot(6000, []() {
+        QTimer::singleShot(500, []() {
             AddSystrayIcon(g_hHUD); SetTimer(g_hHUD, 1, 32, NULL); SetTimer(g_hHUD, 2, 30000, NULL); RefreshHotkeys(g_hHUD);
         });
         CreateControlPanel(hInstance);
