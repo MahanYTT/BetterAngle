@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.4] - 2026-04-12
+### Fixed
+- **Emergency Boot Rescue**: Silenced the high-frequency HUD repaint timer until after the engine is stable. This ensures 0% CPU usage during engine load, preventing "security suspension" (9MB RAM hang) on high-resolution displays.
+- **AV Compatibility**: Removed aggressive process-purging (KillOtherInstances) from the startup sequence to satisfy security software heuristics (Code 225).
+- **Staged Init**: Balanced the background thread startup to avoid resource contention during the first 3 seconds of launch.
+
 ## [v4.27.3] - 2026-04-12
 ### Changed
 - **UI Precision**: Simplified sensitivity displays across the Dashboard and Setup Wizard to show only 1 decimal place. This provides a cleaner, more professional interface while maintaining full internal precision for mouse movements.

@@ -287,34 +287,11 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 #include <QResource>
 #include <tlhelp32.h>
 
-void KillOtherInstances() {
-    DWORD currentPid = GetCurrentProcessId();
-    HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (hSnap == INVALID_HANDLE_VALUE) return;
-
-    PROCESSENTRY32W pe;
-    pe.dwSize = sizeof(pe);
-    if (Process32FirstW(hSnap, &pe)) {
-        do {
-            if (pe.th32ProcessID != currentPid) {
-                std::wstring name = pe.szExeFile;
-                // Surgical purge: Only kill processes that explicitly contain "BetterAngle"
-                if (name.find(L"BetterAngle") != std::wstring::npos) {
-                    HANDLE hProc = OpenProcess(PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
-                    if (hProc) {
-                        TerminateProcess(hProc, 0);
-                        CloseHandle(hProc);
-                    }
-                }
-            }
-        } while (Process32NextW(hSnap, &pe));
-    }
-    CloseHandle(hSnap);
-}
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     SetProcessDPIAware();
-    KillOtherInstances();
+    // DE-ESCALATION: Removed KillOtherInstances to avoid AV heuristic triggers.
+    // User must manually clear old tasks before run.
 
     // 0. Single Instance Check (v4.27.0 - Hardened Mutex)
     HANDLE hMutex = CreateMutexW(NULL, TRUE, L"BetterAnglePro_MainInstance_Mutex");
@@ -421,21 +398,23 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
 
     SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA);
 
-    // Restore critical Win32 logic (Tray, Timers, Hotkeys)
-    AddSystrayIcon(g_hHUD);
-    SetTimer(g_hHUD, 1, 16, NULL);    // ~60 fps repaint
-    SetTimer(g_hHUD, 2, 30000, NULL); // auto-save
-    SetTimer(g_hHUD, 3, 3000, NULL);  // Master Boot Transition (3s splash)
-    RefreshHotkeys(g_hHUD);
-
     // QML Init
     EnsureEngineInitialized();
     ShowSplashScreen();
 
-    // Deferred Work: Wait for UI to be stable before starting background CPU-heavy tasks.
-    // This removes the "High CPU at Startup" heuristic trigger for Antivirus.
-    QTimer::singleShot(2000, []() {
-        qDebug() << "[BOOT] Starting deferred background tasks...";
+    // Deferred Logic: Wait for UI to be stable before starting high-frequency or background tasks.
+    QTimer::singleShot(1000, []() {
+        qDebug() << "[BOOT] Activating Win32 hooks and timers...";
+        AddSystrayIcon(g_hHUD);
+        SetTimer(g_hHUD, 1, 16, NULL);    // ~60 fps repaint (CPU intensive)
+        SetTimer(g_hHUD, 2, 30000, NULL); // auto-save
+        SetTimer(g_hHUD, 3, 3000, NULL);  // Master Boot Transition (3s splash)
+        RefreshHotkeys(g_hHUD);
+    });
+
+    // Deferred Work: Wait 3 seconds before starting heavy background threads
+    QTimer::singleShot(3000, []() {
+        qDebug() << "[BOOT] Starting background threads...";
         std::thread(CheckForUpdates).detach();
         std::thread(DetectorThread).detach();
     });
