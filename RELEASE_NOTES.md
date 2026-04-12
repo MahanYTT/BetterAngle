@@ -1,3 +1,8 @@
+### BetterAngle Pro v4.24.0
+- **Visibility Recovery:** Fixed a critical regression where the Dashboard and Setup Wizard would launch with `visible: false`, making the app appear broken after start.
+- **Engine Load Hardening:** Updated the C++ QML loader to explicitly verify that the Dashboard has been added to the engine's root objects alongside the Splash screen.
+- **Redistributable Fixes:** Incorporated MahanYTT's VC++ Redistributable fixes to resolve build failures for developers using MSVC.
+
 ### BetterAngle Pro v4.23.6
 - **ROOT CAUSE FIX: App Does Nothing on Launch.** Two critical issues resolved: (1) `CMakeLists.txt` was only linking `Qt6::Qml` but not `Qt6::Quick` or `Qt6::QuickControls2`. These modules provide `Window`, `Rectangle`, `TabBar`, `Button` and all visual primitives — without them the QML engine runs but cannot render anything. (2) The installer did not include the Visual C++ Redistributable. On clean Windows PCs without Visual Studio, the MSVC runtime DLLs are missing and the `.exe` crashes silently before `WinMain` is reached.
 - **Fix Applied:** Added `Qt6::Quick Qt6::QuickControls2` to `find_package` and `target_link_libraries`. Added VC++ Redist download to CI pipeline and silent install step to `installer.iss`. Also added `--quick` flag to `windeployqt` to ensure Quick DLLs are deployed.

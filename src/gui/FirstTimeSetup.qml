@@ -6,7 +6,7 @@ Window {
     id: setupWindow
     width: 500
     height: 380
-    visible: false
+    visible: true
     title: "BetterAngle Pro Calibration"
     color: "#050508"
     

@@ -21,24 +21,24 @@ void EnsureEngineInitialized() {
 HWND CreateControlPanel(HINSTANCE hInstance) {
     EnsureEngineInitialized();
 
-    // Use a static flag to prevent loading main.qml more than once.
     static bool mainLoaded = false;
     if (!mainLoaded) {
         mainLoaded = true;
 
         // Load main.qml. Dashboard.qml and FirstTimeSetup.qml are in the
-        // same qrc:/src/gui/ directory and Qt auto-discovers them as types —
-        // no import statement or qmldir needed.
+        // same qrc:/src/gui/ directory and Qt auto-discovers them as types.
+        qDebug() << "[BOOT] Attempting to load main.qml...";
         g_qmlEngine->load(QUrl(QStringLiteral("qrc:/src/gui/main.qml")));
 
-        if (g_qmlEngine->rootObjects().size() < 2) {
-            qDebug() << "[ERROR] main.qml failed to load. Root objects:" << g_qmlEngine->rootObjects().size();
+        // Splash is index 0, so Dashboard should be index 1+
+        if (g_qmlEngine->rootObjects().isEmpty() || g_qmlEngine->rootObjects().size() < 2) {
+            qDebug() << "[ERROR] Dashboard UI (main.qml) failed to appear in rootObjects. Size:" << g_qmlEngine->rootObjects().size();
             MessageBoxW(NULL,
-                L"CRITICAL: Failed to load the dashboard UI (main.qml).\n\nCheck AppData\\BetterAngle\\debug.log for details.",
-                L"BetterAngle UI Error", MB_OK | MB_ICONERROR);
+                L"CRITICAL: BetterAngle could not load the Main UI.\n\nThis usually happens if a resource is missing or blocked.",
+                L"BetterAngle Error", MB_OK | MB_ICONERROR);
             exit(1);
         }
-        qDebug() << "[BOOT] main.qml loaded successfully.";
+        qDebug() << "[BOOT] Dashboard UI loaded successfully.";
     }
 
     return (HWND)1;
