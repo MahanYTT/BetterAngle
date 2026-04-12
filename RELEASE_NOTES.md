@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.23] - 2026-04-12
+### Fixed
+- **Iron-Sight Stability**: Resolved the 'UI Freeze' by correctly implementing `SetLayeredWindowAttributes` for a 100% click-through HUD.
+- **Hotkey Restoration**: All 5 hotkey IDs (F10 for Crosshair, Ctrl+8 for ROI, etc.) are now fully operational.
+- **Dynamic Interaction**: The HUD now intelligently toggles its own click-through state when you are in selection mode, ensuring no interference with the Dashboard.
+
 ## [v4.27.22] - 2026-04-12
 ### Deleted
 - **First-Time Setup Wizard**: Removed the setup wizard entirely for a more streamlined "Straight-to-Work" experience.
