@@ -289,7 +289,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
                 QTimer::singleShot(500, [hInstance]() {
                     LogStartup("Panel: Initializing Systray & Dashboard...");
                     AddSystrayIcon(g_hHUD); SetTimer(g_hHUD, 1, 32, NULL); SetTimer(g_hHUD, 2, 30000, NULL); RefreshHotkeys(g_hHUD);
+                    LogStartup("Panel: Invoking CreateControlPanel...");
                     CreateControlPanel(hInstance);
+                    LogStartup("Panel: Bridge Task Complete.");
                 });
             } catch (const std::exception& e) {
                 LogStartup("WIN_TASK_FATAL: " + std::string(e.what()));

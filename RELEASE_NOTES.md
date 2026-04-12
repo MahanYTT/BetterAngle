@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.39] - 2026-04-12
+### Fixed
+- **Directory Unification**: Locked all application data (Settings, Profiles, Logs) into a single folder: `%LOCALAPPDATA%\BetterAngle Pro`. This prevents the creation of redundant "BetterAngle" folders.
+- **Log Hygiene**: Fixed QML `Connections` deprecation warnings in the splash screen to ensure a cleaner, more actionable diagnostic log.
+- **Enhanced Trace**: Added deeper bridge checkpoints to the startup log to definitively identify any remaining UI hangs.
+
 ## [v4.27.38] - 2026-04-12
 ### Fixed
 - **Logo Geometry**: Enforced strict 1:1 aspect ratios on all branding elements to fix "Oval Logo" distortion on high-refresh/high-DPI monitors.

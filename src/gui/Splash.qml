@@ -14,8 +14,8 @@ Window {
 
     Connections {
         target: backend
-        onCloseSplashRequested: {
-            console.log("[QML] Close signal received. Terminating splash.")
+        function onCloseSplashRequested() {
+            LogStartup("QML: Close signal received. Terminating splash.");
             splashWindow.close()
         }
     }
