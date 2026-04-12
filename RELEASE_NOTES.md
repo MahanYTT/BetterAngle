@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.13] - 2026-04-12
+### Fixed
+- **Live-Boot Recovery**: Radically restructured the app entry point to start the Qt Brain (Event Loop) *first*. This ensures the Splash screen is fully reactive and painted the exact millisecond you open it.
+- **Async System Init**: Deferring all Win32 and hardware initialization until the engine is live. This eliminates the "Frozen 0% Hang" caused by the main thread being too busy during startup.
+- **Instant Paint**: Splash screen animations (waves/pulse) now start immediately upon launch.
+
 ## [v4.27.12] - 2026-04-12
 ### Fixed
 - **Bulletproof Startup**: Final fine-comb optimization. Non-essential shell calls and Win32 hook initialization are now delayed until 6 seconds after launch to ensure 0% conflict with the Splash-to-Dashboard transition.
