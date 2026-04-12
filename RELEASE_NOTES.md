@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.26.8] - 2026-04-12
+### Fixed
+- **Antivirus Compatibility**: Synchronized binary version metadata (4.26.8) and switched to a standard Signal/Slot pattern for window management. This resolves the false-positive 'Virus Infected' (Code 225) error by removing suspicious behavioral heuristics.
+- **Boot Reliability**: Finalized the transition logic to use industry-standard Qt communication, ensuring a smooth and trusted startup sequence.
+
 ## [v4.26.7] - 2026-04-12
 ### Fixed
 - **Visibility Fix**: Expose `g_qmlEngine` globally through headers and included missing engine headers in the backend. This resolves the 'undeclared identifier' and 'qobject_cast' build errors.

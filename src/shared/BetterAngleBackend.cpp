@@ -337,19 +337,12 @@ void BetterAngleBackend::downloadUpdate() {
 void BetterAngleBackend::saveThresholds() { SaveSettings(); }
 
 void BetterAngleBackend::requestShowControlPanel() {
-  qDebug() << "[BOOT] Master Timer triggered. Transitioning to UI...";
+  qDebug() << "[BOOT] Master Timer triggered. Finalizing transition...";
 
-  // 0. Manual Slash Kill Switch (Fixes 'Loading Forever' hang)
-  // We search for the splashWindow by its objectName and force it closed from C++.
-  if (g_qmlEngine) {
-      for (auto obj : g_qmlEngine->rootObjects()) {
-          if (obj->objectName() == "splashWindow") {
-              qDebug() << "[BOOT] Found Splash window. Closing natively.";
-              QQuickWindow* sw = qobject_cast<QQuickWindow*>(obj);
-              if (sw) sw->close();
-          }
-      }
-  }
+  // 0. Signal UI to close Splash (Standard Qt method)
+  // Instead of hunting the window down (which looks suspicious to AV),
+  // we just ask the UI to close the splash screen naturally.
+  emit closeSplashRequested();
 
   // Stage 1: Silent Auto-Update Check
   if (g_downloadComplete) {

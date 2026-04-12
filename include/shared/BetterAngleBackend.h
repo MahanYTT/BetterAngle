@@ -133,6 +133,7 @@ signals:
     void showControlPanelRequested();
     void toggleControlPanelRequested();
     void showSetupRequested();
+    void closeSplashRequested();
     void hotkeysChanged();
 
 private:

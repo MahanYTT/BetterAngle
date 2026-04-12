@@ -12,6 +12,14 @@ Window {
     color: "transparent"
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.SplashScreen
 
+    Connections {
+        target: backend
+        onCloseSplashRequested: {
+            console.log("[QML] Close signal received. Terminating splash.")
+            splashWindow.close()
+        }
+    }
+
     Rectangle {
         id: mainBg
         anchors.fill: parent
@@ -125,7 +133,7 @@ Window {
                         font.letterSpacing: 6
                     }
                     Text {
-                        text: "VERSION 4.26.7"
+                        text: "VERSION 4.26.8"
                         color: "#00ffa3"
                         font.pixelSize: 10
                         font.bold: true
