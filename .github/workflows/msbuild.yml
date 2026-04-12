@@ -101,6 +101,7 @@ jobs:
         with:
           files: |
             bin/BetterAngle_Setup.exe
+            build/Release/BetterAngle.exe
             build/Release/uninstaller.exe
           tag_name: ${{ env.TAG }}
           name: BetterAngle Pro ${{ env.TAG }}

@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.26.1] - 2026-04-12
+### Fixed
+- **Binary Distribution Fix**: Updated the CI/CD pipeline to explicitly upload the raw `BetterAngle.exe` file. This resolves the 16-bit application error previously seen when auto-updating.
+- **Update Safety**: Added a file-size guard to the auto-updater to prevent it from replacing the application with a corrupted or incomplete download.
+
 ## [v4.26.0] - 2026-04-12
 ### Fixed
 - **Build Restoration**: Resolved a critical compiler error (redefinition of `g_needsSetup`) that caused the previous release build to fail. This fix restores the CI/CD pipeline integrity.
