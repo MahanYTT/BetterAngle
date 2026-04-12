@@ -117,7 +117,6 @@ Window {
                 // Brand Main Text
                 Column {
                     spacing: 4
-                    horizontalAlignment: Text.AlignHCenter
                     Text {
                         text: "BETTERANGLE PRO"
                         color: "white"
@@ -126,7 +125,7 @@ Window {
                         font.letterSpacing: 6
                     }
                     Text {
-                        text: "VERSION 4.25.6"
+                        text: "VERSION 4.25.7"
                         color: "#00ffa3"
                         font.pixelSize: 10
                         font.bold: true

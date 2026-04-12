@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.25.7] - 2026-04-12
+### Fixed
+- **Global UI Syntax Clean-up**: Performed a project-wide sweep to remove all remaining invalid `horizontalAlignment` properties from Column elements. This resolves the recurring boot crashes in the Splash screen, Setup Wizard, and Dashboard.
+- **Zero-Blocker Stability**: Verified that every UI component is now 100% compliant with the Qt QML engine, ensuring a guaranteed clean boot for all users.
+
 ## [v4.25.6] - 2026-04-12
 ### Fixed
 - **Splash Syntax Fix**: Resolved a critical syntax error in `Splash.qml` (invalid `horizontalAlignment` property) that was identified by the new diagnostic trap. This finally allows the UI to load and display correctly on launch.

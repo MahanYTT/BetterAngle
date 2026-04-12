@@ -92,7 +92,6 @@ Window {
 
                 Column {
                     spacing: 8
-                    horizontalAlignment: Text.AlignHCenter
                     width: parent.width
                     Text {
                         text: "In-Game Sensitivity Sync"
