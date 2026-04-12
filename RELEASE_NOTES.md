@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.26] - 2026-04-12
+### Fixed
+- **Startup Recovery**: Resolved the "Splash Hang" issue by moving high-DPI initialization to the absolute start of the application.
+- **Fail-Safe Integrity**: Re-architected the boot sequence to ensure the 5-second backup close timer is scheduled before resource loading, guaranteeing the transition to the Dashboard.
+
 ## [v4.27.25] - 2026-04-12
 ### Changed
 - **Splash Redesign**: Moved the "Wave Dropmaps" banner to the top of the window to eliminate overlap with branding text.

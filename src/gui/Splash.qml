@@ -22,7 +22,7 @@ Window {
 
     // "God Mode" Nuclear Fail-Safe (v4.27.10)
     Timer {
-        interval: 8000
+        interval: 6000
         running: true
         repeat: false
         onTriggered: {

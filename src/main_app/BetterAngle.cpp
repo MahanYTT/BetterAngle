@@ -145,6 +145,7 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 }
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
+    SetProcessDPIAware(); // Must be called PRE-ENGINE to avoid "Splash Hang" deadlock.
     Gdiplus::GdiplusStartupInput gsi; Gdiplus::GdiplusStartup(&g_gdiplusToken, &gsi, NULL);
     HANDLE hMutex = CreateMutexW(NULL, TRUE, L"BetterAnglePro_MainInstance_Mutex");
     if (GetLastError() == ERROR_ALREADY_EXISTS) { if (hMutex) CloseHandle(hMutex); return 0; }
@@ -155,8 +156,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
 
     EnsureEngineInitialized(); ShowSplashScreen();
 
+    // ── Nuclear Backup (Scheduled BEFORE engine load) ──────────────────
+    QTimer::singleShot(5000, []() { 
+        if (g_backend) QMetaObject::invokeMethod(g_backend, "requestShowControlPanel", Qt::QueuedConnection); 
+    });
+
     QTimer::singleShot(0, [hInstance]() {
-        SetProcessDPIAware();
         WNDCLASS wc = { 0 }; wc.lpfnWndProc = HUDWndProc; wc.hInstance = hInstance;
         wc.hCursor = LoadCursor(NULL, IDC_CROSS); wc.lpszClassName = L"BetterAngleHUD"; RegisterClass(&wc);
         WNDCLASS wcMsg = { 0 }; wcMsg.lpfnWndProc = MsgWndProc; wcMsg.hInstance = hInstance;
@@ -169,7 +174,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
                 g_loadingProgress = 30; CleanupUpdateJunk();
                 g_loadingProgress = 40; g_allProfiles = GetProfiles(GetProfilesPath());
                 g_loadingProgress = 70;
-                while (!g_winInitialized) std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                while (!g_winInitialized) std::this_thread::sleep_for(std::chrono::milliseconds(20));
                 
                 if (g_allProfiles.empty()) {
                     Profile def; def.name = L"Default"; def.sensitivityX = 0.05; def.sensitivityY = 0.05;
@@ -200,8 +205,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         QTimer::singleShot(500, []() {
             AddSystrayIcon(g_hHUD); SetTimer(g_hHUD, 1, 32, NULL); SetTimer(g_hHUD, 2, 30000, NULL); RefreshHotkeys(g_hHUD);
         });
-        CreateControlPanel(hInstance);
+        CreateControlPanel(hInstance); // Load the main UI in parallel.
     });
-    QTimer::singleShot(5000, []() { if (g_backend) g_backend->requestShowControlPanel(); });
     return app.exec();
 }
