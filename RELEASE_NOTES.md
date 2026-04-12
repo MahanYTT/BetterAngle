@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.50] - 2026-04-12
+### Improved
+- **Deep-Clean Hardening**: Synchronized all internal C++ version macros (`State.h`) to resolve diagnostic confusion.
+- **Input Resilience**: Added `NaN` protection and defaults to the setup wizard to prevent backend connection errors on invalid input.
+- **Modern QML Signals**: Resolved all remaining "mouse parameter not declared" deprecation warnings in the startup sequence.
+
 ## [v4.27.49] - 2026-04-12
 ### Improved
 - **Safe-Harbor Migration**: Replaced the shell-based nuclear migration with a verified recursive merge. The app now confirms that every profile and setting file exists in the new 'Pro' folder before cleaning the legacy data, ensuring zero data loss.

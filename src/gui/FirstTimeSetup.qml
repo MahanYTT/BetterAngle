@@ -47,8 +47,8 @@ Window {
             MouseArea {
                 anchors.fill: parent
                 property point lastMousePos: Qt.point(0, 0)
-                onPressed: lastMousePos = Qt.point(mouse.x, mouse.y)
-                onPositionChanged: {
+                onPressed: (mouse) => { lastMousePos = Qt.point(mouse.x, mouse.y) }
+                onPositionChanged: (mouse) => {
                     var delta = Qt.point(mouse.x - lastMousePos.x, mouse.y - lastMousePos.y)
                     setupWindow.x += delta.x
                     setupWindow.y += delta.y
@@ -221,8 +221,10 @@ Window {
                     height: 54
                     onClicked: {
                         setupWindow.hide()
-                        backend.sensX = parseFloat(sensXInput.text)
-                        backend.sensY = parseFloat(sensYInput.text)
+                        let sx = parseFloat(sensXInput.text)
+                        let sy = parseFloat(sensYInput.text)
+                        backend.sensX = isNaN(sx) ? 0.05 : sx
+                        backend.sensY = isNaN(sy) ? 0.05 : sy
                         backend.finishSetup()
                     }
                     contentItem: Text { 
