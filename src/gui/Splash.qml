@@ -97,7 +97,7 @@ Window {
                         font.letterSpacing: 4
                     }
                     Text {
-                        text: "V E R S I O N  4 . 2 4 . 0"
+                        text: "V E R S I O N  4 . 2 4 . 1"
                         color: "#666"
                         font.pixelSize: 10
                         font.bold: true

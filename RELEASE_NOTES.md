@@ -1,3 +1,9 @@
+### BetterAngle Pro v4.24.1
+- **Architectural Recovery:** Unified the 'Lean Boot' refactor with UI stability logic. Resolved build failures caused by entry point mismatches and multiple engine handling.
+- **Phased Startup Restored:** Re-integrated the 1.5s delay between the Splash screen and Dashboard load to prevent CPU/GPU contention.
+- **Fail-Safe Watchdog:** Restored the 5.0s fail-safe timer that forces the UI to appear if the QML load is delayed.
+- **Windows Entry Point:** Reverted to `wWinMain` for better compatibility with Windows project settings.
+
 ### BetterAngle Pro v4.24.0
 - **Visibility Recovery:** Fixed a critical regression where the Dashboard and Setup Wizard would launch with `visible: false`, making the app appear broken after start.
 - **Engine Load Hardening:** Updated the C++ QML loader to explicitly verify that the Dashboard has been added to the engine's root objects alongside the Splash screen.
