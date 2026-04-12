@@ -10,6 +10,7 @@
 
 std::wstring GetAppRootPath();
 std::wstring GetProfilesPath();
+void MigrateLegacyData();
 extern std::atomic<bool> g_fortniteFocusedCache;
 
 // Versioning system

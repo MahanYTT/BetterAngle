@@ -177,6 +177,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 
         LogStartup(">>> STARTUP INITIATED (v4.27.36) <<<");
+        MigrateLegacyData();
 
         // ── Modern DPI Awareness (V2) for Windows 10/11 ──────────────
         LogStartup("Init: DPI Awareness V2...");

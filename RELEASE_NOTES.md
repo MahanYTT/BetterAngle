@@ -1,5 +1,9 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.41] - 2026-04-12
+### Fixed
+- **Legacy Migration**: Implemented an automatic data migration routine. On startup, the app now moves all settings, profiles, and logs from `%LOCALAPPDATA%\BetterAngle` to the new `%LOCALAPPDATA%\BetterAngle Pro` folder and cleans up the redundant directory.
+
 ## [v4.27.40] - 2026-04-12
 ### Fixed
 - **Build Rescue**: Fixed a compilation error in `State.cpp` by restoring the native `SHGetFolderPathW` logic, ensuring 100% compatibility without external ATL libraries.

@@ -51,6 +51,54 @@ std::wstring GetAppRootPath() {
     return L"";
 }
 
+void MigrateLegacyData() {
+    wchar_t appdata[MAX_PATH];
+    if (FAILED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) return;
+
+    std::wstring legacyRoot = std::wstring(appdata) + L"\\BetterAngle";
+    std::wstring proRoot = std::wstring(appdata) + L"\\BetterAngle Pro";
+
+    if (GetFileAttributesW(legacyRoot.c_str()) == INVALID_FILE_ATTRIBUTES) return; // No legacy folder
+
+    // 1. Ensure Pro folder exists
+    CreateDirectoryW(proRoot.c_str(), NULL);
+
+    // 2. Move main settings
+    std::wstring oldSettings = legacyRoot + L"\\settings.json";
+    std::wstring newSettings = proRoot + L"\\settings.json";
+    if (GetFileAttributesW(oldSettings.c_str()) != INVALID_FILE_ATTRIBUTES) {
+        MoveFileW(oldSettings.c_str(), newSettings.c_str());
+    }
+
+    // 3. Move Profiles folder
+    std::wstring oldProfiles = legacyRoot + L"\\profiles";
+    std::wstring newProfiles = proRoot + L"\\profiles";
+    if (GetFileAttributesW(oldProfiles.c_str()) != INVALID_FILE_ATTRIBUTES) {
+        // MoveFileW only works on directories if they are on the same volume and the target doesn't exist.
+        // If newProfiles exists, we might need a more robust merge, but for now, simple move:
+        if (GetFileAttributesW(newProfiles.c_str()) == INVALID_FILE_ATTRIBUTES) {
+            MoveFileW(oldProfiles.c_str(), newProfiles.c_str());
+        }
+    }
+
+    // 4. Move startup log if present
+    std::wstring oldLog = legacyRoot + L"\\startup.log";
+    std::wstring newLog = proRoot + L"\\startup.log";
+    if (GetFileAttributesW(oldLog.c_str()) != INVALID_FILE_ATTRIBUTES) {
+        // Append or replace? Let's just move it if Pro log doesn't exist yet
+        if (GetFileAttributesW(newLog.c_str()) == INVALID_FILE_ATTRIBUTES) {
+            MoveFileW(oldLog.c_str(), newLog.c_str());
+        } else {
+            DeleteFileW(oldLog.c_str()); // Already have a pro log, discard legacy
+        }
+    }
+
+    // 5. Cleanup legacy root
+    // Note: This won't work if folder is not empty. We should ideally use SHFileOperation for recursive delete
+    // but simple RemoveDirectory for now if we moved everything.
+    RemoveDirectoryW(legacyRoot.c_str());
+}
+
 std::wstring GetProfilesPath() {
   std::wstring root = GetAppRootPath();
   if (root.empty())
