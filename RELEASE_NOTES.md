@@ -1,5 +1,12 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.7] - 2026-04-12
+### Fixed
+- **Clean Slate Recovery**: Rebuilt the startup sequence from scratch to resolve the 12.8% CPU "Silent Hang."
+- **Infinite Loop Protection**: Hardened the math engine (`Norm360`) to prevent infinite loops if malformed data is encountered. This was the root cause of the startup freezes.
+- **Instant Launch Architecture**: The UI engine and Splash screen now initialize immediately (0ms delay), ensuring a window appears on screen before any background file loading occurs.
+- **Startup Stability**: Moved expensive file I/O operations (profiles/settings) to the background to keep the main thread fluid and responsive.
+
 ## [v4.27.6] - 2026-04-12
 ### Fixed
 - **Absolute Restoration**: Reverted the boot sequence to the proven v4.24 steady-state logic. This ensures a successful launch by removing conflicting native Win32/GPU startup code.
