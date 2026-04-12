@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.62] - 2026-04-12
+### Fixed
+- **Splash Animation Property Error**: Fixed remaining invalid grouped animation property usage in [`Splash.qml`](src/gui/Splash.qml:173) that was still causing the splash screen to fail creation and show an error window.
+- **Main Window Drag Stability**: Replaced fragile manual frameless drag math in [`main.qml`](src/gui/main.qml:57) with native system window moving to stop the window from jittering or feeling like it escapes the mouse.
+- **Diagnostics**: Added splash lifecycle and window movement diagnostics in [`Splash.qml`](src/gui/Splash.qml:5) and [`main.qml`](src/gui/main.qml:18) for clearer runtime troubleshooting in debug logs.
+
 ## [v4.27.60] - 2026-04-12
 ### Fixed
 - **Splash Screen QML Loading Error**: Fixed "Cannot assign to non-existent property 'property'" error in Splash.qml by removing invalid `property: "y"` from YAnimator.

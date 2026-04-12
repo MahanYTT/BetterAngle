@@ -16,8 +16,12 @@ Window {
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowSystemMenuHint | Qt.WindowMinimizeButtonHint | Qt.WindowStaysOnTopHint
 
     onVisibleChanged: {
+        console.log("[QML] Main window visibility changed:", visible, "visibility=", visibility)
         // No longer forcing crosshair state here to allow user preference to persist
     }
+
+    onXChanged: console.log("[QML] Main window X changed:", x)
+    onYChanged: console.log("[QML] Main window Y changed:", y)
 
     Connections {
         target: backend
@@ -56,12 +60,12 @@ Window {
 
         MouseArea {
             anchors.fill: parent
-            property point lastMousePos: Qt.point(0, 0)
-            onPressed: lastMousePos = Qt.point(mouse.x, mouse.y)
-            onPositionChanged: {
-                var delta = Qt.point(mouse.x - lastMousePos.x, mouse.y - lastMousePos.y)
-                mainWindow.x += delta.x
-                mainWindow.y += delta.y
+            onPressed: {
+                console.log("[QML] Title bar press at", mouse.x, mouse.y, "window", mainWindow.x, mainWindow.y)
+                mainWindow.startSystemMove()
+            }
+            onDoubleClicked: {
+                console.log("[QML] Title bar double-click detected.")
             }
         }
 

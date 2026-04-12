@@ -13,6 +13,14 @@ Window {
     color: "transparent"
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
 
+    Component.onCompleted: {
+        console.log("[QML] Splash window component completed successfully.")
+    }
+
+    onVisibleChanged: {
+        console.log("[QML] Splash visibility changed:", visible)
+    }
+
     Connections {
         target: backend
         function onCloseSplashRequested() {
@@ -170,19 +178,15 @@ Window {
                             property alias pulseScaleAnimation: scaleAnim
                             property alias pulseOpacityAnimation: opacityAnim
                             
-                            SequentialAnimation {
+                            SequentialAnimation on scale {
                                 id: scaleAnim
-                                target: pulseRect
-                                property: "scale"
                                 loops: Animation.Infinite
                                 running: true
                                 NumberAnimation { from: 1.0; to: 1.10; duration: 2000; easing.type: Easing.OutCubic }
                                 NumberAnimation { from: 1.10; to: 1.0; duration: 1000 }
                             }
-                            SequentialAnimation {
+                            SequentialAnimation on opacity {
                                 id: opacityAnim
-                                target: pulseRect
-                                property: "opacity"
                                 loops: Animation.Infinite
                                 running: true
                                 NumberAnimation { from: 0.6; to: 0.0; duration: 2000; easing.type: Easing.OutCubic }
