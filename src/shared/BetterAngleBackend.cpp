@@ -317,9 +317,9 @@ void BetterAngleBackend::checkForUpdates() {
         this,
         [this]() {
           emit updateStatusChanged();
-          // Auto-trigger download during splash or whenever found
+          // Notify UI that update is available, but do NOT auto-download.
           if (g_updateAvailable) {
-            downloadUpdate();
+            qDebug() << "[UPDATER] Update found. Waiting for user to initiate download.";
           }
         },
         Qt::QueuedConnection);
@@ -344,12 +344,8 @@ void BetterAngleBackend::requestShowControlPanel() {
   // we just ask the UI to close the splash screen naturally.
   emit closeSplashRequested();
 
-  // Stage 1: Silent Auto-Update Check
-  if (g_downloadComplete) {
-    qDebug() << "[BOOT] Applying pending update...";
-    ApplyUpdateAndRestart();
-    return;
-  }
+  // Stage 1: Silent Auto-Update Check (REMOVED: Manual-only policy)
+  // We no longer auto-apply updates on boot. User must use the UI button.
 
   // Stage 2: Ensure Dashboard is loaded
   qDebug() << "[BOOT] Ensuring Main Dashboard is ready...";

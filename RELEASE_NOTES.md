@@ -1,5 +1,9 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.26.9] - 2026-04-12
+### Changed
+- **Manual-Only Updates**: Disabled automatic background downloads and startup restarts. Updates are now only initiated when the user explicitly clicks the 'Update' button in the UI. This gives you full control over the application lifecycle.
+
 ## [v4.26.8] - 2026-04-12
 ### Fixed
 - **Antivirus Compatibility**: Synchronized binary version metadata (4.26.8) and switched to a standard Signal/Slot pattern for window management. This resolves the false-positive 'Virus Infected' (Code 225) error by removing suspicious behavioral heuristics.
