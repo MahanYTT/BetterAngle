@@ -205,7 +205,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
             try {
                 LogStartup("BootThread: Loading Settings...");
                 g_loadingProgress = 10;
-                { std::lock_guard<std::mutex> lock(g_profileMutex); LoadSettings(); }
+                { std::lock_guard<std::recursive_mutex> lock(g_profileMutex); LoadSettings(); }
                 
                 LogStartup("BootThread: Cleanup...");
                 g_loadingProgress = 30;
@@ -214,7 +214,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
                 LogStartup("BootThread: Fetching Profiles...");
                 g_loadingProgress = 40;
                 { 
-                    std::lock_guard<std::mutex> lock(g_profileMutex); 
+                    std::lock_guard<std::recursive_mutex> lock(g_profileMutex); 
                     g_allProfiles = GetProfiles(GetProfilesPath()); 
                     if (g_allProfiles.empty()) {
                         LogStartup("BootThread: Generating Default Profile...");
@@ -231,7 +231,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
                 LogStartup("BootThread: Applying active state...");
                 g_loadingProgress = 70;
                 {
-                    std::lock_guard<std::mutex> lock(g_profileMutex);
+                    std::lock_guard<std::recursive_mutex> lock(g_profileMutex);
                     g_crossThickness = g_currentProfile.crossThickness; g_crossColor = g_currentProfile.crossColor;
                     g_crossOffsetX = g_currentProfile.crossOffsetX; g_crossOffsetY = g_currentProfile.crossOffsetY;
                     g_crossPulse = g_currentProfile.crossPulse; g_logic.LoadProfile(g_currentProfile.sensitivityX);

@@ -88,13 +88,13 @@ BetterAngleBackend::BetterAngleBackend(QObject *parent) : QObject(parent) {
 }
 
 double BetterAngleBackend::sensX() const {
-  std::lock_guard<std::mutex> lock(g_profileMutex);
+  std::lock_guard<std::recursive_mutex> lock(g_profileMutex);
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return 0.05;
   return g_allProfiles[g_selectedProfileIdx].sensitivityX;
 }
 void BetterAngleBackend::setSensX(double v) {
-  std::lock_guard<std::mutex> lock(g_profileMutex);
+  std::lock_guard<std::recursive_mutex> lock(g_profileMutex);
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return;
   g_allProfiles[g_selectedProfileIdx].sensitivityX = (std::max)(0.00001, v);
@@ -105,13 +105,13 @@ void BetterAngleBackend::setSensX(double v) {
 }
 
 double BetterAngleBackend::sensY() const {
-  std::lock_guard<std::mutex> lock(g_profileMutex);
+  std::lock_guard<std::recursive_mutex> lock(g_profileMutex);
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return 0.05;
   return g_allProfiles[g_selectedProfileIdx].sensitivityY;
 }
 void BetterAngleBackend::setSensY(double v) {
-  std::lock_guard<std::mutex> lock(g_profileMutex);
+  std::lock_guard<std::recursive_mutex> lock(g_profileMutex);
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return;
   g_allProfiles[g_selectedProfileIdx].sensitivityY = (std::max)(0.00001, v);
@@ -121,13 +121,13 @@ void BetterAngleBackend::setSensY(double v) {
 }
 
 int BetterAngleBackend::tolerance() const {
-  std::lock_guard<std::mutex> lock(g_profileMutex);
+  std::lock_guard<std::recursive_mutex> lock(g_profileMutex);
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return 2;
   return g_allProfiles[g_selectedProfileIdx].tolerance;
 }
 void BetterAngleBackend::setTolerance(int v) {
-  std::lock_guard<std::mutex> lock(g_profileMutex);
+  std::lock_guard<std::recursive_mutex> lock(g_profileMutex);
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return;
   g_allProfiles[g_selectedProfileIdx].tolerance = v;
@@ -139,7 +139,7 @@ void BetterAngleBackend::setTolerance(int v) {
 QString BetterAngleBackend::syncResult() const { return m_syncResult; }
 
 void BetterAngleBackend::syncAndSaveProfile() {
-  std::lock_guard<std::mutex> lock(g_profileMutex);
+  std::lock_guard<std::recursive_mutex> lock(g_profileMutex);
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return;
   Profile &p = g_allProfiles[g_selectedProfileIdx];
@@ -154,12 +154,12 @@ void BetterAngleBackend::syncAndSaveProfile() {
 }
 
 bool BetterAngleBackend::crosshairOn() const {
-  std::lock_guard<std::mutex> lock(g_profileMutex);
+  std::lock_guard<std::recursive_mutex> lock(g_profileMutex);
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) return true;
   return g_allProfiles[g_selectedProfileIdx].showCrosshair;
 }
 void BetterAngleBackend::setCrosshairOn(bool v) {
-  std::lock_guard<std::mutex> lock(g_profileMutex);
+  std::lock_guard<std::recursive_mutex> lock(g_profileMutex);
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) return;
   g_allProfiles[g_selectedProfileIdx].showCrosshair = v;
   g_showCrosshair = v;
@@ -408,7 +408,7 @@ void BetterAngleBackend::finishSetup() {
 }
 
 QStringList BetterAngleBackend::crosshairPresetNames() const {
-  std::lock_guard<std::mutex> lock(g_profileMutex);
+  std::lock_guard<std::recursive_mutex> lock(g_profileMutex);
   QStringList list;
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return list;

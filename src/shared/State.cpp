@@ -38,6 +38,7 @@ float g_freefallThreshold = 0.20f;
 #include <sstream>
 #include <string>
 
+#include <mutex>
 #include <shellapi.h>
 #pragma comment(lib, "shell32.lib")
 

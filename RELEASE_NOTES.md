@@ -1,5 +1,9 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.44] - 2026-04-12
+### Fixed
+- **Build Integrity**: Synchronized all `lock_guard` templates with the new `std::recursive_mutex` architecture and added missing headers to `State.cpp`.
+
 ## [v4.27.43] - 2026-04-12
 ### Fixed
 - **Deadlock Resolution**: Upgraded the internal synchronization engine to use `std::recursive_mutex`. This eliminates "Resource Deadlock" errors during startup and migration.
