@@ -373,10 +373,13 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     int sh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
     g_hHUD = CreateWindowEx(
-        WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW,
+        WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
         L"BetterAngleHUD", L"BetterAngle HUD", WS_POPUP,
         g_virtScreenX, g_virtScreenY, sw, sh,
         NULL, NULL, hInstance, NULL);
+
+    // Ensure the HUD is truly transparent and click-through
+    SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA);
 
     // SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA); // REMOVED: Switching to UpdateLayeredWindow
     AddSystrayIcon(g_hHUD);

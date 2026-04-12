@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.25.8] - 2026-04-12
+### Fixed
+- **UI Interactivity Overhaul**: Resolved the issue where the application buttons were non-clickable. Hardened the HUD overlay with explicit click-through transparency and focus-prevention (`WS_EX_NOACTIVATE`), ensuring it never blocks interaction.
+- **Improved Window Dragging**: Implemented a more compatible manual dragging logic for the Dashboard and Setup Wizard, ensuring smooth window movement across all Windows configurations.
+
 ## [v4.25.7] - 2026-04-12
 ### Fixed
 - **Global UI Syntax Clean-up**: Performed a project-wide sweep to remove all remaining invalid `horizontalAlignment` properties from Column elements. This resolves the recurring boot crashes in the Splash screen, Setup Wizard, and Dashboard.

@@ -63,7 +63,13 @@ Window {
 
         MouseArea {
             anchors.fill: parent
-            onPressed: mainWindow.startSystemMove()
+            property point lastMousePos: Qt.point(0, 0)
+            onPressed: lastMousePos = Qt.point(mouse.x, mouse.y)
+            onPositionChanged: {
+                var delta = Qt.point(mouse.x - lastMousePos.x, mouse.y - lastMousePos.y)
+                mainWindow.x += delta.x
+                mainWindow.y += delta.y
+            }
         }
 
         // Window Controls
