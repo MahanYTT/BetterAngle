@@ -27,7 +27,6 @@ set(SRC_FILES
     src/shared/ControlPanel.cpp
     include/shared/BetterAngleBackend.h
     src/shared/BetterAngleBackend.cpp
-    include/shared/BetterAngleBackend.h
     src/shared/Detector.cpp
     src/shared/FirstTimeSetup.cpp
     src/shared/Input.cpp

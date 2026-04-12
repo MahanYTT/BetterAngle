@@ -30,6 +30,12 @@
 #include <QQmlContext>
 #include <QTimer>
 
+// ─── Forward Declarations ──────────────────────────────────────────────────
+LRESULT CALLBACK HUDWndProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK MsgWndProc(HWND, UINT, WPARAM, LPARAM);
+void DetectorThread();
+void HandleRawInput(LPARAM lParam);
+
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "gdiplus.lib")
 
