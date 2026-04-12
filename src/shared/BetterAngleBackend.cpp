@@ -335,23 +335,39 @@ void BetterAngleBackend::downloadUpdate() {
 void BetterAngleBackend::saveThresholds() { SaveSettings(); }
 
 void BetterAngleBackend::requestShowControlPanel() {
-  // Stage 0: Silent Auto-Update Check
-  // If an update was downloaded during splash, apply it immediately.
+  qDebug() << "[BOOT] Master Timer triggered. Transitioning to UI...";
+
+  // 0. Manual Slash Kill Switch (Fixes 'Loading Forever' hang)
+  // We search for the splashWindow by its objectName and force it closed from C++.
+  if (m_engine) {
+      for (auto obj : m_engine->rootObjects()) {
+          if (obj->objectName() == "splashWindow") {
+              qDebug() << "[BOOT] Found Splash window. Closing natively.";
+              QQuickWindow* sw = qobject_cast<QQuickWindow*>(obj);
+              if (sw) sw->close();
+          }
+      }
+  }
+
+  // Stage 1: Silent Auto-Update Check
   if (g_downloadComplete) {
+    qDebug() << "[BOOT] Applying pending update...";
     ApplyUpdateAndRestart();
     return;
   }
 
-  // Transition stage: Splash timer just ended.
-  // 1. Ensure the engine and root objects (main.qml) are fully loaded.
+  // Stage 2: Ensure Dashboard is loaded
+  qDebug() << "[BOOT] Ensuring Main Dashboard is ready...";
   CreateControlPanel(g_hInstance);
 
-  // 2. Decide where to route the user.
+  // Stage 3: Decide where to route the user.
   if (g_needsSetup || g_allProfiles.empty()) {
-    qDebug() << "[BOOT] Setup needed. Routing to Wizard.";
+    qDebug() << "[BOOT] Routing to Setup Wizard.";
     emit showSetupRequested();
     return;
   }
+
+  qDebug() << "[BOOT] Routing to Main Dashboard.";
 
   // 3. Normal boot: show HUD and Dashboard
   if (g_hHUD) {

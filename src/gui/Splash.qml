@@ -125,7 +125,7 @@ Window {
                         font.letterSpacing: 6
                     }
                     Text {
-                        text: "VERSION 4.26.3"
+                        text: "VERSION 4.26.4"
                         color: "#00ffa3"
                         font.pixelSize: 10
                         font.bold: true
@@ -229,14 +229,3 @@ Window {
             }
         }
     }
-
-    // ── 3-Second Hard Lock Timer ───────────────────────────────────
-    Timer {
-        interval: 3000 // 3000ms = 3 Seconds
-        running: true
-        repeat: false
-        onTriggered: {
-            splashWindow.close()
-        }
-    }
-}

@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.26.4] - 2026-04-12
+### Fixed
+- **Master Kill Switch**: Implemented a native C++ routine to forcefully identify and close the splash window after 3 seconds. This bypasses QML engine deadlocks and ensures a guaranteed boot transition.
+- **Enhanced Diagnostics**: Added detailed loading markers to `debug.log` to track the exact state of the boot sequence in real-time.
+
 ## [v4.26.3] - 2026-04-12
 ### Fixed
 - **Boot Hardening**: Moved the splash screen transition logic to a native C++ timer. This eliminates the 'Loading forever' hang by ensuring the transition is decoupled from the UI thread and QML engine state.
