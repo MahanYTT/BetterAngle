@@ -323,10 +323,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         }
     }
 
-    // GDI+
-    GdiplusStartupInput gsi;
-    GdiplusStartup(&g_gdiplusToken, &gsi, NULL);
-
     // Register Win32 window classes
     WNDCLASS wc = {};
     wc.lpfnWndProc   = HUDWndProc;
