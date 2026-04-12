@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.61] - 2026-04-12
+### Improved
+- **Iron-Clad Re-unification**: Consolidated the fragmented modular startup into a deterministic linear sequence to resolve race conditions.
+- **Eager Property Binding**: Ensured the `backend` property is globally registered before the very first line of QML is parsed, eliminating TypeErrors.
+- **Context Guarding**: Hardened the setup wizard with defensive null-checks to prevent crashes during rapid UI transitions.
+
 ## [v4.27.60] - 2026-04-12
 ### Fixed
 - **Splash Screen QML Loading Error**: Fixed "Cannot assign to non-existent property 'property'" error in Splash.qml by removing invalid `property: "y"` from YAnimator.

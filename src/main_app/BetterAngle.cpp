@@ -1,4 +1,4 @@
-﻿// Windows headers must be included in correct order for GDI+
+// Windows headers must be included in correct order for GDI+
 // windows.h must come before gdiplus.h, and WIN32_LEAN_AND_MEAN must not
 // exclude GDI definitions
 #include <objidl.h>
@@ -377,23 +377,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
           g_logic.LoadProfile(g_currentProfile.sensitivityX);
         }
 
-        g_loadingProgress = 100;
-        LogStartup("BootThread: Boot sequence complete.");
-        // Reduced delay from 2500ms to 500ms for faster splash closing
-        std::this_thread::sleep_until(startTime +
-                                      std::chrono::milliseconds(500));
-        if (g_backend)
-          QMetaObject::invokeMethod(g_backend, "requestShowControlPanel",
-                                    Qt::QueuedConnection);
-      } catch (const std::exception &e) {
-        LogStartup("BOOT_THREAD_FATAL: " + std::string(e.what()));
-        g_loadingProgress = 100;
-        if (g_backend)
-          QMetaObject::invokeMethod(g_backend, "requestShowControlPanel",
-                                    Qt::QueuedConnection);
-      }
-    }).detach();
-
     LogStartup("Init: Creating QGuiApplication...");
     static int argc = 1;
     static char *arg0 = const_cast<char *>("BetterAngle");
@@ -404,28 +387,46 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     LogStartup("Init: Initializing Resources...");
     Q_INIT_RESOURCE(qml);
 
-    LogStartup("Init: Loading QML Engine & Splash...");
-    EnsureEngineInitialized();
+    LogStartup("Init: Loading QML Engine & Backend Context...");
+    // Deterministic Linear Setup: Create the engine and register the backend 
+    // IMMEDIATELY before loading ANY QML files.
+    g_backendEngine = new QQmlApplicationEngine();
+    g_backend = new BetterAngleBackend(g_backendEngine);
+    g_backendEngine->rootContext()->setContextProperty("backend", g_backend);
+
+    LogStartup("Init: Spawning UI Flow (Splash -> Dashboard)...");
     ShowSplashScreen();
 
-    // â”€â”€ Nuclear Backup (Fail-safe)
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    QTimer::singleShot(8000, []() {
-      if (g_backend) {
-        LogStartup("Fail-Safe: Forcing transition to Dashboard.");
-        QMetaObject::invokeMethod(g_backend, "requestShowControlPanel",
-                                  Qt::QueuedConnection);
-
-        // Physical Override: Find and kill anything claiming to be the splash
-        HWND hSplash = FindWindowW(NULL, L"BetterAngle Splash");
-        if (hSplash) {
-          PostMessage(hSplash, WM_CLOSE, 0, 0);
-          LogStartup("Fail-Safe: Physically closed Splash window.");
-        } else {
-          LogStartup("Fail-Safe: No native splash window found to close.");
+    // ── Atomic Boot Thread (Starts AFTER Engine/Backend are ready)
+    std::thread([hInstance]() {
+        auto startTime = std::chrono::steady_clock::now();
+        try {
+            LogStartup("BootThread: Loading Settings...");
+            g_loadingProgress = 10;
+            { std::lock_guard<std::recursive_mutex> lock(g_profileMutex); LoadSettings(); }
+            
+            LogStartup("BootThread: Processing Startup Verification...");
+            g_loadingProgress = 50;
+            { 
+                std::lock_guard<std::recursive_mutex> lock(g_profileMutex); 
+                g_allProfiles = GetProfiles(GetProfilesPath()); 
+                if (g_allProfiles.empty()) {
+                    Profile def; def.name = L"Default"; def.sensitivityX = 0.05; def.sensitivityY = 0.05;
+                    g_allProfiles.push_back(def); g_selectedProfileIdx = 0;
+                    def.Save(GetProfilesPath() + L"Default.json"); SaveSettings();
+                }
+                g_currentProfile = g_allProfiles[g_selectedProfileIdx < (int)g_allProfiles.size() ? g_selectedProfileIdx : 0];
+            }
+            
+            g_loadingProgress = 100;
+            LogStartup("BootThread: Sequence complete. Signaling Dashboard transition.");
+            std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+            if (g_backend) QMetaObject::invokeMethod(g_backend, "requestShowControlPanel", Qt::QueuedConnection);
+        } catch (...) {
+            g_loadingProgress = 100;
+            if (g_backend) QMetaObject::invokeMethod(g_backend, "requestShowControlPanel", Qt::QueuedConnection);
         }
-      }
-    });
+    }).detach();
 
     LogStartup("Init: Creating HUD Window Layer...");
     try {

@@ -220,12 +220,17 @@ Window {
                     width: parent.width
                     height: 54
                     onClicked: {
-                        setupWindow.hide()
-                        let sx = parseFloat(sensXInput.text)
-                        let sy = parseFloat(sensYInput.text)
-                        backend.sensX = isNaN(sx) ? 0.05 : sx
-                        backend.sensY = isNaN(sy) ? 0.05 : sy
-                        backend.finishSetup()
+                        if (typeof backend !== "undefined" && backend !== null) {
+                            setupWindow.hide()
+                            let sx = parseFloat(sensXInput.text)
+                            let sy = parseFloat(sensYInput.text)
+                            backend.sensX = isNaN(sx) ? 0.05 : sx
+                            backend.sensY = isNaN(sy) ? 0.05 : sy
+                            backend.finishSetup()
+                        } else {
+                            console.error("[QML] Critical: Backend not available during setup finish!")
+                            setupWindow.hide()
+                        }
                     }
                     contentItem: Text { 
                         text: parent.text
