@@ -7,6 +7,8 @@
 #include <filesystem>
 #include <atomic>
 
+using namespace Gdiplus;
+
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -37,14 +39,14 @@ LRESULT CALLBACK HUDWndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK MsgWndProc(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
-    // 0. Single Instance Check (v4.27.0 - Hardened Mutex) - ABSOLUTE TOP
+    // 0. Single Instance Check (v4.27.0 - Hardened Mutex)
     HANDLE hMutex = CreateMutexW(NULL, TRUE, L"BetterAnglePro_MainInstance_Mutex");
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
         if (hMutex) CloseHandle(hMutex);
         return 0; 
     }
 
-    // 1. ENGINE-FIRST BOOT (v4.27.13)
+    // 1. ENGINE-FIRST BOOT (v4.27.14)
     static int   argc = 1;
     static char* arg0 = const_cast<char*>("BetterAngle");
     static char* argv_arr[] = { arg0, nullptr };
@@ -56,18 +58,18 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     Q_INIT_RESOURCE(qml);
     g_hInstance = hInstance;
 
-    // 2. SHOW SPLASH IMMEDIATELY (Starts painting as soon as app.exec() hits)
+    // 2. SHOW SPLASH IMMEDIATELY
     EnsureEngineInitialized();
     ShowSplashScreen();
 
-    // 3. DEFERRED SYSTEM INIT (Runs inside the event loop)
+    // 3. DEFERRED SYSTEM INIT (v4.27.14 - Fixed syntax)
     QTimer::singleShot(0, [hInstance]() {
         qDebug() << "[BOOT] Starting Deferred Win32/HW Initialization...";
         
         SetProcessDPIAware();
         
-        GdiplusStartupInput gsi;
-        GdiplusStartup(&g_gdiplusToken, &gsi, NULL);
+        Gdiplus::GdiplusStartupInput gsi;
+        Gdiplus::GdiplusStartup(&g_gdiplusToken, &gsi, NULL);
 
         // Register Win32 classes
         WNDCLASS wc = {};
@@ -80,7 +82,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         wcMsg.lpszClassName = L"BetterAngleMsgWnd";
         RegisterClass(&wcMsg);
 
-        // SYNC STARTUP (v4.27.8 - Background Thread)
+        // SYNC STARTUP
         std::thread([hInstance]() {
             qDebug() << "[BOOT] Background Thread: Loading Data...";
             g_loadingProgress = 10;
@@ -133,7 +135,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
                                  NULL, NULL, hInstance, NULL);
         SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA);
 
-        // Wait for stability then add UI components
+        // System Tray & Hooks
         QTimer::singleShot(6000, []() {
             AddSystrayIcon(g_hHUD);
             SetTimer(g_hHUD, 1, 32, NULL);    
@@ -145,14 +147,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         CreateControlPanel(hInstance);
     });
 
-    // 4. MASTER FAIL-SAFE (v4.27.9)
+    // 4. MASTER FAIL-SAFE
     QTimer::singleShot(5000, []() {
         if (g_backend) g_backend->requestShowControlPanel();
-    });
-
-    // 5. MASTER LOGGING RE-ENABLE
-    QTimer::singleShot(15000, []() {
-        // qInstallMessageHandler(QtLogHandler);
     });
 
     return app.exec();

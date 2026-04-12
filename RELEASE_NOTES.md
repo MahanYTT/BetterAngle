@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.14] - 2026-04-12
+### Fixed
+- **Clean-Build Recovery**: Resolved two syntax errors in `BetterAngle.cpp` (missing semicolon and Gdiplus namespace conflict) that were breaking the build.
+- **Live-Boot Integrity**: Maintained the Brain-First engine startup to ensure the Splash screen is fully reactive and painted from frame 1.
+
 ## [v4.27.13] - 2026-04-12
 ### Fixed
 - **Live-Boot Recovery**: Radically restructured the app entry point to start the Qt Brain (Event Loop) *first*. This ensures the Splash screen is fully reactive and painted the exact millisecond you open it.
