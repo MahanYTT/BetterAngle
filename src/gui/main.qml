@@ -22,17 +22,19 @@ Window {
     Connections {
         target: backend
         function onShowControlPanelRequested() {
-            mainWindow.show()
+            mainWindow.showNormal()
             mainWindow.raise()
             mainWindow.requestActivate()
             mainWindow.forceActiveFocus()
         }
         function onToggleControlPanelRequested() {
-            if (mainWindow.visible) mainWindow.hide()
-            else {
-                mainWindow.show()
+            if (mainWindow.visible && mainWindow.visibility !== Window.Minimized) {
+                mainWindow.showMinimized()
+            } else {
+                mainWindow.showNormal()
                 mainWindow.raise()
                 mainWindow.requestActivate()
+                mainWindow.forceActiveFocus()
             }
         }
     }
@@ -83,7 +85,7 @@ Window {
                 height: 40
                 background: Rectangle { color: parent.hovered ? "#ff3333" : "transparent" }
                 contentItem: Text { text: parent.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
-                onClicked: mainWindow.hide()
+                onClicked: mainWindow.showMinimized()
             }
         }
     }

@@ -9,20 +9,27 @@ Window {
     x: Screen.width / 2 - width / 2
     y: Screen.height / 2 - height / 2
     visible: true
+    title: qsTr("BetterAngle Splash")
     color: "transparent"
-    flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
+    flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
 
     Connections {
         target: backend
         function onCloseSplashRequested() {
-            LogStartup("QML: Close signal received. Terminating splash.");
+            console.log("[QML] closeSplashRequested received. Stopping animations and closing splash window.")
+            // Stop all animations to reduce CPU usage
+            waveCanvas.phaseAnimation.stop()
+            pulseScaleAnimation.stop()
+            pulseOpacityAnimation.stop()
+            glowOpacityAnimation.stop()
+            lineYAnimator.stop()
             splashWindow.close()
         }
     }
 
     // "God Mode" Nuclear Fail-Safe (v4.27.10)
     Timer {
-        interval: 6000
+        interval: 8000
         running: true
         repeat: false
         onTriggered: {
@@ -55,6 +62,7 @@ Window {
             anchors.fill: parent
             opacity: 0.3
             property real phase: 0
+            property alias phaseAnimation: wavePhaseAnimation
             
             onPaint: {
                 var ctx = getContext("2d");
@@ -66,7 +74,8 @@ Window {
                 var mid = height * 0.85;
                 ctx.moveTo(0, mid);
                 
-                for (var x = 0; x <= width; x += 5) {
+                // Reduce rendering frequency for better performance
+                for (var x = 0; x <= width; x += 8) {
                     var y = mid + Math.sin(x * 0.01 + phase) * 20;
                     ctx.lineTo(x, y);
                 }
@@ -74,11 +83,20 @@ Window {
                 ctx.stroke();
             }
 
-            NumberAnimation on phase {
-                from: 0; to: Math.PI * 2; duration: 3000; loops: Animation.Infinite
+            NumberAnimation {
+                id: wavePhaseAnimation
+                target: waveCanvas
+                property: "phase"
+                from: 0; to: Math.PI * 2; duration: 4000; loops: Animation.Infinite
+                running: true
             }
 
-            onPhaseChanged: requestPaint()
+            onPhaseChanged: {
+                // Throttle repaints to reduce CPU usage
+                if (Math.floor(phase * 10) % 3 === 0) {
+                    requestPaint()
+                }
+            }
         }
 
         // ── The Banner (Moved to Top v4.27.25) ───────────────────
@@ -98,9 +116,17 @@ Window {
             }
             
             Rectangle {
+                id: lineAnimator
                 width: parent.width; height: 1; color: "#00ffa3"; opacity: 0.1
                 anchors.top: parent.top
-                YAnimator on y { from: 0; to: 80; duration: 2000; loops: Animation.Infinite }
+                property alias lineYAnimator: yAnim
+                YAnimator {
+                    id: yAnim
+                    target: lineAnimator
+                    property: "y"
+                    from: 0; to: 80; duration: 3000; loops: Animation.Infinite
+                    running: true
+                }
             }
         }
 
@@ -135,22 +161,33 @@ Window {
 
                         // Pulse Effect (Hard-Centered)
                         Rectangle {
+                            id: pulseRect
                             anchors.fill: parent
                             radius: 60
                             color: "transparent"
                             border.color: "#00ffa3"
                             border.width: 2
                             opacity: 0.6
+                            property alias pulseScaleAnimation: scaleAnim
+                            property alias pulseOpacityAnimation: opacityAnim
                             
-                            SequentialAnimation on scale {
+                            SequentialAnimation {
+                                id: scaleAnim
+                                target: pulseRect
+                                property: "scale"
                                 loops: Animation.Infinite
-                                NumberAnimation { from: 1.0; to: 1.15; duration: 1500; easing.type: Easing.OutCubic }
-                                NumberAnimation { from: 1.15; to: 1.0; duration: 0 }
+                                running: true
+                                NumberAnimation { from: 1.0; to: 1.10; duration: 2000; easing.type: Easing.OutCubic }
+                                NumberAnimation { from: 1.10; to: 1.0; duration: 1000 }
                             }
-                            SequentialAnimation on opacity {
+                            SequentialAnimation {
+                                id: opacityAnim
+                                target: pulseRect
+                                property: "opacity"
                                 loops: Animation.Infinite
-                                NumberAnimation { from: 0.6; to: 0.0; duration: 1500; easing.type: Easing.OutCubic }
-                                NumberAnimation { from: 0.0; to: 0.6; duration: 0 }
+                                running: true
+                                NumberAnimation { from: 0.6; to: 0.0; duration: 2000; easing.type: Easing.OutCubic }
+                                NumberAnimation { from: 0.0; to: 0.6; duration: 1000 }
                             }
                         }
                     }
@@ -225,17 +262,23 @@ Window {
                     
                     // Glow on the leading edge
                     Rectangle {
+                        id: glowRect
                         width: 8; height: 12
                         color: "#00ffa3"
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
                         opacity: 0.5
                         visible: progressBar.width > 0 && progressBar.width < 340
+                        property alias glowOpacityAnimation: glowAnim
                         
-                        SequentialAnimation on opacity {
+                        SequentialAnimation {
+                            id: glowAnim
+                            target: glowRect
+                            property: "opacity"
                             loops: Animation.Infinite
-                            NumberAnimation { from: 0.5; to: 0.8; duration: 500 }
-                            NumberAnimation { from: 0.8; to: 0.5; duration: 500 }
+                            running: true
+                            NumberAnimation { from: 0.5; to: 0.7; duration: 800 }
+                            NumberAnimation { from: 0.7; to: 0.5; duration: 800 }
                         }
                     }
                 }

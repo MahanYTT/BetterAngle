@@ -1,5 +1,15 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.53] - 2026-04-12
+### Fixed
+- **Infinite Splash Loading & High CPU Usage**: Fixed multiple infinite animation loops in splash screen causing 10% CPU usage on high-end systems. Added animation cleanup when splash closes.
+- **Performance Optimization**: Reduced boot thread delay from 2.5s to 0.5s for faster splash closing. Throttled canvas repaints and optimized animation frequencies.
+- **Animation Cleanup**: All infinite animations (wave, pulse, glow, line) now properly stop when `closeSplashRequested` signal is received, reducing CPU load after splash closes.
+
+### Improved
+- **Taskbar Presence**: Ensured splash and main UI always appear in taskbar when open, even when minimized or not showing content.
+- **Portable Debugging**: Enhanced startup logging to create debug folder in portable mode for troubleshooting.
+
 ## [v4.27.52] - 2026-04-12
 ### Added
 - **Portable Mode Support**: Added detection of 'portable.flag' file to store all application data in 'Data/' folder within executable directory.

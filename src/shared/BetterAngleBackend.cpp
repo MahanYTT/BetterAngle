@@ -10,9 +10,9 @@
 #include <QTimer>
 #include <mutex>
 #include <shlobj.h>
+#include <string>
 #include <thread>
 #include <windows.h>
-
 
 extern std::vector<Profile> g_allProfiles;
 extern int g_selectedProfileIdx;
@@ -22,6 +22,7 @@ extern HWND g_hHUD;
 extern HWND g_hPanel;
 #include "shared/ControlPanel.h"
 extern void __cdecl RefreshHotkeys(HWND hWnd);
+void LogStartup(const std::string &msg);
 
 std::recursive_mutex g_profileMutex;
 
@@ -421,17 +422,22 @@ void BetterAngleBackend::downloadUpdate() {
 void BetterAngleBackend::saveThresholds() { SaveSettings(); }
 
 void BetterAngleBackend::requestShowControlPanel() {
-  qDebug() << "[DIAGNOSTIC] requestShowControlPanel called, emitting "
-              "closeSplashRequested";
+  LogStartup("UI: requestShowControlPanel invoked.");
   emit closeSplashRequested();
-  qDebug() << "[DIAGNOSTIC] Creating control panel";
+  LogStartup("UI: closeSplashRequested emitted.");
+
+  LogStartup("UI: Creating or reusing control panel root.");
   CreateControlPanel(g_hInstance);
 
   if (g_hHUD) {
     ShowWindow(g_hHUD, SW_SHOW);
     UpdateWindow(g_hHUD);
+    LogStartup("UI: HUD window shown.");
+  } else {
+    LogStartup("UI: HUD window handle not available yet.");
   }
-  qDebug() << "[DIAGNOSTIC] Emitting showControlPanelRequested";
+
+  LogStartup("UI: Emitting showControlPanelRequested.");
   emit showControlPanelRequested();
 }
 
