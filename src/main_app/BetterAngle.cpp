@@ -297,7 +297,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     app.setQuitOnLastWindowClosed(false);
     
     Q_INIT_RESOURCE(qml);
-    qInstallMessageHandler(QtLogHandler);
+    // Silent Boot (v4.27.9): Disable logging until engine is stable to avoid disk contention freezes
+    // qInstallMessageHandler(QtLogHandler);
     g_hInstance = hInstance;
 
     // 2. SHOW SPLASH INSTANTLY (0ms delay)
@@ -415,6 +416,20 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         if (g_backend) {
             g_backend->requestShowControlPanel();
         }
+    });
+
+    // FAIL-SAFE (v4.27.9): Force transition after 5s no matter what
+    QTimer::singleShot(5000, []() {
+        qDebug() << "[BOOT] 5S Fail-Safe Triggered. Forcing UI transition...";
+        if (g_backend) {
+            g_backend->requestShowControlPanel();
+        }
+    });
+
+    // Re-enable logging after transition (Safe Zone)
+    QTimer::singleShot(10000, []() {
+        qDebug() << "[BOOT] Enabling diagnostic logging handler.";
+        qInstallMessageHandler(QtLogHandler);
     });
 
     // Deferred Work: Wait 3.5 seconds before starting background threads (after transition)

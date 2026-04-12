@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.9] - 2026-04-12
+### Fixed
+- **Core Rescue**: Implemented a hard 5-second "Fail-Safe" that forces the Dashboard to open even if background loading is delayed. 
+- **Freeze Prevention**: Disabled synchronous diagnostic logging during boot. This prevents the "Silent Freeze" caused by disk contention during the critical initial seconds of launch.
+- **Reactive Progress**: Bound the splash progress bar directly to the backend loading status for real-time, non-blocking visual feedback.
+
 ## [v4.27.8] - 2026-04-12
 ### Fixed
 - **Zero-Block Recovery**: Moved all settings and profile loading to a dedicated background thread. This ensures the Splash screen animations are 100% fluid and the UI never enters a "Not Responding" state during startup.

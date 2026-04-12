@@ -133,7 +133,7 @@ Window {
                         font.letterSpacing: 6
                     }
                     Text {
-                        text: "VERSION 4.27.8"
+                        text: "VERSION 4.27.9"
                         color: "#00ffa3"
                         font.pixelSize: 10
                         font.bold: true
@@ -197,14 +197,13 @@ Window {
                 // Actual Progress
                 Rectangle {
                     id: progressBar
-                    width: 0
+                    width: (backend.loadingProgress / 100.0) * 340
                     height: parent.height
                     color: "#00ffa3"
                     radius: 2
                     
-                    // The 3-second hard lock animation
-                    NumberAnimation on width {
-                        from: 0; to: 340; duration: 3000; easing.type: Easing.InOutSine
+                    Behavior on width {
+                        NumberAnimation { duration: 400; easing.type: Easing.OutCubic }
                     }
                     
                     // Glow on the leading edge
