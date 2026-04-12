@@ -381,8 +381,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         g_loadingProgress = 100;
         qDebug() << "[BOOT] Background Thread: Done. Triggering UI transition...";
         
-        // Synchro-Launch (v4.27.11): Trigger transition on the main thread
-        QMetaObject::invokeMethod(g_backend, "requestShowControlPanel", Qt::QueuedConnection);
+        // Synchro-Launch (v4.27.11): Trigger transition on the main thread safely
+        if (g_backend) {
+            QMetaObject::invokeMethod(g_backend, "requestShowControlPanel", Qt::QueuedConnection);
+        }
     }).detach();
 
     // Create message-only window for raw mouse input
