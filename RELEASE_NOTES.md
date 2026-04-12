@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.20] - 2026-04-12
+### Fixed
+- **Wizard Unlock**: Resolved the unresponsive 'Finish Setup' button by correcting the QML property assignment syntax.
+- **Boot Integrity**: All startup systems (Sync-Lock, Toolbox, and Linker) are now fully operational and synchronized.
+
 ## [v4.27.19] - 2026-04-12
 ### Fixed
 - **Toolbox Restoration**: Re-implemented the missing `CaptureScreen` and `GetPixelColor` selection utilities in `BetterAngle.cpp`.
