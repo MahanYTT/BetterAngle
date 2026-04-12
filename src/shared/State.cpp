@@ -248,6 +248,7 @@ POINT g_dragStartHUD = {0, 0};
 POINT g_dragStartMouse = {0, 0};
 HWND g_hHUD = NULL;
 HWND g_hPanel = NULL;
+std::atomic<int> g_loadingProgress{0};
 
 // Hotkey IDs (must match WM_HOTKEY dispatch in HUDWndProc)
 #define HK_TOGGLE 1

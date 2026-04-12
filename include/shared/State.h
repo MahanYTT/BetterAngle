@@ -90,6 +90,7 @@ extern POINT g_dragStartHUD;
 extern POINT g_dragStartMouse;
 extern HWND g_hHUD;
 extern HWND g_hPanel;
+extern std::atomic<int> g_loadingProgress;
 
 void __cdecl RefreshHotkeys(HWND hWnd);
 
