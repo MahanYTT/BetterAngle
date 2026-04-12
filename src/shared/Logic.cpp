@@ -138,6 +138,7 @@ void AngleLogic::SetDivingState(bool diving) {
 }
 
 double AngleLogic::Norm360(double a) const {
+    if (!std::isfinite(a)) return 0.0;
     while (a >= 360.0) a -= 360.0;
     while (a < 0.0)    a += 360.0;
     return a;

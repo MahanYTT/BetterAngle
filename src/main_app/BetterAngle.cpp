@@ -288,7 +288,26 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 #include <tlhelp32.h>
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
+    // 1. INSTANT UI LAUNCH: Initialize Qt and Splash immediately (v4.27.7)
+    static int   argc = 1;
+    static char* arg0 = const_cast<char*>("BetterAngle");
+    static char* argv_arr[] = { arg0, nullptr };
+    char**       argv = argv_arr;
+    QGuiApplication app(argc, argv);
+    app.setQuitOnLastWindowClosed(false);
+    
+    Q_INIT_RESOURCE(qml);
+    qInstallMessageHandler(QtLogHandler);
+    g_hInstance = hInstance;
+
+    // 2. SHOW SPLASH INSTANTLY (0ms delay)
+    EnsureEngineInitialized();
+    ShowSplashScreen();
+
+    // 3. SYSTEM & HW INIT
     SetProcessDPIAware();
+    GdiplusStartupInput gsi;
+    GdiplusStartup(&g_gdiplusToken, &gsi, NULL);
     
     // 0. Single Instance Check (v4.27.0 - Hardened Mutex)
     HANDLE hMutex = CreateMutexW(NULL, TRUE, L"BetterAnglePro_MainInstance_Mutex");
@@ -297,35 +316,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         return 0; // Exit silently if already running
     }
 
-    Q_INIT_RESOURCE(qml);
-    g_hInstance = hInstance;
-
-    // 1. IMMEDIATE Recovery mode (SHIFT held) — Top priority before ANY logic
+    // 1. IMMEDIATE Recovery mode (SHIFT held)
     if (GetKeyState(VK_SHIFT) & 0x8000) {
-        if (MessageBoxW(NULL,
-            L"BetterAngle Recovery Mode\n\nReset all settings to defaults?",
-            L"BetterAngle Recovery", MB_YESNO | MB_ICONQUESTION) == IDYES) {
+        if (MessageBoxW(NULL, L"BetterAngle Recovery Mode\n\nReset all settings to defaults?", L"BetterAngle Recovery", MB_YESNO | MB_ICONQUESTION) == IDYES) {
             std::filesystem::remove_all(GetAppRootPath());
-            MessageBoxW(NULL, L"Reset complete. Starting in setup mode.", L"Done", MB_OK | MB_ICONINFORMATION);
         }
     }
-
-    // Use static argc/argv
-    static int   argc = 1;
-    static char* arg0 = const_cast<char*>("BetterAngle");
-    static char* argv_arr[] = { arg0, nullptr };
-    char**       argv = argv_arr;
-
-    qInstallMessageHandler(QtLogHandler);
-
-    {   // Write first log line
-        std::wstring logPath = GetAppRootPath() + L"debug.log";
-        std::wofstream out(logPath, std::ios::app);
-        if (out.is_open()) out << L"[BOOT] --- BetterAngle " << VERSION_WSTR << L" starting ---" << std::endl;
-    }
-
-    QGuiApplication app(argc, argv);
-    app.setQuitOnLastWindowClosed(false);
 
     // GDI+
     GdiplusStartupInput gsi;
@@ -345,40 +341,42 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     wcMsg.lpszClassName = L"BetterAngleMsgWnd";
     RegisterClass(&wcMsg);
 
-    // Load settings synchronously
-    LoadSettings();
-    CleanupUpdateJunk();
-    g_allProfiles = GetProfiles(GetProfilesPath());
-    
-    // Safety Guard: Force setup if profiles are missing
-    if (g_allProfiles.empty() || g_needsSetup) {
-        g_needsSetup = true;
-        g_allProfiles.clear();
-        Profile def;
-        def.name = L"Default"; def.sensitivityX = 0.05; def.sensitivityY = 0.05;
-        def.showCrosshair = true; def.crossThickness = 2.0f;
-        def.crossColor = RGB(0, 255, 204); def.tolerance = 2;
-        g_allProfiles.push_back(def);
-        g_selectedProfileIdx = 0;
-    }
+    // 4. DEFERRED BACKGROUND LOADING (Wait until Splash is rendering)
+    QTimer::singleShot(100, []() {
+        qDebug() << "[BOOT] Background Loading Settings & Profiles...";
+        LoadSettings();
+        CleanupUpdateJunk();
+        g_allProfiles = GetProfiles(GetProfilesPath());
+        
+        // Safety Guard: Force setup if profiles are missing
+        if (g_allProfiles.empty() || g_needsSetup) {
+            g_needsSetup = true;
+            g_allProfiles.clear();
+            Profile def;
+            def.name = L"Default"; def.sensitivityX = 0.05; def.sensitivityY = 0.05;
+            def.showCrosshair = true; def.crossThickness = 2.0f;
+            def.crossColor = RGB(0, 255, 204); def.tolerance = 2;
+            g_allProfiles.push_back(def);
+            g_selectedProfileIdx = 0;
+        }
 
-    // SAFETY CLAMPING: Ensure index is never out of bounds
-    if (g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) {
-        g_selectedProfileIdx = 0;
-    }
+        // SAFETY CLAMPING: Ensure index is never out of bounds
+        if (g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size()) {
+            g_selectedProfileIdx = 0;
+        }
 
-    g_currentProfile  = g_allProfiles[g_selectedProfileIdx];
-    g_crossThickness  = g_currentProfile.crossThickness;
-    g_crossColor      = g_currentProfile.crossColor;
-    g_crossOffsetX    = g_currentProfile.crossOffsetX;
-    g_crossOffsetY    = g_currentProfile.crossOffsetY;
-    g_crossAngle      = g_currentProfile.crossAngle;
-    g_crossPulse      = g_currentProfile.crossPulse;
-    g_logic.LoadProfile(g_currentProfile.sensitivityX);
+        g_currentProfile  = g_allProfiles[g_selectedProfileIdx];
+        g_crossThickness  = g_currentProfile.crossThickness;
+        g_crossColor      = g_currentProfile.crossColor;
+        g_crossOffsetX    = g_currentProfile.crossOffsetX;
+        g_crossOffsetY    = g_currentProfile.crossOffsetY;
+        g_crossAngle      = g_currentProfile.crossAngle;
+        g_crossPulse      = g_currentProfile.crossPulse;
+        g_logic.LoadProfile(g_currentProfile.sensitivityX);
+    });
 
     // Create message-only window for raw mouse input
-    HWND hMsgWnd = CreateWindowEx(0, L"BetterAngleMsgWnd", NULL, 0,
-                                   0, 0, 0, 0, HWND_MESSAGE, NULL, hInstance, NULL);
+    HWND hMsgWnd = CreateWindowEx(0, L"BetterAngleMsgWnd", NULL, 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, hInstance, NULL);
     RegisterRawMouse(hMsgWnd);
 
     // Create layered HUD overlay window (covers virtual desktop)
@@ -395,20 +393,17 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
 
     SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA);
 
-    // QML Init
-    EnsureEngineInitialized();
-    ShowSplashScreen();
-
     // Deferred Logic: Wait for UI to be stable before starting high-frequency or background tasks.
     QTimer::singleShot(1000, []() {
         qDebug() << "[BOOT] Activating Win32 hooks and timers...";
         AddSystrayIcon(g_hHUD);
-        SetTimer(g_hHUD, 1, 16, NULL);    // ~60 fps repaint (CPU intensive)
+        // Repaint timer moved to 32ms (30fps) for startup stability
+        SetTimer(g_hHUD, 1, 32, NULL);    
         SetTimer(g_hHUD, 2, 30000, NULL); // auto-save
         RefreshHotkeys(g_hHUD);
     });
 
-    // MASTER BOOT TRANSITION: Move the countdown out of Win32 and into the persistent Qt loop (v4.27.6)
+    // MASTER BOOT TRANSITION
     QTimer::singleShot(3000, []() {
         qDebug() << "[BOOT] 3S Splash Expired. Triggering transition...";
         if (g_backend) {
@@ -423,7 +418,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         std::thread(DetectorThread).detach();
     });
 
-    // Deferred Pre-warm: Wait 500ms so Splash can render and animate before we pin the CPU
+    // Deferred Pre-warm
     QTimer::singleShot(500, [hInstance]() {
         qDebug() << "[BOOT] Background Pre-warming Dashboard...";
         CreateControlPanel(hInstance);
