@@ -39,14 +39,16 @@ float g_freefallThreshold = 0.20f;
 #include <string>
 
 #pragma comment(lib, "shell32.lib")
-#pragma comment(lib, "advapi32.lib")
+#include <shlobj.h>
 
 std::wstring GetAppRootPath() {
-  char* appdata = getenv("LOCALAPPDATA");
-  if (!appdata) return L"";
-  std::wstring path = std::wstring(CA2W(appdata)) + L"\\BetterAngle Pro";
-  CreateDirectoryW(path.c_str(), NULL);
-  return path + L"\\";
+    wchar_t appdata[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) {
+        std::wstring path = std::wstring(appdata) + L"\\BetterAngle Pro";
+        CreateDirectoryW(path.c_str(), NULL);
+        return path + L"\\";
+    }
+    return L"";
 }
 
 std::wstring GetProfilesPath() {

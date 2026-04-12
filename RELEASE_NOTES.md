@@ -1,5 +1,9 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.40] - 2026-04-12
+### Fixed
+- **Build Rescue**: Fixed a compilation error in `State.cpp` by restoring the native `SHGetFolderPathW` logic, ensuring 100% compatibility without external ATL libraries.
+
 ## [v4.27.39] - 2026-04-12
 ### Fixed
 - **Directory Unification**: Locked all application data (Settings, Profiles, Logs) into a single folder: `%LOCALAPPDATA%\BetterAngle Pro`. This prevents the creation of redundant "BetterAngle" folders.

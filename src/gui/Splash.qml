@@ -158,7 +158,7 @@ Window {
 
                 // Centered Version Number (Clean Typography)
                 Text {
-                    text: "VERSION 4.27.38"
+                    text: "VERSION 4.27.40"
                     color: "#00ffa3"
                     font.pixelSize: 12
                     font.bold: true
