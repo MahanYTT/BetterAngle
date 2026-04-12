@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.12] - 2026-04-12
+### Fixed
+- **Bulletproof Startup**: Final fine-comb optimization. Non-essential shell calls and Win32 hook initialization are now delayed until 6 seconds after launch to ensure 0% conflict with the Splash-to-Dashboard transition.
+- **Force-Active Pulse**: The Dashboard window now requests immediate focus and brings itself to the front the exact millisecond it becomes visible.
+- **Zero-Contention Recovery**: Extended all safety timers and logging handlers to provide a distraction-free environment for the UI engine.
+
 ## [v4.27.11] - 2026-04-12
 ### Fixed
 - **Synchro-Launch**: Linked the Dashboard transition directly to the background loading completion. The app now opens the exact millisecond it is ready, rather than relying on a hardcoded 3-second 'guess.'

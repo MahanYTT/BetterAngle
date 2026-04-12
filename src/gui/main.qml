@@ -25,6 +25,7 @@ Window {
             mainWindow.show()
             mainWindow.raise()
             mainWindow.requestActivate()
+            mainWindow.forceActiveFocus()
         }
         onShowSetupRequested: {
             setupWindow.show()

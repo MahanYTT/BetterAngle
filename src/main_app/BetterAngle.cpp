@@ -406,7 +406,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA);
 
     // Deferred Logic: Wait for UI to be stable before starting high-frequency or background tasks.
-    QTimer::singleShot(1000, []() {
+    // (v4.27.12 - Delayed even further to avoid Splash-Dashboard conflict)
+    QTimer::singleShot(6000, []() {
         qDebug() << "[BOOT] Activating Win32 hooks and timers...";
         AddSystrayIcon(g_hHUD);
         // Repaint timer moved to 32ms (30fps) for startup stability
@@ -424,7 +425,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     });
 
     // Re-enable logging after transition (Safe Zone)
-    QTimer::singleShot(10000, []() {
+    QTimer::singleShot(15000, []() {
         qDebug() << "[BOOT] Enabling diagnostic logging handler.";
         qInstallMessageHandler(QtLogHandler);
     });
