@@ -10,7 +10,7 @@ Window {
     y: Screen.height / 2 - height / 2
     visible: true
     color: "transparent"
-    flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.SplashScreen
+    flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
 
     Connections {
         target: backend
@@ -133,7 +133,7 @@ Window {
                         font.letterSpacing: 6
                     }
                     Text {
-                        text: "VERSION 4.27.0"
+                        text: "VERSION 4.27.1"
                         color: "#00ffa3"
                         font.pixelSize: 10
                         font.bold: true

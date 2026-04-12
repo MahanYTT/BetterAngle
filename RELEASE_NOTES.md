@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.1] - 2026-04-12
+### Fixed
+- **Boot Reliability**: Deferred all background processing (Detector/Updater) until 2 seconds after startup to ensure 0% CPU usage during engine load. This resolves "Smart" AV security suspensions and the '9MB RAM hang' issue.
+- **Splash Compatibility**: Simplified window flags to ensure the splash screen is always visible across all monitor and OS configurations.
+- **Process Purge**: Improved the surgical cleanup of orphaned tasks to handle varied executable filenames (e.g. 'BetterAngle Pro.exe').
+
 ## [v4.27.0] - 2026-04-12
 ### Added
 - **Ghost Process Purge**: Automatically finds and closes orphaned 'BetterAngle.exe' background tasks at startup to ensure the new version always launches.

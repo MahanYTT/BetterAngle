@@ -297,7 +297,9 @@ void KillOtherInstances() {
     if (Process32FirstW(hSnap, &pe)) {
         do {
             if (pe.th32ProcessID != currentPid) {
-                if (wcscmp(pe.szExeFile, L"BetterAngle.exe") == 0) {
+                std::wstring name = pe.szExeFile;
+                // Surgical purge: Only kill processes that explicitly contain "BetterAngle"
+                if (name.find(L"BetterAngle") != std::wstring::npos) {
                     HANDLE hProc = OpenProcess(PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
                     if (hProc) {
                         TerminateProcess(hProc, 0);
@@ -308,7 +310,6 @@ void KillOtherInstances() {
         } while (Process32NextW(hSnap, &pe));
     }
     CloseHandle(hSnap);
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
 }
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
@@ -421,22 +422,17 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     // Ensure the HUD is truly transparent and click-through
     SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA);
 
-    // SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA); // REMOVED: Switching to UpdateLayeredWindow
-    AddSystrayIcon(g_hHUD);
-    SetTimer(g_hHUD, 1, 16, NULL);    // ~60 fps repaint
-    SetTimer(g_hHUD, 2, 30000, NULL); // auto-save
-    SetTimer(g_hHUD, 3, 3000, NULL);  // Master Boot Transition (3s)
-    RefreshHotkeys(g_hHUD);
-
-    // Background threads
-    std::thread(CheckForUpdates).detach();
-    std::thread(DetectorThread).detach();
-
-    // QML engine — context properties MUST be set before load()
-    qDebug() << "[BOOT] Initialising QML engine...";
+    // QML Init
     EnsureEngineInitialized();
-    qDebug() << "[BOOT] Loading Splash...";
     ShowSplashScreen();
+
+    // Deferred Work: Wait for UI to be stable before starting background CPU-heavy tasks.
+    // This removes the "High CPU at Startup" heuristic trigger for Antivirus.
+    QTimer::singleShot(2000, []() {
+        qDebug() << "[BOOT] Starting deferred background tasks...";
+        std::thread(CheckForUpdates).detach();
+        std::thread(DetectorThread).detach();
+    });
 
     // Deferred Pre-warm: Wait 500ms so Splash can render and animate before we pin the CPU
     QTimer::singleShot(500, [hInstance]() {
@@ -444,6 +440,5 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         CreateControlPanel(hInstance);
     });
 
-    qDebug() << "[BOOT] Entering event loop.";
     return app.exec();
 }
