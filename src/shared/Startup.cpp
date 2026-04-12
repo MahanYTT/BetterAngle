@@ -1,11 +1,14 @@
-#include "shared/Startup.h"
-#include "shared/State.h"
-#include <chrono>
+#define WIN32_LEAN_AND_MEAN
 #include <gdiplus.h>
-#include <string>
-#include <thread>
 #include <windows.h>
 
+
+#include <chrono>
+#include <string>
+#include <thread>
+
+#include "shared/Startup.h"
+#include "shared/State.h"
 
 using namespace Gdiplus;
 

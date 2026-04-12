@@ -1,15 +1,20 @@
+// Windows headers must be included in correct order for GDI+
+// Remove WIN32_LEAN_AND_MEAN to ensure GDI definitions are available
+#include <gdiplus.h>
+#include <objidl.h>
+#include <shlobj.h>
+#include <windows.h>
+
+
 #include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <filesystem>
-#include <gdiplus.h>
 #include <iostream>
 #include <mutex>
-#include <shlobj.h>
 #include <string>
 #include <thread>
 #include <vector>
-#include <windows.h>
 
 #include <fstream>
 #include <iomanip>
