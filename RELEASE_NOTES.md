@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.38] - 2026-04-12
+### Fixed
+- **Logo Geometry**: Enforced strict 1:1 aspect ratios on all branding elements to fix "Oval Logo" distortion on high-refresh/high-DPI monitors.
+- **Splash Override**: Added a C++ level "Force-Destroy" timer. If the splash screen hangs for more than 8 seconds, the engine will now physically close it and manifest the Dashboard.
+- **Visual Polish**: Re-aligned splash typography for a cleaner, professional appearance.
+
 ## [v4.27.37] - 2026-04-12
 ### Fixed
 - **Build Rescue**: Fixed a critical MSVC compilation error (`C3861: SHGetFolderPathW identifier not found`) by adding the missing Windows Shell headers.

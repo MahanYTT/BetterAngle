@@ -112,36 +112,40 @@ Window {
                 anchors.centerIn: parent
                 spacing: 20
 
-                // New Circular Logo
+                // New Circular Logo (Hard-Locked 1:1 Aspect Ratio)
                 Item {
-                    width: 100; height: 100
+                    width: 120; height: 120
                     anchors.horizontalCenter: parent.horizontalCenter
                     
                     Rectangle {
                         anchors.fill: parent
-                        radius: 50
+                        radius: 60
                         color: "#11ffffff"
                         clip: true
+                        border.color: "#1a00ffa3"
+                        border.width: 1
                         
                         Image {
-                            anchors.fill: parent
+                            anchors.centerIn: parent
+                            width: 80; height: 80
                             source: "qrc:/assets/logo_transparent.png"
                             fillMode: Image.PreserveAspectFit
+                            mipmap: true
                         }
 
-                        // Pulse Effect
+                        // Pulse Effect (Hard-Centered)
                         Rectangle {
                             anchors.fill: parent
-                            radius: 50
+                            radius: 60
                             color: "transparent"
                             border.color: "#00ffa3"
-                            border.width: 1.5
+                            border.width: 2
                             opacity: 0.6
                             
                             SequentialAnimation on scale {
                                 loops: Animation.Infinite
-                                NumberAnimation { from: 1.0; to: 1.2; duration: 1500; easing.type: Easing.OutCubic }
-                                NumberAnimation { from: 1.2; to: 1.0; duration: 0 }
+                                NumberAnimation { from: 1.0; to: 1.15; duration: 1500; easing.type: Easing.OutCubic }
+                                NumberAnimation { from: 1.15; to: 1.0; duration: 0 }
                             }
                             SequentialAnimation on opacity {
                                 loops: Animation.Infinite
@@ -152,31 +156,32 @@ Window {
                     }
                 }
 
-                // Centered Version Number
+                // Centered Version Number (Clean Typography)
                 Text {
-                    text: "VERSION 4.27.37"
+                    text: "VERSION 4.27.38"
                     color: "#00ffa3"
-                    font.pixelSize: 14
+                    font.pixelSize: 12
                     font.bold: true
-                    font.letterSpacing: 4
+                    font.letterSpacing: 3
                     anchors.horizontalCenter: parent.horizontalCenter
+                    opacity: 0.8
                 }
 
-                // Brand Main Text
+                // Brand Main Text (Balanced)
                 Text {
                     text: "BETTERANGLE PRO"
                     color: "white"
-                    font.pixelSize: 32
+                    font.pixelSize: 30
                     font.bold: true
-                    font.letterSpacing: 8
+                    font.letterSpacing: 6
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
 
-                // The Quote
+                // The Quote (Precision Aligned)
                 Text {
                     text: "\"The best wins begin with the best drops\""
-                    color: "#666"
-                    font.pixelSize: 13
+                    color: "#888"
+                    font.pixelSize: 12
                     font.italic: true
                     font.letterSpacing: 1
                     anchors.horizontalCenter: parent.horizontalCenter

@@ -257,10 +257,14 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         EnsureEngineInitialized(); ShowSplashScreen();
 
         // ── Nuclear Backup (Fail-safe) ───────────────────────────────────
-        QTimer::singleShot(6000, []() { 
+        QTimer::singleShot(8000, []() { 
             if (g_backend) {
                 LogStartup("Fail-Safe: Forcing transition to Dashboard.");
                 QMetaObject::invokeMethod(g_backend, "requestShowControlPanel", Qt::QueuedConnection); 
+                
+                // Physical Override: Find and kill anything claiming to be the splash
+                HWND hSplash = FindWindowW(NULL, L"BetterAngle Splash");
+                if (hSplash) { PostMessage(hSplash, WM_CLOSE, 0, 0); LogStartup("Fail-Safe: Physically closed Splash window."); }
             }
         });
 
