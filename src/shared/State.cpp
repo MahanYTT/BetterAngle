@@ -235,7 +235,6 @@ std::string g_latestVersionOnline = "v" VERSION_STR;
 float g_currentAngle = 0.0f;
 bool g_debugMode = false;
 bool g_isCursorVisible = false;
-bool g_needsSetup = false;
 AngleLogic g_logic(0.05);
 bool g_forceDiving = false;
 bool g_forceDetection = false;

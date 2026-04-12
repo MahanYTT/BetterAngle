@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.26.0] - 2026-04-12
+### Fixed
+- **Build Restoration**: Resolved a critical compiler error (redefinition of `g_needsSetup`) that caused the previous release build to fail. This fix restores the CI/CD pipeline integrity.
+- **Binary Integrity**: Fixed the issue where users were receiving corrupted/16-bit-error binaries by ensuring a successful 64-bit production build.
+
 ## [v4.25.9] - 2026-04-12
 ### Added
 - **Single Instance Mutex**: Implemented a native Windows locking mechanism that prevents the application from opening twice, avoiding settings conflicts and resource waste.
