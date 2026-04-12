@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.10] - 2026-04-12
+### Fixed
+- **God Mode Recovery**: Resolved a missing property binding that kept the splash progress bar at 0%. 
+- **QML Fail-Safe**: Added a redundant 8-second timer inside the Splash UI itself. If the app's brain is too slow, the window will now force itself closed and open the Dashboard automatically.
+- **Improved Responsiveness**: Connected the "Loading Engine..." bar to the actual background thread via a real-time reactive binding.
+
 ## [v4.27.9] - 2026-04-12
 ### Fixed
 - **Core Rescue**: Implemented a hard 5-second "Fail-Safe" that forces the Dashboard to open even if background loading is delayed. 

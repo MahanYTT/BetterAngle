@@ -20,6 +20,17 @@ Window {
         }
     }
 
+    // "God Mode" Nuclear Fail-Safe (v4.27.10)
+    Timer {
+        interval: 8000
+        running: true
+        repeat: false
+        onTriggered: {
+            console.log("[QML] 8s Fail-Safe Triggered. Forcing splash close.")
+            splashWindow.close()
+        }
+    }
+
     Rectangle {
         id: mainBg
         anchors.fill: parent
@@ -133,7 +144,7 @@ Window {
                         font.letterSpacing: 6
                     }
                     Text {
-                        text: "VERSION 4.27.9"
+                        text: "VERSION 4.27.10"
                         color: "#00ffa3"
                         font.pixelSize: 10
                         font.bold: true

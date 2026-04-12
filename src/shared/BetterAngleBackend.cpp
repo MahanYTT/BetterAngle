@@ -62,6 +62,13 @@ BetterAngleBackend::BetterAngleBackend(QObject *parent) : QObject(parent) {
       lastComplete = g_downloadComplete;
       emit updateStatusChanged();
     }
+    
+    // Smooth Progress Emission (v4.27.10)
+    static int lastProgress = 0;
+    if (g_loadingProgress != lastProgress) {
+      lastProgress = g_loadingProgress;
+      emit loadingProgressChanged();
+    }
   });
   timer->start(100);
 
@@ -702,4 +709,8 @@ void BetterAngleBackend::saveKeybinds() {
   Profile &p = g_allProfiles[g_selectedProfileIdx];
   p.Save(GetProfilesPath() + p.name + L".json");
   RefreshHotkeys(g_hHUD);
+}
+
+int BetterAngleBackend::loadingProgress() const {
+    return g_loadingProgress.load();
 }
