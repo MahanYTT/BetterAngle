@@ -1,5 +1,9 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.26.2] - 2026-04-12
+### Fixed
+- **Update Safety Refinement**: Tuned the auto-updater's safety floor to 1MB. This ensures valid production binaries (1.4MB) are accepted while still blocking corrupted downloads.
+
 ## [v4.26.1] - 2026-04-12
 ### Fixed
 - **Binary Distribution Fix**: Updated the CI/CD pipeline to explicitly upload the raw `BetterAngle.exe` file. This resolves the 16-bit application error previously seen when auto-updating.

@@ -49,7 +49,7 @@ bool DownloadFile(const std::wstring& url, const std::wstring& dest) {
     std::ifstream check(dest, std::ios::binary | std::ios::ate);
     if (check.is_open()) {
         std::streamsize size = check.tellg();
-        if (size < 5 * 1024 * 1024) { // 5 MB minimum
+        if (size < 1 * 1024 * 1024) { // 1 MB minimum
             check.close();
             DeleteFileW(dest.c_str());
             return false;
