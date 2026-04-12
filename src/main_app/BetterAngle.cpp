@@ -270,34 +270,30 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         });
 
         LogStartup("Init: Creating HUD Window Layer...");
-        QTimer::singleShot(0, [hInstance]() {
-            try {
-                WNDCLASS wc = { 0 }; wc.lpfnWndProc = HUDWndProc; wc.hInstance = hInstance;
-                wc.hCursor = LoadCursor(NULL, IDC_CROSS); wc.lpszClassName = L"BetterAngleHUD"; RegisterClass(&wc);
-                WNDCLASS wcMsg = { 0 }; wcMsg.lpfnWndProc = MsgWndProc; wcMsg.hInstance = hInstance;
-                wcMsg.lpszClassName = L"BetterAngleMsgWnd"; RegisterClass(&wcMsg);
+        try {
+            WNDCLASS wc = { 0 }; wc.lpfnWndProc = HUDWndProc; wc.hInstance = hInstance;
+            wc.hCursor = LoadCursor(NULL, IDC_CROSS); wc.lpszClassName = L"BetterAngleHUD"; RegisterClass(&wc);
+            WNDCLASS wcMsg = { 0 }; wcMsg.lpfnWndProc = MsgWndProc; wcMsg.hInstance = hInstance;
+            wcMsg.lpszClassName = L"BetterAngleMsgWnd"; RegisterClass(&wcMsg);
 
-                LogStartup("Window: Registering Raw Input...");
-                HWND hMsgWnd = CreateWindowEx(0, L"BetterAngleMsgWnd", NULL, 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, hInstance, NULL); RegisterRawMouse(hMsgWnd);
-                int sw = GetSystemMetrics(SM_CXVIRTUALSCREEN), sh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-                
-                LogStartup("Window: Spawning HUD Overlay...");
-                g_hHUD = CreateWindowEx(WS_EX_TOPMOST|WS_EX_LAYERED|WS_EX_TRANSPARENT|WS_EX_TOOLWINDOW|WS_EX_NOACTIVATE, L"BetterAngleHUD", L"BetterAngle HUD", WS_POPUP, GetSystemMetrics(SM_XVIRTUALSCREEN), GetSystemMetrics(SM_YVIRTUALSCREEN), sw, sh, NULL, NULL, hInstance, NULL);
-                SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA);
-                g_winInitialized = true;
+            LogStartup("Window: Registering Raw Input...");
+            HWND hMsgWnd = CreateWindowEx(0, L"BetterAngleMsgWnd", NULL, 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, hInstance, NULL); RegisterRawMouse(hMsgWnd);
+            int sw = GetSystemMetrics(SM_CXVIRTUALSCREEN), sh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+            
+            LogStartup("Window: Spawning HUD Overlay...");
+            g_hHUD = CreateWindowEx(WS_EX_TOPMOST|WS_EX_LAYERED|WS_EX_TRANSPARENT|WS_EX_TOOLWINDOW|WS_EX_NOACTIVATE, L"BetterAngleHUD", L"BetterAngle HUD", WS_POPUP, GetSystemMetrics(SM_XVIRTUALSCREEN), GetSystemMetrics(SM_YVIRTUALSCREEN), sw, sh, NULL, NULL, hInstance, NULL);
+            SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA);
+            g_winInitialized = true;
 
-                LogStartup("Window: Starting Control Panel Bridge...");
-                QTimer::singleShot(500, [hInstance]() {
-                    LogStartup("Panel: Initializing Systray & Dashboard...");
-                    AddSystrayIcon(g_hHUD); SetTimer(g_hHUD, 1, 32, NULL); SetTimer(g_hHUD, 2, 30000, NULL); RefreshHotkeys(g_hHUD);
-                    LogStartup("Panel: Invoking CreateControlPanel...");
-                    CreateControlPanel(hInstance);
-                    LogStartup("Panel: Bridge Task Complete.");
-                });
-            } catch (const std::exception& e) {
-                LogStartup("WIN_TASK_FATAL: " + std::string(e.what()));
-            }
-        });
+            LogStartup("Window: Starting Control Panel Bridge...");
+            LogStartup("Panel: Initializing Systray & Dashboard...");
+            AddSystrayIcon(g_hHUD); SetTimer(g_hHUD, 1, 32, NULL); SetTimer(g_hHUD, 2, 30000, NULL); RefreshHotkeys(g_hHUD);
+            LogStartup("Panel: Invoking CreateControlPanel...");
+            CreateControlPanel(hInstance);
+            LogStartup("Panel: Bridge Task Complete.");
+        } catch (const std::exception& e) {
+            LogStartup("WIN_TASK_FATAL: " + std::string(e.what()));
+        }
 
         LogStartup(">>> APP READY. ENTERING EVENT LOOP <<<");
         return app.exec();

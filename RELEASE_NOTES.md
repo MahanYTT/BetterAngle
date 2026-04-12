@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.42] - 2026-04-12
+### Fixed
+- **Steel-Wall Startup**: Resolved a critical boot hang by moving all window registration and creation logic into the synchronous startup flow. This prevents the "Timer Deadlock" observed on some hardware configurations.
+- **Synchronous Bridge**: The transition from HUD to Dashboard is now triggered immediately and reliably, with no asynchronous delays.
+
 ## [v4.27.41] - 2026-04-12
 ### Fixed
 - **Legacy Migration**: Implemented an automatic data migration routine. On startup, the app now moves all settings, profiles, and logs from `%LOCALAPPDATA%\BetterAngle` to the new `%LOCALAPPDATA%\BetterAngle Pro` folder and cleans up the redundant directory.
