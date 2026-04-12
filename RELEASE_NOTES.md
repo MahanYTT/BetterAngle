@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.25.5] - 2026-04-12
+### Fixed
+- **Resource Path Hardening**: Standardized all internal QRC paths with explicit prefixes and forced resource initialization at boot. This resolves the recurring "Splash resources failed to load" error.
+- **Deep QML Diagnostics**: Implemented a "Warning Trap" in the boot sequence. If the UI fails to load, the error dialog will now display the **exact technical reason** (e.g., missing QML module or syntax error) directly from the Qt engine.
+- **Reliable Boot Sequence**: Ensured that the splash screen and main dashboard are correctly linked and accessible across all Windows deployment scenarios.
+
 ## [v4.25.4] - 2026-04-12
 ### Fixed
 - **Rendering Compatibility**: Restored `opengl32sw.dll` to the distribution. This ensures the app can launch and render on systems that lack full GPU hardware acceleration, eliminating the "silent crash" on boot.

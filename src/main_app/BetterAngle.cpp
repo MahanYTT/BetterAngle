@@ -279,7 +279,10 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 // ── Entry point ───────────────────────────────────────────────────────────────
+#include <QResource>
+
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
+    Q_INIT_RESOURCE(qml);
     g_hInstance = hInstance;
 
     // 1. IMMEDIATE Recovery mode (SHIFT held) — Top priority before ANY logic

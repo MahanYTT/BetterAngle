@@ -1,5 +1,5 @@
 <!DOCTYPE RCC><RCC version="1.0">
-<qresource>
+<qresource prefix="/">
     <file>src/gui/main.qml</file>
     <file>src/gui/Dashboard.qml</file>
     <file>src/gui/Splash.qml</file>
