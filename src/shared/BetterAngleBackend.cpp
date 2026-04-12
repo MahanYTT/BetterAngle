@@ -85,12 +85,12 @@ BetterAngleBackend::BetterAngleBackend(QObject *parent) : QObject(parent) {
 }
 
 double BetterAngleBackend::sensX() const {
-  if (g_allProfiles.empty())
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return 1.0;
   return g_allProfiles[g_selectedProfileIdx].sensitivityX;
 }
 void BetterAngleBackend::setSensX(double v) {
-  if (g_allProfiles.empty())
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return;
   Profile &p = g_allProfiles[g_selectedProfileIdx];
   p.sensitivityX = (std::max)(0.00001, v);
@@ -101,12 +101,12 @@ void BetterAngleBackend::setSensX(double v) {
 }
 
 double BetterAngleBackend::sensY() const {
-  if (g_allProfiles.empty())
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return 1.0;
   return g_allProfiles[g_selectedProfileIdx].sensitivityY;
 }
 void BetterAngleBackend::setSensY(double v) {
-  if (g_allProfiles.empty())
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return;
   Profile &p = g_allProfiles[g_selectedProfileIdx];
   p.sensitivityY = (std::max)(0.00001, v);
@@ -116,12 +116,12 @@ void BetterAngleBackend::setSensY(double v) {
 }
 
 int BetterAngleBackend::tolerance() const {
-  if (g_allProfiles.empty())
-    return 25;
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
+    return 2;
   return g_allProfiles[g_selectedProfileIdx].tolerance;
 }
 void BetterAngleBackend::setTolerance(int v) {
-  if (g_allProfiles.empty())
+  if (g_allProfiles.empty() || g_selectedProfileIdx < 0 || g_selectedProfileIdx >= (int)g_allProfiles.size())
     return;
   Profile &p = g_allProfiles[g_selectedProfileIdx];
   p.tolerance = v;

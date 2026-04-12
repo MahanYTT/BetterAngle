@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.30] - 2026-04-12
+### Fixed
+- **Safety Lock**: Upgraded the startup sequence to detect and handle "Ghost Processes" (hung background instances). The app now warns you if an old version is stuck in memory.
+- **Steel-Walled Backend**: Added strict bounds-checking to all profile data access, eliminating the "Early Boot" silent crash that was blocking the UI.
+- **Bootstrap Stability**: Further isolated the loading thread to ensure it can never be blocked by UI component initialization.
+
 ## [v4.27.29] - 2026-04-12
 ### Fixed
 - **Atomic Boot**: Forced the initialization thread to start before any windows are created, ensuring the 0% hang is physically impossible.

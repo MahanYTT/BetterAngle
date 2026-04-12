@@ -148,9 +148,13 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     SetProcessDPIAware(); 
     Gdiplus::GdiplusStartupInput gsi; Gdiplus::GdiplusStartup(&g_gdiplusToken, &gsi, NULL);
     HANDLE hMutex = CreateMutexW(NULL, TRUE, L"BetterAnglePro_MainInstance_Mutex");
-    if (GetLastError() == ERROR_ALREADY_EXISTS) { if (hMutex) CloseHandle(hMutex); return 0; }
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        if (hMutex) CloseHandle(hMutex);
+        MessageBoxW(NULL, L"BetterAngle Pro is already running.\n\nIf the app is not showing, please close the 'BetterAngle.exe' process in Task Manager and try again.", L"BetterAngle Pro - Already Running", MB_OK | MB_ICONINFORMATION);
+        return 0;
+    }
 
-    g_loadingProgress = 5; // Instant 5% to break the 0% hang.
+    g_loadingProgress = 5; 
     g_hInstance = hInstance;
 
     // ── Atomic Boot Thread (Starts BEFORE Splash/Engine) ───────────────
