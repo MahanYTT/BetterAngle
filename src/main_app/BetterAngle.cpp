@@ -282,6 +282,13 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 #include <QResource>
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
+    // 0. Single Instance Check (Prevents multiple BetterAngle processes)
+    HANDLE hMutex = CreateMutexW(NULL, TRUE, L"Global\\BetterAngle_Unique_Instance_Mutex");
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        if (hMutex) CloseHandle(hMutex);
+        return 0; // Exit silently if already running
+    }
+
     Q_INIT_RESOURCE(qml);
     g_hInstance = hInstance;
 

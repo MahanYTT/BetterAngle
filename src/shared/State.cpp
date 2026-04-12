@@ -20,6 +20,7 @@ bool g_downloadComplete = false;
 std::string g_updateHistory = "";
 std::atomic<bool> g_fortniteFocusedCache(false);
 bool g_setupComplete = false;
+bool g_needsSetup = true;
 std::string g_lastVersionRun = "";
 
 Profile g_currentProfile;

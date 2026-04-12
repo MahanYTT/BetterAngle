@@ -1,5 +1,12 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.25.9] - 2026-04-12
+### Added
+- **Single Instance Mutex**: Implemented a native Windows locking mechanism that prevents the application from opening twice, avoiding settings conflicts and resource waste.
+### Fixed
+- **Startup Protocol Hardening**: Re-engineered the boot sequence to ensure the First Time Setup wizard is correctly prioritized on the initial installation run.
+- **Improved UI Flow**: Set the main dashboard to remain hidden until the setup is confirmed, eliminating any visual flicker or "Dashboard skipping" on first boot.
+
 ## [v4.25.8] - 2026-04-12
 ### Fixed
 - **UI Interactivity Overhaul**: Resolved the issue where the application buttons were non-clickable. Hardened the HUD overlay with explicit click-through transparency and focus-prevention (`WS_EX_NOACTIVATE`), ensuring it never blocks interaction.

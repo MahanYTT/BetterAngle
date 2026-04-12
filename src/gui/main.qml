@@ -8,7 +8,7 @@ Window {
     height: 480
     x: Screen.width / 2 - width / 2
     y: Screen.height / 2 - height / 2
-    visible: true
+    visible: false
     title: qsTr("BetterAngle Pro Angle HUD")
     color: "#0a0a0f"
 
