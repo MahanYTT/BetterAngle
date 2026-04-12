@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.6] - 2026-04-12
+### Fixed
+- **Absolute Restoration**: Reverted the boot sequence to the proven v4.24 steady-state logic. This ensures a successful launch by removing conflicting native Win32/GPU startup code.
+- **Event Loop Reliability**: Moved the 3-second splash transition from a native Win32 timer to a robust Qt QTimer. This guarantees the dashboard always appears regardless of OS-level window suspension or monitor configuration.
+- **Stability Cleanup**: Removed aggressive process-killing and experimental rendering modes to satisfy system trust heuristics and ensure 100% UI delivery.
+
 ## [v4.27.5] - 2026-04-12
 ### Fixed
 - **High-Resolution Recovery**: Forced Software Rendering (`QT_QUICK_BACKEND=software`) to bypass GPU/driver deadlocks common on high-end gaming setups. This ensures the UI appears instantly even on 4K/Ultra-wide displays.

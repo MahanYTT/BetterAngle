@@ -287,39 +287,9 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 #include <QResource>
 #include <tlhelp32.h>
 
-void KillOtherInstances() {
-    DWORD currentPid = GetCurrentProcessId();
-    HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (hSnap == INVALID_HANDLE_VALUE) return;
-    PROCESSENTRY32W pe;
-    pe.dwSize = sizeof(pe);
-    if (Process32FirstW(hSnap, &pe)) {
-        do {
-            if (pe.th32ProcessID != currentPid) {
-                std::wstring name = pe.szExeFile;
-                if (name.find(L"BetterAngle") != std::wstring::npos) {
-                    HANDLE hProc = OpenProcess(PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
-                    if (hProc) {
-                        TerminateProcess(hProc, 0);
-                        CloseHandle(hProc);
-                    }
-                }
-            }
-        } while (Process32NextW(hSnap, &pe));
-    }
-    CloseHandle(hSnap);
-}
-
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
-    // 1. FORCE SOFTWARE RENDERING (Definitive fix for GPU deadlocks on high-res monitors)
-    qputenv("QT_QUICK_BACKEND", "software");
-
-    // 2. MODERN DPI AWARENESS
-    SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+    SetProcessDPIAware();
     
-    // 3. SURGICAL PURGE
-    KillOtherInstances();
-
     // 0. Single Instance Check (v4.27.0 - Hardened Mutex)
     HANDLE hMutex = CreateMutexW(NULL, TRUE, L"BetterAnglePro_MainInstance_Mutex");
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
@@ -435,12 +405,19 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         AddSystrayIcon(g_hHUD);
         SetTimer(g_hHUD, 1, 16, NULL);    // ~60 fps repaint (CPU intensive)
         SetTimer(g_hHUD, 2, 30000, NULL); // auto-save
-        SetTimer(g_hHUD, 3, 3000, NULL);  // Master Boot Transition (3s splash)
         RefreshHotkeys(g_hHUD);
     });
 
-    // Deferred Work: Wait 3 seconds before starting heavy background threads
+    // MASTER BOOT TRANSITION: Move the countdown out of Win32 and into the persistent Qt loop (v4.27.6)
     QTimer::singleShot(3000, []() {
+        qDebug() << "[BOOT] 3S Splash Expired. Triggering transition...";
+        if (g_backend) {
+            g_backend->requestShowControlPanel();
+        }
+    });
+
+    // Deferred Work: Wait 3.5 seconds before starting background threads (after transition)
+    QTimer::singleShot(3500, []() {
         qDebug() << "[BOOT] Starting background threads...";
         std::thread(CheckForUpdates).detach();
         std::thread(DetectorThread).detach();
