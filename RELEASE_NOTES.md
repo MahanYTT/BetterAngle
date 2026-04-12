@@ -1,5 +1,9 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.26.7] - 2026-04-12
+### Fixed
+- **Visibility Fix**: Expose `g_qmlEngine` globally through headers and included missing engine headers in the backend. This resolves the 'undeclared identifier' and 'qobject_cast' build errors.
+
 ## [v4.26.6] - 2026-04-12
 ### Fixed
 - **Build Fix**: Resolved compiler errors in the backend caused by missing headers and incorrect engine pointer references. This restores the CI/CD pipeline and ensures the master kill switch is properly compiled.

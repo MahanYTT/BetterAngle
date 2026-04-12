@@ -7,6 +7,7 @@
 #include <QGuiApplication>
 #include <QTimer>
 #include <QQuickWindow>
+#include <QQmlApplicationEngine>
 #include <shlobj.h>
 #include <thread>
 #include <windows.h>
