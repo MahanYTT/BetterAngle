@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.15] - 2026-04-12
+### Fixed
+- **Linker Rescue**: Re-implemented missing `HUDWndProc` and `MsgWndProc` procedures that were accidentally deleted during the v4.27.13 restructure. This restores hotkey, tray, and mouse tracking functionality.
+- **Resolved Conflicts**: Removed duplicate `g_hHUD` definitions causing linker error LNK2005.
+- **God-Mode Stability**: Added a master try-catch net to the background engine and deferred Win32 setup to ensure the app never hangs regardless of system contention.
+
 ## [v4.27.14] - 2026-04-12
 ### Fixed
 - **Clean-Build Recovery**: Resolved two syntax errors in `BetterAngle.cpp` (missing semicolon and Gdiplus namespace conflict) that were breaking the build.
