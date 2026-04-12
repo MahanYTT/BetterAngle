@@ -1,5 +1,12 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.25] - 2026-04-12
+### Changed
+- **Splash Redesign**: Moved the "Wave Dropmaps" banner to the top of the window to eliminate overlap with branding text.
+- **Center Focus**: The version number is now centered in the middle of the splash screen for better prominence.
+- **New Branding**: Replaced the procedural brand icon with the new circular logo.
+- **Visual Polish**: Added a circular mask and pulse effect to the new logo to ensure it appears as a clean seal.
+
 ## [v4.27.24] - 2026-04-12
 ### Fixed
 - **Build Integrity**: Resolved the 'identifier not found' error by correctly ordering function prototypes in the main engine.

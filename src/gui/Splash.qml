@@ -81,39 +81,58 @@ Window {
             onPhaseChanged: requestPaint()
         }
 
-        // ── Content Wrapper ─────────────────────────────────────────
+        // ── The Banner (Moved to Top v4.27.25) ───────────────────
+        Item {
+            width: parent.width - 100
+            height: 80
+            anchors.top: parent.top
+            anchors.topMargin: 20
+            anchors.horizontalCenter: parent.horizontalCenter
+            clip: true
+
+            Image {
+                anchors.fill: parent
+                source: "qrc:/assets/banner.png"
+                fillMode: Image.PreserveAspectFit
+                opacity: 0.8
+            }
+            
+            Rectangle {
+                width: parent.width; height: 1; color: "#00ffa3"; opacity: 0.1
+                anchors.top: parent.top
+                YAnimator on y { from: 0; to: 80; duration: 2000; loops: Animation.Infinite }
+            }
+        }
+
+        // ── Content Wrapper (Centered Layout v4.27.25) ────────────────
         Item {
             anchors.fill: parent
             
             Column {
                 anchors.centerIn: parent
-                spacing: 24
+                spacing: 20
 
-                // Rotating Brand Icon
+                // New Circular Logo
                 Item {
-                    width: 70; height: 70
+                    width: 100; height: 100
                     anchors.horizontalCenter: parent.horizontalCenter
                     
                     Rectangle {
                         anchors.fill: parent
-                        radius: 35
-                        gradient: Gradient {
-                            GradientStop { position: 0.0; color: "#00ffa3" }
-                            GradientStop { position: 1.0; color: "#0080ff" }
-                        }
+                        radius: 50
+                        color: "#11ffffff"
+                        clip: true
                         
-                        Text {
-                            anchors.centerIn: parent
-                            text: "\x3E" // ">" symbol
-                            color: "white"
-                            font.pixelSize: 32
-                            font.bold: true
+                        Image {
+                            anchors.fill: parent
+                            source: "qrc:/assets/logo.png"
+                            fillMode: Image.PreserveAspectCrop
                         }
 
                         // Pulse Effect
                         Rectangle {
                             anchors.fill: parent
-                            radius: 35
+                            radius: 50
                             color: "transparent"
                             border.color: "#00ffa3"
                             border.width: 1.5
@@ -121,8 +140,8 @@ Window {
                             
                             SequentialAnimation on scale {
                                 loops: Animation.Infinite
-                                NumberAnimation { from: 1.0; to: 1.4; duration: 1500; easing.type: Easing.OutCubic }
-                                NumberAnimation { from: 1.4; to: 1.0; duration: 0 }
+                                NumberAnimation { from: 1.0; to: 1.2; duration: 1500; easing.type: Easing.OutCubic }
+                                NumberAnimation { from: 1.2; to: 1.0; duration: 0 }
                             }
                             SequentialAnimation on opacity {
                                 loops: Animation.Infinite
@@ -133,60 +152,34 @@ Window {
                     }
                 }
 
-                // Brand Main Text
-                Column {
-                    spacing: 4
-                    Text {
-                        text: "BETTERANGLE PRO"
-                        color: "white"
-                        font.pixelSize: 32
-                        font.bold: true
-                        font.letterSpacing: 6
-                    }
-                    Text {
-                        text: "VERSION 4.27.24"
-                        color: "#00ffa3"
-                        font.pixelSize: 10
-                        font.bold: true
-                        font.letterSpacing: 3
-                        opacity: 0.8
-                    }
+                // Centered Version Number
+                Text {
+                    text: "VERSION 4.27.25"
+                    color: "#00ffa3"
+                    font.pixelSize: 14
+                    font.bold: true
+                    font.letterSpacing: 4
+                    anchors.horizontalCenter: parent.horizontalCenter
                 }
 
-                // The Quote (Centered)
+                // Brand Main Text
+                Text {
+                    text: "BETTERANGLE PRO"
+                    color: "white"
+                    font.pixelSize: 32
+                    font.bold: true
+                    font.letterSpacing: 8
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+
+                // The Quote
                 Text {
                     text: "\"The best drops begin with the best wins\""
-                    color: "#888"
-                    font.pixelSize: 14
+                    color: "#666"
+                    font.pixelSize: 13
                     font.italic: true
                     font.letterSpacing: 1
-                    topPadding: 10
-                }
-            }
-
-            // ── The Banner (Loading Screen Style) ───────────────────
-            Item {
-                width: parent.width - 100
-                height: 80
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: 80
-                anchors.horizontalCenter: parent.horizontalCenter
-                clip: true
-
-                Image {
-                    anchors.fill: parent
-                    source: "qrc:/assets/banner.png"
-                    fillMode: Image.PreserveAspectFit
-                    opacity: 0.6
-                }
-                
-                // Subtle scanline overlay
-                Rectangle {
-                    width: parent.width; height: 1; color: "#00ffa3"; opacity: 0.1
-                    anchors.top: parent.top
-                    YAnimator on y {
-                        from: 0; to: 80; duration: 2000; loops: Animation.Infinite
-                    }
+                    anchors.horizontalCenter: parent.horizontalCenter
                 }
             }
 
