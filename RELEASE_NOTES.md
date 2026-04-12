@@ -1,5 +1,9 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.48] - 2026-04-12
+### Improved
+- **Total Silence**: Resolved the absolute last QML warning (a property name mismatch for the tolerance slider). The `startup.log` is now 100% free of warnings and reset on every launch.
+
 ## [v4.27.47] - 2026-04-12
 ### Improved
 - **Log Refresh**: The `startup.log` is now automatically truncated on every application launch, ensuring that you always have a fresh report of the current session's initialization sequence.

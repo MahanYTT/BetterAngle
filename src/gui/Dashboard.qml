@@ -699,8 +699,8 @@ Item {
                 Text { text: "Tolerance (color match ±)"; color: "white" }
                 Slider {
                     width: parent.width
-                    from: 0.1; to: 1.0; value: backend.transparency
-                    onMoved: backend.transparency = value
+                    from: 0; to: 120; value: backend.tolerance
+                    onMoved: backend.tolerance = Math.round(value)
                 }
                 Text { text: "Value: " + backend.tolerance; color: "#aaa" }
             }
