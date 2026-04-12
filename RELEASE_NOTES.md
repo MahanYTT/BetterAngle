@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.36] - 2026-04-12
+### Added
+- **Portable Master Zip**: Now providing a `BetterAngle_Portable.zip` in the release. This standalone version includes 100% of required Qt DLLs and plugins.
+- **GPU Stabilization**: Added safe-rendering hints (`AA_UseOpenGLES`) to ensure the transparent HUD manifests correctly on all graphics cards.
+- **Permission Sync**: Unified application data paths to `LocalAppData` to ensure startup logs are always writeable and accessible.
+
 ## [v4.27.35] - 2026-04-12
 ### Added
 - **Black-Box Diagnostics**: Implemented a comprehensive startup logger that records every milestone of the boot sequence to `%APPDATA%/BetterAngle Pro/startup.log`.

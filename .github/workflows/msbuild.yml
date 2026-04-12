@@ -96,13 +96,18 @@ jobs:
           }
           $outLines | Out-File CURRENT_RELEASE_NOTES.md -Encoding utf8
 
+      - name: Create Portable Zip
+        shell: pwsh
+        run: |
+          Compress-Archive -Path build/Release/* -DestinationPath bin/BetterAngle_Portable.zip
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             bin/BetterAngle_Setup.exe
+            bin/BetterAngle_Portable.zip
             build/Release/BetterAngle.exe
-            build/Release/uninstaller.exe
           tag_name: ${{ env.TAG }}
           name: BetterAngle Pro ${{ env.TAG }}
           body_path: CURRENT_RELEASE_NOTES.md

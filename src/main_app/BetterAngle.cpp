@@ -47,7 +47,8 @@ extern std::mutex          g_profileMutex;
 void LogStartup(const std::string& msg) {
     try {
         wchar_t path[MAX_PATH];
-        if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_APPDATA, NULL, 0, path))) {
+        // 0x001c is CSIDL_LOCAL_APPDATA - Syncing with installer manifest
+        if (SUCCEEDED(SHGetFolderPathW(NULL, 0x001c, NULL, 0, path))) {
             std::wstring logDir = std::wstring(path) + L"\\BetterAngle Pro";
             CreateDirectoryW(logDir.c_str(), NULL);
             std::wstring logPath = logDir + L"\\startup.log";
@@ -170,7 +171,11 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     try {
-        LogStartup(">>> STARTUP INITIATED (v4.27.35) <<<");
+        // ── GPU Stabilization Hints (Safe-Rendering Mode) ───────────
+        QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
+        QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
+
+        LogStartup(">>> STARTUP INITIATED (v4.27.36) <<<");
 
         // ── Modern DPI Awareness (V2) for Windows 10/11 ──────────────
         LogStartup("Init: DPI Awareness V2...");

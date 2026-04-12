@@ -154,7 +154,7 @@ Window {
 
                 // Centered Version Number
                 Text {
-                    text: "VERSION 4.27.35"
+                    text: "VERSION 4.27.36"
                     color: "#00ffa3"
                     font.pixelSize: 14
                     font.bold: true
