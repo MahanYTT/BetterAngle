@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.26.3] - 2026-04-12
+### Fixed
+- **Boot Hardening**: Moved the splash screen transition logic to a native C++ timer. This eliminates the 'Loading forever' hang by ensuring the transition is decoupled from the UI thread and QML engine state.
+- **Pre-warming**: Implemented background dashboard pre-loading while the splash screen is visible, making the final transition instantaneous and smooth.
+
 ## [v4.26.2] - 2026-04-12
 ### Fixed
 - **Update Safety Refinement**: Tuned the auto-updater's safety floor to 1MB. This ensures valid production binaries (1.4MB) are accepted while still blocking corrupted downloads.

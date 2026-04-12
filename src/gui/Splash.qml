@@ -125,7 +125,7 @@ Window {
                         font.letterSpacing: 6
                     }
                     Text {
-                        text: "VERSION 4.26.2"
+                        text: "VERSION 4.26.3"
                         color: "#00ffa3"
                         font.pixelSize: 10
                         font.bold: true
@@ -237,8 +237,6 @@ Window {
         repeat: false
         onTriggered: {
             splashWindow.close()
-            // Transitions to dashboard or wizard depending on state
-            backend.requestShowControlPanel()
         }
     }
 }

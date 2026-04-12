@@ -126,6 +126,12 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 Profile& p = g_allProfiles[g_selectedProfileIdx];
                 p.Save(GetProfilesPath() + p.name + L".json");
             }
+        } else if (wParam == 3) {
+            // Master Boot Transition: End Splash and show Main UI/Wizard
+            KillTimer(hWnd, 3);
+            if (g_backend) {
+                g_backend->requestShowControlPanel();
+            }
         }
         break;
 
@@ -392,6 +398,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     AddSystrayIcon(g_hHUD);
     SetTimer(g_hHUD, 1, 16, NULL);    // ~60 fps repaint
     SetTimer(g_hHUD, 2, 30000, NULL); // auto-save
+    SetTimer(g_hHUD, 3, 3000, NULL);  // Master Boot Transition (3s)
     RefreshHotkeys(g_hHUD);
 
     // Background threads
@@ -401,9 +408,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     // QML engine — context properties MUST be set before load()
     qDebug() << "[BOOT] Initialising QML engine...";
     EnsureEngineInitialized();
-
     qDebug() << "[BOOT] Loading Splash...";
     ShowSplashScreen();
+
+    // Pre-warm the main dashboard while splash is showing
+    qDebug() << "[BOOT] Pre-warming Dashboard...";
+    CreateControlPanel(hInstance);
 
     qDebug() << "[BOOT] Entering event loop.";
     return app.exec();
