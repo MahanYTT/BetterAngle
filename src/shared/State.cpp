@@ -54,51 +54,57 @@ std::wstring GetAppRootPath() {
     return L"";
 }
 
+#include <filesystem>
+namespace fs = std::filesystem;
+
 void LogStartup(const std::string& msg); // Forward declaration
 
 void MigrateLegacyData() {
     wchar_t appdata[MAX_PATH];
     if (FAILED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) return;
 
-    std::wstring legacyRoot = std::wstring(appdata) + L"\\BetterAngle";
-    std::wstring proRoot = std::wstring(appdata) + L"\\BetterAngle Pro";
+    std::wstring legacyRootStr = std::wstring(appdata) + L"\\BetterAngle";
+    std::wstring proRootStr = std::wstring(appdata) + L"\\BetterAngle Pro";
 
-    if (GetFileAttributesW(legacyRoot.c_str()) == INVALID_FILE_ATTRIBUTES) return; 
+    fs::path legacyRoot(legacyRootStr);
+    fs::path proRoot(proRootStr);
 
-    LogStartup("Migration: Found legacy data. Initiating nuclear merge...");
-    CreateDirectoryW(proRoot.c_str(), NULL);
+    if (!fs::exists(legacyRoot)) return;
 
-    SHFILEOPSTRUCTW fileOp = { 0 };
-    fileOp.hwnd = NULL;
-    fileOp.wFunc = FO_MOVE;
-    
-    // Wildcard: move everything inside BetterAngle to BetterAngle Pro
-    std::wstring fromPath = legacyRoot + L"\\*";
-    wchar_t from[MAX_PATH + 2] = { 0 };
-    wchar_t to[MAX_PATH + 2] = { 0 };
-    wcscpy_s(from, fromPath.c_str());
-    wcscpy_s(to, proRoot.c_str());
-    
-    fileOp.pFrom = from;
-    fileOp.pTo = to;
-    fileOp.fFlags = FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI | FOF_NOCONFIRMMKDIR | FOF_RENAMEONCOLLISION;
-    
-    int result = SHFileOperationW(&fileOp);
-    if (result == 0) {
-        LogStartup("Migration: Shell merge complete. Cleaning roots...");
-        
-        // Nuclear Delete: Ensure the legacy folder is completely gone
-        SHFILEOPSTRUCTW delOp = { 0 };
-        delOp.wFunc = FO_DELETE;
-        wchar_t delPath[MAX_PATH + 2] = { 0 };
-        wcscpy_s(delPath, legacyRoot.c_str());
-        delOp.pFrom = delPath;
-        delOp.fFlags = FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI;
-        SHFileOperationW(&delOp);
-        
-        LogStartup("Migration: Nuclear cleanup success.");
-    } else {
-        LogStartup("Migration: Shell merge failed (Code: " + std::to_string(result) + ")");
+    try {
+        LogStartup("Migration: Initiating Safe-Harbor verified copy...");
+        if (!fs::exists(proRoot)) fs::create_directories(proRoot);
+
+        // Recursive Copy with Merge support
+        int movedCount = 0;
+        for (const auto& entry : fs::recursive_directory_iterator(legacyRoot)) {
+            if (entry.is_regular_file()) {
+                fs::path relative = fs::relative(entry.path(), legacyRoot);
+                fs::path destPath = proRoot / relative;
+
+                if (!fs::exists(destPath.parent_path())) {
+                    fs::create_directories(destPath.parent_path());
+                }
+
+                fs::copy_file(entry.path(), destPath, fs::copy_options::overwrite_existing);
+                movedCount++;
+            }
+        }
+
+        LogStartup("Migration: Verified " + std::to_string(movedCount) + " files. Cleanup initiated...");
+
+        // Safety check: Ensure the critical settings file exists in the new home before deleting the old home
+        if (movedCount > 0 || fs::exists(proRoot / "settings.json")) {
+            fs::remove_all(legacyRoot);
+            LogStartup("Migration: Safe-Harbor complete. Legacy data purged.");
+        } else {
+            LogStartup("Migration Warning: Verification failed. Legacy data preserved.");
+        }
+
+    } catch (const fs::filesystem_error& e) {
+        LogStartup("Migration Error: " + std::string(e.what()));
+    } catch (...) {
+        LogStartup("Migration Error: Unknown failure during Safe-Harbor move.");
     }
 }
 

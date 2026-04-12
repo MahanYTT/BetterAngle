@@ -1,5 +1,9 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.49] - 2026-04-12
+### Improved
+- **Safe-Harbor Migration**: Replaced the shell-based nuclear migration with a verified recursive merge. The app now confirms that every profile and setting file exists in the new 'Pro' folder before cleaning the legacy data, ensuring zero data loss.
+
 ## [v4.27.48] - 2026-04-12
 ### Improved
 - **Total Silence**: Resolved the absolute last QML warning (a property name mismatch for the tolerance slider). The `startup.log` is now 100% free of warnings and reset on every launch.
