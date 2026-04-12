@@ -284,12 +284,39 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-// ── Entry point ───────────────────────────────────────────────────────────────
 #include <QResource>
+#include <tlhelp32.h>
+
+void KillOtherInstances() {
+    DWORD currentPid = GetCurrentProcessId();
+    HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnap == INVALID_HANDLE_VALUE) return;
+
+    PROCESSENTRY32W pe;
+    pe.dwSize = sizeof(pe);
+    if (Process32FirstW(hSnap, &pe)) {
+        do {
+            if (pe.th32ProcessID != currentPid) {
+                if (wcscmp(pe.szExeFile, L"BetterAngle.exe") == 0) {
+                    HANDLE hProc = OpenProcess(PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
+                    if (hProc) {
+                        TerminateProcess(hProc, 0);
+                        CloseHandle(hProc);
+                    }
+                }
+            }
+        } while (Process32NextW(hSnap, &pe));
+    }
+    CloseHandle(hSnap);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+}
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
-    // 0. Single Instance Check (Prevents multiple BetterAngle processes)
-    HANDLE hMutex = CreateMutexW(NULL, TRUE, L"Global\\BetterAngle_Unique_Instance_Mutex");
+    SetProcessDPIAware();
+    KillOtherInstances();
+
+    // 0. Single Instance Check (v4.27.0 - Hardened Mutex)
+    HANDLE hMutex = CreateMutexW(NULL, TRUE, L"BetterAnglePro_MainInstance_Mutex");
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
         if (hMutex) CloseHandle(hMutex);
         return 0; // Exit silently if already running

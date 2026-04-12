@@ -1,5 +1,12 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.0] - 2026-04-12
+### Added
+- **Ghost Process Purge**: Automatically finds and closes orphaned 'BetterAngle.exe' background tasks at startup to ensure the new version always launches.
+- **DPI Awareness**: Explicitly forced DPI scaling in C++ to ensure the UI renders correctly on all screen resolutions.
+### Fixed
+- **Force Launch**: Renamed system locks to resolve 'nothing pops up' issues caused by previous version crashes or security blocks. This ensures a guaranteed startup sequence.
+
 ## [v4.26.9] - 2026-04-12
 ### Changed
 - **Manual-Only Updates**: Disabled automatic background downloads and startup restarts. Updates are now only initiated when the user explicitly clicks the 'Update' button in the UI. This gives you full control over the application lifecycle.
