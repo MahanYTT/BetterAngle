@@ -1,5 +1,14 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.24.7] - 2026-04-12
+### Added
+- **Premium Splash Overhaul**: Re-imagined the startup experience.
+    - Added a **3-second hard-locked** brand presence for better brand recognition.
+    - Synchronized an elegant progress bar to the 3-second loading period.
+    - Implemented a **Sine-Wave Animation** ("The Wave Thing") for a dynamic background effect.
+    - Added the iconic quote: *"The best drops begin with the best wins."*
+    - Cleaned up the UI layout for a more minimalist, professional feel.
+
 ## [v4.24.6] - 2026-04-12
 ### Fixed
 - **Hardened Fortnite Sync**: Completely overhauled the sensitivity detection logic to be more resilient.

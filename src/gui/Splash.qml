@@ -4,8 +4,8 @@ import QtQuick.Controls 2.15
 
 Window {
     id: splashWindow
-    width: 600
-    height: 380
+    width: 640
+    height: 400
     x: Screen.width / 2 - width / 2
     y: Screen.height / 2 - height / 2
     visible: true
@@ -16,38 +16,69 @@ Window {
         id: mainBg
         anchors.fill: parent
         color: "#050508"
-        radius: 16
+        radius: 20
         border.color: "#1a1a25"
         border.width: 1
         clip: true
 
-        // Diagnostic Background (Lean Boot Mode)
+        // ── Background Glow ──────────────────────────────────────────
         Rectangle {
             anchors.fill: parent
             gradient: Gradient {
-                GradientStop { position: 0.0; color: "#0a0a14" }
+                GradientStop { position: 0.0; color: "#0d0d1a" }
                 GradientStop { position: 1.0; color: "#050508" }
             }
-            opacity: 0.8
         }
 
-        // Content Wrapper
+        // ── Wave Animation (The "Wave Thing") ────────────────────────
+        Canvas {
+            id: waveCanvas
+            anchors.fill: parent
+            opacity: 0.3
+            property real phase: 0
+            
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+                ctx.beginPath();
+                ctx.strokeStyle = "#00ffa3";
+                ctx.lineWidth = 2;
+                
+                var mid = height * 0.85;
+                ctx.moveTo(0, mid);
+                
+                for (var x = 0; x <= width; x += 5) {
+                    var y = mid + Math.sin(x * 0.01 + phase) * 20;
+                    ctx.lineTo(x, y);
+                }
+                
+                ctx.stroke();
+            }
+
+            NumberAnimation on phase {
+                from: 0; to: Math.PI * 2; duration: 3000; loops: Animation.Infinite
+            }
+
+            onPhaseChanged: requestPaint()
+        }
+
+        // ── Content Wrapper ─────────────────────────────────────────
         Item {
             anchors.fill: parent
             
             Column {
                 anchors.centerIn: parent
-                spacing: 30
+                spacing: 24
                 horizontalAlignment: Text.AlignHCenter
 
-                // Logo with Glow
+                // Rotating Brand Icon
                 Item {
-                    width: 80; height: 80
+                    width: 70; height: 70
                     anchors.horizontalCenter: parent.horizontalCenter
                     
                     Rectangle {
                         anchors.fill: parent
-                        radius: 40
+                        radius: 35
                         gradient: Gradient {
                             GradientStop { position: 0.0; color: "#00ffa3" }
                             GradientStop { position: 1.0; color: "#0080ff" }
@@ -55,129 +86,161 @@ Window {
                         
                         Text {
                             anchors.centerIn: parent
-                            text: "\x3E"
+                            text: "\x3E" // ">" symbol
                             color: "white"
-                            font.pixelSize: 36
+                            font.pixelSize: 32
                             font.bold: true
                         }
 
-                        // Glow animation
+                        // Pulse Effect
                         Rectangle {
                             anchors.fill: parent
-                            radius: 40
+                            radius: 35
                             color: "transparent"
                             border.color: "#00ffa3"
-                            border.width: 2
-                            scale: 1.0
-                            opacity: 1.0
-
+                            border.width: 1.5
+                            opacity: 0.6
+                            
                             SequentialAnimation on scale {
                                 loops: Animation.Infinite
-                                NumberAnimation { from: 1.0; to: 1.5; duration: 2500; easing.type: Easing.OutCubic }
-                                NumberAnimation { from: 1.5; to: 1.0; duration: 0 }
+                                NumberAnimation { from: 1.0; to: 1.4; duration: 1500; easing.type: Easing.OutCubic }
+                                NumberAnimation { from: 1.4; to: 1.0; duration: 0 }
                             }
                             SequentialAnimation on opacity {
                                 loops: Animation.Infinite
-                                NumberAnimation { from: 0.8; to: 0.0; duration: 2500; easing.type: Easing.OutCubic }
-                                NumberAnimation { from: 0.0; to: 0.8; duration: 0 }
+                                NumberAnimation { from: 0.6; to: 0.0; duration: 1500; easing.type: Easing.OutCubic }
+                                NumberAnimation { from: 0.0; to: 0.6; duration: 0 }
                             }
                         }
                     }
                 }
 
-                // Brand
+                // Brand Main Text
                 Column {
-                    spacing: 8
+                    spacing: 4
                     horizontalAlignment: Text.AlignHCenter
                     Text {
                         text: "BETTERANGLE PRO"
                         color: "white"
                         font.pixelSize: 32
                         font.bold: true
-                        font.letterSpacing: 4
+                        font.letterSpacing: 6
                     }
                     Text {
-                        text: "VERSION 4.24.6"
-                        color: "#666"
+                        text: "VERSION 4.24.7"
+                        color: "#00ffa3"
                         font.pixelSize: 10
                         font.bold: true
-                        font.letterSpacing: 2
+                        font.letterSpacing: 3
+                        opacity: 0.8
                     }
+                }
+
+                // The Quote (Centered)
+                Text {
+                    text: "\"The best drops begin with the best wins\""
+                    color: "#888"
+                    font.pixelSize: 14
+                    font.italic: true
+                    font.letterSpacing: 1
+                    topPadding: 10
                 }
             }
 
-            // Provided Banner Image
-            Rectangle {
-                width: parent.width
-                height: 100
-                color: "#1a000000"
+            // ── The Banner (Loading Screen Style) ───────────────────
+            Item {
+                width: parent.width - 100
+                height: 80
                 anchors.bottom: parent.bottom
-                anchors.bottomMargin: 40
+                anchors.bottomMargin: 80
+                anchors.horizontalCenter: parent.horizontalCenter
                 clip: true
-                
+
                 Image {
                     anchors.fill: parent
                     source: "qrc:/assets/banner.png"
                     fillMode: Image.PreserveAspectFit
-                    opacity: 0.9
-                }
-
-                // Top/Bottom border accents
-                Rectangle {
-                    width: parent.width; height: 1; color: "#00ffa3"
-                    anchors.top: parent.top; opacity: 0.3
-                }
-                Rectangle {
-                    width: parent.width; height: 1; color: "#00ffa3"
-                    anchors.bottom: parent.bottom; opacity: 0.3
+                    opacity: 0.6
                 }
                 
-                // Animated scan line
+                // Subtle scanline overlay
                 Rectangle {
-                    width: 120; height: parent.height
-                    gradient: Gradient {
-                        orientation: Gradient.Horizontal
-                        GradientStop { position: 0.0; color: "transparent" }
-                        GradientStop { position: 0.5; color: "#3300ffa3" }
-                        GradientStop { position: 1.0; color: "transparent" }
-                    }
-                    XAnimator on x {
-                        from: -120; to: splashWindow.width; duration: 2500; loops: Animation.Infinite
+                    width: parent.width; height: 1; color: "#00ffa3"; opacity: 0.1
+                    anchors.top: parent.top
+                    YAnimator on y {
+                        from: 0; to: 80; duration: 2000; loops: Animation.Infinite
                     }
                 }
             }
 
-            // Minimal Progress Bar
-            Rectangle {
-                width: 300
-                height: 2
-                color: "#11ffffff"
+            // ── Hardlocked Progress Bar (3 Seconds) ────────────────
+            Item {
+                width: 340
+                height: 4
                 anchors.bottom: parent.bottom
-                anchors.bottomMargin: 20
+                anchors.bottomMargin: 40
                 anchors.horizontalCenter: parent.horizontalCenter
 
+                // Background
+                Rectangle {
+                    anchors.fill: parent
+                    color: "#11ffffff"
+                    radius: 2
+                }
+
+                // Actual Progress
                 Rectangle {
                     id: progressBar
                     width: 0
                     height: parent.height
                     color: "#00ffa3"
+                    radius: 2
                     
+                    // The 3-second hard lock animation
                     NumberAnimation on width {
-                        from: 0; to: 300; duration: 2200; easing.type: Easing.InOutQuad
+                        from: 0; to: 340; duration: 3000; easing.type: Easing.InOutSine
                     }
+                    
+                    // Glow on the leading edge
+                    Rectangle {
+                        width: 8; height: 12
+                        color: "#00ffa3"
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        opacity: 0.5
+                        visible: progressBar.width > 0 && progressBar.width < 340
+                        
+                        SequentialAnimation on opacity {
+                            loops: Animation.Infinite
+                            NumberAnimation { from: 0.5; to: 0.8; duration: 500 }
+                            NumberAnimation { from: 0.8; to: 0.5; duration: 500 }
+                        }
+                    }
+                }
+                
+                Text {
+                    text: "LOADING ENGINE..."
+                    color: "#444"
+                    font.pixelSize: 9
+                    font.bold: true
+                    anchors.top: parent.bottom
+                    anchors.topMargin: 8
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    font.letterSpacing: 2
                 }
             }
         }
     }
 
+    // ── 3-Second Hard Lock Timer ───────────────────────────────────
     Timer {
-        interval: 2500
+        interval: 3000 // 3000ms = 3 Seconds
         running: true
         repeat: false
         onTriggered: {
             splashWindow.close()
+            // Transitions to dashboard or wizard depending on state
             backend.requestShowControlPanel()
         }
     }
 }
-
