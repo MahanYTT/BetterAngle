@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.5] - 2026-04-12
+### Fixed
+- **High-Resolution Recovery**: Forced Software Rendering (`QT_QUICK_BACKEND=software`) to bypass GPU/driver deadlocks common on high-end gaming setups. This ensures the UI appears instantly even on 4K/Ultra-wide displays.
+- **Modern DPI Awareness**: Transitioned to `DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2`, resolving layout issues and hangs on mixed-DPI multi-monitor environments.
+- **Startup Integrity**: Re-implemented surgical process purging to ensure zero zombie confusion between version updates.
+
 ## [v4.27.4] - 2026-04-12
 ### Fixed
 - **Emergency Boot Rescue**: Silenced the high-frequency HUD repaint timer until after the engine is stable. This ensures 0% CPU usage during engine load, preventing "security suspension" (9MB RAM hang) on high-resolution displays.

@@ -287,11 +287,38 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 #include <QResource>
 #include <tlhelp32.h>
 
+void KillOtherInstances() {
+    DWORD currentPid = GetCurrentProcessId();
+    HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnap == INVALID_HANDLE_VALUE) return;
+    PROCESSENTRY32W pe;
+    pe.dwSize = sizeof(pe);
+    if (Process32FirstW(hSnap, &pe)) {
+        do {
+            if (pe.th32ProcessID != currentPid) {
+                std::wstring name = pe.szExeFile;
+                if (name.find(L"BetterAngle") != std::wstring::npos) {
+                    HANDLE hProc = OpenProcess(PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
+                    if (hProc) {
+                        TerminateProcess(hProc, 0);
+                        CloseHandle(hProc);
+                    }
+                }
+            }
+        } while (Process32NextW(hSnap, &pe));
+    }
+    CloseHandle(hSnap);
+}
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
-    SetProcessDPIAware();
-    // DE-ESCALATION: Removed KillOtherInstances to avoid AV heuristic triggers.
-    // User must manually clear old tasks before run.
+    // 1. FORCE SOFTWARE RENDERING (Definitive fix for GPU deadlocks on high-res monitors)
+    qputenv("QT_QUICK_BACKEND", "software");
+
+    // 2. MODERN DPI AWARENESS
+    SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+    
+    // 3. SURGICAL PURGE
+    KillOtherInstances();
 
     // 0. Single Instance Check (v4.27.0 - Hardened Mutex)
     HANDLE hMutex = CreateMutexW(NULL, TRUE, L"BetterAnglePro_MainInstance_Mutex");
