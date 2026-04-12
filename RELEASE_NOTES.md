@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.27] - 2026-04-12
+### Changed
+- **Branding Perfection**: Introduced 100% transparent circular logos, removing all black backgrounds from the startup experience.
+- **Application Identity**: Replaced the default application icon with a new, high-resolution transparent circular brand icon for all shortcuts, taskbar entries, and the system tray.
+
 ## [v4.27.26] - 2026-04-12
 ### Fixed
 - **Startup Recovery**: Resolved the "Splash Hang" issue by moving high-DPI initialization to the absolute start of the application.

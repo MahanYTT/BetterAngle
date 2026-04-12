@@ -125,8 +125,8 @@ Window {
                         
                         Image {
                             anchors.fill: parent
-                            source: "qrc:/assets/logo.png"
-                            fillMode: Image.PreserveAspectCrop
+                            source: "qrc:/assets/logo_transparent.png"
+                            fillMode: Image.PreserveAspectFit
                         }
 
                         // Pulse Effect
@@ -154,7 +154,7 @@ Window {
 
                 // Centered Version Number
                 Text {
-                    text: "VERSION 4.27.25"
+                    text: "VERSION 4.27.27"
                     color: "#00ffa3"
                     font.pixelSize: 14
                     font.bold: true
