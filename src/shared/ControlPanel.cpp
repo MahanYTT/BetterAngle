@@ -32,10 +32,13 @@ HWND CreateControlPanel(HINSTANCE hInstance) {
 
         // Splash is index 0, so Dashboard should be index 1+
         if (g_qmlEngine->rootObjects().isEmpty() || g_qmlEngine->rootObjects().size() < 2) {
-            qDebug() << "[ERROR] Dashboard UI (main.qml) failed to appear in rootObjects. Size:" << g_qmlEngine->rootObjects().size();
-            MessageBoxW(NULL,
-                L"CRITICAL: BetterAngle could not load the Main UI.\n\nThis usually happens if a resource is missing or blocked.",
-                L"BetterAngle Error", MB_OK | MB_ICONERROR);
+            std::wstring err = L"CRITICAL: BetterAngle could not load the Main UI (main.qml).\n\n";
+            err += L"Error Details:\n";
+            if (g_qmlEngine->rootObjects().isEmpty()) err += L"- No root objects found.\n";
+            err += L"- Resource URL: qrc:/src/gui/main.qml\n\n";
+            err += L"This usually happens if the binary is corrupted or resources are blocked.";
+
+            MessageBoxW(NULL, err.c_str(), L"BetterAngle Error", MB_OK | MB_ICONERROR);
             exit(1);
         }
         qDebug() << "[BOOT] Dashboard UI loaded successfully.";
@@ -49,6 +52,10 @@ void ShowSplashScreen() {
     g_qmlEngine->load(QUrl(QStringLiteral("qrc:/src/gui/Splash.qml")));
     if (g_qmlEngine->rootObjects().isEmpty()) {
         qDebug() << "[ERROR] Splash.qml failed to load.";
+        MessageBoxW(NULL, 
+            L"CRITICAL ERROR: Splash resources failed to load.\n\nThe application cannot continue without the startup UI components.", 
+            L"BetterAngle Boot Error", MB_OK | MB_ICONERROR);
+        exit(1);
     } else {
         qDebug() << "[BOOT] Splash.qml loaded successfully.";
     }

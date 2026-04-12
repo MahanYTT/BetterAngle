@@ -1,5 +1,12 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.25.3] - 2026-04-12
+### Fixed
+- **Build Integrity Overhaul**: Fixed a critical issue where binaries were being corrupted (the "16-Bit Application" error). Added automated file-size checks to the CI/CD pipeline to catch malformed files.
+- **UI Loading Diagnostics**: Improved error handling when loading QML resources. The app now provides granular details if a resource is blocked or missing.
+- **Robust Deployment**: Updated the build process with mandatory PowerShell error checking and explicit Qt module verification.
+- **Windows Professional Signature**: Added full version and product metadata to the executable for better OS compatibility and trust.
+
 ## [v4.25.2] - 2026-04-12
 ### Improved
 - **Definitive Fortnite Sync**: Replaced the flaky recursive scanner with a direct path check using `%LOCALAPPDATA%`. Sensitivity is now pulled instantly and reliably.
