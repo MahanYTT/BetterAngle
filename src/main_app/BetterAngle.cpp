@@ -37,6 +37,25 @@ extern BetterAngleBackend* g_backend;
 extern AngleLogic          g_logic;
 extern std::atomic<int>    g_loadingProgress;
 
+// Helper Functions
+HBITMAP CaptureScreen() {
+    HDC hdc = GetDC(NULL);
+    HDC hdcMem = CreateCompatibleDC(hdc);
+    int w = GetSystemMetrics(SM_CXVIRTUALSCREEN), h = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+    HBITMAP hbm = CreateCompatibleBitmap(hdc, w, h);
+    SelectObject(hdcMem, hbm);
+    BitBlt(hdcMem, 0, 0, w, h, hdc, GetSystemMetrics(SM_XVIRTUALSCREEN), GetSystemMetrics(SM_YVIRTUALSCREEN), SRCCOPY);
+    DeleteDC(hdcMem); ReleaseDC(NULL, hdc);
+    return hbm;
+}
+
+COLORREF GetPixelColor(int x, int y) {
+    HDC hdc = GetDC(NULL);
+    COLORREF c = GetPixel(hdc, x, y);
+    ReleaseDC(NULL, hdc);
+    return c;
+}
+
 // Window Procedures
 LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {

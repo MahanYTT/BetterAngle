@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.19] - 2026-04-12
+### Fixed
+- **Toolbox Restoration**: Re-implemented the missing `CaptureScreen` and `GetPixelColor` selection utilities in `BetterAngle.cpp`.
+- **Core Integrity**: Restored Stage 1 (Snapshot) and Stage 2 (Pixel Pick) tools while maintaining v4.27.18 sync safety.
+
 ## [v4.27.18] - 2026-04-12
 ### Fixed
 - **Sync-Lock Stability**: Introduced an atomic synchronization barrier between the background thread and window creation to eliminate boot-time race conditions.
