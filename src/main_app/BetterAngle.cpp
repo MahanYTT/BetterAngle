@@ -411,9 +411,11 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     qDebug() << "[BOOT] Loading Splash...";
     ShowSplashScreen();
 
-    // Pre-warm the main dashboard while splash is showing
-    qDebug() << "[BOOT] Pre-warming Dashboard...";
-    CreateControlPanel(hInstance);
+    // Deferred Pre-warm: Wait 500ms so Splash can render and animate before we pin the CPU
+    QTimer::singleShot(500, [hInstance]() {
+        qDebug() << "[BOOT] Background Pre-warming Dashboard...";
+        CreateControlPanel(hInstance);
+    });
 
     qDebug() << "[BOOT] Entering event loop.";
     return app.exec();

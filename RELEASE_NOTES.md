@@ -1,5 +1,9 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.26.5] - 2026-04-12
+### Fixed
+- **Boot Responsiveness**: Deferred the heavy dashboard loading process by 500ms using a single-shot timer. This prevents the main thread from jamming, allowing the Splash screen to render and animate smoothly upon launch.
+
 ## [v4.26.4] - 2026-04-12
 ### Fixed
 - **Master Kill Switch**: Implemented a native C++ routine to forcefully identify and close the splash window after 3 seconds. This bypasses QML engine deadlocks and ensures a guaranteed boot transition.
