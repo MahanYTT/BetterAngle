@@ -182,10 +182,10 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if (g_currentSelection == SELECTING_ROI && (wParam & MK_LBUTTON)) {
             POINT cur = { LOWORD(lParam), HIWORD(lParam) };
             g_selectionRect = {
-                min(g_startPoint.x, cur.x) + g_virtScreenX,
-                min(g_startPoint.y, cur.y) + g_virtScreenY,
-                max(g_startPoint.x, cur.x) + g_virtScreenX,
-                max(g_startPoint.y, cur.y) + g_virtScreenY
+                std::min(g_startPoint.x, cur.x) + g_virtScreenX,
+                std::min(g_startPoint.y, cur.y) + g_virtScreenY,
+                std::max(g_startPoint.x, cur.x) + g_virtScreenX,
+                std::max(g_startPoint.y, cur.y) + g_virtScreenY
             };
             RECT rc; GetClientRect(hWnd, &rc);
             InvalidateRect(hWnd, &rc, FALSE);
