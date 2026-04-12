@@ -1,5 +1,9 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.26.6] - 2026-04-12
+### Fixed
+- **Build Fix**: Resolved compiler errors in the backend caused by missing headers and incorrect engine pointer references. This restores the CI/CD pipeline and ensures the master kill switch is properly compiled.
+
 ## [v4.26.5] - 2026-04-12
 ### Fixed
 - **Boot Responsiveness**: Deferred the heavy dashboard loading process by 500ms using a single-shot timer. This prevents the main thread from jamming, allowing the Splash screen to render and animate smoothly upon launch.

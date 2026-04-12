@@ -6,6 +6,7 @@
 #include "shared/Updater.h"
 #include <QGuiApplication>
 #include <QTimer>
+#include <QQuickWindow>
 #include <shlobj.h>
 #include <thread>
 #include <windows.h>
@@ -339,8 +340,8 @@ void BetterAngleBackend::requestShowControlPanel() {
 
   // 0. Manual Slash Kill Switch (Fixes 'Loading Forever' hang)
   // We search for the splashWindow by its objectName and force it closed from C++.
-  if (m_engine) {
-      for (auto obj : m_engine->rootObjects()) {
+  if (g_qmlEngine) {
+      for (auto obj : g_qmlEngine->rootObjects()) {
           if (obj->objectName() == "splashWindow") {
               qDebug() << "[BOOT] Found Splash window. Closing natively.";
               QQuickWindow* sw = qobject_cast<QQuickWindow*>(obj);
