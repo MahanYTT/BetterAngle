@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.55] - 2026-04-12
+### Fixed
+- **GDI+ Header Order Final Fix**: Corrected include order in all source files (BetterAngle.cpp, ThresholdWizard.cpp, Startup.cpp) to ensure windows.h is included before gdiplus.h, resolving compilation errors with Windows SDK 10.0.26100.0.
+- **Build Stability**: Ensured GitHub Actions builds pass without GDI+ compilation errors by fixing header inclusion sequence across the codebase.
+
 ## [v4.27.54] - 2026-04-12
 ### Fixed
 - **GDI+ Compilation Errors**: Fixed Windows SDK 10.0.26100.0 compatibility issues by correcting include order (windows.h before gdiplus.h) and adding objidl.h include.

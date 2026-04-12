@@ -1,5 +1,6 @@
 // Windows headers must be included in correct order for GDI+
-// Remove WIN32_LEAN_AND_MEAN to ensure GDI definitions are available
+// windows.h must come before gdiplus.h, and WIN32_LEAN_AND_MEAN must not
+// exclude GDI definitions
 #include <gdiplus.h>
 #include <objidl.h>
 #include <shlobj.h>

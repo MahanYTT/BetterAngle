@@ -1,4 +1,4 @@
-#define WIN32_LEAN_AND_MEAN
+// windows.h must come before gdiplus.h for GDI+ compatibility
 #include <algorithm>
 #include <cmath>
 #include <gdiplus.h>
@@ -10,7 +10,6 @@
 #include "shared/Input.h"
 #include "shared/Profile.h"
 #include "shared/State.h"
-
 
 extern float g_detectionRatio;
 extern std::vector<Profile> g_allProfiles;

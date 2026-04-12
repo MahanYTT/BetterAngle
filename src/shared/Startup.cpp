@@ -1,4 +1,4 @@
-#define WIN32_LEAN_AND_MEAN
+// windows.h must come before gdiplus.h for GDI+ compatibility
 #include <gdiplus.h>
 #include <windows.h>
 
