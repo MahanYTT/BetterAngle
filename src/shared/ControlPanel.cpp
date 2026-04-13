@@ -1,13 +1,47 @@
 #include "shared/ControlPanel.h"
 #include "shared/BetterAngleBackend.h"
+#include "shared/State.h"
 #include <QDebug>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QWindow>
+#include <cstdint>
 
 QQmlApplicationEngine *g_qmlEngine = nullptr;
 BetterAngleBackend *g_backend = nullptr;
 std::wstring g_qmlErrors;
+
+namespace {
+void SyncHUDWithPanelWindow(QWindow *panelWindow) {
+  if (!panelWindow)
+    return;
+
+  const bool panelInteractive = panelWindow->isVisible() &&
+                                panelWindow->visibility() != QWindow::Minimized;
+
+  LogStartup(std::string("PanelWindowState: visible=") +
+             (panelWindow->isVisible() ? "true" : "false") +
+             " visibility=" + std::to_string(int(panelWindow->visibility())) +
+             " active=" + (panelWindow->isActive() ? "true" : "false") +
+             " interactive=" + (panelInteractive ? "true" : "false"));
+
+  if (!g_hHUD)
+    return;
+
+  if (panelInteractive) {
+    ShowWindow(g_hHUD, SW_HIDE);
+    LogStartup(
+        "PanelWindowState: HUD hidden while control panel is interactive.");
+  } else {
+    ShowWindow(g_hHUD, SW_SHOWNA);
+    UpdateWindow(g_hHUD);
+    InvalidateRect(g_hHUD, NULL, FALSE);
+    LogStartup("PanelWindowState: HUD restored because control panel is not "
+               "interactive.");
+  }
+}
+} // namespace
 
 void EnsureEngineInitialized() {
   if (!g_qmlEngine) {
@@ -86,9 +120,35 @@ HWND CreateControlPanel(HINSTANCE hInstance) {
       exit(1);
     }
     LogStartup("Panel: Dashboard UI loaded successfully.");
+
+    QObject *rootObject = g_qmlEngine->rootObjects().isEmpty()
+                              ? nullptr
+                              : g_qmlEngine->rootObjects().last();
+    QWindow *panelWindow = qobject_cast<QWindow *>(rootObject);
+    if (panelWindow) {
+      g_hPanel = reinterpret_cast<HWND>(panelWindow->winId());
+      LogStartup(std::string("Panel: Native panel handle acquired: ") +
+                 std::to_string(reinterpret_cast<uintptr_t>(g_hPanel)));
+
+      QObject::connect(panelWindow, &QWindow::visibleChanged, [panelWindow]() {
+        SyncHUDWithPanelWindow(panelWindow);
+      });
+      QObject::connect(panelWindow, &QWindow::visibilityChanged,
+                       [panelWindow](QWindow::Visibility) {
+                         SyncHUDWithPanelWindow(panelWindow);
+                       });
+      QObject::connect(panelWindow, &QWindow::activeChanged, [panelWindow]() {
+        SyncHUDWithPanelWindow(panelWindow);
+      });
+
+      SyncHUDWithPanelWindow(panelWindow);
+    } else {
+      LogStartup("Panel: Failed to cast root object to QWindow; HUD/panel sync "
+                 "unavailable.");
+    }
   }
 
-  return (HWND)1;
+  return g_hPanel ? g_hPanel : (HWND)1;
 }
 
 void ShowControlPanel() {

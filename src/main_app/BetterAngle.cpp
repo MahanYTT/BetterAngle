@@ -138,6 +138,12 @@ void SetHUDClickable(HWND hWnd, bool clickable) {
     SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0,
                  SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_NOACTIVATE);
   }
+
+  const LONG_PTR updatedExStyle = GetWindowLongPtr(hWnd, GWL_EXSTYLE);
+  LogStartup(std::string("SetHUDClickable: clickable=") +
+             (clickable ? "true" : "false") + " exStyleTransparent=" +
+             ((updatedExStyle & WS_EX_TRANSPARENT) ? "true" : "false") +
+             " zOrder=" + (clickable ? "TOPMOST" : "NOTOPMOST"));
 }
 
 HBITMAP CaptureScreen() {
@@ -249,7 +255,19 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
       InvalidateRect(hWnd, NULL, FALSE);
     }
     return 0;
-  case WM_LBUTTONDOWN:
+  case WM_LBUTTONDOWN: {
+    const char *selectionState =
+        (g_currentSelection == NONE)
+            ? "NONE"
+            : (g_currentSelection == SELECTING_ROI ? "SELECTING_ROI"
+                                                   : "SELECTING_COLOR");
+    const LONG_PTR exStyle = GetWindowLongPtr(hWnd, GWL_EXSTYLE);
+    LogStartup(std::string("HUDMouseDown: selection=") + selectionState +
+               " dragging=" + (g_isDraggingHUD ? "true" : "false") +
+               " selectionActive=" + (g_isSelectionActive ? "true" : "false") +
+               " exStyleTransparent=" +
+               ((exStyle & WS_EX_TRANSPARENT) ? "true" : "false"));
+
     if (g_currentSelection == SELECTING_ROI) {
       g_isSelectionActive = true;
       g_startPoint = {(short)LOWORD(lp), (short)HIWORD(lp)};
@@ -263,8 +281,10 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
       GetCursorPos(&g_dragStartMouse);
       g_dragStartHUD = {g_hudX, g_hudY};
       SetCapture(hWnd);
+      LogStartup("HUDMouseDown: unexpected drag start while selection=NONE");
     }
     return 0;
+  }
   case WM_MOUSEMOVE:
     if (g_isSelectionActive) {
       POINT cur = {(short)LOWORD(lp), (short)HIWORD(lp)};

@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.72] - 2026-04-13
+### Fixed
+- **Frozen Dashboard Input**: [`CreateControlPanel()`](src/shared/ControlPanel.cpp:82) now acquires the native Qt panel window and synchronizes it with the fullscreen HUD, hiding the HUD while the dashboard is interactive so mouse clicks and window dragging reach the control panel reliably.
+- **HUD / Panel Handoff**: [`SyncHUDWithPanelWindow()`](src/shared/ControlPanel.cpp:15) now restores the HUD only after the dashboard is minimized or hidden, removing the fullscreen layered-window overlap that was still blocking UI interaction.
+
 ## [v4.27.71] - 2026-04-13
 ### Fixed
 - **Angle Normalization**: Corrected [`AngleLogic::GetAngle()`](src/shared/Logic.cpp:128) to return the normalized value produced by [`AngleLogic::Norm360()`](src/shared/Logic.cpp:180), keeping the calculated angle inside the `[0, 360)` range.

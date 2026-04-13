@@ -430,15 +430,13 @@ void BetterAngleBackend::requestShowControlPanel() {
   CreateControlPanel(g_hInstance);
 
   if (g_hHUD) {
-    ShowWindow(g_hHUD, SW_SHOW);
-    UpdateWindow(g_hHUD);
-    InvalidateRect(g_hHUD, NULL, FALSE);
+    ShowWindow(g_hHUD, SW_HIDE);
     g_pendingShowHUD = false;
-    LogStartup("UI: HUD window shown.");
+    LogStartup("UI: HUD hidden before showing control panel.");
   } else {
-    g_pendingShowHUD = true;
-    LogStartup("UI: HUD window handle not available yet. Marked pending HUD "
-               "show request.");
+    g_pendingShowHUD = false;
+    LogStartup("UI: HUD window handle not available yet; skipping HUD show "
+               "while control panel opens.");
   }
 
   LogStartup("UI: Emitting showControlPanelRequested.");
@@ -466,9 +464,8 @@ void BetterAngleBackend::finishSetup() {
 
   // 5. Final HUD/Dashboard reveal
   if (g_hHUD) {
-    ShowWindow(g_hHUD, SW_SHOW);
-    UpdateWindow(g_hHUD);
-    InvalidateRect(g_hHUD, NULL, FALSE);
+    ShowWindow(g_hHUD, SW_HIDE);
+    LogStartup("UI: HUD hidden during final dashboard reveal.");
   }
   emit profileChanged();
   emit showControlPanelRequested();
