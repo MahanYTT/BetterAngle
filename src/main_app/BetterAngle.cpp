@@ -392,7 +392,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   if (g_allProfiles.empty()) {
     Profile p;
     p.name = L"Default";
-    p.tolerance = 25;
+    p.tolerance = 2;
     p.roi_x = 760;
     p.roi_y = 640;
     p.roi_w = 400;

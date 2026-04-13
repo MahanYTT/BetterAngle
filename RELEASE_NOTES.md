@@ -1,3 +1,6 @@
+### BetterAngle Pro v4.27.86
+- **Performance Optimization**: Adjusted the default color match tolerance from 25 to 2. This significantly improves startup detection performance and ensures stricter target matching for high-fidelity overlays.
+
 ### BetterAngle Pro v4.27.85
 - **Modernized Debug Overlay**: Replaced the legacy debug dashboard with a high-fidelity "glass" aesthetic. Features include semi-transparent gradients, inner-glow borders, and sleek layout dividers.
 - **Dynamic Layout Engine**: Height now automatically adjusts based on the number of active metrics, eliminating empty space at the bottom of the overlay.
