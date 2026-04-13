@@ -12,8 +12,10 @@ Window {
     title: qsTr("BetterAngle Pro Angle HUD")
     color: "#0a0a0f"
 
-    // Frameless window style for a custom sleek look
-    flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowSystemMenuHint | Qt.WindowMinimizeButtonHint | Qt.WindowStaysOnTopHint
+    // Use standard native window chrome for reliable focus and mouse interaction.
+    // The previous frameless + always-on-top combination could leave the window
+    // visually active while native hit-testing still failed to deliver clicks.
+    flags: Qt.Window | Qt.WindowTitleHint | Qt.WindowSystemMenuHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint
 
     function logState(prefix) {
         if (backend && backend.logDebugMessage) {
@@ -98,7 +100,8 @@ Window {
             onPressed: {
                 console.log("[QML] Title bar press at", mouse.x, mouse.y, "window", mainWindow.x, mainWindow.y)
                 mainWindow.logState("titleBar.onPressed mouseX=" + mouse.x + " mouseY=" + mouse.y)
-                mainWindow.startSystemMove()
+                if (mouse.button === Qt.LeftButton)
+                    mainWindow.startSystemMove()
             }
             onReleased: {
                 mainWindow.logState("titleBar.onReleased mouseX=" + mouse.x + " mouseY=" + mouse.y)

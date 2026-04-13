@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.75] - 2026-04-13
+### Fixed
+- **Dashboard Native Window Reliability**: [`src/gui/main.qml`](src/gui/main.qml:15) now uses standard native window chrome instead of the previous frameless + always-on-top combination, removing a likely source of “active but not actually clickable” behavior on Windows.
+- **Title Bar Drag Safety**: [`src/gui/main.qml`](src/gui/main.qml:96) now only starts system move on left-click drag, aligning the custom title handling with normal native window expectations.
+
 ## [v4.27.74] - 2026-04-13
 ### Fixed
 - **Native Panel Focus / Input Routing**: [`SyncHUDWithPanelWindow()`](src/shared/ControlPanel.cpp:16) now explicitly enables, foregrounds, focuses, and raises the native dashboard window while the HUD is pushed behind it, ensuring the active panel actually receives mouse drag and click interaction.
