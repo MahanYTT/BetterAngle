@@ -165,14 +165,17 @@ void CleanupUpdateJunk() {
 void ApplyUpdateAndRestart() {
   std::wstring root = GetAppRootPath();
   std::wstring installerPath = root + L"BetterAngle_Setup_update.exe";
-  std::wstring scriptPath = root + L"ba_update.ps1";
+
+  auto openReleasePage = []() {
+    ShellExecuteW(NULL, L"open",
+                  L"https://github.com/MahanYTT/BetterAngle/releases/latest",
+                  NULL, NULL, SW_SHOWNORMAL);
+  };
 
   if (GetFileAttributesW(installerPath.c_str()) == INVALID_FILE_ATTRIBUTES) {
     g_downloadComplete = false;
     g_updateAvailable = true;
-    ShellExecuteW(NULL, L"open",
-                  L"https://github.com/MahanYTT/BetterAngle/releases/latest",
-                  NULL, NULL, SW_SHOWNORMAL);
+    openReleasePage();
     return;
   }
 
@@ -180,6 +183,7 @@ void ApplyUpdateAndRestart() {
   if (GetModuleFileNameW(NULL, currentExe, MAX_PATH) == 0) {
     g_downloadComplete = false;
     g_updateAvailable = true;
+    openReleasePage();
     return;
   }
 
@@ -189,40 +193,45 @@ void ApplyUpdateAndRestart() {
       L"/SP- /VERYSILENT /SUPPRESSMSGBOXES /NORESTART "
       L"/CLOSEAPPLICATIONS /FORCECLOSEAPPLICATIONS");
 
-  std::wofstream script(scriptPath, std::ios::trunc);
-  if (!script.is_open()) {
-    g_downloadComplete = false;
-    g_updateAvailable = true;
-    return;
-  }
-
-  script << L"$ErrorActionPreference = 'Stop'\r\n";
-  script << L"$installer = '" << installerEsc << L"'\r\n";
-  script << L"$app = '" << currentExeEsc << L"'\r\n";
-  script << L"$args = '" << paramsEsc << L"'\r\n";
-  script << L"Start-Sleep -Seconds 2\r\n";
-  script << L"try {\r\n";
-  script << L"  $p = Start-Process -FilePath $installer -ArgumentList $args "
-            L"-Verb RunAs -PassThru -Wait\r\n";
-  script
-      << L"  if ($p.ExitCode -eq 0 -and (Test-Path -LiteralPath $app)) {\r\n";
-  script << L"    Start-Sleep -Seconds 2\r\n";
-  script << L"    Start-Process -FilePath $app\r\n";
-  script << L"  }\r\n";
-  script << L"} catch { } finally {\r\n";
-  script << L"  Remove-Item -LiteralPath $PSCommandPath -Force -ErrorAction "
-            L"SilentlyContinue\r\n";
-  script << L"}\r\n";
-  script.close();
+  std::wstring psCommand =
+      L"$ErrorActionPreference = 'Stop'; "
+      L"$installer = '" +
+      installerEsc +
+      L"'; "
+      L"$app = '" +
+      currentExeEsc +
+      L"'; "
+      L"$args = '" +
+      paramsEsc +
+      L"'; "
+      L"Start-Sleep -Seconds 2; "
+      L"try { "
+      L"$p = Start-Process -FilePath $installer -ArgumentList $args -Verb "
+      L"RunAs -PassThru -Wait; "
+      L"if ($p.ExitCode -eq 0 -and (Test-Path -LiteralPath $app)) { "
+      L"Start-Sleep -Seconds 2; Start-Process -FilePath $app -WorkingDirectory "
+      L"(Split-Path -Parent $app) | Out-Null; "
+      L"} elseif (Test-Path -LiteralPath $app) { "
+      L"Start-Process -FilePath $app -WorkingDirectory (Split-Path -Parent "
+      L"$app) | Out-Null; "
+      L"} "
+      L"} catch { "
+      L"if (Test-Path -LiteralPath $app) { Start-Process -FilePath $app "
+      L"-WorkingDirectory (Split-Path -Parent $app) | Out-Null } "
+      L"} finally { "
+      L"Remove-Item -LiteralPath $installer -Force -ErrorAction "
+      L"SilentlyContinue "
+      L"}";
 
   std::wstring psArgs =
-      L"-NoProfile -ExecutionPolicy Bypass -File \"" + scriptPath + L"\"";
+      L"-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -Command \"" +
+      psCommand + L"\"";
   HINSTANCE result = ShellExecuteW(NULL, L"open", L"powershell.exe",
                                    psArgs.c_str(), NULL, SW_HIDE);
   if ((INT_PTR)result <= 32) {
     g_downloadComplete = false;
     g_updateAvailable = true;
-    DeleteFileW(scriptPath.c_str());
+    openReleasePage();
     return;
   }
 

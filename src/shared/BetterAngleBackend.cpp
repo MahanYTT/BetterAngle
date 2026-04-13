@@ -18,7 +18,16 @@ extern AngleLogic g_logic;
 static double g_pendingSetupSensX = 0.05;
 static double g_pendingSetupSensY = 0.05;
 
+static BetterAngleBackend* s_backendInstance = nullptr;
+
+void NotifyBackendCrosshairChanged() {
+  if (s_backendInstance) {
+    emit s_backendInstance->crosshairChanged();
+  }
+}
+
 BetterAngleBackend::BetterAngleBackend(QObject *parent) : QObject(parent) {
+  s_backendInstance = this;
   // Emit profileChanged once the Qt event loop starts so QML fields
   // refresh with whatever sensitivityX is in g_allProfiles (set by setup or
   // loaded from disk).
@@ -115,6 +124,7 @@ void BetterAngleBackend::setTolerance(int v) {
 bool BetterAngleBackend::crosshairOn() const { return g_showCrosshair; }
 void BetterAngleBackend::setCrosshairOn(bool v) {
   g_showCrosshair = v;
+  g_forceRedraw = true;
   if (!g_allProfiles.empty()) {
     Profile &p = g_allProfiles[g_selectedProfileIdx];
     p.showCrosshair = v;
@@ -127,6 +137,7 @@ void BetterAngleBackend::setCrosshairOn(bool v) {
 float BetterAngleBackend::crossThickness() const { return g_crossThickness; }
 void BetterAngleBackend::setCrossThickness(float v) {
   g_crossThickness = v;
+  g_forceRedraw = true;
   if (!g_allProfiles.empty()) {
     Profile &p = g_allProfiles[g_selectedProfileIdx];
     p.crossThickness = v;
@@ -139,6 +150,7 @@ void BetterAngleBackend::setCrossThickness(float v) {
 float BetterAngleBackend::crossOffsetX() const { return g_crossOffsetX; }
 void BetterAngleBackend::setCrossOffsetX(float v) {
   g_crossOffsetX = (std::round(v * 2.0f) / 2.0f);
+  g_forceRedraw = true;
   if (!g_allProfiles.empty()) {
     Profile &p = g_allProfiles[g_selectedProfileIdx];
     p.crossOffsetX = g_crossOffsetX;
@@ -151,6 +163,7 @@ void BetterAngleBackend::setCrossOffsetX(float v) {
 float BetterAngleBackend::crossOffsetY() const { return g_crossOffsetY; }
 void BetterAngleBackend::setCrossOffsetY(float v) {
   g_crossOffsetY = (std::round(v * 2.0f) / 2.0f);
+  g_forceRedraw = true;
   if (!g_allProfiles.empty()) {
     Profile &p = g_allProfiles[g_selectedProfileIdx];
     p.crossOffsetY = g_crossOffsetY;
@@ -163,6 +176,7 @@ void BetterAngleBackend::setCrossOffsetY(float v) {
 bool BetterAngleBackend::crossPulse() const { return g_crossPulse; }
 void BetterAngleBackend::setCrossPulse(bool v) {
   g_crossPulse = v;
+  g_forceRedraw = true;
   if (!g_allProfiles.empty()) {
     Profile &p = g_allProfiles[g_selectedProfileIdx];
     p.crossPulse = v;
@@ -178,6 +192,7 @@ QColor BetterAngleBackend::crossColor() const {
 }
 void BetterAngleBackend::setCrossColor(const QColor &c) {
   g_crossColor = RGB(c.red(), c.green(), c.blue());
+  g_forceRedraw = true;
   if (!g_allProfiles.empty()) {
     Profile &p = g_allProfiles[g_selectedProfileIdx];
     p.crossColor = g_crossColor;

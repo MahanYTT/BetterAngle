@@ -48,34 +48,58 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
                  bool showCrosshair) {
   TickFPS();
 
-  PAINTSTRUCT ps;
-  HDC hdc = BeginPaint(hwnd, &ps);
-
   RECT rect;
   GetClientRect(hwnd, &rect);
   int sw = rect.right - rect.left;
   int sh = rect.bottom - rect.top;
+  if (sw <= 0 || sh <= 0) return;
 
-  // Double-buffered drawing
-  HDC hdcMem = CreateCompatibleDC(hdc);
-  HBITMAP hbmMem = CreateCompatibleBitmap(hdc, sw, sh);
+  HDC hdcScreen = GetDC(NULL);
+  HDC hdcMem = CreateCompatibleDC(hdcScreen);
+
+  BITMAPINFO bmi = {0};
+  bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+  bmi.bmiHeader.biWidth = sw;
+  bmi.bmiHeader.biHeight = -sh; // top-down
+  bmi.bmiHeader.biPlanes = 1;
+  bmi.bmiHeader.biBitCount = 32;
+  bmi.bmiHeader.biCompression = BI_RGB;
+
+  void* pBits = nullptr;
+  HBITMAP hbmMem = CreateDIBSection(hdcScreen, &bmi, DIB_RGB_COLORS, &pBits, NULL, 0);
   HGDIOBJ hOld = SelectObject(hdcMem, hbmMem);
 
-  Graphics graphics(hdcMem);
-  graphics.SetSmoothingMode(SmoothingModeAntiAlias);
-  graphics.SetInterpolationMode(InterpolationModeHighQuality);
-  graphics.SetPixelOffsetMode(PixelOffsetModeHighQuality);
-  graphics.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
-  graphics.Clear(Color(0, 0, 0, 0));
+  if (!pBits) {
+    SelectObject(hdcMem, hOld);
+    DeleteObject(hbmMem);
+    DeleteDC(hdcMem);
+    ReleaseDC(NULL, hdcScreen);
+    return;
+  }
 
-  // ROI selection snapshot background
+  // Pre-fill selection background if needed
   if (g_screenSnapshot && g_currentSelection != NONE) {
     HDC hdcSnap = CreateCompatibleDC(hdcMem);
     HGDIOBJ hOldSnap = SelectObject(hdcSnap, g_screenSnapshot);
     BitBlt(hdcMem, 0, 0, sw, sh, hdcSnap, 0, 0, SRCCOPY);
     SelectObject(hdcSnap, hOldSnap);
     DeleteDC(hdcSnap);
+
+    // Force opaque alpha for the desktop snapshot so the window catches clicks
+    DWORD* pixels = (DWORD*)pBits;
+    int count = sw * sh;
+    for (int i = 0; i < count; ++i) pixels[i] |= 0xFF000000;
+  } else {
+    // Clear to fully transparent
+    memset(pBits, 0, sw * sh * 4);
   }
+
+  Bitmap bmp(sw, sh, sw * 4, PixelFormat32bppPARGB, (BYTE*)pBits);
+  Graphics graphics(&bmp);
+  graphics.SetSmoothingMode(SmoothingModeAntiAlias);
+  graphics.SetInterpolationMode(InterpolationModeHighQuality);
+  graphics.SetPixelOffsetMode(PixelOffsetModeHighQuality);
+  graphics.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
 
   // Two-stage selection overlay
   if (g_currentSelection != NONE) {
@@ -142,7 +166,8 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
       int zy = (cur.y + mh * 3 < sh) ? cur.y : (sh - mh * 3);
 
       // Draw magnifier content and border
-      BitBlt(hdcMem, zx, zy, mw * 3, mh * 3, hdcZoom, 0, 0, SRCCOPY);
+      Bitmap zoomBmp(hbmZoom, NULL);
+      graphics.DrawImage(&zoomBmp, zx, zy, mw * 3, mh * 3);
       Pen magBorder(Color(255, 255, 255, 255), 2.0f);
       graphics.DrawRectangle(&magBorder, zx, zy, mw * 3, mh * 3);
 
@@ -164,12 +189,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
       ReleaseDC(NULL, hdcScr);
     }
 
-    BitBlt(hdc, 0, 0, sw, sh, hdcMem, 0, 0, SRCCOPY);
-    SelectObject(hdcMem, hOld);
-    DeleteObject(hbmMem);
-    DeleteDC(hdcMem);
-    EndPaint(hwnd, &ps);
-    return;
+    goto render_done;
   }
 
   // ROI box visualizer
@@ -435,10 +455,18 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
     }
   }
 
-  // Blit to screen
-  BitBlt(hdc, 0, 0, sw, sh, hdcMem, 0, 0, SRCCOPY);
+render_done:
+  POINT ptSrc = {0, 0};
+  RECT wRect;
+  GetWindowRect(hwnd, &wRect);
+  POINT ptWin = {wRect.left, wRect.top};
+  SIZE size = {sw, sh};
+  BLENDFUNCTION blend = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
+  
+  UpdateLayeredWindow(hwnd, hdcScreen, &ptWin, &size, hdcMem, &ptSrc, 0, &blend, ULW_ALPHA);
+
   SelectObject(hdcMem, hOld);
   DeleteObject(hbmMem);
   DeleteDC(hdcMem);
-  EndPaint(hwnd, &ps);
+  ReleaseDC(NULL, hdcScreen);
 }

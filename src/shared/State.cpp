@@ -18,6 +18,7 @@ std::string g_updateHistory = "";
 std::atomic<bool> g_fortniteFocusedCache(false);
 bool g_setupComplete = false;
 std::string g_lastVersionRun = "";
+std::atomic<bool> g_forceRedraw(true);
 
 Profile g_currentProfile;
 std::vector<Profile> g_allProfiles;

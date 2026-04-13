@@ -1,3 +1,8 @@
+### BetterAngle Pro v4.27.110
+- **True Crosshair Transparency**: Refactored the core Win32 rendering engine to use a 32-bpp `CreateDIBSection` with `UpdateLayeredWindow`. This completely eliminates the "black outline" alpha-blending artifact. The pulse animation now correctly fades from fully opaque to seamlessly transparent.
+- **Instant UI Synchronization**: Established a direct bidirectional signaling bridge between the global Win32 hotkeys and the Qt Dashboard. Toggling the crosshair via the F10 hotkey now instantly updates the UI button text and triggers a synchronous visual refresh.
+- **Render Loop Optimization**: Removed legacy, asynchronous `WM_PAINT` handlers. The application now exclusively dispatches zero-latency memory blits directly from the `WM_TIMER` tick, ensuring instantaneous slider feedback without OS-level buffering delays.
+
 ### BetterAngle Pro v4.27.109
 - **Ultra-Fine Crosshairs**: Enabled GDI+ `PixelOffsetModeHighQuality` to support sub-pixel rendering. Crosshairs can now be as thin as 0.1px while maintaining visual clarity through high-quality anti-aliasing.
 - **UI Nomenclature Standardization**: Renamed "SAVED POSITIONS" to "SAVED CONFIG" and updated associated placeholders to "Config name..." to better reflect the profile-based settings architecture.

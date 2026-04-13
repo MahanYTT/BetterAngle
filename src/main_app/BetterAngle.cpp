@@ -132,7 +132,6 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
                             LPARAM lParam) {
   switch (message) {
   case WM_CREATE:
-    SetLayeredWindowAttributes(hWnd, RGB(0, 0, 0), 0, LWA_COLORKEY);
     RefreshHotkeys(hWnd);
     return 0;
 
@@ -177,11 +176,13 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       break;
     case 3:
       g_showCrosshair = !g_showCrosshair;
-      SaveSettings();
-      if (g_hHUD) {
-        InvalidateRect(g_hHUD, NULL, FALSE);
-        UpdateWindow(g_hHUD);
+      g_forceRedraw = true;
+      if (!g_allProfiles.empty()) {
+        g_allProfiles[g_selectedProfileIdx].showCrosshair = g_showCrosshair;
+        g_allProfiles[g_selectedProfileIdx].Save(GetProfilesPath() + g_allProfiles[g_selectedProfileIdx].name + L".json");
       }
+      SaveSettings();
+      NotifyBackendCrosshairChanged();
       break;
     case 4:
       g_currentAngle = 0.0f;
@@ -330,11 +331,12 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
       if (ang != lastAngle || g_isDiving != lastDiving ||
           g_isCursorVisible != lastCursor || g_currentSelection != NONE ||
-          g_showCrosshair || pulseActive) {
+          g_showCrosshair || pulseActive || g_forceRedraw.load()) {
         lastAngle = ang;
         lastDiving = g_isDiving;
         lastCursor = g_isCursorVisible;
-        InvalidateRect(hWnd, NULL, FALSE);
+        g_forceRedraw.store(false);
+        DrawOverlay(hWnd, ang, g_detectionRatio, g_showCrosshair);
       }
     } else if (wParam == 2) { // 30s Auto-Save Periodic Timer
       SaveSettings();
@@ -347,10 +349,6 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
     }
     return 0;
   }
-
-  case WM_PAINT:
-    DrawOverlay(hWnd, g_logic.GetAngle(), g_detectionRatio, g_showCrosshair);
-    return 0;
 
   case WM_SYSCOMMAND:
     // Block F10 from opening the system menu (interferes with Fn+F10 keybind)

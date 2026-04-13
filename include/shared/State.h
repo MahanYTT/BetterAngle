@@ -20,7 +20,7 @@ std::wstring GetProfilesPath();
 #ifndef V_MAJ
 #define V_MAJ 4
 #define V_MIN 27
-#define V_PAT 107
+#define V_PAT 110
 #endif
 extern std::string g_lastVersionRun;
 extern bool g_setupComplete;
@@ -88,5 +88,7 @@ extern HWND g_hHUD;
 extern HWND g_hPanel;
 
 bool RefreshHotkeys(HWND hWnd);
+extern std::atomic<bool> g_forceRedraw;
+void NotifyBackendCrosshairChanged();
 
 #endif // STATE_H
