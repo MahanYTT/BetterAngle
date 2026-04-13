@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.76] - 2026-04-13
+### Fixed
+- **Dashboard Client-Area Input**: [`SyncHUDWithPanelWindow()`](src/shared/ControlPanel.cpp:16) now cuts a hole out of the fullscreen HUD over the dashboard window rectangle instead of only relying on click-through styles, allowing Qt controls inside the panel to receive mouse interaction while the HUD remains visible elsewhere.
+- **HUD / Panel Overlap Resolution**: The HUD region is now dynamically reduced around the live panel bounds during interactive panel state, targeting the remaining case where the window could move but client-area buttons still would not click.
+
 ## [v4.27.75] - 2026-04-13
 ### Fixed
 - **Dashboard Native Window Reliability**: [`src/gui/main.qml`](src/gui/main.qml:15) now uses standard native window chrome instead of the previous frameless + always-on-top combination, removing a likely source of “active but not actually clickable” behavior on Windows.

@@ -39,6 +39,35 @@ void SyncHUDWithPanelWindow(QWindow *panelWindow) {
     hudExStyle &= ~WS_EX_TRANSPARENT;
 
   SetWindowLongPtr(g_hHUD, GWL_EXSTYLE, hudExStyle);
+
+  if (panelInteractive && g_hPanel) {
+    RECT panelRect = {};
+    RECT hudRect = {};
+    if (GetWindowRect(g_hPanel, &panelRect) &&
+        GetWindowRect(g_hHUD, &hudRect)) {
+      const int hudWidth = hudRect.right - hudRect.left;
+      const int hudHeight = hudRect.bottom - hudRect.top;
+      const int panelLeft = panelRect.left - hudRect.left;
+      const int panelTop = panelRect.top - hudRect.top;
+      const int panelRight = panelRect.right - hudRect.left;
+      const int panelBottom = panelRect.bottom - hudRect.top;
+
+      HRGN fullRegion = CreateRectRgn(0, 0, hudWidth, hudHeight);
+      HRGN panelRegion =
+          CreateRectRgn(panelLeft, panelTop, panelRight, panelBottom);
+      CombineRgn(fullRegion, fullRegion, panelRegion, RGN_DIFF);
+      SetWindowRgn(g_hHUD, fullRegion, TRUE);
+      DeleteObject(panelRegion);
+
+      LogStartup(
+          std::string("PanelWindowState: HUD hole-punch applied panelRect=") +
+          std::to_string(panelLeft) + "," + std::to_string(panelTop) + "," +
+          std::to_string(panelRight) + "," + std::to_string(panelBottom));
+    }
+  } else {
+    SetWindowRgn(g_hHUD, NULL, TRUE);
+  }
+
   SetWindowPos(g_hHUD, panelInteractive ? HWND_NOTOPMOST : HWND_TOPMOST, 0, 0,
                0, 0,
                SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_NOACTIVATE |
@@ -64,7 +93,8 @@ void SyncHUDWithPanelWindow(QWindow *panelWindow) {
       ((hudExStyle & WS_EX_TRANSPARENT) ? "true" : "false") +
       " zOrder=" + (panelInteractive ? "NOTOPMOST" : "TOPMOST") +
       " clickable=" + (hudShouldBeClickable ? "true" : "false") +
-      " panelForcedTop=" + (panelInteractive ? "true" : "false"));
+      " panelForcedTop=" + (panelInteractive ? "true" : "false") +
+      " regionMode=" + (panelInteractive ? "hole-punch" : "full"));
 }
 } // namespace
 
