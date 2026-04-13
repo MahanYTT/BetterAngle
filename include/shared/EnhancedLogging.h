@@ -55,6 +55,7 @@ void LogFileOperation(const std::string &operation, const std::string &path,
 void LogCOMOperation(const std::string &operation, HRESULT hr);
 void LogGDIResource(const std::string &context, int count);
 void LogDirectXState(const std::string &context, HRESULT hr = S_OK);
+void LogWindowDragEvent(const std::string &context, int x, int y, bool started);
 
 // Backward compatibility
 void LogStartup(const std::string &msg);

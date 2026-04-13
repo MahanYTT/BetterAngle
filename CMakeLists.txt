@@ -44,6 +44,7 @@ set(SRC_FILES
     src/shared/Profile.cpp
     src/shared/Startup.cpp
     src/shared/State.cpp
+    src/shared/EnhancedLogging.cpp
     src/shared/Tray.cpp
     src/shared/Updater.cpp
     qml.qrc

@@ -295,3 +295,12 @@ void LogDirectXState(const std::string &context, HRESULT hr) {
     LOG_DEBUG_MSG(ss.str());
   }
 }
+
+void LogWindowDragEvent(const std::string &context, int x, int y,
+                        bool started) {
+  std::stringstream ss;
+  ss << "Window Drag Event - " << context;
+  ss << " - " << (started ? "STARTED" : "ENDED");
+  ss << " at (" << x << ", " << y << ")";
+  LOG_TRACE_MSG(ss.str());
+}

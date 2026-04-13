@@ -5,6 +5,53 @@ import QtQuick.Layouts 1.15
 Item {
     id: root
 
+    // Window dragging MouseArea - allows dragging window by clicking anywhere on empty areas
+    MouseArea {
+        id: windowDragArea
+        anchors.fill: parent
+        propagateComposedEvents: true
+        
+        // Only start window drag if we're not clicking on interactive elements
+        onPressed: function(mouse) {
+            // Check if the mouse is over any interactive child
+            var interactiveChild = childAt(mouse.x, mouse.y);
+            var isInteractive = false;
+            
+            // Walk up the parent chain to see if we're over an interactive element
+            var item = interactiveChild;
+            while (item && item !== windowDragArea) {
+                // Check if this item is interactive (Button, Slider, TextField, TabButton, etc.)
+                if (item.hasOwnProperty('hovered') || // Buttons have hovered property
+                    item.hasOwnProperty('pressed') || // Interactive items have pressed
+                    item.objectName === 'interactive' || // Custom marker
+                    (item.parent && item.parent.hasOwnProperty('currentIndex')) || // TabBar
+                    item instanceof TextField ||
+                    item instanceof Slider ||
+                    item instanceof Button ||
+                    item instanceof TabButton ||
+                    item instanceof ComboBox) {
+                    isInteractive = true;
+                    break;
+                }
+                item = item.parent;
+            }
+            
+            if (!isInteractive && mouse.button === Qt.LeftButton) {
+                console.log("[QML] Dashboard window drag started at", mouse.x, mouse.y);
+                // Start window system move
+                Window.window.startSystemMove();
+                mouse.accepted = true;
+            } else {
+                // Propagate event to child items
+                mouse.accepted = false;
+            }
+        }
+        
+        // Also handle mouse position changes for visual feedback
+        hoverEnabled: true
+        cursorShape: containsMouse ? Qt.SizeAllCursor : Qt.ArrowCursor
+    }
+
     TabBar {
         id: bar
         width: parent.width

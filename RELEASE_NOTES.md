@@ -1,5 +1,9 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.81] - 2026-04-13
+### Fixed
+- **Window Dragging from Entire UI**: [`Dashboard.qml`](src/gui/Dashboard.qml:5) Added window dragging MouseArea that covers the entire dashboard area, allowing users to drag the window by clicking anywhere on empty UI space (not just the white title bar). The MouseArea uses `propagateComposedEvents: true` to allow clicks to pass through to interactive elements like buttons, sliders, and text fields while still enabling window dragging on empty areas.
+
 ## [v4.27.80] - 2026-04-13
 ### Fixed
 - **Dashboard UI Click Responsiveness**: [`ControlPanel.cpp`](src/shared/ControlPanel.cpp:107) Removed `HWND_TOPMOST` flag from panel window to prevent focus/activation conflicts. Added `AllowSetForegroundWindow(ASFW_ANY)` before activation calls to ensure proper foreground window permissions. This fixes the issue where UI elements (buttons, sliders) were unclickable while window dragging still worked.
