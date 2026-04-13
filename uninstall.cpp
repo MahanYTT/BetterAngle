@@ -3,6 +3,7 @@
 #include <tlhelp32.h>
 
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <system_error>
@@ -36,6 +37,10 @@ static std::wstring GetEnvVar(const wchar_t* name) {
     return value;
 }
 
+static std::wstring Quote(const std::wstring& value) {
+    return L"\"" + value + L"\"";
+}
+
 static bool EqualsIgnoreCase(const std::wstring& a, const std::wstring& b) {
     return _wcsicmp(a.c_str(), b.c_str()) == 0;
 }
@@ -44,6 +49,24 @@ static void ClearReadOnlyAttribute(const fs::path& path) {
     DWORD attrs = GetFileAttributesW(path.c_str());
     if (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_READONLY)) {
         SetFileAttributesW(path.c_str(), attrs & ~FILE_ATTRIBUTE_READONLY);
+    }
+}
+
+static std::wstring GetModulePath() {
+    std::wstring buffer(MAX_PATH, L'\0');
+
+    for (;;) {
+        DWORD written = GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
+        if (written == 0) {
+            return L"";
+        }
+
+        if (written < buffer.size() - 1) {
+            buffer.resize(written);
+            return buffer;
+        }
+
+        buffer.resize(buffer.size() * 2);
     }
 }
 
@@ -131,51 +154,131 @@ static void RemoveNamedFilesRecursively(const fs::path& root, const std::vector<
     }
 }
 
+static fs::path DetectInstallDirFromCurrentExecutable() {
+    const fs::path currentExe = GetModulePath();
+    if (currentExe.empty()) {
+        return {};
+    }
+
+    const fs::path parent = currentExe.parent_path();
+    const std::wstring parentName = parent.filename().wstring();
+
+    if (EqualsIgnoreCase(parentName, L"BetterAngle")) {
+        return parent;
+    }
+
+    if (EqualsIgnoreCase(currentExe.filename().wstring(), L"uninstaller.exe")) {
+        return parent;
+    }
+
+    return parent;
+}
+
+static bool WriteCleanupScript(const fs::path& scriptPath,
+                               const fs::path& currentExe,
+                               const fs::path& installDir,
+                               const std::vector<fs::path>& extraDirs,
+                               const std::vector<fs::path>& extraFiles) {
+    std::wofstream script(scriptPath);
+    if (!script.is_open()) {
+        return false;
+    }
+
+    script << L"@echo off\n";
+    script << L"setlocal\n";
+    script << L"timeout /t 2 /nobreak >nul\n";
+    script << L":retry_main\n";
+    script << L"del /f /q " << Quote(currentExe.wstring()) << L" >nul 2>nul\n";
+    script << L"if exist " << Quote(currentExe.wstring()) << L" (\n";
+    script << L"  timeout /t 1 /nobreak >nul\n";
+    script << L"  goto retry_main\n";
+    script << L")\n";
+
+    for (const auto& file : extraFiles) {
+        script << L"del /f /q " << Quote(file.wstring()) << L" >nul 2>nul\n";
+    }
+
+    for (const auto& dir : extraDirs) {
+        script << L"rmdir /s /q " << Quote(dir.wstring()) << L" >nul 2>nul\n";
+    }
+
+    if (!installDir.empty()) {
+        script << L"rmdir /s /q " << Quote(installDir.wstring()) << L" >nul 2>nul\n";
+    }
+
+    script << L"del /f /q %~f0 >nul 2>nul\n";
+    return true;
+}
+
+static bool LaunchCleanupScript(const fs::path& scriptPath) {
+    std::wstring command = L"/c start \"\" /min " + Quote(scriptPath.wstring());
+
+    STARTUPINFOW si{};
+    si.cb = sizeof(si);
+    PROCESS_INFORMATION pi{};
+
+    std::wstring mutableCommand = command;
+    BOOL ok = CreateProcessW(
+        L"C:\\Windows\\System32\\cmd.exe",
+        mutableCommand.data(),
+        nullptr,
+        nullptr,
+        FALSE,
+        CREATE_NO_WINDOW,
+        nullptr,
+        nullptr,
+        &si,
+        &pi);
+
+    if (ok) {
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+        return true;
+    }
+
+    return false;
+}
+
 int wmain() {
     CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
+    const fs::path currentExe = GetModulePath();
+    const fs::path installDir = DetectInstallDirFromCurrentExecutable();
+
     KillProcessByName(L"BetterAngle.exe");
+    Sleep(1500);
 
     const std::wstring localAppData = GetKnownFolder(FOLDERID_LocalAppData);
     const std::wstring roamingAppData = GetKnownFolder(FOLDERID_RoamingAppData);
     const std::wstring programData = GetKnownFolder(FOLDERID_ProgramData);
     const std::wstring desktop = GetKnownFolder(FOLDERID_Desktop);
     const std::wstring startMenu = GetKnownFolder(FOLDERID_Programs);
-    const std::wstring programFiles = GetEnvVar(L"ProgramFiles");
-    const std::wstring programFilesX86 = GetEnvVar(L"ProgramFiles(x86)");
+    const std::wstring tempDir = GetEnvVar(L"TEMP");
 
-    std::vector<fs::path> filesToRemove;
-    std::vector<fs::path> directoriesToRemove;
-
-    if (!programFiles.empty()) {
-        filesToRemove.emplace_back(fs::path(programFiles) / L"BetterAngle.exe");
-        directoriesToRemove.emplace_back(fs::path(programFiles) / L"BetterAngle");
-    }
-
-    if (!programFilesX86.empty()) {
-        filesToRemove.emplace_back(fs::path(programFilesX86) / L"BetterAngle.exe");
-        directoriesToRemove.emplace_back(fs::path(programFilesX86) / L"BetterAngle");
-    }
+    std::vector<fs::path> filesToRemoveNow;
+    std::vector<fs::path> dirsToRemoveNow;
+    std::vector<fs::path> filesToRemoveLater;
+    std::vector<fs::path> dirsToRemoveLater;
 
     if (!localAppData.empty()) {
-        directoriesToRemove.emplace_back(fs::path(localAppData) / L"BetterAngle");
+        dirsToRemoveNow.emplace_back(fs::path(localAppData) / L"BetterAngle");
     }
 
     if (!roamingAppData.empty()) {
-        directoriesToRemove.emplace_back(fs::path(roamingAppData) / L"BetterAngle");
+        dirsToRemoveNow.emplace_back(fs::path(roamingAppData) / L"BetterAngle");
     }
 
     if (!programData.empty()) {
-        directoriesToRemove.emplace_back(fs::path(programData) / L"BetterAngle");
+        dirsToRemoveNow.emplace_back(fs::path(programData) / L"BetterAngle");
     }
 
     if (!desktop.empty()) {
-        filesToRemove.emplace_back(fs::path(desktop) / L"BetterAngle.lnk");
+        filesToRemoveNow.emplace_back(fs::path(desktop) / L"BetterAngle.lnk");
     }
 
     if (!startMenu.empty()) {
-        filesToRemove.emplace_back(fs::path(startMenu) / L"BetterAngle.lnk");
-        directoriesToRemove.emplace_back(fs::path(startMenu) / L"BetterAngle");
+        filesToRemoveNow.emplace_back(fs::path(startMenu) / L"BetterAngle.lnk");
+        dirsToRemoveNow.emplace_back(fs::path(startMenu) / L"BetterAngle");
     }
 
     const std::vector<std::wstring> likelyDataFiles = {
@@ -186,31 +289,55 @@ int wmain() {
         L"settings.json",
         L"config.json",
         L"state.json",
-        L"overlay.json",
-        L"BetterAngle.exe"
+        L"overlay.json"
     };
 
     bool ok = true;
 
-    for (const auto& dir : directoriesToRemove) {
+    for (const auto& dir : dirsToRemoveNow) {
         RemoveNamedFilesRecursively(dir, likelyDataFiles);
     }
 
-    for (const auto& file : filesToRemove) {
+    for (const auto& file : filesToRemoveNow) {
         if (!RemoveFileIfExists(file)) {
             ok = false;
         }
     }
 
-    for (const auto& dir : directoriesToRemove) {
+    for (const auto& dir : dirsToRemoveNow) {
         if (!RemoveDirectoryIfExists(dir)) {
             ok = false;
         }
     }
 
-    std::wcout << (ok ? L"BetterAngle uninstall completed.\n"
-                      : L"BetterAngle uninstall completed with some errors.\n");
+    if (!installDir.empty()) {
+        filesToRemoveLater.emplace_back(installDir / L"BetterAngle.exe");
+        dirsToRemoveLater.emplace_back(installDir);
+    }
+
+    if (currentExe.empty() || tempDir.empty()) {
+        std::wcerr << L"Unable to prepare uninstall cleanup.\n";
+        CoUninitialize();
+        return 1;
+    }
+
+    const fs::path scriptPath = fs::path(tempDir) / L"betterangle_cleanup.cmd";
+
+    if (!WriteCleanupScript(scriptPath, currentExe, installDir, dirsToRemoveLater, filesToRemoveLater)) {
+        std::wcerr << L"Failed to create cleanup script.\n";
+        CoUninitialize();
+        return 1;
+    }
+
+    if (!LaunchCleanupScript(scriptPath)) {
+        std::wcerr << L"Failed to launch cleanup script.\n";
+        CoUninitialize();
+        return 1;
+    }
+
+    std::wcout << (ok ? L"BetterAngle uninstall started.\n"
+                      : L"BetterAngle uninstall started, but some files may require elevation.\n");
 
     CoUninitialize();
-    return ok ? 0 : 1;
+    return 0;
 }
