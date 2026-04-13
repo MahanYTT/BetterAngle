@@ -460,6 +460,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   WNDCLASS wc = {0};
   wc.lpfnWndProc = HUDWndProc;
   wc.hInstance = hInstance;
+  wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
   wc.hCursor = LoadCursor(NULL, IDC_ARROW);
   wc.lpszClassName = L"BetterAngleHUD";
   RegisterClass(&wc);

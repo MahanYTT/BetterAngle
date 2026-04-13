@@ -42,10 +42,20 @@ Window {
         height: 40
         color: "#181824"
         
-        Text {
+        Image {
+            id: logo
+            source: "qrc:/assets/betterangle_refined_logo.png"
+            width: 24
+            height: 24
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
-            anchors.leftMargin: 20
+            anchors.leftMargin: 12
+        }
+
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.left: logo.right
+            anchors.leftMargin: 10
             text: "BetterAngle Pro"
             color: "#ffffff"
             font.bold: true
