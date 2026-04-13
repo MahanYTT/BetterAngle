@@ -205,6 +205,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
       } else if (g_currentSelection == SELECTING_ROI) {
         // Cancel ROI selection mode
         g_currentSelection = NONE;
+        g_isSelectionActive = false; // Ensure dragging state is cleared
         if (g_screenSnapshot) {
           DeleteObject(g_screenSnapshot);
           g_screenSnapshot = nullptr;
