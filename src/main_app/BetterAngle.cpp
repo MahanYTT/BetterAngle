@@ -125,13 +125,19 @@ void LogStartup(const std::string &msg) {
 // Helper Functions
 void SetHUDClickable(HWND hWnd, bool clickable) {
   LONG_PTR exStyle = GetWindowLongPtr(hWnd, GWL_EXSTYLE);
-  if (clickable)
+  if (clickable) {
     exStyle &= ~WS_EX_TRANSPARENT;
-  else
+    SetWindowLongPtr(hWnd, GWL_EXSTYLE, exStyle);
+    SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_NOACTIVATE);
+  } else {
     exStyle |= WS_EX_TRANSPARENT;
-  SetWindowLongPtr(hWnd, GWL_EXSTYLE, exStyle);
-  SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0,
-               SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_NOACTIVATE);
+    SetWindowLongPtr(hWnd, GWL_EXSTYLE, exStyle);
+    // When not clickable, lower Z-order so control panel can receive mouse
+    // events
+    SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_NOACTIVATE);
+  }
 }
 
 HBITMAP CaptureScreen() {
