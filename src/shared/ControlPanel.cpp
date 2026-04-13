@@ -4,9 +4,11 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QWindow>
 
 QQmlApplicationEngine *g_qmlEngine = nullptr;
 BetterAngleBackend *g_backend = nullptr;
+QObject *g_splashRoot = nullptr;
 std::wstring g_qmlErrors;
 
 void EnsureEngineInitialized() {
@@ -126,7 +128,32 @@ void ShowSplashScreen() {
                 MB_OK | MB_ICONERROR);
     exit(1);
   } else {
-    LogStartup("Splash: Splash.qml loaded successfully.");
+    g_splashRoot = g_qmlEngine->rootObjects().constLast();
+    QObject::connect(g_splashRoot, &QObject::destroyed, [](QObject *) {
+      LogStartup(
+          "Splash: Splash root destroyed. Clearing tracked splash pointer.");
+      g_splashRoot = nullptr;
+    });
+    LogStartup("Splash: Splash.qml loaded successfully and root tracked for "
+               "direct close.");
+  }
+}
+
+void CloseSplashScreenDirect() {
+  if (!g_splashRoot) {
+    LogStartup("Splash: No tracked splash root available for direct close.");
+    return;
+  }
+
+  LogStartup("Splash: Direct C++ close requested for tracked splash root.");
+  if (auto *window = qobject_cast<QWindow *>(g_splashRoot)) {
+    window->close();
+    LogStartup("Splash: Tracked splash QWindow close() invoked.");
+  } else {
+    const bool invoked =
+        QMetaObject::invokeMethod(g_splashRoot, "close", Qt::DirectConnection);
+    LogStartup(std::string("Splash: Fallback QObject close() invoke ") +
+               (invoked ? "succeeded." : "failed."));
   }
 }
 

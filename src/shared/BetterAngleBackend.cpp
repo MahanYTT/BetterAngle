@@ -425,6 +425,8 @@ void BetterAngleBackend::requestShowControlPanel() {
   LogStartup("UI: requestShowControlPanel invoked.");
   emit closeSplashRequested();
   LogStartup("UI: closeSplashRequested emitted.");
+  CloseSplashScreenDirect();
+  LogStartup("UI: direct C++ splash close requested.");
 
   LogStartup("UI: Creating or reusing control panel root.");
   CreateControlPanel(g_hInstance);

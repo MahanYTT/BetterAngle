@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.67] - 2026-04-13
+### Fixed
+- **Direct Splash Ownership**: Added direct C++ tracking of the splash root in [`src/shared/ControlPanel.cpp`](src/shared/ControlPanel.cpp), allowing the app to explicitly close the splash window instead of relying only on QML signal timing.
+- **Direct Splash Close Path**: [`requestShowControlPanel()`](src/shared/BetterAngleBackend.cpp:424) now requests a direct C++ splash close before revealing the main UI, reducing the chance of the splash remaining stuck on screen.
+- **Splash Close Diagnostics**: Added targeted logging for tracked splash root creation, direct close attempts, and tracked root destruction to improve startup troubleshooting.
+
 ## [v4.27.66] - 2026-04-13
 ### Fixed
 - **Startup Unfreeze / Splash Handoff**: Moved the startup reveal gating logic onto the UI thread in [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp), preventing the splash screen from getting stuck after startup completed.
