@@ -19,7 +19,6 @@
 #include <sstream>
 #include <string>
 
-
 using namespace Gdiplus;
 
 bool IsFortniteFocused();
@@ -251,6 +250,26 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
 
   // HUD box
   int rw = 260, rh = 150, rx = g_hudX, ry = g_hudY;
+
+  // Diagnostic logging for HUD box position
+  static int s_lastHudX = INT_MIN, s_lastHudY = INT_MIN;
+  static int s_lastVirtScreenX = INT_MIN, s_lastVirtScreenY = INT_MIN;
+  if (s_lastHudX != rx || s_lastHudY != ry ||
+      s_lastVirtScreenX != g_virtScreenX ||
+      s_lastVirtScreenY != g_virtScreenY) {
+    std::ostringstream oss;
+    oss << "HUDBox: pos=(" << rx << "," << ry << ") virtScreen=("
+        << g_virtScreenX << "," << g_virtScreenY << ") windowRect=("
+        << rect.left << "," << rect.top << "," << rect.right << ","
+        << rect.bottom
+        << ") selection=" << (g_currentSelection == NONE ? "none" : "active");
+    LogStartup(oss.str());
+    s_lastHudX = rx;
+    s_lastHudY = ry;
+    s_lastVirtScreenX = g_virtScreenX;
+    s_lastVirtScreenY = g_virtScreenY;
+  }
+
   LinearGradientBrush bgBrush(Point(rx, ry), Point(rx, ry + rh),
                               Color(150, 6, 8, 12), Color(150, 2, 3, 5));
   GraphicsPath path;
@@ -411,8 +430,26 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
   POINT ptDst = {rect.left, rect.top};
   SIZE size = {sw, sh};
   BLENDFUNCTION blend = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
-  UpdateLayeredWindow(hwnd, hdcScreen, &ptDst, &size, hdcMem, &ptSrc, 0, &blend,
-                      ULW_ALPHA);
+  const BOOL updateOk = UpdateLayeredWindow(
+      hwnd, hdcScreen, &ptDst, &size, hdcMem, &ptSrc, 0, &blend, ULW_ALPHA);
+  static RECT s_lastLoggedRect = {INT_MIN, INT_MIN, INT_MIN, INT_MIN};
+  static BOOL s_lastUpdateOk = -1;
+  if (s_lastUpdateOk != updateOk || s_lastLoggedRect.left != rect.left ||
+      s_lastLoggedRect.top != rect.top ||
+      s_lastLoggedRect.right != rect.right ||
+      s_lastLoggedRect.bottom != rect.bottom) {
+    const DWORD lastError = updateOk ? 0 : GetLastError();
+    std::ostringstream oss;
+    oss << "HUDLayeredUpdate: ok=" << (updateOk ? "true" : "false")
+        << " lastError=" << lastError << " rect=(" << rect.left << ","
+        << rect.top << " " << rect.right << "x" << rect.bottom << ")"
+        << " selection=" << (g_currentSelection == NONE ? "none" : "active")
+        << " showCrosshair=" << (showCrosshair ? "true" : "false")
+        << " hudPos=(" << g_hudX << "," << g_hudY << ")";
+    LogStartup(oss.str());
+    s_lastLoggedRect = rect;
+    s_lastUpdateOk = updateOk;
+  }
 
   SelectObject(hdcMem, hOld);
   DeleteObject(hbmMem);

@@ -26,17 +26,21 @@ Window {
     Connections {
         target: backend
         function onShowControlPanelRequested() {
+            console.log("[QML] showControlPanelRequested before:", "visible=", mainWindow.visible, "visibility=", mainWindow.visibility, "active=", mainWindow.active)
             mainWindow.showNormal()
             mainWindow.raise()
             mainWindow.requestActivate()
+            console.log("[QML] showControlPanelRequested after:", "visible=", mainWindow.visible, "visibility=", mainWindow.visibility, "active=", mainWindow.active)
         }
         function onToggleControlPanelRequested() {
+            console.log("[QML] toggleControlPanelRequested:", "visible=", mainWindow.visible, "visibility=", mainWindow.visibility, "active=", mainWindow.active)
             if (mainWindow.visible && mainWindow.visibility !== Window.Minimized) {
                 mainWindow.showMinimized()
             } else {
                 mainWindow.showNormal()
                 mainWindow.raise()
                 mainWindow.requestActivate()
+                console.log("[QML] toggleControlPanelRequested restore:", "visible=", mainWindow.visible, "visibility=", mainWindow.visibility, "active=", mainWindow.active)
             }
         }
     }

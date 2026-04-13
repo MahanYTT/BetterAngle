@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.71] - 2026-04-13
+### Fixed
+- **HUD Mouse Barrier Issue**: Enhanced [`HUDWndProc()`](src/main_app/BetterAngle.cpp:159) with detailed diagnostic logging for `WM_NCHITTEST` to track click-through behavior. Added window style validation to ensure `WS_EX_TRANSPARENT` is correctly applied.
+- **Angle Overlay Visibility**: Added diagnostic logging in [`DrawOverlay()`](src/shared/Overlay.cpp:60) to track HUD box position and virtual screen coordinates. Fixed potential coordinate calculation issues that could cause the angle overlay to render off-screen.
+- **Enhanced Debug Logging**: Added comprehensive window creation diagnostics including window visibility state, styles, and extended styles after `ShowWindow()` calls to aid in troubleshooting HUD interaction issues.
+
 ## [v4.27.70] - 2026-04-13
 ### Fixed
 - **Dashboard Interactivity Restored**: [`HUDWndProc()`](src/main_app/BetterAngle.cpp:159) now returns `HTTRANSPARENT` during normal operation so the always-on-top HUD no longer blocks clicks meant for [`main.qml`](src/gui/main.qml).

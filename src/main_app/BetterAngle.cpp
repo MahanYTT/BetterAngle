@@ -158,10 +158,30 @@ COLORREF GetPixelColor(int x, int y) {
 // Window Procedures
 LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
   switch (msg) {
-  case WM_NCHITTEST:
-    if (!g_isDraggingHUD && g_currentSelection == NONE)
-      return HTTRANSPARENT;
-    return HTCLIENT;
+  case WM_NCHITTEST: {
+    const LRESULT hitResult = (!g_isDraggingHUD && g_currentSelection == NONE)
+                                  ? HTTRANSPARENT
+                                  : HTCLIENT;
+    static LRESULT s_lastHitResult = -1;
+    static int s_hitTestCounter = 0;
+    s_hitTestCounter++;
+    if (s_lastHitResult != hitResult || s_hitTestCounter % 100 == 0) {
+      const char *selectionState =
+          (g_currentSelection == NONE)
+              ? "NONE"
+              : (g_currentSelection == SELECTING_ROI ? "SELECTING_ROI"
+                                                     : "SELECTING_COLOR");
+      LONG_PTR exStyle = GetWindowLongPtr(hWnd, GWL_EXSTYLE);
+      LogStartup(std::string("HUDHitTest: result=") +
+                 (hitResult == HTTRANSPARENT ? "HTTRANSPARENT" : "HTCLIENT") +
+                 " dragging=" + (g_isDraggingHUD ? "true" : "false") +
+                 " selection=" + selectionState + " exStyleTransparent=" +
+                 ((exStyle & WS_EX_TRANSPARENT) ? "true" : "false") +
+                 " counter=" + std::to_string(s_hitTestCounter));
+      s_lastHitResult = hitResult;
+    }
+    return hitResult;
+  }
   case WM_PAINT:
     DrawOverlay(hWnd, g_currentAngle, g_detectionRatio, g_showCrosshair);
     return 0;
@@ -455,13 +475,34 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
           g_virtScreenY, sw, sh, NULL, NULL, hInstance, NULL);
       if (g_hHUD) {
         LogStartup("Window: HUD overlay created successfully.");
-        SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA);
+        LogStartup(
+            "Window: HUD using per-pixel layered updates only; skipping "
+            "SetLayeredWindowAttributes to avoid invisible fullscreen input "
+            "barrier.");
+        const LONG_PTR hudExStyle = GetWindowLongPtr(g_hHUD, GWL_EXSTYLE);
+        LogStartup(std::string("Window: HUD exstyle transparent=") +
+                   ((hudExStyle & WS_EX_TRANSPARENT) ? "true" : "false") +
+                   " noactivate=" +
+                   ((hudExStyle & WS_EX_NOACTIVATE) ? "true" : "false") +
+                   " toolwindow=" +
+                   ((hudExStyle & WS_EX_TOOLWINDOW) ? "true" : "false"));
         if (g_pendingShowHUD) {
           LogStartup("Window: Applying pending HUD show request.");
           ShowWindow(g_hHUD, SW_SHOW);
           UpdateWindow(g_hHUD);
           InvalidateRect(g_hHUD, NULL, FALSE);
           g_pendingShowHUD = false;
+
+          // Additional diagnostic logging
+          BOOL isVisible = IsWindowVisible(g_hHUD);
+          BOOL isWindow = IsWindow(g_hHUD);
+          LONG_PTR style = GetWindowLongPtr(g_hHUD, GWL_STYLE);
+          LONG_PTR exStyle = GetWindowLongPtr(g_hHUD, GWL_EXSTYLE);
+          LogStartup(std::string("Window: After ShowWindow - isWindow=") +
+                     (isWindow ? "true" : "false") +
+                     " isVisible=" + (isVisible ? "true" : "false") +
+                     " style=0x" + std::to_string(style) + " exStyle=0x" +
+                     std::to_string(exStyle));
         }
       } else {
         LogStartup("WINDOW_FATAL: CreateWindowEx failed for HUD overlay.");
