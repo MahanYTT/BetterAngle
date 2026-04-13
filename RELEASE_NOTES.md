@@ -1,3 +1,7 @@
+### BetterAngle Pro v4.27.95
+- **Angle Wrap Fix**: Normalized [`AngleLogic::GetAngle()`](src/shared/Logic.cpp:153) through [`AngleLogic::Norm360()`](src/shared/Logic.cpp:188) so the displayed angle stays in `[0, 360)` and wraps from `359.9` back to `0.x` instead of exceeding `360`.
+- **Legacy Folder Safety**: Added [`betterangle_old_python_version/`](betterangle_old_python_version) to [`.gitignore`](.gitignore) so the old Python reference implementation remains local and is not included in future pushes.
+
 ### BetterAngle Pro v4.27.94
 - **Toggle Dashboard Fix**: Changed the dashboard hotkey from show-only to proper toggle (hide/show) in [`src/gui/main.qml`](src/gui/main.qml:18).
 - **Debug Overlay Fix**: Added window repaint after toggling debug mode via hotkey in [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:174).
