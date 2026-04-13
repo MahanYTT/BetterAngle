@@ -144,9 +144,9 @@ Item {
                     // NEW: Hotkey Recording Logic
                     function handleHotkey(event) {
                         var mods = "";
-                        if (event.modifiers & Qt.ControlModifier) mods += "Ctrl + ";
-                        if (event.modifiers & Qt.ShiftModifier) mods += "Shift + ";
-                        if (event.modifiers & Qt.AltModifier)   mods += "Alt + ";
+                        if (event.modifiers & Qt.ControlModifier) mods += "Ctrl+";
+                        if (event.modifiers & Qt.ShiftModifier) mods += "Shift+";
+                        if (event.modifiers & Qt.AltModifier)   mods += "Alt+";
                         
                         var key = "";
                         // Only capture non-modifier keys as the "final" key
@@ -176,8 +176,11 @@ Item {
                             }
                         }
                         
+                        var full = mods + key;
                         var display = mods + (key !== "" ? key : "...");
-                        return { "full": mods + key, "display": display, "isFinal": (key !== "") };
+                        // Only finalize if we have a non-modifier key AND at least one modifier is still held (optional)
+                        var isFinal = (key !== "") && (event.modifiers !== 0 || mods === "");
+                        return { "full": full, "display": display, "isFinal": isFinal };
                     }
                     
                     Column {
@@ -314,6 +317,17 @@ Item {
                                 MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
                                 placeholderText: "Press key..."
                             }
+                        }
+                        
+                        Text {
+                            visible: backend.hotkeyError !== ""
+                            text: backend.hotkeyError
+                            color: "#ff6b6b"
+                            font.pixelSize: 11
+                            width: parent.width
+                            wrapMode: Text.WordWrap
+                            topPadding: 8
+                            bottomPadding: 8
                         }
                         
                         Button {

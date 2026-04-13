@@ -713,18 +713,36 @@ static QString fullKeyToString(UINT mod, UINT vk) {
 
 static void parseFullKey(const QString &s, UINT &outMod, UINT &outKey) {
   outMod = 0;
-  QString lower = s.toLower();
-  if (lower.contains("ctrl"))
-    outMod |= MOD_CONTROL;
-  if (lower.contains("shift"))
-    outMod |= MOD_SHIFT;
-  if (lower.contains("alt"))
-    outMod |= MOD_ALT;
+  outKey = 0;
+  if (s.isEmpty())
+    return;
 
-  QString keyPart = s;
-  if (s.contains("+")) {
-    keyPart = s.split("+").last().trimmed();
+  QStringList parts = s.split('+', Qt::SkipEmptyParts);
+  if (parts.isEmpty())
+    return;
+
+  // Process each part
+  QString keyPart;
+  for (const QString &part : parts) {
+    QString trimmed = part.trimmed();
+    QString lower = trimmed.toLower();
+    if (lower == "ctrl" || lower == "control") {
+      outMod |= MOD_CONTROL;
+    } else if (lower == "shift") {
+      outMod |= MOD_SHIFT;
+    } else if (lower == "alt") {
+      outMod |= MOD_ALT;
+    } else {
+      // This is the key (non-modifier)
+      keyPart = trimmed;
+    }
   }
+
+  // If no key part found, treat the last part as key (fallback)
+  if (keyPart.isEmpty() && !parts.isEmpty()) {
+    keyPart = parts.last().trimmed();
+  }
+
   outKey = stringToVk(keyPart);
 }
 
@@ -813,6 +831,10 @@ void BetterAngleBackend::setKeyDebug(const QString &s) {
   }
 }
 
+QString BetterAngleBackend::hotkeyError() const {
+  return QString::fromStdString(g_lastHotkeyError);
+}
+
 void BetterAngleBackend::saveKeybinds() {
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 ||
       g_selectedProfileIdx >= (int)g_allProfiles.size())
@@ -821,6 +843,10 @@ void BetterAngleBackend::saveKeybinds() {
   p.Save(GetProfilesPath() + p.name + L".json");
   LogStartup("HotkeyRegister: refreshing after explicit keybind save");
   RefreshHotkeys(g_hHUD);
+  // Emit signal if there is an error
+  if (!g_lastHotkeyError.empty()) {
+    emit hotkeyRegistrationFailed(QString::fromStdString(g_lastHotkeyError));
+  }
 }
 
 int BetterAngleBackend::loadingProgress() const {

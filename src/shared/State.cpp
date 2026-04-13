@@ -31,6 +31,7 @@ int g_selectedProfileIdx = 0;
 std::wstring g_lastLoadedProfileName = L"";
 float g_glideThreshold = 0.05f;
 float g_freefallThreshold = 0.20f;
+std::string g_lastHotkeyError = "";
 
 #include <fstream>
 #include <locale>
@@ -357,11 +358,23 @@ void __cdecl RefreshHotkeys(HWND hWnd) {
     LogStartup(oss.str());
   };
 
+  // Clear previous error
+  g_lastHotkeyError.clear();
+
   BOOL okToggle = RegisterHotKey(hWnd, HK_TOGGLE, kb.toggleMod, kb.toggleKey);
   logRegister("toggle", HK_TOGGLE, kb.toggleMod, kb.toggleKey, okToggle);
+  if (!okToggle) {
+    g_lastHotkeyError = "Toggle dashboard hotkey registration failed (maybe "
+                        "already used by another app).";
+  }
 
   BOOL okRoi = RegisterHotKey(hWnd, HK_ROI, kb.roiMod, kb.roiKey);
   logRegister("roi", HK_ROI, kb.roiMod, kb.roiKey, okRoi);
+  if (!okRoi) {
+    if (!g_lastHotkeyError.empty())
+      g_lastHotkeyError += " ";
+    g_lastHotkeyError += "Selection overlay hotkey registration failed.";
+  }
 
   UINT crossMods = kb.crossMod;
   const bool isFunctionCrossKey = kb.crossKey >= VK_F1 && kb.crossKey <= VK_F24;
@@ -374,10 +387,25 @@ void __cdecl RefreshHotkeys(HWND hWnd) {
     logRegister("crosshair-fallback", HK_CROSS, kb.crossMod, kb.crossKey,
                 okCross);
   }
+  if (!okCross) {
+    if (!g_lastHotkeyError.empty())
+      g_lastHotkeyError += " ";
+    g_lastHotkeyError += "Crosshair toggle hotkey registration failed.";
+  }
 
   BOOL okZero = RegisterHotKey(hWnd, HK_ZERO, kb.zeroMod, kb.zeroKey);
   logRegister("zero", HK_ZERO, kb.zeroMod, kb.zeroKey, okZero);
+  if (!okZero) {
+    if (!g_lastHotkeyError.empty())
+      g_lastHotkeyError += " ";
+    g_lastHotkeyError += "Zero counter hotkey registration failed.";
+  }
 
   BOOL okDebug = RegisterHotKey(hWnd, HK_DEBUG, kb.debugMod, kb.debugKey);
   logRegister("debug", HK_DEBUG, kb.debugMod, kb.debugKey, okDebug);
+  if (!okDebug) {
+    if (!g_lastHotkeyError.empty())
+      g_lastHotkeyError += " ";
+    g_lastHotkeyError += "Debug overlay hotkey registration failed.";
+  }
 }

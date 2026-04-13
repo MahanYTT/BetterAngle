@@ -64,6 +64,8 @@ class BetterAngleBackend : public QObject {
       QString keyZero READ keyZero WRITE setKeyZero NOTIFY hotkeysChanged)
   Q_PROPERTY(
       QString keyDebug READ keyDebug WRITE setKeyDebug NOTIFY hotkeysChanged)
+  Q_PROPERTY(
+      QString hotkeyError READ hotkeyError NOTIFY hotkeyRegistrationFailed)
 
 public:
   explicit BetterAngleBackend(QObject *parent = nullptr);
@@ -152,6 +154,8 @@ public:
   void setKeyDebug(const QString &s);
   Q_INVOKABLE void saveKeybinds();
 
+  QString hotkeyError() const;
+
 signals:
   void profileChanged();
   void syncResultChanged();
@@ -164,6 +168,7 @@ signals:
   void showSetupRequested();
   void hotkeysChanged();
   void loadingProgressChanged();
+  void hotkeyRegistrationFailed(const QString &errorMessage);
 
 private:
   void syncAndSaveProfile();

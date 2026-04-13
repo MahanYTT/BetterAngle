@@ -22,7 +22,7 @@ extern std::atomic<bool> g_fortniteFocusedCache;
 #ifndef V_MAJ
 #define V_MAJ 4
 #define V_MIN 27
-#define V_PAT 77
+#define V_PAT 78
 #endif
 extern bool g_needsSetup;
 extern bool g_setupComplete;
@@ -93,6 +93,7 @@ extern HWND g_hHUD;
 extern HWND g_hPanel;
 extern bool g_pendingShowHUD;
 extern std::atomic<int> g_loadingProgress;
+extern std::string g_lastHotkeyError;
 
 void __cdecl RefreshHotkeys(HWND hWnd);
 

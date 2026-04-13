@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.78] - 2026-04-13
+### Fixed
+- **Custom Keybind Capture Race Conditions**: [`Dashboard.qml`](src/gui/Dashboard.qml:145) `handleHotkey` now requires a non-modifier key and ensures modifiers are still held before finalizing, reducing "ghost" keybinds when pressing modifiers slowly.
+- **Robust Keybind Parsing**: [`BetterAngleBackend.cpp`](src/shared/BetterAngleBackend.cpp:714) `parseFullKey` now splits by `+` and matches exact modifier tokens, eliminating false‑positive matches and improving compatibility with QML's output format.
+- **Silent Hotkey Registration Failures**: [`State.cpp`](src/shared/State.cpp:340) `RefreshHotkeys` now logs and stores registration errors; [`BetterAngleBackend`](include/shared/BetterAngleBackend.h) exposes `hotkeyError` property and emits `hotkeyRegistrationFailed` signal, with UI feedback in the dashboard.
+
 ## [v4.27.77] - 2026-04-13
 ### Fixed
 - **Moving Dashboard Stayed Behind Its Own HUD Hole**: [`CreateControlPanel()`](src/shared/ControlPanel.cpp:149) now resynchronizes [`SyncHUDWithPanelWindow()`](src/shared/ControlPanel.cpp:16) on panel movement and resize (`xChanged`, `yChanged`, `widthChanged`, `heightChanged`), so the input hole tracks the dashboard instead of staying at the old location.
