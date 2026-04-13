@@ -544,7 +544,7 @@ void BetterAngleBackend::setKeyToggle(const QString &s) {
 
 QString BetterAngleBackend::keyRoi() const {
   if (g_allProfiles.empty())
-    return "Ctrl + 8";
+    return "Ctrl + R";
   const auto &k = g_allProfiles[g_selectedProfileIdx].keybinds;
   return fullKeyToString(k.roiMod, k.roiKey);
 }

@@ -142,54 +142,153 @@ Item {
                     Column {
                         spacing: 8
                         width: parent.width
+
+                        function formatCapturedHotkey(event) {
+                            var parts = []
+                            if (event.modifiers & Qt.ControlModifier) parts.push("Ctrl")
+                            if (event.modifiers & Qt.ShiftModifier) parts.push("Shift")
+                            if (event.modifiers & Qt.AltModifier) parts.push("Alt")
+
+                            if (event.key === Qt.Key_Control || event.key === Qt.Key_Shift || event.key === Qt.Key_Alt)
+                                return ""
+
+                            var key = ""
+                            if (event.key >= Qt.Key_F1 && event.key <= Qt.Key_F12)
+                                key = "F" + (event.key - Qt.Key_F1 + 1)
+                            else if (event.key === Qt.Key_Space)
+                                key = "Space"
+                            else if (event.key === Qt.Key_Tab)
+                                key = "Tab"
+                            else if (event.key === Qt.Key_Escape)
+                                key = "Esc"
+                            else if (event.key >= Qt.Key_A && event.key <= Qt.Key_Z)
+                                key = String.fromCharCode(event.key)
+                            else if (event.key >= Qt.Key_0 && event.key <= Qt.Key_9)
+                                key = String.fromCharCode(event.key)
+
+                            if (key === "")
+                                return ""
+
+                            parts.push(key)
+                            return parts.join(" + ")
+                        }
+
+                        function captureHotkey(event, applyBinding) {
+                            if (event.key === Qt.Key_Escape) {
+                                root.forceActiveFocus()
+                                event.accepted = true
+                                return
+                            }
+
+                            var bind = formatCapturedHotkey(event)
+                            if (bind === "") {
+                                event.accepted = true
+                                return
+                            }
+
+                            applyBinding(bind)
+                            backend.saveKeybinds()
+                            root.forceActiveFocus()
+                            event.accepted = true
+                        }
                         
                         RowLayout {
                             Text { text: "Toggle Dashboard:"; color: "white"; Layout.preferredWidth: 150 }
-                            TextField { 
-                                text: backend.keyToggle; width: 120; color: "#00cca3"
-                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: "#333"; border.width: 1 }
-                                onTextChanged: backend.keyToggle = text
+                            TextField {
+                                id: keyToggleField
+                                Layout.fillWidth: true
+                                readOnly: true
+                                selectByMouse: false
+                                activeFocusOnTab: true
+                                text: activeFocus ? "Press keys..." : backend.keyToggle
+                                color: activeFocus ? "white" : "#00cca3"
+                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: keyToggleField.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
+                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
+                                Keys.priority: Keys.BeforeItem
+                                Keys.onPressed: function(event) {
+                                    parent.parent.captureHotkey(event, function(bind) { backend.keyToggle = bind })
+                                }
                             }
                         }
                         RowLayout {
                             Text { text: "Selection Overlay:"; color: "white"; Layout.preferredWidth: 150 }
-                            TextField { 
-                                text: backend.keyRoi; width: 120; color: "#00cca3"
-                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: "#333"; border.width: 1 }
-                                onTextChanged: backend.keyRoi = text
+                            TextField {
+                                id: keyRoiField
+                                Layout.fillWidth: true
+                                readOnly: true
+                                selectByMouse: false
+                                activeFocusOnTab: true
+                                text: activeFocus ? "Press keys..." : backend.keyRoi
+                                color: activeFocus ? "white" : "#00cca3"
+                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: keyRoiField.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
+                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
+                                Keys.priority: Keys.BeforeItem
+                                Keys.onPressed: function(event) {
+                                    parent.parent.captureHotkey(event, function(bind) { backend.keyRoi = bind })
+                                }
                             }
                         }
                         RowLayout {
                             Text { text: "Toggle Crosshair:"; color: "white"; Layout.preferredWidth: 150 }
-                            TextField { 
-                                text: backend.keyCross; width: 120; color: "#00cca3"
-                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: "#333"; border.width: 1 }
-                                onTextChanged: backend.keyCross = text
+                            TextField {
+                                id: keyCrossField
+                                Layout.fillWidth: true
+                                readOnly: true
+                                selectByMouse: false
+                                activeFocusOnTab: true
+                                text: activeFocus ? "Press keys..." : backend.keyCross
+                                color: activeFocus ? "white" : "#00cca3"
+                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: keyCrossField.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
+                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
+                                Keys.priority: Keys.BeforeItem
+                                Keys.onPressed: function(event) {
+                                    parent.parent.captureHotkey(event, function(bind) { backend.keyCross = bind })
+                                }
                             }
                         }
                         RowLayout {
                             Text { text: "Zero Counter:"; color: "white"; Layout.preferredWidth: 150 }
-                            TextField { 
-                                text: backend.keyZero; width: 120; color: "#00cca3"
-                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: "#333"; border.width: 1 }
-                                onTextChanged: backend.keyZero = text
+                            TextField {
+                                id: keyZeroField
+                                Layout.fillWidth: true
+                                readOnly: true
+                                selectByMouse: false
+                                activeFocusOnTab: true
+                                text: activeFocus ? "Press keys..." : backend.keyZero
+                                color: activeFocus ? "white" : "#00cca3"
+                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: keyZeroField.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
+                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
+                                Keys.priority: Keys.BeforeItem
+                                Keys.onPressed: function(event) {
+                                    parent.parent.captureHotkey(event, function(bind) { backend.keyZero = bind })
+                                }
                             }
                         }
                         RowLayout {
                             Text { text: "Debug Overlay:"; color: "white"; Layout.preferredWidth: 150 }
-                            TextField { 
-                                text: backend.keyDebug; width: 120; color: "#00cca3"
-                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: "#333"; border.width: 1 }
-                                onTextChanged: backend.keyDebug = text
+                            TextField {
+                                id: keyDebugField
+                                Layout.fillWidth: true
+                                readOnly: true
+                                selectByMouse: false
+                                activeFocusOnTab: true
+                                text: activeFocus ? "Press keys..." : backend.keyDebug
+                                color: activeFocus ? "white" : "#00cca3"
+                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: keyDebugField.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
+                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
+                                Keys.priority: Keys.BeforeItem
+                                Keys.onPressed: function(event) {
+                                    parent.parent.captureHotkey(event, function(bind) { backend.keyDebug = bind })
+                                }
                             }
                         }
-                        
-                        Button {
-                            text: "SAVE KEYBINDS"
-                            width: parent.width; height: 36
-                            contentItem: Text { text: parent.text; color: "white"; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
-                            background: Rectangle { color: parent.hovered ? "#4a3080" : "#302060"; radius: 4; border.color: "#6644aa" }
-                            onClicked: backend.saveKeybinds()
+
+                        Text {
+                            text: "Click a bind, then press the combo. Changes apply immediately."
+                            color: "#888"
+                            font.pixelSize: 11
+                            wrapMode: Text.WordWrap
+                            width: parent.width
                         }
                     }
 

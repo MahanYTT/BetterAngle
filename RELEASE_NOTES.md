@@ -1,3 +1,8 @@
+### BetterAngle Pro v4.27.99
+- **Keybind UI Restore**: Replaced the broken free-text hotkey editor in [`src/gui/Dashboard.qml`](src/gui/Dashboard.qml:140) with click-to-capture fields again, so binds change by pressing inside the field instead of being corrupted character-by-character.
+- **Immediate Apply Fix**: Restored immediate hotkey application from the dashboard capture flow in [`src/gui/Dashboard.qml`](src/gui/Dashboard.qml:176), removing the need for the incorrect manual save-button workflow.
+- **Default Label Fix**: Corrected the selection overlay fallback label back to `Ctrl + R` in [`src/shared/BetterAngleBackend.cpp`](src/shared/BetterAngleBackend.cpp:545) so the UI matches the shipped default bind.
+
 ### BetterAngle Pro v4.27.98
 - **Dashboard UI Boot Fix**: Corrected [`CreateControlPanel()`](src/shared/ControlPanel.cpp:21) to treat [`main.qml`](src/gui/main.qml:5) as successfully loaded when at least one root window exists, fixing the false failure path that blocked the decimal/dashboard UI from opening.
 - **Error Message Cleanup**: Removed the misleading missing-log reference from the loader error text in [`src/shared/ControlPanel.cpp`](src/shared/ControlPanel.cpp:37), since there is no shipped [`debug.log`](src/shared/ControlPanel.cpp:37) logging system.
