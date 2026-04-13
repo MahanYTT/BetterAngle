@@ -1,3 +1,6 @@
+### BetterAngle Pro v4.27.87
+- **Hotfix**: Resolved the critical build failure (error C2065) by restoring the `g_setupComplete` global state identifier. The application now correctly compiles and handles setup persistence logic.
+
 ### BetterAngle Pro v4.27.86
 - **Performance Optimization**: Adjusted the default color match tolerance from 25 to 2. This significantly improves startup detection performance and ensures stricter target matching for high-fidelity overlays.
 

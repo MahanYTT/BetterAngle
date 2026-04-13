@@ -10,6 +10,7 @@
 
 std::wstring GetAppRootPath();
 std::wstring GetProfilesPath();
+extern bool g_setupComplete;
 
 // Versioning system
 #define APP_STR_Z(x) #x
@@ -22,6 +23,7 @@ std::wstring GetProfilesPath();
 #define V_MIN 27
 #define V_PAT 83
 #endif
+extern bool g_setupComplete;
 extern std::string g_lastVersionRun;
 
 #define VERSION_STR APP_STR_Y(V_MAJ) "." APP_STR_Y(V_MIN) "." APP_STR_Y(V_PAT)
@@ -86,6 +88,6 @@ extern POINT g_dragStartMouse;
 extern HWND g_hHUD;
 extern HWND g_hPanel;
 
-void RefreshHotkeys(HWND hWnd);
+bool RefreshHotkeys(HWND hWnd);
 
 #endif // STATE_H
