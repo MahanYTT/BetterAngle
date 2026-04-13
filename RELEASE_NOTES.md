@@ -1,3 +1,7 @@
+### BetterAngle Pro v4.27.103
+- **Uninstaller Compilation Fix**: Fixed syntax errors in `uninstall.cpp` that prevented compilation with MSVC. The file now compiles successfully with `/std:c++20` and produces a functional uninstaller executable.
+- **Version Bump**: Updated version to 4.27.103 in accordance with release workflow.
+
 ### BetterAngle Pro v4.27.102
 - **Crosshair Default Fix**: Set fresh-profile crosshair thickness to `1.0f` in [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:397) and added matching initialized profile defaults in [`include/shared/Profile.h`](include/shared/Profile.h:45), so new profiles no longer start at `2.0f`.
 - **Topmost Ordering Fix**: Removed [`Qt.WindowStaysOnTopHint`](src/gui/main.qml:16) from the dashboard window in [`src/gui/main.qml`](src/gui/main.qml:16), preventing the main UI from covering the HUD/crosshair overlay.
