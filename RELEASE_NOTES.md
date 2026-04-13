@@ -1,3 +1,7 @@
+### BetterAngle Pro v4.27.101
+- **Angle Wrap Fix**: Normalized [`AngleLogic::GetAngle()`](src/shared/Logic.cpp:13) through [`AngleLogic::Norm360()`](src/shared/Logic.cpp:47) so the angle remains in `[0, 360)` and wraps from `359.9` back to `0.x` instead of exceeding `360`.
+- **Local Legacy Folder Ignore**: Added [`betterangle_old_python_version/`](betterangle_old_python_version) to [`.gitignore`](.gitignore) so the old Python reference code stays local and is not included in pushes.
+
 ### BetterAngle Pro v4.27.100
 - **Startup UI Sync Fix**: Removed the delayed extra [`requestShowControlPanel()`](src/shared/BetterAngleBackend.cpp:60) from [`BetterAngleBackend::BetterAngleBackend()`](src/shared/BetterAngleBackend.cpp:21), so launch no longer re-toggles the main UI closed after [`ShowControlPanel()`](src/main_app/BetterAngle.cpp:478) already opened it.
 - **Launch Behavior Fix**: The decimal HUD and the main dashboard UI now stay visible together on startup instead of only the decimal overlay remaining on screen.
