@@ -429,20 +429,23 @@ void BetterAngleBackend::requestShowControlPanel() {
   LogStartup("UI: Creating or reusing control panel root.");
   CreateControlPanel(g_hInstance);
 
-  if (g_hHUD) {
-    ShowWindow(g_hHUD, SW_SHOW);
-    UpdateWindow(g_hHUD);
-    InvalidateRect(g_hHUD, NULL, FALSE);
-    g_pendingShowHUD = false;
-    LogStartup("UI: HUD window shown.");
-  } else {
-    g_pendingShowHUD = true;
-    LogStartup("UI: HUD window handle not available yet. Marked pending HUD "
-               "show request.");
-  }
+  LogStartup("UI: Delaying HUD/menu reveal to allow splash to close cleanly.");
+  QTimer::singleShot(180, this, [this]() {
+    if (g_hHUD) {
+      ShowWindow(g_hHUD, SW_SHOW);
+      UpdateWindow(g_hHUD);
+      InvalidateRect(g_hHUD, NULL, FALSE);
+      g_pendingShowHUD = false;
+      LogStartup("UI: HUD window shown after splash handoff.");
+    } else {
+      g_pendingShowHUD = true;
+      LogStartup("UI: HUD window handle not available yet after splash "
+                 "handoff. Marked pending HUD show request.");
+    }
 
-  LogStartup("UI: Emitting showControlPanelRequested.");
-  emit showControlPanelRequested();
+    LogStartup("UI: Emitting showControlPanelRequested after splash handoff.");
+    emit showControlPanelRequested();
+  });
 }
 
 void BetterAngleBackend::requestToggleControlPanel() {

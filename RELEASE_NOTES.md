@@ -1,5 +1,15 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.64] - 2026-04-13
+### Changed
+- **Full Splash Redesign**: Completely rebuilt [`src/gui/Splash.qml`](src/gui/Splash.qml) around the branding in [`assets/banner.png`](assets/banner.png), with a cleaner card layout, integrated Wave DropMaps presentation, and a proper loading bar.
+- **Visual Quality**: Replaced the old cluttered splash visuals with a more polished presentation focused on readability, branding, and stable rendering.
+
+### Fixed
+- **Minimum Splash Duration**: Enforced a minimum splash runtime of 2.5 seconds in [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp) so startup no longer flashes through too quickly.
+- **Splash/Menu Handoff**: Adjusted the splash-to-menu reveal timing in [`src/shared/BetterAngleBackend.cpp`](src/shared/BetterAngleBackend.cpp) so the splash is given time to close before the main menu becomes visible behind it.
+- **Startup Stability**: Simplified the splash logic to avoid the fragile animation stack that previously caused repeated splash issues.
+
 ## [v4.27.63] - 2026-04-13
 ### Fixed
 - **Final Splash Animation Load Error**: Removed the last invalid grouped animation property usage in [`src/gui/Splash.qml`](src/gui/Splash.qml:277), fixing the remaining splash startup error window and root object creation failure.

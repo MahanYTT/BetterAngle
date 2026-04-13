@@ -378,9 +378,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
 
         g_loadingProgress = 100;
         LogStartup("BootThread: Boot sequence complete.");
-        // Reduced delay from 2500ms to 500ms for faster splash closing
+        LogStartup("BootThread: Enforcing minimum splash duration of 2500ms.");
         std::this_thread::sleep_until(startTime +
-                                      std::chrono::milliseconds(500));
+                                      std::chrono::milliseconds(2500));
         if (g_backend)
           QMetaObject::invokeMethod(g_backend, "requestShowControlPanel",
                                     Qt::QueuedConnection);

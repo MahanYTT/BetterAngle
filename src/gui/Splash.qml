@@ -4,8 +4,8 @@ import QtQuick.Controls 2.15
 
 Window {
     id: splashWindow
-    width: 640
-    height: 400
+    width: 760
+    height: 460
     x: Screen.width / 2 - width / 2
     y: Screen.height / 2 - height / 2
     visible: true
@@ -13,8 +13,11 @@ Window {
     color: "transparent"
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
 
+    property int safeProgress: Math.max(0, Math.min(100, backend ? backend.loadingProgress : 0))
+    property int dotPhase: 0
+
     Component.onCompleted: {
-        console.log("[QML] Splash window component completed successfully.")
+        console.log("[QML] Splash redesign loaded successfully.")
     }
 
     onVisibleChanged: {
@@ -24,275 +27,260 @@ Window {
     Connections {
         target: backend
         function onCloseSplashRequested() {
-            console.log("[QML] closeSplashRequested received. Stopping animations and closing splash window.")
-            // Stop all animations to reduce CPU usage
-            waveCanvas.phaseAnimation.stop()
-            pulseScaleAnimation.stop()
-            pulseOpacityAnimation.stop()
-            glowOpacityAnimation.stop()
-            lineYAnimator.stop()
+            console.log("[QML] closeSplashRequested received. Closing redesigned splash.")
+            statusTimer.stop()
+            shimmerAnimation.stop()
             splashWindow.close()
         }
     }
 
-    // "God Mode" Nuclear Fail-Safe (v4.27.10)
     Timer {
-        interval: 8000
+        id: emergencyCloseTimer
+        interval: 10000
         running: true
         repeat: false
         onTriggered: {
-            console.log("[QML] 8s Fail-Safe Triggered. Forcing splash close.")
+            console.log("[QML] Emergency splash timeout reached. Closing splash.")
             splashWindow.close()
+        }
+    }
+
+    Timer {
+        id: statusTimer
+        interval: 350
+        running: true
+        repeat: true
+        onTriggered: {
+            dotPhase = (dotPhase + 1) % 4
         }
     }
 
     Rectangle {
-        id: mainBg
         anchors.fill: parent
-        color: "#050508"
-        radius: 20
-        border.color: "#1a1a25"
+        radius: 24
+        color: "#0a0d12"
         border.width: 1
+        border.color: "#203041"
         clip: true
 
-        // ── Background Glow ──────────────────────────────────────────
         Rectangle {
             anchors.fill: parent
             gradient: Gradient {
-                GradientStop { position: 0.0; color: "#0d0d1a" }
-                GradientStop { position: 1.0; color: "#050508" }
+                GradientStop { position: 0.0; color: "#0e141d" }
+                GradientStop { position: 0.45; color: "#0a0d12" }
+                GradientStop { position: 1.0; color: "#080a0f" }
             }
         }
 
-        // ── Wave Animation (The "Wave Thing") ────────────────────────
-        Canvas {
-            id: waveCanvas
+        Rectangle {
+            width: 420
+            height: 420
+            radius: 210
+            color: "#101fcfef"
+            opacity: 0.08
+            x: -90
+            y: -140
+        }
+
+        Rectangle {
+            width: 380
+            height: 380
+            radius: 190
+            color: "#10ffffff"
+            opacity: 0.05
+            anchors.right: parent.right
+            anchors.rightMargin: -120
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: -110
+        }
+
+        Column {
             anchors.fill: parent
-            opacity: 0.3
-            property real phase: 0
-            property alias phaseAnimation: wavePhaseAnimation
-            
-            onPaint: {
-                var ctx = getContext("2d");
-                ctx.clearRect(0, 0, width, height);
-                ctx.beginPath();
-                ctx.strokeStyle = "#00ffa3";
-                ctx.lineWidth = 2;
-                
-                var mid = height * 0.85;
-                ctx.moveTo(0, mid);
-                
-                // Reduce rendering frequency for better performance
-                for (var x = 0; x <= width; x += 8) {
-                    var y = mid + Math.sin(x * 0.01 + phase) * 20;
-                    ctx.lineTo(x, y);
-                }
-                
-                ctx.stroke();
-            }
+            anchors.margins: 24
+            spacing: 18
 
-            NumberAnimation {
-                id: wavePhaseAnimation
-                target: waveCanvas
-                property: "phase"
-                from: 0; to: Math.PI * 2; duration: 4000; loops: Animation.Infinite
-                running: true
-            }
-
-            onPhaseChanged: {
-                // Throttle repaints to reduce CPU usage
-                if (Math.floor(phase * 10) % 3 === 0) {
-                    requestPaint()
-                }
-            }
-        }
-
-        // ── The Banner (Moved to Top v4.27.25) ───────────────────
-        Item {
-            width: parent.width - 100
-            height: 80
-            anchors.top: parent.top
-            anchors.topMargin: 20
-            anchors.horizontalCenter: parent.horizontalCenter
-            clip: true
-
-            Image {
-                anchors.fill: parent
-                source: "qrc:/assets/banner.png"
-                fillMode: Image.PreserveAspectFit
-                opacity: 0.8
-            }
-            
             Rectangle {
-                id: lineAnimator
-                width: parent.width; height: 1; color: "#00ffa3"; opacity: 0.1
-                anchors.top: parent.top
-                property alias lineYAnimator: yAnim
-                YAnimator {
-                    id: yAnim
-                    target: lineAnimator
-                    from: 0; to: 80; duration: 3000; loops: Animation.Infinite
-                    running: true
-                }
-            }
-        }
+                id: bannerCard
+                width: parent.width
+                height: 220
+                radius: 18
+                color: "#121821"
+                border.width: 1
+                border.color: "#223244"
+                clip: true
 
-        // ── Content Wrapper (Centered Layout v4.27.25) ────────────────
-        Item {
-            anchors.fill: parent
-            
-            Column {
-                anchors.centerIn: parent
-                spacing: 20
-
-                // New Circular Logo (Hard-Locked 1:1 Aspect Ratio)
-                Item {
-                    width: 120; height: 120
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: 60
-                        color: "#11ffffff"
-                        clip: true
-                        border.color: "#1a00ffa3"
-                        border.width: 1
-                        
-                        Image {
-                            anchors.centerIn: parent
-                            width: 80; height: 80
-                            source: "qrc:/assets/logo_transparent.png"
-                            fillMode: Image.PreserveAspectFit
-                            mipmap: true
-                        }
-
-                        // Pulse Effect (Hard-Centered)
-                        Rectangle {
-                            id: pulseRect
-                            anchors.fill: parent
-                            radius: 60
-                            color: "transparent"
-                            border.color: "#00ffa3"
-                            border.width: 2
-                            opacity: 0.6
-                            property alias pulseScaleAnimation: scaleAnim
-                            property alias pulseOpacityAnimation: opacityAnim
-                            
-                            SequentialAnimation on scale {
-                                id: scaleAnim
-                                loops: Animation.Infinite
-                                running: true
-                                NumberAnimation { from: 1.0; to: 1.10; duration: 2000; easing.type: Easing.OutCubic }
-                                NumberAnimation { from: 1.10; to: 1.0; duration: 1000 }
-                            }
-                            SequentialAnimation on opacity {
-                                id: opacityAnim
-                                loops: Animation.Infinite
-                                running: true
-                                NumberAnimation { from: 0.6; to: 0.0; duration: 2000; easing.type: Easing.OutCubic }
-                                NumberAnimation { from: 0.0; to: 0.6; duration: 1000 }
-                            }
-                        }
-                    }
+                Image {
+                    anchors.fill: parent
+                    source: "qrc:/assets/banner.png"
+                    fillMode: Image.PreserveAspectCrop
+                    smooth: true
+                    mipmap: true
                 }
 
-        }
-        
-        // Centered Version Number (Exact Window Center v4.27.45)
-        Text {
-            text: "VERSION 4.27.45"
-            color: "#00ffa3"
-            font.pixelSize: 13
-            font.bold: true
-            font.letterSpacing: 4
-            anchors.centerIn: parent
-            opacity: 0.9
-            z: 10 // Ensure it stays above animation layers
-        }
-
-        // ── Content Wrapper (Shifted down below top-banner v4.27.45) ────────
-        Item {
-            anchors.fill: parent
-            anchors.topMargin: 100
-
-                // Brand Main Text (Balanced)
-                Text {
-                    text: "BETTERANGLE PRO"
-                    color: "white"
-                    font.pixelSize: 30
-                    font.bold: true
-                    font.letterSpacing: 6
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
-
-                // The Quote (Precision Aligned)
-                Text {
-                    text: "\"The best wins begin with the best drops\""
-                    color: "#888"
-                    font.pixelSize: 12
-                    font.italic: true
-                    font.letterSpacing: 1
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
-            }
-
-            // ── Hardlocked Progress Bar (3 Seconds) ────────────────
-            Item {
-                width: 340
-                height: 4
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: 40
-                anchors.horizontalCenter: parent.horizontalCenter
-
-                // Background
                 Rectangle {
                     anchors.fill: parent
-                    color: "#11ffffff"
-                    radius: 2
+                    gradient: Gradient {
+                        GradientStop { position: 0.0; color: "#00000000" }
+                        GradientStop { position: 0.65; color: "#20000000" }
+                        GradientStop { position: 1.0; color: "#b010141a" }
+                    }
                 }
 
-                // Actual Progress
                 Rectangle {
-                    id: progressBar
-                    width: (backend.loadingProgress / 100.0) * 340
-                    height: parent.height
-                    color: "#00ffa3"
-                    radius: 2
-                    
-                    Behavior on width {
-                        NumberAnimation { duration: 400; easing.type: Easing.OutCubic }
-                    }
-                    
-                    // Glow on the leading edge
-                    Rectangle {
-                        id: glowRect
-                        width: 8; height: 12
-                        color: "#00ffa3"
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        opacity: 0.5
-                        visible: progressBar.width > 0 && progressBar.width < 340
-                        property alias glowOpacityAnimation: glowAnim
-                        
-                        SequentialAnimation on opacity {
-                            id: glowAnim
-                            loops: Animation.Infinite
-                            running: true
-                            NumberAnimation { from: 0.5; to: 0.7; duration: 800 }
-                            NumberAnimation { from: 0.7; to: 0.5; duration: 800 }
+                    anchors.left: parent.left
+                    anchors.bottom: parent.bottom
+                    anchors.margins: 16
+                    radius: 12
+                    color: "#cc0d1219"
+                    border.width: 1
+                    border.color: "#2d7fa6"
+                    width: brandColumn.width + 24
+                    height: brandColumn.height + 18
+
+                    Column {
+                        id: brandColumn
+                        anchors.centerIn: parent
+                        spacing: 4
+
+                        Text {
+                            text: "BETTERANGLE PRO"
+                            color: "white"
+                            font.pixelSize: 22
+                            font.bold: true
+                            font.letterSpacing: 2.5
+                        }
+
+                        Text {
+                            text: "Powered by Wave DropMaps"
+                            color: "#93dfff"
+                            font.pixelSize: 13
+                            font.bold: true
+                            font.letterSpacing: 1.2
                         }
                     }
                 }
-                
+            }
+
+            Item {
+                width: parent.width
+                height: 150
+
+                Column {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    spacing: 10
+
+                    Text {
+                        text: "Launching BetterAngle"
+                        color: "white"
+                        font.pixelSize: 28
+                        font.bold: true
+                        font.letterSpacing: 1.5
+                    }
+
+                    Text {
+                        text: "Preparing the angle HUD, profiles, and DropMaps-powered startup experience."
+                        color: "#9fb1c2"
+                        font.pixelSize: 14
+                        wrapMode: Text.WordWrap
+                    }
+
+                    Rectangle {
+                        id: progressTrack
+                        width: parent.width
+                        height: 16
+                        radius: 8
+                        color: "#16212d"
+                        border.width: 1
+                        border.color: "#294156"
+                        clip: true
+
+                        Rectangle {
+                            id: progressFill
+                            width: Math.max(20, (safeProgress / 100.0) * progressTrack.width)
+                            height: parent.height
+                            radius: 8
+                            gradient: Gradient {
+                                GradientStop { position: 0.0; color: "#1bc6ff" }
+                                GradientStop { position: 0.55; color: "#15f0c5" }
+                                GradientStop { position: 1.0; color: "#94ff6d" }
+                            }
+
+                            Behavior on width {
+                                NumberAnimation {
+                                    duration: 220
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
+
+                            Rectangle {
+                                id: shimmer
+                                width: 120
+                                height: parent.height
+                                radius: 8
+                                opacity: 0.30
+                                gradient: Gradient {
+                                    GradientStop { position: 0.0; color: "#00ffffff" }
+                                    GradientStop { position: 0.5; color: "#ccffffff" }
+                                    GradientStop { position: 1.0; color: "#00ffffff" }
+                                }
+                            }
+
+                            NumberAnimation {
+                                id: shimmerAnimation
+                                target: shimmer
+                                property: "x"
+                                from: -shimmer.width
+                                to: Math.max(progressFill.width, shimmer.width)
+                                duration: 1200
+                                loops: Animation.Infinite
+                                running: true
+                            }
+                        }
+                    }
+
+                    Row {
+                        width: parent.width
+                        spacing: 12
+
+                        Text {
+                            text: dotPhase === 0 ? "Loading" : dotPhase === 1 ? "Loading." : dotPhase === 2 ? "Loading.." : "Loading..."
+                            color: "#d7e4ef"
+                            font.pixelSize: 13
+                            font.bold: true
+                        }
+
+                        Text {
+                            text: safeProgress + "%"
+                            color: "#8fe8ff"
+                            font.pixelSize: 13
+                            font.bold: true
+                        }
+                    }
+                }
+            }
+
+            Item {
+                width: parent.width
+                height: 20
+
                 Text {
-                    text: "LOADING ENGINE..."
-                    color: "#444"
-                    font.pixelSize: 9
-                    font.bold: true
-                    anchors.top: parent.bottom
-                    anchors.topMargin: 8
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    font.letterSpacing: 2
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Wave DropMaps banner integrated"
+                    color: "#6e8294"
+                    font.pixelSize: 11
+                    font.letterSpacing: 0.8
+                }
+
+                Text {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Please wait while startup completes"
+                    color: "#6e8294"
+                    font.pixelSize: 11
+                    font.letterSpacing: 0.8
                 }
             }
         }
