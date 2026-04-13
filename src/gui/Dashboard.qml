@@ -139,13 +139,14 @@ Item {
                         RowLayout {
                             Text { text: "Toggle Dashboard:"; color: "white"; Layout.preferredWidth: 150 }
                             TextField {
+                                id: keyToggleField
                                 Layout.fillWidth: true
                                 readOnly: true
                                 selectByMouse: false
-                                focusPolicy: Qt.StrongFocus
+                                activeFocusOnTab: true
                                 text: activeFocus ? "Press keys..." : backend.keyToggle
                                 color: activeFocus ? "white" : "#00cca3"
-                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
+                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: keyToggleField.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
                                 MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
                                 Keys.priority: Keys.BeforeItem
                                 Keys.onPressed: function(event) {
@@ -163,13 +164,14 @@ Item {
                         RowLayout {
                             Text { text: "Selection Overlay:"; color: "white"; Layout.preferredWidth: 150 }
                             TextField {
+                                id: keyRoiField
                                 Layout.fillWidth: true
                                 readOnly: true
                                 selectByMouse: false
-                                focusPolicy: Qt.StrongFocus
+                                activeFocusOnTab: true
                                 text: activeFocus ? "Press keys..." : backend.keyRoi
                                 color: activeFocus ? "white" : "#00cca3"
-                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
+                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: keyRoiField.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
                                 MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
                                 Keys.priority: Keys.BeforeItem
                                 Keys.onPressed: function(event) {
@@ -187,13 +189,14 @@ Item {
                         RowLayout {
                             Text { text: "Toggle Crosshair:"; color: "white"; Layout.preferredWidth: 150 }
                             TextField {
+                                id: keyCrossField
                                 Layout.fillWidth: true
                                 readOnly: true
                                 selectByMouse: false
-                                focusPolicy: Qt.StrongFocus
+                                activeFocusOnTab: true
                                 text: activeFocus ? "Press keys..." : backend.keyCross
                                 color: activeFocus ? "white" : "#00cca3"
-                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
+                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: keyCrossField.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
                                 MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
                                 Keys.priority: Keys.BeforeItem
                                 Keys.onPressed: function(event) {
@@ -211,13 +214,14 @@ Item {
                         RowLayout {
                             Text { text: "Zero Counter:"; color: "white"; Layout.preferredWidth: 150 }
                             TextField {
+                                id: keyZeroField
                                 Layout.fillWidth: true
                                 readOnly: true
                                 selectByMouse: false
-                                focusPolicy: Qt.StrongFocus
+                                activeFocusOnTab: true
                                 text: activeFocus ? "Press keys..." : backend.keyZero
                                 color: activeFocus ? "white" : "#00cca3"
-                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
+                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: keyZeroField.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
                                 MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
                                 Keys.priority: Keys.BeforeItem
                                 Keys.onPressed: function(event) {
@@ -235,13 +239,14 @@ Item {
                         RowLayout {
                             Text { text: "Debug Overlay:"; color: "white"; Layout.preferredWidth: 150 }
                             TextField {
+                                id: keyDebugField
                                 Layout.fillWidth: true
                                 readOnly: true
                                 selectByMouse: false
-                                focusPolicy: Qt.StrongFocus
+                                activeFocusOnTab: true
                                 text: activeFocus ? "Press keys..." : backend.keyDebug
                                 color: activeFocus ? "white" : "#00cca3"
-                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
+                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: keyDebugField.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
                                 MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
                                 Keys.priority: Keys.BeforeItem
                                 Keys.onPressed: function(event) {

@@ -1,3 +1,8 @@
+### BetterAngle Pro v4.27.93
+- **QML Load Fix**: Removed the unsupported `focusPolicy` usage from the hotkey capture fields in [`src/gui/Dashboard.qml`](src/gui/Dashboard.qml:141), which was preventing [`main.qml`](src/gui/main.qml:5) from loading.
+- **Hotkey Field Cleanup**: Switched the capture fields to use explicit ids and `activeFocusOnTab`, keeping the keybind UI valid for Qt Quick Controls.
+- **Startup UI Restored**: This fixes the `Failed to load user interface (main.qml)` error path raised from [`src/shared/ControlPanel.cpp`](src/shared/ControlPanel.cpp:18).
+
 ### BetterAngle Pro v4.27.92
 - **Tolerance Default Fix**: Set the no-profile tolerance fallback to `2` in [`BetterAngleBackend::tolerance()`](src/shared/BetterAngleBackend.cpp:94), aligning runtime defaults with the direct-boot profile default in [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:388).
 - **Detection Consistency**: This keeps fresh launches and uninitialized UI states on the same tighter detection threshold intended for improved performance.
