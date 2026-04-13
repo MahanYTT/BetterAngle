@@ -381,15 +381,13 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         LogStartup("BootThread: Enforcing minimum splash duration of 2500ms.");
         std::this_thread::sleep_until(startTime +
                                       std::chrono::milliseconds(2500));
-        if (g_backend)
-          QMetaObject::invokeMethod(g_backend, "requestShowControlPanel",
-                                    Qt::QueuedConnection);
+        LogStartup("BootThread: Minimum splash duration satisfied. Waiting for "
+                   "UI thread reveal gate.");
       } catch (const std::exception &e) {
         LogStartup("BOOT_THREAD_FATAL: " + std::string(e.what()));
         g_loadingProgress = 100;
-        if (g_backend)
-          QMetaObject::invokeMethod(g_backend, "requestShowControlPanel",
-                                    Qt::QueuedConnection);
+        LogStartup("BootThread: Fatal path reached. Waiting for UI thread "
+                   "reveal gate.");
       }
     }).detach();
 
@@ -406,6 +404,37 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     LogStartup("Init: Loading QML Engine & Splash...");
     EnsureEngineInitialized();
     ShowSplashScreen();
+
+    auto splashUiStart = std::chrono::steady_clock::now();
+    bool startupRevealTriggered = false;
+    QTimer *startupRevealTimer = new QTimer(&app);
+    startupRevealTimer->setInterval(100);
+    QObject::connect(
+        startupRevealTimer, &QTimer::timeout, [&, startupRevealTimer]() {
+          if (startupRevealTriggered)
+            return;
+
+          const auto elapsed =
+              std::chrono::duration_cast<std::chrono::milliseconds>(
+                  std::chrono::steady_clock::now() - splashUiStart)
+                  .count();
+
+          if (g_loadingProgress.load() < 100 || elapsed < 2500)
+            return;
+
+          startupRevealTriggered = true;
+          startupRevealTimer->stop();
+          LogStartup("UI: Startup reveal gate satisfied on UI thread. "
+                     "Requesting control panel reveal.");
+
+          if (g_backend) {
+            g_backend->requestShowControlPanel();
+          } else {
+            LogStartup("UI_FATAL: Backend was null when UI thread attempted to "
+                       "reveal control panel.");
+          }
+        });
+    startupRevealTimer->start();
 
     // â”€â”€ Nuclear Backup (Fail-safe)
     // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.66] - 2026-04-13
+### Fixed
+- **Startup Unfreeze / Splash Handoff**: Moved the startup reveal gating logic onto the UI thread in [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp), preventing the splash screen from getting stuck after startup completed.
+- **Reveal Reliability**: The splash-to-dashboard handoff no longer depends on the boot thread to trigger the UI transition directly, reducing the chance of the splash staying open until force-quit.
+- **Startup Diagnostics**: Added clearer startup handoff logging around the UI-thread reveal gate to make future splash transition issues easier to diagnose.
+
 ## [v4.27.65] - 2026-04-13
 ### Fixed
 - **WaveDropMaps Naming**: Corrected the splash branding text in [`src/gui/Splash.qml`](src/gui/Splash.qml) to use `WaveDropMaps` consistently instead of `Wave DropMaps`.
