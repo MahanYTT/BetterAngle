@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.77] - 2026-04-13
+### Fixed
+- **Moving Dashboard Stayed Behind Its Own HUD Hole**: [`CreateControlPanel()`](src/shared/ControlPanel.cpp:149) now resynchronizes [`SyncHUDWithPanelWindow()`](src/shared/ControlPanel.cpp:16) on panel movement and resize (`xChanged`, `yChanged`, `widthChanged`, `heightChanged`), so the input hole tracks the dashboard instead of staying at the old location.
+- **Client-Area Alignment**: [`SyncHUDWithPanelWindow()`](src/shared/ControlPanel.cpp:43) now cuts the HUD hole from the native panel client rect via `GetClientRect`/`ClientToScreen`, instead of the full window rect, fixing frame/titlebar offset mismatches.
+
 ## [v4.27.76] - 2026-04-13
 ### Fixed
 - **Dashboard Client-Area Input**: [`SyncHUDWithPanelWindow()`](src/shared/ControlPanel.cpp:16) now cuts a hole out of the fullscreen HUD over the dashboard window rectangle instead of only relying on click-through styles, allowing Qt controls inside the panel to receive mouse interaction while the HUD remains visible elsewhere.

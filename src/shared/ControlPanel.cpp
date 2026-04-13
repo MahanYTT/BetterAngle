@@ -41,16 +41,26 @@ void SyncHUDWithPanelWindow(QWindow *panelWindow) {
   SetWindowLongPtr(g_hHUD, GWL_EXSTYLE, hudExStyle);
 
   if (panelInteractive && g_hPanel) {
-    RECT panelRect = {};
+    RECT clientRect = {};
     RECT hudRect = {};
-    if (GetWindowRect(g_hPanel, &panelRect) &&
+    POINT clientTopLeft = {};
+    POINT clientBottomRight = {};
+    if (GetClientRect(g_hPanel, &clientRect) &&
         GetWindowRect(g_hHUD, &hudRect)) {
+      clientTopLeft.x = clientRect.left;
+      clientTopLeft.y = clientRect.top;
+      clientBottomRight.x = clientRect.right;
+      clientBottomRight.y = clientRect.bottom;
+
+      ClientToScreen(g_hPanel, &clientTopLeft);
+      ClientToScreen(g_hPanel, &clientBottomRight);
+
       const int hudWidth = hudRect.right - hudRect.left;
       const int hudHeight = hudRect.bottom - hudRect.top;
-      const int panelLeft = panelRect.left - hudRect.left;
-      const int panelTop = panelRect.top - hudRect.top;
-      const int panelRight = panelRect.right - hudRect.left;
-      const int panelBottom = panelRect.bottom - hudRect.top;
+      const int panelLeft = clientTopLeft.x - hudRect.left;
+      const int panelTop = clientTopLeft.y - hudRect.top;
+      const int panelRight = clientBottomRight.x - hudRect.left;
+      const int panelBottom = clientBottomRight.y - hudRect.top;
 
       HRGN fullRegion = CreateRectRgn(0, 0, hudWidth, hudHeight);
       HRGN panelRegion =
@@ -60,7 +70,7 @@ void SyncHUDWithPanelWindow(QWindow *panelWindow) {
       DeleteObject(panelRegion);
 
       LogStartup(
-          std::string("PanelWindowState: HUD hole-punch applied panelRect=") +
+          std::string("PanelWindowState: HUD hole-punch applied clientRect=") +
           std::to_string(panelLeft) + "," + std::to_string(panelTop) + "," +
           std::to_string(panelRight) + "," + std::to_string(panelBottom));
     }
@@ -77,6 +87,12 @@ void SyncHUDWithPanelWindow(QWindow *panelWindow) {
 
   if (g_hPanel) {
     EnableWindow(g_hPanel, TRUE);
+
+    LONG_PTR panelExStyle = GetWindowLongPtr(g_hPanel, GWL_EXSTYLE);
+    panelExStyle &= ~WS_EX_TRANSPARENT;
+    panelExStyle &= ~WS_EX_NOACTIVATE;
+    SetWindowLongPtr(g_hPanel, GWL_EXSTYLE, panelExStyle);
+
     SetWindowPos(g_hPanel, panelInteractive ? HWND_TOPMOST : HWND_NOTOPMOST, 0,
                  0, 0, 0,
                  SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
@@ -88,13 +104,19 @@ void SyncHUDWithPanelWindow(QWindow *panelWindow) {
     }
   }
 
+  LONG_PTR panelExStyleLogged =
+      g_hPanel ? GetWindowLongPtr(g_hPanel, GWL_EXSTYLE) : 0;
   LogStartup(
       std::string("PanelWindowState: HUD synchronized exStyleTransparent=") +
       ((hudExStyle & WS_EX_TRANSPARENT) ? "true" : "false") +
       " zOrder=" + (panelInteractive ? "NOTOPMOST" : "TOPMOST") +
       " clickable=" + (hudShouldBeClickable ? "true" : "false") +
       " panelForcedTop=" + (panelInteractive ? "true" : "false") +
-      " regionMode=" + (panelInteractive ? "hole-punch" : "full"));
+      " regionMode=" + (panelInteractive ? "hole-punch" : "full") +
+      " panelExTransparent=" +
+      ((panelExStyleLogged & WS_EX_TRANSPARENT) ? "true" : "false") +
+      " panelExNoActivate=" +
+      ((panelExStyleLogged & WS_EX_NOACTIVATE) ? "true" : "false"));
 }
 } // namespace
 
@@ -195,6 +217,18 @@ HWND CreateControlPanel(HINSTANCE hInstance) {
       QObject::connect(panelWindow, &QWindow::activeChanged, [panelWindow]() {
         SyncHUDWithPanelWindow(panelWindow);
       });
+      QObject::connect(panelWindow, &QWindow::xChanged, [panelWindow](int) {
+        SyncHUDWithPanelWindow(panelWindow);
+      });
+      QObject::connect(panelWindow, &QWindow::yChanged, [panelWindow](int) {
+        SyncHUDWithPanelWindow(panelWindow);
+      });
+      QObject::connect(panelWindow, &QWindow::widthChanged, [panelWindow](int) {
+        SyncHUDWithPanelWindow(panelWindow);
+      });
+      QObject::connect(
+          panelWindow, &QWindow::heightChanged,
+          [panelWindow](int) { SyncHUDWithPanelWindow(panelWindow); });
 
       SyncHUDWithPanelWindow(panelWindow);
     } else {

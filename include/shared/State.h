@@ -22,7 +22,7 @@ extern std::atomic<bool> g_fortniteFocusedCache;
 #ifndef V_MAJ
 #define V_MAJ 4
 #define V_MIN 27
-#define V_PAT 76
+#define V_PAT 77
 #endif
 extern bool g_needsSetup;
 extern bool g_setupComplete;
