@@ -29,12 +29,13 @@ jobs:
           arch: 'win64_msvc2019_64'
           setup-python: 'false'
 
-      - name: Verify uninstall.cpp exists
+      - name: Verify uninstaller source exists
         shell: pwsh
         run: |
-          if (-not (Test-Path "uninstall.cpp")) {
-            Write-Error "uninstall.cpp was not found in the repository root."
+          if (-not (Test-Path "shared/uninstall.cpp")) {
+            Write-Error "shared/uninstall.cpp was not found."
             Get-ChildItem -Force
+            if (Test-Path "shared") { Get-ChildItem shared -Force }
             exit 1
           }
 
@@ -54,7 +55,8 @@ jobs:
       - name: Build uninstaller.exe
         shell: pwsh
         run: |
-          cl /std:c++20 /EHsc /O2 /W4 /Fe:build/Release/uninstaller.exe uninstall.cpp ole32.lib shell32.lib
+          New-Item -ItemType Directory -Force -Path build/Release | Out-Null
+          cl /std:c++20 /EHsc /O2 /W4 /Fe:build/Release/uninstaller.exe shared/uninstall.cpp ole32.lib shell32.lib
 
       - name: Deploy Qt Dependencies
         shell: pwsh
@@ -74,22 +76,16 @@ jobs:
           $ver = (Get-Content VERSION).Trim()
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /dAppVer=$ver installer.iss
 
-      - name: Upload uninstaller artifact
+      - name: Upload CI artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: uninstaller
-          path: build/Release/uninstaller.exe
-
-      - name: Get Version
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: pwsh
-        run: |
-          $ver = (Get-Content VERSION).Trim()
-          echo "VERSION=$ver" >> $env:GITHUB_ENV
-          echo "TAG=v$ver" >> $env:GITHUB_ENV
+          name: BetterAngle-build
+          path: |
+            bin/BetterAngle_Setup.exe
+            build/Release/uninstaller.exe
 
       - name: Extract Latest Release Notes
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name != 'pull_request'
         shell: pwsh
         run: |
           $lines = Get-Content RELEASE_NOTES.md
@@ -102,19 +98,41 @@ jobs:
               }
               if ($seenFirst) { $outLines += $line }
           }
+          if ($outLines.Count -eq 0) {
+            $outLines = @("Automated build release.")
+          }
           $outLines | Out-File CURRENT_RELEASE_NOTES.md -Encoding utf8
 
-      - name: Create GitHub Release
+      - name: Set release metadata for tag build
         if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          echo "RELEASE_TAG=${{ github.ref_name }}" >> $env:GITHUB_ENV
+          echo "RELEASE_NAME=BetterAngle Pro ${{ github.ref_name }}" >> $env:GITHUB_ENV
+          echo "RELEASE_PRERELEASE=false" >> $env:GITHUB_ENV
+
+      - name: Set release metadata for main build
+        if: github.ref == 'refs/heads/main'
+        shell: pwsh
+        run: |
+          $ver = (Get-Content VERSION).Trim()
+          $shortSha = "${{ github.sha }}".Substring(0, 7)
+          $tag = "ci-$ver-${{ github.run_number }}-$shortSha"
+          echo "RELEASE_TAG=$tag" >> $env:GITHUB_ENV
+          echo "RELEASE_NAME=BetterAngle CI $tag" >> $env:GITHUB_ENV
+          echo "RELEASE_PRERELEASE=true" >> $env:GITHUB_ENV
+
+      - name: Create GitHub Release
+        if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v1
         with:
           files: |
             bin/BetterAngle_Setup.exe
             build/Release/uninstaller.exe
-          tag_name: ${{ env.TAG }}
-          name: BetterAngle Pro ${{ env.TAG }}
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_NAME }}
           body_path: CURRENT_RELEASE_NOTES.md
           draft: false
-          prerelease: false
+          prerelease: ${{ env.RELEASE_PRERELEASE }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
