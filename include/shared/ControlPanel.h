@@ -4,13 +4,10 @@
 #include <string>
 #include <windows.h>
 
-
 class QQmlApplicationEngine;
 
 HWND CreateControlPanel(HINSTANCE hInst);
 void ShowControlPanel();
-void ShowSplashScreen();
-void CloseSplashScreenDirect();
 void EnsureEngineInitialized();
 LRESULT CALLBACK ControlPanelWndProc(HWND hWnd, UINT message, WPARAM wParam,
                                      LPARAM lParam);

@@ -1,5 +1,14 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.69] - 2026-04-13
+### Changed
+- **Splash Removed From Startup**: [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp) now skips loading [`Splash.qml`](src/gui/Splash.qml) entirely and reveals the dashboard directly after initialization.
+- **Simpler UI Reveal Flow**: [`requestShowControlPanel()`](src/shared/BetterAngleBackend.cpp:424) now shows the HUD and emits the dashboard reveal without any splash-close dependency.
+
+### Fixed
+- **Startup Reliability**: Removed the fragile splash handoff path from [`src/shared/ControlPanel.cpp`](src/shared/ControlPanel.cpp), preventing the app from getting stuck behind a splash screen during launch.
+- **Resource Cleanup**: [`qml.qrc`](qml.qrc) no longer packages [`Splash.qml`](src/gui/Splash.qml), and [`include/shared/BetterAngleBackend.h`](include/shared/BetterAngleBackend.h) no longer exposes the obsolete splash-close signal.
+
 ## [v4.27.68] - 2026-04-13
 ### Fixed
 - **Crosshair Activation Reliability**: Unified the dashboard button and F10 hotkey through the same persisted backend toggle path so the crosshair state stays consistent across UI, HUD, and saved profile state.

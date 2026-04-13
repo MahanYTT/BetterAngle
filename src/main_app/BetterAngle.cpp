@@ -410,59 +410,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
     LogStartup("Init: Initializing Resources...");
     Q_INIT_RESOURCE(qml);
 
-    LogStartup("Init: Loading QML Engine & Splash...");
+    LogStartup("Init: Loading QML Engine...");
     EnsureEngineInitialized();
-    ShowSplashScreen();
-
-    auto splashUiStart = std::chrono::steady_clock::now();
-    bool startupRevealTriggered = false;
-    QTimer *startupRevealTimer = new QTimer(&app);
-    startupRevealTimer->setInterval(100);
-    QObject::connect(
-        startupRevealTimer, &QTimer::timeout, [&, startupRevealTimer]() {
-          if (startupRevealTriggered)
-            return;
-
-          const auto elapsed =
-              std::chrono::duration_cast<std::chrono::milliseconds>(
-                  std::chrono::steady_clock::now() - splashUiStart)
-                  .count();
-
-          if (g_loadingProgress.load() < 100 || elapsed < 2500)
-            return;
-
-          startupRevealTriggered = true;
-          startupRevealTimer->stop();
-          LogStartup("UI: Startup reveal gate satisfied on UI thread. "
-                     "Requesting control panel reveal.");
-
-          if (g_backend) {
-            g_backend->requestShowControlPanel();
-          } else {
-            LogStartup("UI_FATAL: Backend was null when UI thread attempted to "
-                       "reveal control panel.");
-          }
-        });
-    startupRevealTimer->start();
-
-    // â”€â”€ Nuclear Backup (Fail-safe)
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    QTimer::singleShot(8000, []() {
-      if (g_backend) {
-        LogStartup("Fail-Safe: Forcing transition to Dashboard.");
-        QMetaObject::invokeMethod(g_backend, "requestShowControlPanel",
-                                  Qt::QueuedConnection);
-
-        // Physical Override: Find and kill anything claiming to be the splash
-        HWND hSplash = FindWindowW(NULL, L"BetterAngle Splash");
-        if (hSplash) {
-          PostMessage(hSplash, WM_CLOSE, 0, 0);
-          LogStartup("Fail-Safe: Physically closed Splash window.");
-        } else {
-          LogStartup("Fail-Safe: No native splash window found to close.");
-        }
-      }
-    });
+    LogStartup("Init: Splash disabled. Skipping Splash.qml load.");
 
     LogStartup("Init: Creating HUD Window Layer...");
     try {
@@ -520,6 +470,16 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
       RefreshHotkeys(g_hHUD);
       LogStartup("Panel: Invoking CreateControlPanel...");
       CreateControlPanel(hInstance);
+      QTimer::singleShot(0, []() {
+        if (g_backend) {
+          LogStartup(
+              "UI: Splash disabled. Requesting immediate dashboard reveal.");
+          g_backend->requestShowControlPanel();
+        } else {
+          LogStartup(
+              "UI_FATAL: Backend was null during immediate dashboard reveal.");
+        }
+      });
       LogStartup("Panel: Bridge Task Complete.");
     } catch (const std::exception &e) {
       LogStartup("WIN_TASK_FATAL: " + std::string(e.what()));
