@@ -56,9 +56,6 @@ BetterAngleBackend::BetterAngleBackend(QObject *parent) : QObject(parent) {
       checkForUpdates();
     }
   });
-
-  // Force show Dashboard shortly after startup
-  QTimer::singleShot(500, this, [this]() { requestShowControlPanel(); });
 }
 
 double BetterAngleBackend::sensX() const {
@@ -114,7 +111,6 @@ void BetterAngleBackend::setTolerance(int v) {
   SaveSettings();
   emit profileChanged();
 }
-
 
 bool BetterAngleBackend::crosshairOn() const { return g_showCrosshair; }
 void BetterAngleBackend::setCrosshairOn(bool v) {
@@ -231,7 +227,6 @@ QString BetterAngleBackend::updateStatus() const {
   }
   return "";
 }
-
 
 void BetterAngleBackend::terminateApp() {
   SaveSettings();

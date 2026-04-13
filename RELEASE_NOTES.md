@@ -1,3 +1,7 @@
+### BetterAngle Pro v4.27.100
+- **Startup UI Sync Fix**: Removed the delayed extra [`requestShowControlPanel()`](src/shared/BetterAngleBackend.cpp:60) from [`BetterAngleBackend::BetterAngleBackend()`](src/shared/BetterAngleBackend.cpp:21), so launch no longer re-toggles the main UI closed after [`ShowControlPanel()`](src/main_app/BetterAngle.cpp:478) already opened it.
+- **Launch Behavior Fix**: The decimal HUD and the main dashboard UI now stay visible together on startup instead of only the decimal overlay remaining on screen.
+
 ### BetterAngle Pro v4.27.99
 - **Keybind UI Restore**: Replaced the broken free-text hotkey editor in [`src/gui/Dashboard.qml`](src/gui/Dashboard.qml:140) with click-to-capture fields again, so binds change by pressing inside the field instead of being corrupted character-by-character.
 - **Immediate Apply Fix**: Restored immediate hotkey application from the dashboard capture flow in [`src/gui/Dashboard.qml`](src/gui/Dashboard.qml:176), removing the need for the incorrect manual save-button workflow.
