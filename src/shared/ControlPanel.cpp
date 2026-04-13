@@ -7,6 +7,7 @@
 #include <QQmlContext>
 #include <QWindow>
 #include <cstdint>
+#include <windows.h>
 
 QQmlApplicationEngine *g_qmlEngine = nullptr;
 BetterAngleBackend *g_backend = nullptr;
@@ -102,10 +103,14 @@ void SyncHUDWithPanelWindow(QWindow *panelWindow) {
     panelExStyle &= ~WS_EX_NOACTIVATE;
     SetWindowLongPtr(g_hPanel, GWL_EXSTYLE, panelExStyle);
 
-    SetWindowPos(g_hPanel, panelInteractive ? HWND_TOPMOST : HWND_NOTOPMOST, 0,
-                 0, 0, 0,
+    // Set panel as NOTOPMOST to avoid focus issues
+    SetWindowPos(g_hPanel, HWND_NOTOPMOST, 0, 0, 0, 0,
                  SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
     if (panelInteractive) {
+      // Request permission to set foreground window before attempting to bring
+      // to front
+      AllowSetForegroundWindow(ASFW_ANY);
+      // Bring window to top and activate
       BringWindowToTop(g_hPanel);
       SetForegroundWindow(g_hPanel);
       SetActiveWindow(g_hPanel);

@@ -1,0 +1,27 @@
+diff --git a/src/shared/ControlPanel.cpp b/src/shared/ControlPanel.cpp
+index abc1234..def5678 100644
+--- a/src/shared/ControlPanel.cpp
++++ b/src/shared/ControlPanel.cpp
+@@ -105,16 +105,18 @@ void SyncHUDWithPanelWindow(QWindow *panelWindow) {
+     panelExStyle &= ~WS_EX_NOACTIVATE;
+     SetWindowLongPtr(g_hPanel, GWL_EXSTYLE, panelExStyle);
+ 
+-    SetWindowPos(g_hPanel, panelInteractive ? HWND_TOPMOST : HWND_NOTOPMOST, 0,
+-                 0, 0, 0,
+-                 SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
++    // Set panel as NOTOPMOST to avoid focus issues, then bring to front
++    SetWindowPos(g_hPanel, HWND_NOTOPMOST, 0, 0, 0, 0,
++                 SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_SHOWWINDOW | SWP_NOZORDER);
+     if (panelInteractive) {
++      // Request permission to set foreground window
++      AllowSetForegroundWindow(ASFW_ANY);
++      // Bring window to top and activate
+       BringWindowToTop(g_hPanel);
+       SetForegroundWindow(g_hPanel);
+       SetActiveWindow(g_hPanel);
+       SetFocus(g_hPanel);
+     }
+-  }
+ 
+   LONG_PTR panelExStyleLogged =
+       g_hPanel ? GetWindowLongPtr(g_hPanel, GWL_EXSTYLE) : 0;
