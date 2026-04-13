@@ -158,6 +158,10 @@ COLORREF GetPixelColor(int x, int y) {
 // Window Procedures
 LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
   switch (msg) {
+  case WM_NCHITTEST:
+    if (!g_isDraggingHUD && g_currentSelection == NONE)
+      return HTTRANSPARENT;
+    return HTCLIENT;
   case WM_PAINT:
     DrawOverlay(hWnd, g_currentAngle, g_detectionRatio, g_showCrosshair);
     return 0;
@@ -377,10 +381,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
         g_loadingProgress = 70;
         {
           std::lock_guard<std::recursive_mutex> lock(g_profileMutex);
+          g_showCrosshair = g_currentProfile.showCrosshair;
           g_crossThickness = g_currentProfile.crossThickness;
           g_crossColor = g_currentProfile.crossColor;
           g_crossOffsetX = g_currentProfile.crossOffsetX;
           g_crossOffsetY = g_currentProfile.crossOffsetY;
+          g_crossAngle = g_currentProfile.crossAngle;
           g_crossPulse = g_currentProfile.crossPulse;
           g_logic.LoadProfile(g_currentProfile.sensitivityX);
         }

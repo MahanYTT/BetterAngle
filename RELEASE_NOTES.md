@@ -1,5 +1,12 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.70] - 2026-04-13
+### Fixed
+- **Dashboard Interactivity Restored**: [`HUDWndProc()`](src/main_app/BetterAngle.cpp:159) now returns `HTTRANSPARENT` during normal operation so the always-on-top HUD no longer blocks clicks meant for [`main.qml`](src/gui/main.qml).
+- **Crosshair Startup State**: [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:376) now restores `showCrosshair` and `crossAngle` together with the rest of the active profile so the overlay state is consistent immediately after launch.
+- **Settings Parsing Reliability**: [`LoadSettings()`](src/shared/State.cpp:152) now parses values from the actual colon position instead of a fragile fixed offset, preventing malformed reads such as the huge `crossOffsetY` seen in startup logs.
+- **Safe Profile Defaults**: [`Profile`](include/shared/Profile.h:28) now initializes crosshair and sensitivity fields with safe defaults so newly created profiles cannot produce undefined overlay coordinates.
+
 ## [v4.27.69] - 2026-04-13
 ### Changed
 - **Splash Removed From Startup**: [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp) now skips loading [`Splash.qml`](src/gui/Splash.qml) entirely and reveals the dashboard directly after initialization.

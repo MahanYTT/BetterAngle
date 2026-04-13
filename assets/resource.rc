@@ -21,12 +21,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "BetterAngle Pro"
             VALUE "FileDescription", "BetterAngle Pro - Precision Gaming HUD"
-            VALUE "FileVersion", "4.27.69.0"
+            VALUE "FileVersion", "4.27.70.0"
             VALUE "InternalName", "BetterAngle.exe"
             VALUE "LegalCopyright", "Copyright (C) 2026 BetterAngle Pro"
             VALUE "OriginalFilename", "BetterAngle.exe"
             VALUE "ProductName", "BetterAngle Pro"
-            VALUE "ProductVersion", "4.27.69.0"
+            VALUE "ProductVersion", "4.27.70.0"
         END
     END
     BLOCK "VarFileInfo"

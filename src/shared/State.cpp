@@ -164,15 +164,18 @@ void LoadSettings() {
       size_t p = content.find("\"" + k + "\":");
       if (p == std::string::npos)
         return def;
-      size_t valStart =
-          content.find_first_not_of(" \t\n\r", p + k.length() + 2);
+      size_t colon = content.find(':', p + k.length() + 2);
+      if (colon == std::string::npos)
+        return def;
+      size_t valStart = content.find_first_not_of(" \t\n\r", colon + 1);
       if (valStart == std::string::npos)
         return def;
       try {
         std::istringstream iss(content.substr(valStart));
         iss.imbue(std::locale("C"));
-        float v;
-        iss >> v;
+        float v = def;
+        if (!(iss >> v))
+          return def;
         return v;
       } catch (...) {
         return def;
@@ -182,8 +185,10 @@ void LoadSettings() {
       size_t p = content.find("\"" + k + "\":");
       if (p == std::string::npos)
         return def;
-      size_t valStart =
-          content.find_first_not_of(" \t\n\r", p + k.length() + 2);
+      size_t colon = content.find(':', p + k.length() + 2);
+      if (colon == std::string::npos)
+        return def;
+      size_t valStart = content.find_first_not_of(" \t\n\r", colon + 1);
       if (valStart == std::string::npos)
         return def;
       try {
