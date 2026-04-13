@@ -1,29 +1,34 @@
-//
-// Created by ItsDolphin on 4/13/2026.
-//
-
-#include "uninstall.h"
-
 #include <windows.h>
-#include <tlhelp32.h>
 #include <shlobj.h>
+#include <tlhelp32.h>
+
 #include <filesystem>
 #include <iostream>
 #include <string>
-#include <vector>
 #include <system_error>
+#include <vector>
 
 namespace fs = std::filesystem;
 
+static std::wstring GetKnownFolder(REFKNOWNFOLDERID folderId) {
+    PWSTR raw = nullptr;
+    std::wstring result;
+    if (SUCCEEDED(SHGetKnownFolderPath(folderId, 0, nullptr, &raw)) && raw != nullptr) {
+        result = raw;
+        CoTaskMemFree(raw);
+    }
+    return result;
+}
+
 static std::wstring GetEnvVar(const wchar_t* name) {
-    DWORD needed = GetEnvironmentVariableW(name, nullptr, 0);
-    if (needed == 0) {
+    DWORD size = GetEnvironmentVariableW(name, nullptr, 0);
+    if (size == 0) {
         return L"";
     }
 
-    std::wstring value(needed, L'\0');
-    DWORD written = GetEnvironmentVariableW(name, value.data(), needed);
-    if (written == 0 || written >= needed) {
+    std::wstring value(size, L'\0');
+    DWORD written = GetEnvironmentVariableW(name, value.data(), size);
+    if (written == 0 || written >= size) {
         return L"";
     }
 
@@ -31,34 +36,19 @@ static std::wstring GetEnvVar(const wchar_t* name) {
     return value;
 }
 
-static std::wstring GetKnownFolder(REFKNOWNFOLDERID folderId) {
-    PWSTR raw = nullptr;
-    std::wstring result;
-
-    if (SUCCEEDED(SHGetKnownFolderPath(folderId, 0, nullptr, &raw)) && raw != nullptr) {
-        result = raw;
-    }
-
-    if (raw != nullptr) {
-        CoTaskMemFree(raw);
-    }
-
-    return result;
-}
-
-static bool IsSameFileNameInsensitive(const std::wstring& a, const std::wstring& b) {
+static bool EqualsIgnoreCase(const std::wstring& a, const std::wstring& b) {
     return _wcsicmp(a.c_str(), b.c_str()) == 0;
 }
 
-static void RemoveReadOnlyIfNeeded(const fs::path& path) {
+static void ClearReadOnlyAttribute(const fs::path& path) {
     DWORD attrs = GetFileAttributesW(path.c_str());
     if (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_READONLY)) {
         SetFileAttributesW(path.c_str(), attrs & ~FILE_ATTRIBUTE_READONLY);
     }
 }
 
-static bool KillProcessByName(const wchar_t* exeName) {
-    bool killedAny = false;
+static bool KillProcessByName(const wchar_t* processName) {
+    bool terminated = false;
 
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (snapshot == INVALID_HANDLE_VALUE) {
@@ -70,12 +60,12 @@ static bool KillProcessByName(const wchar_t* exeName) {
 
     if (Process32FirstW(snapshot, &entry)) {
         do {
-            if (IsSameFileNameInsensitive(entry.szExeFile, exeName)) {
+            if (EqualsIgnoreCase(entry.szExeFile, processName)) {
                 HANDLE process = OpenProcess(PROCESS_TERMINATE | SYNCHRONIZE, FALSE, entry.th32ProcessID);
                 if (process != nullptr) {
                     if (TerminateProcess(process, 0)) {
                         WaitForSingleObject(process, 5000);
-                        killedAny = true;
+                        terminated = true;
                     }
                     CloseHandle(process);
                 }
@@ -84,28 +74,22 @@ static bool KillProcessByName(const wchar_t* exeName) {
     }
 
     CloseHandle(snapshot);
-    return killedAny;
+    return terminated;
 }
 
 static bool RemoveFileIfExists(const fs::path& path) {
     std::error_code ec;
-
     if (!fs::exists(path, ec)) {
         return true;
     }
 
-    RemoveReadOnlyIfNeeded(path);
-    if (fs::is_regular_file(path, ec) || fs::is_symlink(path, ec)) {
-        fs::remove(path, ec);
-        return !ec;
-    }
-
-    return false;
+    ClearReadOnlyAttribute(path);
+    fs::remove(path, ec);
+    return !ec;
 }
 
-static bool RemoveDirectoryRecursively(const fs::path& dir) {
+static bool RemoveDirectoryIfExists(const fs::path& dir) {
     std::error_code ec;
-
     if (!fs::exists(dir, ec)) {
         return true;
     }
@@ -116,7 +100,7 @@ static bool RemoveDirectoryRecursively(const fs::path& dir) {
         if (ec) {
             break;
         }
-        RemoveReadOnlyIfNeeded(it->path());
+        ClearReadOnlyAttribute(it->path());
     }
 
     ec.clear();
@@ -124,37 +108,11 @@ static bool RemoveDirectoryRecursively(const fs::path& dir) {
     return !ec;
 }
 
-static void RemoveKnownFilesInDirectory(const fs::path& dir, const std::vector<std::wstring>& names) {
-    std::error_code ec;
-    if (!fs::exists(dir, ec) || !fs::is_directory(dir, ec)) {
-        return;
-    }
-
-    for (const auto& name : names) {
-        RemoveFileIfExists(dir / name);
-    }
-}
-
-static void RemoveLikelyBetterAngleArtifacts(const fs::path& root) {
+static void RemoveNamedFilesRecursively(const fs::path& root, const std::vector<std::wstring>& names) {
     std::error_code ec;
     if (!fs::exists(root, ec) || !fs::is_directory(root, ec)) {
         return;
     }
-
-    const std::vector<std::wstring> exactNames = {
-        L"BetterAngle.exe",
-        L"betterangle.exe",
-        L"settings.json",
-        L"config.json",
-        L"roi.json",
-        L"roi.txt",
-        L"position.json",
-        L"color.json",
-        L"overlay.json",
-        L"state.json"
-    };
-
-    RemoveKnownFilesInDirectory(root, exactNames);
 
     for (fs::recursive_directory_iterator it(root, fs::directory_options::skip_permission_denied, ec), end;
          it != end;
@@ -163,12 +121,10 @@ static void RemoveLikelyBetterAngleArtifacts(const fs::path& root) {
             break;
         }
 
-        const fs::path current = it->path();
-        const std::wstring filename = current.filename().wstring();
-
-        for (const auto& known : exactNames) {
-            if (IsSameFileNameInsensitive(filename, known)) {
-                RemoveFileIfExists(current);
+        const std::wstring filename = it->path().filename().wstring();
+        for (const auto& name : names) {
+            if (EqualsIgnoreCase(filename, name)) {
+                RemoveFileIfExists(it->path());
                 break;
             }
         }
@@ -180,26 +136,25 @@ int wmain() {
 
     KillProcessByName(L"BetterAngle.exe");
 
-    std::vector<fs::path> directoriesToRemove;
-    std::vector<fs::path> extraFilesToRemove;
-
     const std::wstring localAppData = GetKnownFolder(FOLDERID_LocalAppData);
     const std::wstring roamingAppData = GetKnownFolder(FOLDERID_RoamingAppData);
     const std::wstring programData = GetKnownFolder(FOLDERID_ProgramData);
     const std::wstring desktop = GetKnownFolder(FOLDERID_Desktop);
     const std::wstring startMenu = GetKnownFolder(FOLDERID_Programs);
-
     const std::wstring programFiles = GetEnvVar(L"ProgramFiles");
     const std::wstring programFilesX86 = GetEnvVar(L"ProgramFiles(x86)");
 
+    std::vector<fs::path> filesToRemove;
+    std::vector<fs::path> directoriesToRemove;
+
     if (!programFiles.empty()) {
+        filesToRemove.emplace_back(fs::path(programFiles) / L"BetterAngle.exe");
         directoriesToRemove.emplace_back(fs::path(programFiles) / L"BetterAngle");
-        extraFilesToRemove.emplace_back(fs::path(programFiles) / L"BetterAngle.exe");
     }
 
     if (!programFilesX86.empty()) {
+        filesToRemove.emplace_back(fs::path(programFilesX86) / L"BetterAngle.exe");
         directoriesToRemove.emplace_back(fs::path(programFilesX86) / L"BetterAngle");
-        extraFilesToRemove.emplace_back(fs::path(programFilesX86) / L"BetterAngle.exe");
     }
 
     if (!localAppData.empty()) {
@@ -215,30 +170,46 @@ int wmain() {
     }
 
     if (!desktop.empty()) {
-        extraFilesToRemove.emplace_back(fs::path(desktop) / L"BetterAngle.lnk");
+        filesToRemove.emplace_back(fs::path(desktop) / L"BetterAngle.lnk");
     }
 
     if (!startMenu.empty()) {
+        filesToRemove.emplace_back(fs::path(startMenu) / L"BetterAngle.lnk");
         directoriesToRemove.emplace_back(fs::path(startMenu) / L"BetterAngle");
-        extraFilesToRemove.emplace_back(fs::path(startMenu) / L"BetterAngle.lnk");
     }
+
+    const std::vector<std::wstring> likelyDataFiles = {
+        L"roi.json",
+        L"roi.txt",
+        L"position.json",
+        L"color.json",
+        L"settings.json",
+        L"config.json",
+        L"state.json",
+        L"overlay.json",
+        L"BetterAngle.exe"
+    };
 
     bool ok = true;
 
-    for (const auto& file : extraFilesToRemove) {
+    for (const auto& dir : directoriesToRemove) {
+        RemoveNamedFilesRecursively(dir, likelyDataFiles);
+    }
+
+    for (const auto& file : filesToRemove) {
         if (!RemoveFileIfExists(file)) {
             ok = false;
         }
     }
 
     for (const auto& dir : directoriesToRemove) {
-        RemoveLikelyBetterAngleArtifacts(dir);
-        if (!RemoveDirectoryRecursively(dir)) {
+        if (!RemoveDirectoryIfExists(dir)) {
             ok = false;
         }
     }
 
-    std::wcout << (ok ? L"Uninstall completed.\n" : L"Uninstall completed with some errors.\n");
+    std::wcout << (ok ? L"BetterAngle uninstall completed.\n"
+                      : L"BetterAngle uninstall completed with some errors.\n");
 
     CoUninitialize();
     return ok ? 0 : 1;

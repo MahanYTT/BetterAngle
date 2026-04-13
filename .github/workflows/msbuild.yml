@@ -1,130 +1,120 @@
-#name: Build & Release
-#
-#on:
-#  push:
-#    branches: [ "main" ]
-#    tags:
-#      - 'v*'
-#
-#jobs:
-#  build:
-#    runs-on: windows-latest
-#
-#    permissions:
-#      contents: write
-#
-#    steps:
-#      - uses: actions/checkout@v4
-#
-#      - name: Set up MSVC
-#        uses: ilammy/msvc-dev-cmd@v1
-#
-#      - name: Install Qt 6
-#        uses: jurplel/install-qt-action@v3
-#        with:
-#          version: '6.5.3'
-#          arch: 'win64_msvc2019_64'
-#          setup-python: 'false'
-#
-#      - name: Configure CMake
-#        run: |
-#          mkdir build
-#          cd build
-#          cmake .. -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -A x64
-#
-#      - name: Build BetterAngle
-#        run: |
-#          cd build
-#          cmake --build . --config Release
-#
-#      - name: Deploy Qt Dependencies
-#        run: |
-#          cd build
-#          windeployqt Release/BetterAngle.exe --qmldir ../src/gui --quick --no-translations
-#
-#      - name: Download VC++ Redistributable
-#        run: |
-#          Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile "build/Release/vc_redist.x64.exe"
-#
-#      - name: Archive Build
-#        run: |
-#          New-Item -ItemType Directory -Force -Path bin
-#          $ver = (Get-Content VERSION).Trim()
-#          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /dAppVer=$ver installer.iss
-#      - name: Get Version
-#        id: get_version
-#        run: |
-#          $ver = (Get-Content VERSION).Trim()
-#          echo "VERSION=$ver" >> $env:GITHUB_ENV
-#          echo "TAG=v$ver" >> $env:GITHUB_ENV
-#
-#      - name: Extract Latest Release Notes
-#        run: |
-#          $lines = Get-Content RELEASE_NOTES.md
-#          $outLines = @()
-#          $seenFirst = $false
-#          foreach ($line in $lines) {
-#              if ($line.StartsWith("### ")) {
-#                  if ($seenFirst) { break }
-#                  $seenFirst = $true
-#              }
-#              if ($seenFirst) { $outLines += $line }
-#          }
-#          $outLines | Out-File CURRENT_RELEASE_NOTES.md -Encoding utf8
-#
-#      - name: Create GitHub Release
-#        uses: softprops/action-gh-release@v1
-#        with:
-#          files: |
-#            bin/BetterAngle_Setup.exe
-#            build/Release/uninstaller.exe
-#          tag_name: ${{ env.TAG }}
-#          name: BetterAngle Pro ${{ env.TAG }}
-#          body_path: CURRENT_RELEASE_NOTES.md
-#          draft: false
-#          prerelease: false
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-name: MSBuild
+name: Build & Release
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
+    tags:
+      - 'v*'
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
 
+    permissions:
+      contents: write
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
-
-      - name: Setup Developer Command Prompt
+      - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Build BetterAngle
-        shell: cmd
+      - name: Install Qt 6
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.3'
+          arch: 'win64_msvc2019_64'
+          setup-python: 'false'
+
+      - name: Verify uninstall.cpp exists
+        shell: pwsh
         run: |
-          if exist BetterAngle.sln (
-            msbuild BetterAngle.sln /p:Configuration=Release /p:Platform=x64
-          ) else (
-            echo No solution file found, skipping solution build.
-          )
+          if (-not (Test-Path "uninstall.cpp")) {
+            Write-Error "uninstall.cpp was not found in the repository root."
+            Get-ChildItem -Force
+            exit 1
+          }
+
+      - name: Configure CMake
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path build | Out-Null
+          Set-Location build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -A x64
+
+      - name: Build BetterAngle
+        shell: pwsh
+        run: |
+          Set-Location build
+          cmake --build . --config Release
 
       - name: Build uninstaller.exe
-        shell: cmd
+        shell: pwsh
         run: |
-          cl /std:c++20 /EHsc /O2 /W4 /Fe:uninstaller.exe uninstall.cpp ole32.lib shell32.lib
+          cl /std:c++20 /EHsc /O2 /W4 /Fe:build/Release/uninstaller.exe uninstall.cpp ole32.lib shell32.lib
+
+      - name: Deploy Qt Dependencies
+        shell: pwsh
+        run: |
+          Set-Location build
+          windeployqt Release/BetterAngle.exe --qmldir ../src/gui --quick --no-translations
+
+      - name: Download VC++ Redistributable
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile "build/Release/vc_redist.x64.exe"
+
+      - name: Archive Build
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path bin | Out-Null
+          $ver = (Get-Content VERSION).Trim()
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /dAppVer=$ver installer.iss
 
       - name: Upload uninstaller artifact
         uses: actions/upload-artifact@v4
         with:
           name: uninstaller
-          path: uninstaller.exe
+          path: build/Release/uninstaller.exe
+
+      - name: Get Version
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $ver = (Get-Content VERSION).Trim()
+          echo "VERSION=$ver" >> $env:GITHUB_ENV
+          echo "TAG=v$ver" >> $env:GITHUB_ENV
+
+      - name: Extract Latest Release Notes
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $lines = Get-Content RELEASE_NOTES.md
+          $outLines = @()
+          $seenFirst = $false
+          foreach ($line in $lines) {
+              if ($line.StartsWith("### ")) {
+                  if ($seenFirst) { break }
+                  $seenFirst = $true
+              }
+              if ($seenFirst) { $outLines += $line }
+          }
+          $outLines | Out-File CURRENT_RELEASE_NOTES.md -Encoding utf8
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            bin/BetterAngle_Setup.exe
+            build/Release/uninstaller.exe
+          tag_name: ${{ env.TAG }}
+          name: BetterAngle Pro ${{ env.TAG }}
+          body_path: CURRENT_RELEASE_NOTES.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
