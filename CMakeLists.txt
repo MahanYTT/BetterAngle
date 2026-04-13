@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(BetterAngle VERSION 4.20.51 LANGUAGES CXX)
+project(BetterAngle VERSION 4.27.94 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -23,18 +23,15 @@ add_definitions(-DUNICODE -D_UNICODE
 
 set(SRC_FILES
     src/main_app/BetterAngle.cpp
-    src/main_app/ThresholdWizard.cpp
     src/shared/ControlPanel.cpp
     include/shared/BetterAngleBackend.h
     src/shared/BetterAngleBackend.cpp
     include/shared/BetterAngleBackend.h
     src/shared/Detector.cpp
-    src/shared/FirstTimeSetup.cpp
     src/shared/Input.cpp
     src/shared/Logic.cpp
     src/shared/Overlay.cpp
     src/shared/Profile.cpp
-    src/shared/Startup.cpp
     src/shared/State.cpp
     src/shared/Tray.cpp
     src/shared/Updater.cpp

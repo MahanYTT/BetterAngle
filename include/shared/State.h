@@ -10,7 +10,6 @@
 
 std::wstring GetAppRootPath();
 std::wstring GetProfilesPath();
-extern std::atomic<bool> g_fortniteFocusedCache;
 
 // Versioning system
 #define APP_STR_Z(x) #x
@@ -20,15 +19,14 @@ extern std::atomic<bool> g_fortniteFocusedCache;
 
 #ifndef V_MAJ
 #define V_MAJ 4
-#define V_MIN 20
-#define V_PAT 56
+#define V_MIN 27
+#define V_PAT 94
 #endif
-extern bool g_setupComplete;
 extern std::string g_lastVersionRun;
 
-
-#define VERSION_STR  APP_STR_Y(V_MAJ) "." APP_STR_Y(V_MIN) "." APP_STR_Y(V_PAT)
-#define VERSION_WSTR APP_WSTR_Y(V_MAJ) L"." APP_WSTR_Y(V_MIN) L"." APP_WSTR_Y(V_PAT)
+#define VERSION_STR APP_STR_Y(V_MAJ) "." APP_STR_Y(V_MIN) "." APP_STR_Y(V_PAT)
+#define VERSION_WSTR                                                           \
+  APP_WSTR_Y(V_MAJ) L"." APP_WSTR_Y(V_MIN) L"." APP_WSTR_Y(V_PAT)
 
 // Global Profile Management
 extern Profile g_currentProfile;
@@ -58,7 +56,6 @@ extern float g_glideThreshold;
 void LoadSettings();
 void SaveSettings();
 
-
 extern bool g_showCrosshair;
 extern float g_crossThickness;
 extern COLORREF g_crossColor;
@@ -86,9 +83,9 @@ extern int g_hudY;
 extern bool g_isDraggingHUD;
 extern POINT g_dragStartHUD;
 extern POINT g_dragStartMouse;
-extern HWND g_hHUD; 
+extern HWND g_hHUD;
 extern HWND g_hPanel;
 
-void RefreshHotkeys(HWND hWnd);
+bool RefreshHotkeys(HWND hWnd);
 
 #endif // STATE_H

@@ -1,3 +1,56 @@
+### BetterAngle Pro v4.27.94
+- **Toggle Dashboard Fix**: Changed the dashboard hotkey from show-only to proper toggle (hide/show) in [`src/gui/main.qml`](src/gui/main.qml:18).
+- **Debug Overlay Fix**: Added window repaint after toggling debug mode via hotkey in [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:174).
+
+### BetterAngle Pro v4.27.93
+- **QML Load Fix**: Removed the unsupported `focusPolicy` usage from the hotkey capture fields in [`src/gui/Dashboard.qml`](src/gui/Dashboard.qml:141), which was preventing [`main.qml`](src/gui/main.qml:5) from loading.
+- **Hotkey Field Cleanup**: Switched the capture fields to use explicit ids and `activeFocusOnTab`, keeping the keybind UI valid for Qt Quick Controls.
+- **Startup UI Restored**: This fixes the `Failed to load user interface (main.qml)` error path raised from [`src/shared/ControlPanel.cpp`](src/shared/ControlPanel.cpp:18).
+
+### BetterAngle Pro v4.27.92
+- **Tolerance Default Fix**: Set the no-profile tolerance fallback to `2` in [`BetterAngleBackend::tolerance()`](src/shared/BetterAngleBackend.cpp:94), aligning runtime defaults with the direct-boot profile default in [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:388).
+- **Detection Consistency**: This keeps fresh launches and uninitialized UI states on the same tighter detection threshold intended for improved performance.
+
+### BetterAngle Pro v4.27.90
+- **Keybind Capture Rewrite**: Reworked hotkey handling in [`src/shared/BetterAngleBackend.cpp`](src/shared/BetterAngleBackend.cpp) so custom binds can reliably use modifier combos such as `Ctrl + R`, `Shift + F10`, and `Alt + G`.
+- **Hotkey UI Fix**: Replaced fragile free-text editing in [`src/gui/Dashboard.qml`](src/gui/Dashboard.qml) with press-to-capture fields and explicit save/apply feedback.
+- **Default Bind Cleanup**: Standardized the selection overlay default to `Ctrl + R` in [`include/shared/Profile.h`](include/shared/Profile.h).
+- **Startup Removal Preserved**: Confirmed the shipped build still has no startup wizard or splash path, with direct boot continuing through [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:381).
+
+### BetterAngle Pro v4.27.89
+- **Link Fix**: Removed stale Qt meta-object declarations for `hotkeyStatus` and `setCapturedKeybind` from [`include/shared/BetterAngleBackend.h`](include/shared/BetterAngleBackend.h:55), resolving the unresolved externals reported by `mocs_compilation_Release.obj`.
+- **Startup Removal Preserved**: Kept the direct boot flow in [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:381) with no startup wizard path or splash components in the shipped target.
+- **Release Alignment**: Bumped [`VERSION`](VERSION) and [`CMakeLists.txt`](CMakeLists.txt:2) to `4.27.89` so the GitHub Actions release metadata stays in sync with the fix.
+
+### BetterAngle Pro v4.27.88
+- **Startup Wizard Removed**: Removed the first-run setup flow from [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:381), so launch now goes straight into settings and profile loading.
+- **Build Fix**: Removed the leftover `g_setupComplete` dependency from [`include/shared/State.h`](include/shared/State.h:20) and [`src/shared/State.cpp`](src/shared/State.cpp:19), resolving the CI failure in [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:385).
+- **Source Cleanup**: Deleted [`src/shared/FirstTimeSetup.cpp`](src/shared/FirstTimeSetup.cpp) and [`include/shared/FirstTimeSetup.h`](include/shared/FirstTimeSetup.h), leaving the shipped target in [`CMakeLists.txt`](CMakeLists.txt:24) free of startup wizard and splash-related sources.
+
+### BetterAngle Pro v4.27.91
+- **Unified Stability Release**: Formalizing the integration of the modernized "glass" debug overlay and the optimized color match tolerance (2) with the latest direct-boot architecture (no startup wizard).
+- **Cleanup**: Verified all legacy Fortnite sync and setup dependencies are fully purged from the codebase for a cleaner, game-agnostic experience.
+
+### BetterAngle Pro v4.27.86
+- **Performance Optimization**: Adjusted the default color match tolerance from 25 to 2. This significantly improves startup detection performance and ensures stricter target matching for high-fidelity overlays.
+
+### BetterAngle Pro v4.27.85
+- **Modernized Debug Overlay**: Replaced the legacy debug dashboard with a high-fidelity "glass" aesthetic. Features include semi-transparent gradients, inner-glow borders, and sleek layout dividers.
+- **Dynamic Layout Engine**: Height now automatically adjusts based on the number of active metrics, eliminating empty space at the bottom of the overlay.
+- **Enhanced Diagnostics**: Improved alignment for "Key: Value" pairs and introduced multi-color LED status indicators for critical states like Diving and Detections.
+- **Improved Metrics**: Added "Interaction State" and "System Cursor" tracking for better troubleshooting.
+
+### BetterAngle Pro v4.27.84
+- **Stability Fix**: Restored the First Time Setup wizard logic which was incorrectly omitted in the previous version. The software now correctly guides new users through initial sensitivity capture.
+- **Game-Agnostic Core**: Completed the transition to a fully manual sensitivity model, removing all Fortnite-specific file parsing and focus-locking hooks.
+
+### BetterAngle Pro v4.27.83
+- **Startup Wizard Removed**: Deleted the first-run setup flow entirely, including [`src/shared/FirstTimeSetup.cpp`](src/shared/FirstTimeSetup.cpp), [`include/shared/FirstTimeSetup.h`](include/shared/FirstTimeSetup.h), and all launch-time entry points that invoked it from [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:376).
+- **Splash Screen Removed**: Removed the native splash implementation and its build references by deleting [`src/shared/Startup.cpp`](src/shared/Startup.cpp), [`include/shared/Startup.h`](include/shared/Startup.h), and stripping the startup sequencing path from [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:385).
+- **Threshold Wizard Removed**: Removed the legacy calibration wizard sources [`src/main_app/ThresholdWizard.cpp`](src/main_app/ThresholdWizard.cpp) and [`include/shared/ThresholdWizard.h`](include/shared/ThresholdWizard.h) so no wizard UI remains in the shipped app.
+- **State Cleanup**: Removed persisted setup-complete state from [`src/shared/State.cpp`](src/shared/State.cpp:19) and [`include/shared/State.h`](include/shared/State.h:20), leaving direct profile loading as the only boot path.
+- **Build Cleanup**: Updated [`CMakeLists.txt`](CMakeLists.txt:2) and [`VERSION`](VERSION) to `4.27.83` and removed deleted sources from the target so the GitHub Actions release build no longer includes wizard or splash artifacts.
+
 ### BetterAngle Pro v4.20.54
 - **Qt 6 Framework Upgrade**: Replaced the entire ImGui / DirectX 11 interface with a modern Qt Quick (QML) GUI featuring silky smooth transitions, responsive tabs, and a massive reduction in boilerplate size.
 - **Inno Setup Installer Module**: Removed `.zip` packaging. The software now distributes exclusively as a `.exe` setup wizard that automatically injects dependencies, assigns Desktop shortcuts, and provides clean Windows uninstallation.
