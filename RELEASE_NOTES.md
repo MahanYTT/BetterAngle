@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.71] - 2026-04-13
+### Fixed
+- **Angle Normalization**: Corrected [`AngleLogic::GetAngle()`](src/shared/Logic.cpp:128) to return the normalized value produced by [`AngleLogic::Norm360()`](src/shared/Logic.cpp:180), keeping the calculated angle inside the `[0, 360)` range.
+- **HUD Angle Wraparound**: Prevented negative angles and values above `359.9...` from propagating through the angle logic, preserving stable wraparound behavior for zeroing, profile loads, and diving-state transitions.
+
 ## [v4.27.70] - 2026-04-13
 ### Fixed
 - **Dashboard Interactivity Restored**: [`HUDWndProc()`](src/main_app/BetterAngle.cpp:159) now returns `HTTRANSPARENT` during normal operation so the always-on-top HUD no longer blocks clicks meant for [`main.qml`](src/gui/main.qml).
