@@ -9,8 +9,10 @@
 #include <cwctype>
 #include "shared/Profile.h"
 #include "shared/State.h"
+#include "shared/Logic.h"
 #include <gdiplus.h>
 
+extern double FetchFortniteSensitivity();
 using namespace Gdiplus;
 
 // Use persistent state from shared/State.h
@@ -25,7 +27,7 @@ extern int g_selectedProfileIdx;
 void FinishSetup() {
     Profile p;
     p.name = L"Default"; 
-    p.tolerance = 25;
+    p.tolerance = 2;
     p.roi_x = 760; p.roi_y = 640; p.roi_w = 400; p.roi_h = 70;
     p.target_color = RGB(150, 150, 150);
     p.fov = 80.0f;
@@ -37,10 +39,12 @@ void FinishSetup() {
     try { if (!g_setupSensX.empty()) sensX  = std::stod(g_setupSensX); } catch(...) {}
     try { if (!g_setupSensY.empty()) sensY  = std::stod(g_setupSensY); } catch(...) {}
     
-    p.sensitivityX = (std::max)(0.0001, sensX);
-    p.sensitivityY = (std::max)(0.0001, sensY);
-
+    // Only update sensitivity if we're definitively in the initial setup flow
+    // or if the profile is brand new. If it's already set (e.g. by QML Backend), 
+    // we take the existing values.
     if (g_allProfiles.empty()) {
+        p.sensitivityX = (std::max)(0.0001, sensX);
+        p.sensitivityY = (std::max)(0.0001, sensY);
         p.Save(GetProfilesPath() + L"Default.json");
         g_allProfiles.push_back(p);
         g_selectedProfileIdx = 0;
@@ -49,12 +53,15 @@ void FinishSetup() {
             g_selectedProfileIdx = 0;
         }
         Profile& e = g_allProfiles[g_selectedProfileIdx];
-        e.sensitivityX = p.sensitivityX;
-        e.sensitivityY = p.sensitivityY;
+        // If they are STILL at default 0.05, then we try the detected/typed ones
+        if (e.sensitivityX == 0.05) e.sensitivityX = (std::max)(0.0001, sensX);
+        if (e.sensitivityY == 0.05) e.sensitivityY = (std::max)(0.0001, sensY);
         e.Save(GetProfilesPath() + e.name + L".json");
     }
 
     g_setupComplete = true; 
+    extern bool g_needsSetup;
+    g_needsSetup = false;
     SaveSettings(); // Force atomic save now
 
     // Create a hidden marker file for absolute persistence (even if JSON is lost)
@@ -185,6 +192,15 @@ LRESULT CALLBACK FirstTimeSetupProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
 }
 
 void ShowFirstTimeSetup(HINSTANCE hInstance) {
+    // Attempt auto-detection before showing UI
+    double detected = FetchFortniteSensitivity();
+    if (detected > 0.0) {
+        wchar_t buf[32];
+        swprintf(buf, 32, L"%.4f", detected);
+        g_setupSensX = buf;
+        g_setupSensY = buf;
+    }
+
     WNDCLASS wc = { 0 };
     if (!GetClassInfo(hInstance, L"FTSWindowClass", &wc)) {
         wc.lpfnWndProc = FirstTimeSetupProc;
@@ -194,12 +210,23 @@ void ShowFirstTimeSetup(HINSTANCE hInstance) {
         RegisterClass(&wc);
     }
 
+    // Auto-detect sensitivity from game files to pre-fill the wizard
+    double detectedSens = FetchFortniteSensitivity();
+    if (detectedSens > 0.0) {
+        wchar_t buf[32];
+        swprintf_s(buf, L"%.4f", detectedSens);
+        g_setupSensX = buf;
+        g_setupSensY = buf;
+    }
+
     int W = 500, H = 320;
-    HWND hWnd = CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW, L"FTSWindowClass", L"BetterAngle Setup", WS_POPUP,
+    HWND hWnd = CreateWindowEx(WS_EX_TOPMOST | WS_EX_TOOLWINDOW, L"FTSWindowClass", L"BetterAngle Pro HUD Calibration", WS_POPUP,
         GetSystemMetrics(SM_CXSCREEN)/2 - W/2, GetSystemMetrics(SM_CYSCREEN)/2 - H/2, W, H, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hWnd, SW_SHOW);
     UpdateWindow(hWnd);
+    SetForegroundWindow(hWnd);
+    SetFocus(hWnd);
 
     MSG msg;
     while (IsWindow(hWnd) && GetMessage(&msg, NULL, 0, 0)) {

@@ -96,6 +96,8 @@ bool Profile::Load(const std::wstring &path) {
   crossAngle = (float)extractDouble("crossAngle");
   bool pulseVal = extractDouble("crossPulse") > 0.5;
   crossPulse = pulseVal;
+  showCrosshair = extractDouble("showCrosshair") > 0.5;
+  if (content.find("\"showCrosshair\"") == std::string::npos) showCrosshair = true; 
 
   // Load Presets Array (Manual Parser)
   crosshairPresets.clear();
@@ -183,6 +185,7 @@ bool Profile::Save(const std::wstring &path) {
   oss << L"  \"kb_debugMod\": " << keybinds.debugMod << L",\n";
   oss << L"  \"kb_debugKey\": " << keybinds.debugKey << L",\n";
   oss << L"  \"crossThickness\": " << crossThickness << L",\n";
+  oss << L"  \"showCrosshair\": " << (showCrosshair ? 1 : 0) << L",\n";
   oss << L"  \"crossColor\": " << (float)crossColor << L",\n";
   oss << L"  \"crossOffsetX\": " << crossOffsetX << L",\n";
   oss << L"  \"crossOffsetY\": " << crossOffsetY << L",\n";

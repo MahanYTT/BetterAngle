@@ -27,40 +27,68 @@ jobs:
           setup-python: 'false'
 
       - name: Configure CMake
+        shell: pwsh
         run: |
-          mkdir build
+          mkdir build -ErrorAction SilentlyContinue
           cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -A x64
+          if ($LASTEXITCODE -ne 0) { exit 1 }
 
       - name: Build BetterAngle
+        shell: pwsh
         run: |
           cd build
           cmake --build . --config Release
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Binary Integrity Check
+        shell: pwsh
+        run: |
+          $exe = "build/Release/BetterAngle.exe"
+          if (!(Test-Path $exe)) { throw "BetterAngle.exe NOT FOUND after build!" }
+          $size = (Get-Item $exe).Length
+          Write-Host "Binary Size: $size bytes"
+          if ($size -lt 50000) { throw "CORRUPTED BINARY DETECTED: $exe is suspiciously small ($size bytes). Build likely failed to link resources." }
 
       - name: Deploy Qt Dependencies
+        shell: pwsh
         run: |
+          $qtBin = "${{ env.Qt6_DIR }}\bin\windeployqt.exe"
           cd build
-          windeployqt Release/BetterAngle.exe --qmldir ../src/gui
+          & $qtBin Release/BetterAngle.exe --qmldir ../src/gui --quick --no-translations --compiler-runtime
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Download VC++ Redistributable
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile "build/Release/vc_redist.x64.exe"
           
-      - name: Archive Build
+      - name: Archive Build (Inno Setup)
+        shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path bin
           $ver = (Get-Content VERSION).Trim()
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /dAppVer=$ver installer.iss
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (!(Test-Path $iscc)) { throw "Inno Setup Compiler (ISCC.exe) not found at expected path!" }
+          & $iscc /dAppVer=$ver installer.iss
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
       - name: Get Version
         id: get_version
+        shell: pwsh
         run: |
           $ver = (Get-Content VERSION).Trim()
           echo "VERSION=$ver" >> $env:GITHUB_ENV
           echo "TAG=v$ver" >> $env:GITHUB_ENV
 
       - name: Extract Latest Release Notes
+        shell: pwsh
         run: |
           $lines = Get-Content RELEASE_NOTES.md
           $outLines = @()
           $seenFirst = $false
           foreach ($line in $lines) {
-              if ($line.StartsWith("### ")) {
+              if ($line.StartsWith("## [")) {
                   if ($seenFirst) { break }
                   $seenFirst = $true
               }
@@ -68,11 +96,24 @@ jobs:
           }
           $outLines | Out-File CURRENT_RELEASE_NOTES.md -Encoding utf8
 
+      - name: Create Portable Zip
+        shell: pwsh
+        run: |
+          # Create portable.flag file in the release directory
+          $portableFlag = "build/Release/portable.flag"
+          "Portable Mode - Data stored in Data/ folder" | Out-File -FilePath $portableFlag -Encoding ascii
+          
+          # Create Data directory for portable mode
+          New-Item -ItemType Directory -Force -Path "build/Release/Data"
+          
+          Compress-Archive -Path build/Release/* -DestinationPath bin/BetterAngle_Portable.zip
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             bin/BetterAngle_Setup.exe
+            bin/BetterAngle_Portable.zip
           tag_name: ${{ env.TAG }}
           name: BetterAngle Pro ${{ env.TAG }}
           body_path: CURRENT_RELEASE_NOTES.md

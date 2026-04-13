@@ -11,7 +11,7 @@ DisableProgramGroupPage=yes
 PrivilegesRequired=admin
 OutputDir=bin
 OutputBaseFilename=BetterAngle_Setup
-SetupIconFile=assets\icon.ico
+SetupIconFile=assets\app_icon.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -22,12 +22,28 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
+[Dirs]
+Name: "{localappdata}\BetterAngle"; Permissions: users-modify
+Name: "{app}"; Permissions: users-modify
+
 [Files]
 Source: "build\Release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "build\Release\uninstaller.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\BetterAngle Pro"; Filename: "{app}\BetterAngle.exe"
-Name: "{autodesktop}\BetterAngle Pro"; Filename: "{app}\BetterAngle.exe"; Tasks: desktopicon
+Name: "{autodesktop}\BetterAngle Pro"; Filename: "{app}\BetterAngle.exe"; IconFilename: "{app}\app_icon.ico"; IconIndex: 0; Tasks: desktopicon
+Name: "{autoprograms}\BetterAngle Pro\Uninstall BetterAngle"; Filename: "{app}\uninstaller.exe"
+
+[UninstallDelete]
+; Remove all application data from AppData directories
+Type: filesandordirs; Name: "{localappdata}\BetterAngle"
+Type: filesandordirs; Name: "{localappdata}\BetterAngle Pro"
+Type: filesandordirs; Name: "{userappdata}\BetterAngle"
+Type: filesandordirs; Name: "{userappdata}\BetterAngle Pro"
 
 [Run]
+; Install Visual C++ Runtime silently before launching the app.
+; Required on clean systems without Visual Studio installed.
+Filename: "{app}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Installing Visual C++ Runtime..."; Flags: waituntilterminated runhidden
 Filename: "{app}\BetterAngle.exe"; Description: "{cm:LaunchProgram,BetterAngle Pro}"; Flags: nowait postinstall skipifsilent

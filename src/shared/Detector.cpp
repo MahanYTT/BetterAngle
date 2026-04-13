@@ -58,15 +58,20 @@ float FovDetector::Scan(const RoiConfig& cfg) {
     DWORD* pPixels = (DWORD*)m_pixels;
     int totalPixels = cfg.w * cfg.h;
     
+    int tolSq = cfg.tolerance * cfg.tolerance;
+    
     for (int i = 0; i < totalPixels; i++) {
         DWORD p = pPixels[i];
-        BYTE b = p & 0xFF;
-        BYTE g = (p >> 8) & 0xFF;
-        BYTE r = (p >> 16) & 0xFF;
+        int r = p & 0xFF;
+        int g = (p >> 8) & 0xFF;
+        int b = (p >> 16) & 0xFF;
 
-        if (std::abs((int)r - (int)tr) <= cfg.tolerance && 
-            std::abs((int)g - (int)tg) <= cfg.tolerance && 
-            std::abs((int)b - (int)tb) <= cfg.tolerance) {
+        int dr = r - (int)tr;
+        int dg = g - (int)tg;
+        int db = b - (int)tb;
+        
+        // Euclidean distance squared is faster and more accurate for matching
+        if ((dr*dr + dg*dg + db*db) <= tolSq) {
             match++;
         }
     }

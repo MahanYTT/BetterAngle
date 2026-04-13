@@ -43,6 +43,20 @@ bool DownloadFile(const std::wstring& url, const std::wstring& dest) {
     ofs.close();
     InternetCloseHandle(hUrl);
     InternetCloseHandle(hInternet);
+
+    // Safety Guard: Check if file size is suspiciously small (e.g. < 5MB)
+    // A corrupted or "Not Found" HTML page is usually a few KB.
+    std::ifstream check(dest, std::ios::binary | std::ios::ate);
+    if (check.is_open()) {
+        std::streamsize size = check.tellg();
+        if (size < 1 * 1024 * 1024) { // 1 MB minimum
+            check.close();
+            DeleteFileW(dest.c_str());
+            return false;
+        }
+        check.close();
+    }
+
     return true;
 }
 

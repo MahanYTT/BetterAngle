@@ -1,5 +1,8 @@
 #include "shared/State.h"
 #include "shared/Logic.h"
+#include <windows.h>
+
+extern HWND g_hHUD;
 
 SelectionState g_currentSelection = NONE;
 bool g_isSelectionActive = false;
@@ -13,12 +16,12 @@ bool g_hasCheckedForUpdates = false;
 float g_updateSpinAngle = 0.0f;
 bool g_updateAvailable = false;
 bool g_isDownloadingUpdate = false;
-bool g_downloadComplete    = false;
+bool g_downloadComplete = false;
 std::string g_updateHistory = "";
 std::atomic<bool> g_fortniteFocusedCache(false);
 bool g_setupComplete = false;
+bool g_needsSetup = true;
 std::string g_lastVersionRun = "";
-
 
 Profile g_currentProfile;
 std::vector<Profile> g_allProfiles;
@@ -28,37 +31,124 @@ int g_selectedProfileIdx = 0;
 std::wstring g_lastLoadedProfileName = L"";
 float g_glideThreshold = 0.05f;
 float g_freefallThreshold = 0.20f;
+std::string g_lastHotkeyError = "";
 
 #include <fstream>
-#include <string>
 #include <locale>
-#include <sstream>
 #include <shlobj.h>
+#include <sstream>
+#include <string>
+
+#include <mutex>
+#include <shellapi.h>
 #pragma comment(lib, "shell32.lib")
-#pragma comment(lib, "advapi32.lib")
+
+extern std::recursive_mutex g_profileMutex;
 
 std::wstring GetAppRootPath() {
-    wchar_t appdata[MAX_PATH];
-    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) {
-        std::wstring path = std::wstring(appdata) + L"\\BetterAngle";
-        CreateDirectoryW(path.c_str(), NULL);
-        return path + L"\\";
+  // Check for portable mode - if "portable.flag" exists in executable directory
+  wchar_t exePath[MAX_PATH];
+  if (GetModuleFileNameW(NULL, exePath, MAX_PATH)) {
+    std::wstring exeDir = exePath;
+    size_t lastSlash = exeDir.find_last_of(L"\\/");
+    if (lastSlash != std::wstring::npos) {
+      exeDir = exeDir.substr(0, lastSlash + 1);
+      std::wstring flagPath = exeDir + L"portable.flag";
+
+      DWORD attrs = GetFileAttributesW(flagPath.c_str());
+      if (attrs != INVALID_FILE_ATTRIBUTES &&
+          !(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
+        // Portable mode: use executable directory for data
+        std::wstring dataDir = exeDir + L"Data\\";
+        CreateDirectoryW(dataDir.c_str(), NULL);
+        return dataDir;
+      }
     }
-    return L"";
+  }
+
+  // Normal mode: use AppData
+  wchar_t appdata[MAX_PATH];
+  if (SUCCEEDED(
+          SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata))) {
+    std::wstring path = std::wstring(appdata) + L"\\BetterAngle Pro";
+    CreateDirectoryW(path.c_str(), NULL);
+    return path + L"\\";
+  }
+  return L"";
+}
+
+#include <filesystem>
+namespace fs = std::filesystem;
+
+void LogStartup(const std::string &msg); // Forward declaration
+
+void MigrateLegacyData() {
+  wchar_t appdata[MAX_PATH];
+  if (FAILED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata)))
+    return;
+
+  std::wstring legacyRootStr = std::wstring(appdata) + L"\\BetterAngle";
+  std::wstring proRootStr = std::wstring(appdata) + L"\\BetterAngle Pro";
+
+  fs::path legacyRoot(legacyRootStr);
+  fs::path proRoot(proRootStr);
+
+  if (!fs::exists(legacyRoot))
+    return;
+
+  try {
+    LogStartup("Migration: Initiating Safe-Harbor verified copy...");
+    if (!fs::exists(proRoot))
+      fs::create_directories(proRoot);
+
+    // Recursive Copy with Merge support
+    int movedCount = 0;
+    for (const auto &entry : fs::recursive_directory_iterator(legacyRoot)) {
+      if (entry.is_regular_file()) {
+        fs::path relative = fs::relative(entry.path(), legacyRoot);
+        fs::path destPath = proRoot / relative;
+
+        if (!fs::exists(destPath.parent_path())) {
+          fs::create_directories(destPath.parent_path());
+        }
+
+        fs::copy_file(entry.path(), destPath,
+                      fs::copy_options::overwrite_existing);
+        movedCount++;
+      }
+    }
+
+    LogStartup("Migration: Verified " + std::to_string(movedCount) +
+               " files. Cleanup initiated...");
+
+    // Safety check: Ensure the critical settings file exists in the new home
+    // before deleting the old home
+    if (movedCount > 0 || fs::exists(proRoot / "settings.json")) {
+      fs::remove_all(legacyRoot);
+      LogStartup("Migration: Safe-Harbor complete. Legacy data purged.");
+    } else {
+      LogStartup(
+          "Migration Warning: Verification failed. Legacy data preserved.");
+    }
+
+  } catch (const fs::filesystem_error &e) {
+    LogStartup("Migration Error: " + std::string(e.what()));
+  } catch (...) {
+    LogStartup("Migration Error: Unknown failure during Safe-Harbor move.");
+  }
 }
 
 std::wstring GetProfilesPath() {
-    std::wstring root = GetAppRootPath();
-    if (root.empty()) return L"";
-    std::wstring pPath = root + L"profiles";
-    CreateDirectoryW(pPath.c_str(), NULL);
-    SetFileAttributesW(pPath.c_str(), FILE_ATTRIBUTE_HIDDEN);
-    return pPath + L"\\";
+  std::wstring root = GetAppRootPath();
+  if (root.empty())
+    return L"";
+  std::wstring pPath = root + L"profiles";
+  CreateDirectoryW(pPath.c_str(), NULL);
+  SetFileAttributesW(pPath.c_str(), FILE_ATTRIBUTE_HIDDEN);
+  return pPath + L"\\";
 }
 
-
 // Legacy Registry functions removed in favor of unified hidden JSON storage.
-
 
 void LoadSettings() {
   std::wstring sp = GetAppRootPath() + L"settings.json";
@@ -68,25 +158,45 @@ void LoadSettings() {
     ifs.seekg(0, std::ios::end);
     content.reserve((size_t)ifs.tellg());
     ifs.seekg(0, std::ios::beg);
-    content.assign((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-    
+    content.assign((std::istreambuf_iterator<char>(ifs)),
+                   std::istreambuf_iterator<char>());
+
     auto eFloat = [&](std::string k, float def) -> float {
       size_t p = content.find("\"" + k + "\":");
-      if (p == std::string::npos) return def;
-      size_t valStart = content.find_first_not_of(" \t\n\r", p + k.length() + 2);
-      if (valStart == std::string::npos) return def;
-      try { 
+      if (p == std::string::npos)
+        return def;
+      size_t colon = content.find(':', p + k.length() + 2);
+      if (colon == std::string::npos)
+        return def;
+      size_t valStart = content.find_first_not_of(" \t\n\r", colon + 1);
+      if (valStart == std::string::npos)
+        return def;
+      try {
         std::istringstream iss(content.substr(valStart));
         iss.imbue(std::locale("C"));
-        float v; iss >> v; return v;
-      } catch (...) { return def; }
+        float v = def;
+        if (!(iss >> v))
+          return def;
+        return v;
+      } catch (...) {
+        return def;
+      }
     };
     auto eInt = [&](std::string k, int def) -> int {
       size_t p = content.find("\"" + k + "\":");
-      if (p == std::string::npos) return def;
-      size_t valStart = content.find_first_not_of(" \t\n\r", p + k.length() + 2);
-      if (valStart == std::string::npos) return def;
-      try { return std::stoi(content.substr(valStart)); } catch (...) { return def; }
+      if (p == std::string::npos)
+        return def;
+      size_t colon = content.find(':', p + k.length() + 2);
+      if (colon == std::string::npos)
+        return def;
+      size_t valStart = content.find_first_not_of(" \t\n\r", colon + 1);
+      if (valStart == std::string::npos)
+        return def;
+      try {
+        return std::stoi(content.substr(valStart));
+      } catch (...) {
+        return def;
+      }
     };
 
     g_glideThreshold = eFloat("glideThreshold", 0.05f);
@@ -94,21 +204,23 @@ void LoadSettings() {
     g_hudX = eInt("hudX", 40);
     g_hudY = eInt("hudY", 40);
     g_crossThickness = eFloat("crossThickness", 2.0f);
-    g_crossColor     = (COLORREF)eFloat("crossColor", (float)RGB(255, 0, 0));
-    g_crossOffsetX   = eFloat("crossOffsetX", 0.0f);
-    g_crossOffsetY   = eFloat("crossOffsetY", 0.0f);
-    g_crossAngle     = eFloat("crossAngle", 0.0f);
-    g_crossPulse     = eFloat("crossPulse", 0.0f) > 0.5f;
-    g_setupComplete  = eFloat("setupComplete", 0.0f) > 0.5f;
+    g_crossColor = (COLORREF)eFloat("crossColor", (float)RGB(255, 0, 0));
+    g_crossOffsetX = eFloat("crossOffsetX", 0.0f);
+    g_crossOffsetY = eFloat("crossOffsetY", 0.0f);
+    g_crossAngle = eFloat("crossAngle", 0.0f);
+    g_crossPulse = eFloat("crossPulse", 0.0f) > 0.5f;
+    g_setupComplete = eFloat("setupComplete", 0.0f) > 0.5f;
+    g_needsSetup = !g_setupComplete; // Link the flags
 
     // Reliability Fallback: Check for hidden marker file
     std::wstring marker = GetAppRootPath() + L".setup_done";
     if (GetFileAttributesW(marker.c_str()) != INVALID_FILE_ATTRIBUTES) {
-        g_setupComplete = true;
+      g_setupComplete = true;
+      g_needsSetup = false;
     }
-    g_showCrosshair  = eFloat("showCrosshair", 1.0f) > 0.5f;
-    g_debugMode      = eFloat("debugMode", 0.0f) > 0.5f;
-    g_forceDiving    = eFloat("forceDiving", 0.0f) > 0.5f;
+    g_showCrosshair = eFloat("showCrosshair", 1.0f) > 0.5f;
+    g_debugMode = eFloat("debugMode", 0.0f) > 0.5f;
+    g_forceDiving = eFloat("forceDiving", 0.0f) > 0.5f;
     g_forceDetection = eFloat("forceDetection", 0.0f) > 0.5f;
     g_selectedProfileIdx = eInt("selectedProfileIdx", 0);
 
@@ -116,7 +228,8 @@ void LoadSettings() {
     if (vp != std::string::npos) {
       size_t valS = vp + 18;
       size_t end = content.find("\"", valS);
-      if (end != std::string::npos) g_lastVersionRun = content.substr(valS, end - valS);
+      if (end != std::string::npos)
+        g_lastVersionRun = content.substr(valS, end - valS);
     }
 
     size_t pp = content.find("\"lastProfile\":\"");
@@ -124,31 +237,23 @@ void LoadSettings() {
       size_t valS = pp + 15;
       size_t end = content.find("\"", valS);
       if (end != std::string::npos) {
-          std::string n = content.substr(valS, end - valS);
-          g_lastLoadedProfileName = std::wstring(n.begin(), n.end());
+        std::string n = content.substr(valS, end - valS);
+        g_lastLoadedProfileName = std::wstring(n.begin(), n.end());
       }
-    }
-  } else {
-    // Migration: Check if it exists in the OLD path (profiles/settings.json)
-    std::wstring oldPath = GetProfilesPath() + L"settings.json";
-    if (GetFileAttributesW(oldPath.c_str()) != INVALID_FILE_ATTRIBUTES) {
-        MoveFileW(oldPath.c_str(), sp.c_str());
-        LoadSettings(); 
-        return;
     }
   }
 }
 
-
 void SaveSettings() {
   std::wstring sp = GetAppRootPath() + L"settings.json";
   std::wstring tempPath = sp + L".tmp";
-  
+
   // Ensure file is not hidden before writing to avoid permission issues
   SetFileAttributesW(sp.c_str(), FILE_ATTRIBUTE_NORMAL);
 
   std::ofstream ofs(tempPath.c_str(), std::ios::trunc);
-  if (!ofs.is_open()) return;
+  if (!ofs.is_open())
+    return;
 
   std::ostringstream oss;
   oss.imbue(std::locale("C"));
@@ -170,14 +275,15 @@ void SaveSettings() {
   oss << "  \"forceDiving\": " << (g_forceDiving ? 1 : 0) << ",\n";
   oss << "  \"forceDetection\": " << (g_forceDetection ? 1 : 0) << ",\n";
   oss << "  \"selectedProfileIdx\": " << g_selectedProfileIdx << ",\n";
-  
+
   oss << "  \"lastVersionRun\":\"" << VERSION_STR << "\",\n";
 
   std::string lp;
-  for (wchar_t c : g_lastLoadedProfileName) lp += (char)c;
+  for (wchar_t c : g_lastLoadedProfileName)
+    lp += (char)c;
   oss << "  \"lastProfile\":\"" << lp << "\"\n";
   oss << "}\n";
-  
+
   ofs << oss.str();
   ofs.close();
 
@@ -189,18 +295,17 @@ void SaveSettings() {
   SetFileAttributesW(sp.c_str(), FILE_ATTRIBUTE_HIDDEN);
 }
 
-
-bool g_showCrosshair = false;
+bool g_showCrosshair = true;
 float g_crossThickness = 2.0f;
-COLORREF g_crossColor = RGB(255, 0, 0);
+COLORREF g_crossColor = RGB(0, 255, 163); // Neon Cyan
 float g_crossOffsetX = 0.0f;
 float g_crossOffsetY = 0.0f;
 float g_crossAngle = 0.0f;
-bool g_crossPulse = false;
+bool g_crossPulse = true;
 
 COLORREF g_targetColor = RGB(255, 255, 255);
 COLORREF g_pickedColor = RGB(255, 255, 255);
-float g_latestVersion = 4.920f; 
+float g_latestVersion = 4.920f;
 std::wstring g_latestName = L"Pending Scan";
 RECT g_selectionRect = {0, 0, 0, 0};
 POINT g_startPoint = {0};
@@ -215,8 +320,92 @@ bool g_forceDetection = false;
 
 int g_hudX = 40;
 int g_hudY = 40;
+int g_virtScreenX = 0;
+int g_virtScreenY = 0;
 bool g_isDraggingHUD = false;
 POINT g_dragStartHUD = {0, 0};
 POINT g_dragStartMouse = {0, 0};
 HWND g_hHUD = NULL;
 HWND g_hPanel = NULL;
+bool g_pendingShowHUD = false;
+std::atomic<int> g_loadingProgress{0};
+
+// Hotkey IDs (must match WM_HOTKEY dispatch in HUDWndProc)
+#define HK_TOGGLE 1
+#define HK_ROI 2
+#define HK_CROSS 3
+#define HK_ZERO 4
+#define HK_DEBUG 5
+
+void __cdecl RefreshHotkeys(HWND hWnd) {
+  if (!hWnd)
+    return;
+  // Unregister all existing hotkeys
+  for (int id = HK_TOGGLE; id <= HK_DEBUG; ++id)
+    UnregisterHotKey(hWnd, id);
+
+  if (g_allProfiles.empty())
+    return;
+  const Keybinds &kb = g_allProfiles[g_selectedProfileIdx].keybinds;
+
+  auto logRegister = [](const char *name, int id, UINT mods, UINT key,
+                        BOOL ok) {
+    std::ostringstream oss;
+    oss << "HotkeyRegister: " << name << " id=" << id << " mods=" << mods
+        << " key=" << key << " ok=" << (ok ? "true" : "false");
+    if (!ok)
+      oss << " error=" << GetLastError();
+    LogStartup(oss.str());
+  };
+
+  // Clear previous error
+  g_lastHotkeyError.clear();
+
+  BOOL okToggle = RegisterHotKey(hWnd, HK_TOGGLE, kb.toggleMod, kb.toggleKey);
+  logRegister("toggle", HK_TOGGLE, kb.toggleMod, kb.toggleKey, okToggle);
+  if (!okToggle) {
+    g_lastHotkeyError = "Toggle dashboard hotkey registration failed (maybe "
+                        "already used by another app).";
+  }
+
+  BOOL okRoi = RegisterHotKey(hWnd, HK_ROI, kb.roiMod, kb.roiKey);
+  logRegister("roi", HK_ROI, kb.roiMod, kb.roiKey, okRoi);
+  if (!okRoi) {
+    if (!g_lastHotkeyError.empty())
+      g_lastHotkeyError += " ";
+    g_lastHotkeyError += "Selection overlay hotkey registration failed.";
+  }
+
+  UINT crossMods = kb.crossMod;
+  const bool isFunctionCrossKey = kb.crossKey >= VK_F1 && kb.crossKey <= VK_F24;
+  if (isFunctionCrossKey)
+    crossMods |= MOD_NOREPEAT;
+  BOOL okCross = RegisterHotKey(hWnd, HK_CROSS, crossMods, kb.crossKey);
+  logRegister("crosshair", HK_CROSS, crossMods, kb.crossKey, okCross);
+  if (!okCross && crossMods != kb.crossMod) {
+    okCross = RegisterHotKey(hWnd, HK_CROSS, kb.crossMod, kb.crossKey);
+    logRegister("crosshair-fallback", HK_CROSS, kb.crossMod, kb.crossKey,
+                okCross);
+  }
+  if (!okCross) {
+    if (!g_lastHotkeyError.empty())
+      g_lastHotkeyError += " ";
+    g_lastHotkeyError += "Crosshair toggle hotkey registration failed.";
+  }
+
+  BOOL okZero = RegisterHotKey(hWnd, HK_ZERO, kb.zeroMod, kb.zeroKey);
+  logRegister("zero", HK_ZERO, kb.zeroMod, kb.zeroKey, okZero);
+  if (!okZero) {
+    if (!g_lastHotkeyError.empty())
+      g_lastHotkeyError += " ";
+    g_lastHotkeyError += "Zero counter hotkey registration failed.";
+  }
+
+  BOOL okDebug = RegisterHotKey(hWnd, HK_DEBUG, kb.debugMod, kb.debugKey);
+  logRegister("debug", HK_DEBUG, kb.debugMod, kb.debugKey, okDebug);
+  if (!okDebug) {
+    if (!g_lastHotkeyError.empty())
+      g_lastHotkeyError += " ";
+    g_lastHotkeyError += "Debug overlay hotkey registration failed.";
+  }
+}

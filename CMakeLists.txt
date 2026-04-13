@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
-project(BetterAngle VERSION 4.20.51 LANGUAGES CXX)
+
+# Enable policy CMP0048 to allow VERSION in project()
+if(POLICY CMP0048)
+  cmake_policy(SET CMP0048 NEW)
+endif()
+
+project(BetterAngle VERSION 4.27.79 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -8,7 +14,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(Qt6 COMPONENTS Core Gui Qml REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Qml Quick QuickControls2 REQUIRED)
 
 # Read the version to pass definitions to C++ code
 file(READ "VERSION" VER_STR)
@@ -21,13 +27,15 @@ list(GET VER_LIST 2 V_PAT)
 add_definitions(-DUNICODE -D_UNICODE
                -DV_MAJ=${V_MAJ} -DV_MIN=${V_MIN} -DV_PAT=${V_PAT})
 
+# Copy Icon for Installer
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/app_icon.ico" DESTINATION "${CMAKE_BINARY_DIR}/Release")
+
 set(SRC_FILES
     src/main_app/BetterAngle.cpp
     src/main_app/ThresholdWizard.cpp
     src/shared/ControlPanel.cpp
     include/shared/BetterAngleBackend.h
     src/shared/BetterAngleBackend.cpp
-    include/shared/BetterAngleBackend.h
     src/shared/Detector.cpp
     src/shared/FirstTimeSetup.cpp
     src/shared/Input.cpp
@@ -36,6 +44,7 @@ set(SRC_FILES
     src/shared/Profile.cpp
     src/shared/Startup.cpp
     src/shared/State.cpp
+    src/shared/EnhancedLogging.cpp
     src/shared/Tray.cpp
     src/shared/Updater.cpp
     qml.qrc
@@ -46,6 +55,10 @@ add_executable(BetterAngle WIN32 ${SRC_FILES})
 
 target_include_directories(BetterAngle PRIVATE include src)
 target_link_libraries(BetterAngle PRIVATE 
-    Qt6::Core Qt6::Gui Qt6::Qml
+    Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::QuickControls2
     user32 gdi32 gdiplus dwmapi winhttp shell32 d2d1 dwrite windowscodecs comdlg32 advapi32
 )
+
+# Uninstaller Binary
+add_executable(uninstaller WIN32 src/clean_uninstaller.cpp)
+target_link_libraries(uninstaller PRIVATE user32 shell32 advapi32)

@@ -1,150 +1,198 @@
-### BetterAngle Pro v4.20.54
-- **Qt 6 Framework Upgrade**: Replaced the entire ImGui / DirectX 11 interface with a modern Qt Quick (QML) GUI featuring silky smooth transitions, responsive tabs, and a massive reduction in boilerplate size.
-- **Inno Setup Installer Module**: Removed `.zip` packaging. The software now distributes exclusively as a `.exe` setup wizard that automatically injects dependencies, assigns Desktop shortcuts, and provides clean Windows uninstallation.
-- **Aesthetics Overhaul**: Shrunk the command center to a sleek `650x480`. Smooth 8px rounded corners gracefully frame the GDI+ Game Overlay and Debug tools. Dropped their alpha transparency limits to eliminate visual obstruction during gameplay.
-- **Tick Logic Hotfix**: Repaired the infinite binding loop causing QML toggles (e.g., Debug Menu and Animations) to occasionally "stick" visually.
+### BetterAngle Pro - Release Notes
 
-### BetterAngle Pro v4.20.50
-- **Overlay Fix:** Rewrote `Overlay.cpp` using ASCII-safe source encoding, fixing corrupted box-drawing characters that rendered as pixel-dot squares and a capital T instead of the degree symbol. HUD now correctly shows `0.0°`, a working match bar, target colour swatch, and the `:: drag` hint.
-- **Control Panel:** Restored missing COLORS tab (target colour picker + tolerance slider), DEBUG tab (force diving/detection toggles + threshold sliders), CROSSHAIR pulse animation checkbox, and the full MANUAL SENSITIVITY section with Fortnite config auto-sync button.
-- **Sensitivity Calculation Fixed:** UI now accepts real Fortnite sensitivity values (e.g. `3.0`). Formula is `dx * 0.05555 * sens`. The old workaround of entering `0.3` instead of `3.0` is no longer needed.
-- **Config Auto-Detect Fixed:** `FetchFortniteSensitivity()` now returns `-1.0` on failure (file/key not found) instead of a fallback value that was indistinguishable from a valid sensitivity.
+## [v4.27.81] - 2026-04-13
+### Fixed
+- **Window Dragging from Entire UI**: [`Dashboard.qml`](src/gui/Dashboard.qml:5) Added window dragging MouseArea that covers the entire dashboard area, allowing users to drag the window by clicking anywhere on empty UI space (not just the white title bar). The MouseArea uses `propagateComposedEvents: true` to allow clicks to pass through to interactive elements like buttons, sliders, and text fields while still enabling window dragging on empty areas.
 
-### BetterAngle Pro v4.20.19
-- **Architectural Overhaul:** Ripped out the custom Direct2D UI drawing engine and completely migrated the Settings Dashboard (`ControlPanel.cpp`) to the industry-standard **Dear ImGui** framework running on DirectX 11.
-- **UI Enhancements:** Replaced clunky + and - buttons with smooth sliders. Integrated massive UX upgrades with `ImGui::ColorEdit3` directly in the dashboard tabs instead of summoning external Windows Forms dialogs. Re-mapped all 5 internal visual tabs with hardware acceleration.
-- **Workflow Upgrades:** Added 14 core ImGui source dependencies strictly to local source tree and wired `d3d11.lib` successfully into the MSBuild CI/CD deployment pipeline.
+## [v4.27.80] - 2026-04-13
+### Fixed
+- **Dashboard UI Click Responsiveness**: [`ControlPanel.cpp`](src/shared/ControlPanel.cpp:107) Removed `HWND_TOPMOST` flag from panel window to prevent focus/activation conflicts. Added `AllowSetForegroundWindow(ASFW_ANY)` before activation calls to ensure proper foreground window permissions. This fixes the issue where UI elements (buttons, sliders) were unclickable while window dragging still worked.
 
-### BetterAngle Pro v4.20.18
-- Performance Fix: Resolved the severe UI thread contention issue located entirely within the Win32 `WM_INPUT` message loop. Re-routed the blocking `IsFortniteFocused()` system cross-process polling hooks into the asynchronous DetectorThread, resolving the persistent raw mouse delta drops (which manifested as "coordinate system drift" to users when returning their physical mouse to position 0).
+## [v4.27.79] - 2026-04-13
+### Fixed
+- **Dashboard UI Not Clickable**: [`ControlPanel.cpp`](src/shared/ControlPanel.cpp:32) `SyncHUDWithPanelWindow` now toggles `WS_EX_TOPMOST` extended style on the HUD overlay when the dashboard is interactive, ensuring the panel window sits above the HUD and receives mouse clicks. Added detailed logging for region creation and window ordering.
 
-### BetterAngle Pro v4.20.15
-- Hotfix: Repaired GitHub Actions MSVC quotation bug causing compilation failures via robust `TOSTRING` macro implementation.
+## [v4.27.78] - 2026-04-13
+### Fixed
+- **Custom Keybind Capture Race Conditions**: [`Dashboard.qml`](src/gui/Dashboard.qml:145) `handleHotkey` now requires a non-modifier key and ensures modifiers are still held before finalizing, reducing "ghost" keybinds when pressing modifiers slowly.
+- **Robust Keybind Parsing**: [`BetterAngleBackend.cpp`](src/shared/BetterAngleBackend.cpp:714) `parseFullKey` now splits by `+` and matches exact modifier tokens, eliminating false‑positive matches and improving compatibility with QML's output format.
+- **Silent Hotkey Registration Failures**: [`State.cpp`](src/shared/State.cpp:340) `RefreshHotkeys` now logs and stores registration errors; [`BetterAngleBackend`](include/shared/BetterAngleBackend.h) exposes `hotkeyError` property and emits `hotkeyRegistrationFailed` signal, with UI feedback in the dashboard.
 
-### BetterAngle Pro v4.20.13
-- Streamlined configuration architecture: completely purged DPI logic and `divingScaleMultiplier` from memory parsing.
-- Refactored Angle calculations to use `0.00555 * sensX` exactly.
-- Enforced hardcoded `1.0916` diving sensitivity multiplier.
-- Stripped FirstTimeSetup to directly target sensitivity and ignore DPI indexing entirely.
+## [v4.27.77] - 2026-04-13
+### Fixed
+- **Moving Dashboard Stayed Behind Its Own HUD Hole**: [`CreateControlPanel()`](src/shared/ControlPanel.cpp:149) now resynchronizes [`SyncHUDWithPanelWindow()`](src/shared/ControlPanel.cpp:16) on panel movement and resize (`xChanged`, `yChanged`, `widthChanged`, `heightChanged`), so the input hole tracks the dashboard instead of staying at the old location.
+- **Client-Area Alignment**: [`SyncHUDWithPanelWindow()`](src/shared/ControlPanel.cpp:43) now cuts the HUD hole from the native panel client rect via `GetClientRect`/`ClientToScreen`, instead of the full window rect, fixing frame/titlebar offset mismatches.
 
-### BetterAngle Pro v4.20.4
-- RUTHLESS REWRITE of ControlPanel.cpp.
-- Introduced Layout struct: both WM_PAINT and WM_LBUTTONDOWN now share exact same coordinate system. Buttons always clickable.
-- Fixed WM_SIZE to call Resize() on the D2D target instead of recreating it, enabling smooth window dragging.
-- Added WM_GETMINMAXINFO to enforce 420x440 minimum window size.
-- CROSSHAIR tab now fully functional: all 4 settings (Thickness, OffsetX, OffsetY, Rotation), Color Picker and Pulse toggle all wired up perfectly.
-- Tabs now use even percentage-based spacing, no more overflow at small window sizes.
+## [v4.27.76] - 2026-04-13
+### Fixed
+- **Dashboard Client-Area Input**: [`SyncHUDWithPanelWindow()`](src/shared/ControlPanel.cpp:16) now cuts a hole out of the fullscreen HUD over the dashboard window rectangle instead of only relying on click-through styles, allowing Qt controls inside the panel to receive mouse interaction while the HUD remains visible elsewhere.
+- **HUD / Panel Overlap Resolution**: The HUD region is now dynamically reduced around the live panel bounds during interactive panel state, targeting the remaining case where the window could move but client-area buttons still would not click.
 
-### BetterAngle Pro v4.20.3
-- Refactored entire UI layout to use 100% percentage-based vertical and horizontal positioning.
-- Added Dynamic Font Scaling (text shrinks/grows with window size).
-- Ensured "QUIT" and footer buttons are always visible on all resolutions.
+## [v4.27.75] - 2026-04-13
+### Fixed
+- **Dashboard Native Window Reliability**: [`src/gui/main.qml`](src/gui/main.qml:15) now uses standard native window chrome instead of the previous frameless + always-on-top combination, removing a likely source of “active but not actually clickable” behavior on Windows.
+- **Title Bar Drag Safety**: [`src/gui/main.qml`](src/gui/main.qml:96) now only starts system move on left-click drag, aligning the custom title handling with normal native window expectations.
 
-### BetterAngle Pro v4.20.2
-- Fixed GitHub Release URL casing for CamelCase repository "BetterAngle".
-- Synchronized internal version strings to eliminate stale "Update Available" flags.
-- Optimized Updater User-Agent to comply with GitHub API requirements.
+## [v4.27.74] - 2026-04-13
+### Fixed
+- **Native Panel Focus / Input Routing**: [`SyncHUDWithPanelWindow()`](src/shared/ControlPanel.cpp:16) now explicitly enables, foregrounds, focuses, and raises the native dashboard window while the HUD is pushed behind it, ensuring the active panel actually receives mouse drag and click interaction.
+- **UI Interactivity Restoration**: The native panel HWND is now forced above the HUD when interactive, addressing the remaining case where the dashboard looked active but still would not drag or accept clicks.
 
-### BetterAngle Pro v4.20.1
-- Renamed "XHAIR" tab to "CROSSHAIR" for better visibility.
-- Refined responsive tab layout to ensure all 5 tabs are visible on all window sizes.
+## [v4.27.73] - 2026-04-13
+### Fixed
+- **HUD / Dashboard Coexistence**: [`SyncHUDWithPanelWindow()`](src/shared/ControlPanel.cpp:16) now keeps the HUD visible in click-through background mode while the dashboard is open, instead of hiding it outright, so the overlay and control panel can operate at the same time.
+- **Startup Overlay Visibility**: [`requestShowControlPanel()`](src/shared/BetterAngleBackend.cpp:426) and [`finishSetup()`](src/shared/BetterAngleBackend.cpp:450) now prepare the HUD behind the panel instead of hiding it, fixing the missing crosshair/overlay state while the dashboard is visible.
+- **Hotkey Re-registration Churn**: [`SaveSettings()`](src/shared/State.cpp:280) no longer re-registers all global hotkeys on every unrelated setting save, and the keybind setters in [`src/shared/BetterAngleBackend.cpp`](src/shared/BetterAngleBackend.cpp) no longer force duplicate refreshes before [`saveKeybinds()`](src/shared/BetterAngleBackend.cpp:803).
+- **Dashboard Button Interaction**: Removed the temporary full-surface debug `MouseArea` from [`src/gui/main.qml`](src/gui/main.qml), restoring normal button clicks for crosshair, updates, and other dashboard controls.
 
-### BetterAngle Pro v4.20.0: "Responsive Pro Command Center"
-v4.20.0: Major UI overhaul for the Control Panel. The window is now fully resizable and responsive—all tabs, buttons, and interaction hit-boxes dynamically auto-fit to any window size. Implemented a focus-locking mechanism where the angle accumulation only triggers when Fortnite is in the foreground. Finalized the "XHAIR" precision configuration tab and ensured all calibration data persists correctly to active profiles.
+## [v4.27.72] - 2026-04-13
+### Fixed
+- **Frozen Dashboard Input**: [`CreateControlPanel()`](src/shared/ControlPanel.cpp:82) now acquires the native Qt panel window and synchronizes it with the fullscreen HUD, hiding the HUD while the dashboard is interactive so mouse clicks and window dragging reach the control panel reliably.
+- **HUD / Panel Handoff**: [`SyncHUDWithPanelWindow()`](src/shared/ControlPanel.cpp:15) now restores the HUD only after the dashboard is minimized or hidden, removing the fullscreen layered-window overlap that was still blocking UI interaction.
 
-### BetterAngle Pro v4.19.0: "Native Precision Crosshair Port"
-v4.19.0: Fully ported the Java crosshair application natively into the BetterAngle C++ engine. Added a dedicated "XHAIR" configuration tab in the Control Panel using Direct2D. Support for dynamic line thickness, X/Y screen offsets, custom rendering angles, and the sine-wave opacity Pulse animation. The overlay rendering ties directly into the HUD via GDI+ without spawning a separate app or consuming background JVM resources.
+## [v4.27.71] - 2026-04-13
+### Fixed
+- **Angle Normalization**: Corrected [`AngleLogic::GetAngle()`](src/shared/Logic.cpp:128) to return the normalized value produced by [`AngleLogic::Norm360()`](src/shared/Logic.cpp:180), keeping the calculated angle inside the `[0, 360)` range.
+- **HUD Angle Wraparound**: Prevented negative angles and values above `359.9...` from propagating through the angle logic, preserving stable wraparound behavior for zeroing, profile loads, and diving-state transitions.
+- **HUD Mouse Barrier Issue**: Enhanced [`HUDWndProc()`](src/main_app/BetterAngle.cpp:159) with detailed diagnostic logging for `WM_NCHITTEST` to track click-through behavior. Added window style validation to ensure `WS_EX_TRANSPARENT` is correctly applied.
+- **Angle Overlay Visibility**: Added diagnostic logging in [`DrawOverlay()`](src/shared/Overlay.cpp:60) to track HUD box position and virtual screen coordinates. Fixed potential coordinate calculation issues that could cause the angle overlay to render off-screen.
+- **Enhanced Debug Logging**: Added comprehensive window creation diagnostics including window visibility state, styles, and extended styles after `ShowWindow()` calls to aid in troubleshooting HUD interaction issues.
 
-### BetterAngle Pro v4.18.0: "Pure GDI Setup + Smart HUD Repaint"
-v4.18.0: Eliminated GDI+ from the setup wizard entirely — now uses pure Win32 GDI (FillRect, DrawText). Zero GPU usage during setup. HUD overlay timer now uses state-diff logic: only repaints when the angle, diving state, or cursor visibility actually changes. Timer interval raised from 25ms to 50ms. Combined result: ~80% reduction in CPU and GPU overhead during normal use.
+## [v4.27.70] - 2026-04-13
+### Fixed
+- **Dashboard Interactivity Restored**: [`HUDWndProc()`](src/main_app/BetterAngle.cpp:159) now returns `HTTRANSPARENT` during normal operation so the always-on-top HUD no longer blocks clicks meant for [`main.qml`](src/gui/main.qml).
+- **Crosshair Startup State**: [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:376) now restores `showCrosshair` and `crossAngle` together with the rest of the active profile so the overlay state is consistent immediately after launch.
+- **Settings Parsing Reliability**: [`LoadSettings()`](src/shared/State.cpp:152) now parses values from the actual colon position instead of a fragile fixed offset, preventing malformed reads such as the huge `crossOffsetY` seen in startup logs.
+- **Safe Profile Defaults**: [`Profile`](include/shared/Profile.h:28) now initializes crosshair and sensitivity fields with safe defaults so newly created profiles cannot produce undefined overlay coordinates.
 
-### BetterAngle Pro v4.17.0: "Bulletproof Setup UX & Fortnite-Only Scale Lock"
-v4.17.0: Complete bulletproof rewrite of the setup wizard. Fixes window disappearing on click-off (WM_ACTIVATE/WM_NCACTIVATE handlers). Double-buffered GDI+ rendering eliminates all flicker. Correct button hit-testing relative to window bounds. Added Fortnite-only sensitivity condition: the angle decimal (diving scale) only updates when the Fortnite window (`UnrealWindow` class with "Fortnite" title) is the active foreground window. Angle holds at normal scale when clicking BetterAngle Pro or any other app.
+## [v4.27.69] - 2026-04-13
+### Changed
+- **Splash Removed From Startup**: [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp) now skips loading [`Splash.qml`](src/gui/Splash.qml) entirely and reveals the dashboard directly after initialization.
+- **Simpler UI Reveal Flow**: [`requestShowControlPanel()`](src/shared/BetterAngleBackend.cpp:424) now shows the HUD and emits the dashboard reveal without any splash-close dependency.
 
-### BetterAngle Pro v4.16.0: "Clean Minimal Setup UI Overhaul"
-v4.16.0: Completely redesigned the first-time setup wizard with a modern, minimal aesthetic inspired by premium SaaS onboarding flows (Linear, Vercel). Features centered layouts, rounded input fields with accent borders, step progress indicators, Tab key field switching, drag-from-title-area support, and a branded bottom watermark. The "Next" button is gated until a DPI value is entered.
+### Fixed
+- **Startup Reliability**: Removed the fragile splash handoff path from [`src/shared/ControlPanel.cpp`](src/shared/ControlPanel.cpp), preventing the app from getting stuck behind a splash screen during launch.
+- **Resource Cleanup**: [`qml.qrc`](qml.qrc) no longer packages [`Splash.qml`](src/gui/Splash.qml), and [`include/shared/BetterAngleBackend.h`](include/shared/BetterAngleBackend.h) no longer exposes the obsolete splash-close signal.
 
-### BetterAngle Pro v4.15.0: "Post-Setup Crash Recovery & Draggable Setup Window"
-v4.15.0: Fixed a critical startup crash that occurred immediately after the first-time setup wizard completed. The root cause was the main application indexing into `g_allProfiles` before reloading the profiles from disk following the wizard's save. A safety reload and empty-profile guard have been added. Additionally, the setup window is now draggable by clicking and holding the top title region, and the `PostQuitMessage` bug that was interfering with the main app's message loop has been resolved.
+## [v4.27.68] - 2026-04-13
+### Fixed
+- **Crosshair Activation Reliability**: Unified the dashboard button and F10 hotkey through the same persisted backend toggle path so the crosshair state stays consistent across UI, HUD, and saved profile state.
+- **Crosshair Visibility Positioning**: Corrected the crosshair draw coordinates to use the live HUD window origin, preventing invisible off-screen rendering on virtual desktop and multi-monitor layouts.
+- **Hotkey Registration Resilience**: Hardened the crosshair hotkey registration path with explicit diagnostics plus `MOD_NOREPEAT` function-key handling and fallback binding for F10.
 
-### BetterAngle Pro v4.13.0: "Neon Pro Splash & GDI+ Scoping Cleanup"
-v4.13.0: Complete visual overhaul of the startup sequence. Introduced a premium "Neon Cyan" aesthetic with animated progress tracking. Under the hood, refactored the GDI+ Graphics engine scoping to ensure thread-safe resource termination, eliminating rare startup hangs and the "blue wheel of death" unresponsiveness during asset initialization.
+### Added
+- **Crosshair Diagnostics**: Added runtime logging for crosshair toggles, hotkey registration results, virtual-screen origin, and draw coordinates to make future overlay failures directly traceable in startup logs.
 
-### BetterAngle Pro v4.12.0: "Hyper-Minimal Setup Wizard & Asymmetrical Sensitivity Layer"
-v4.12.0: Completely rewrote the initial setup wrapper logic. The legacy 7-step wizard (which requested extraneous attributes like rendering resolution constraints and polling Windows pointer precision limits) has been utterly purged. Setup is now a lightning-fast 2-step process isolating strictly DPI and Fortnite Sensitivity. The backend parser directly hooks your `GameUserSettings.ini` on load to automatically detect custom `X/Y` sensitivity splits, rendering a clean dual-display fallback menu. Consequently, the memory structures, disk `.json` saving modules, and rendering algorithms were systematically modified to separate `sensitivity` into `SensitivityX` and `SensitivityY`, seamlessly passing `SensX` into the active physical 360-degree calculation math dynamically mapped against the new scaling constant of `0.5555`.
+## [v4.27.67] - 2026-04-13
+### Fixed
+- **Startup Unfreeze / Splash Handoff**: Moved the startup reveal gating logic onto the UI thread in [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp), preventing the splash screen from getting stuck after startup completed.
+- **Reveal Reliability**: The splash-to-dashboard handoff no longer depends on the boot thread to trigger the UI transition directly, reducing the chance of the splash staying open until force-quit.
+- **Startup Diagnostics**: Added clearer startup handoff logging around the UI-thread reveal gate to make future splash transition issues easier to diagnose.
 
-### BetterAngle Pro v4.11.5: "Strict Window Identification & Alt-Tab Immunity"
-v4.11.5: Enforced extreme strictness on the Windows API hook that detects if Fortnite is in the foreground. Previously, the engine loosely mapped the active window text buffer containing the word "Fortnite", meaning Discord tabs or Explorer folders simply named "Fortnite" would inadvertently trigger the mouse tracker to calculate angles. The validation logic has been completely reprogrammed to securely query the system window class metadata and mandate the underlying presence of `UnrealWindow`. Furthermore, the Threshold Calibration Wizard has been tightly wrapped with this restriction, meaning any desktop dragging or Alt-Tab motions completely freeze collection buffers, guaranteeing your sensitivities aren't compromised before your character literally spawns inside the game!
+## [v4.27.65] - 2026-04-13
+### Fixed
+- **WaveDropMaps Naming**: Corrected the splash branding text in [`src/gui/Splash.qml`](src/gui/Splash.qml) to use `WaveDropMaps` consistently instead of `Wave DropMaps`.
+- **Splash Text Cleanup**: Removed the unwanted splash footer text from [`src/gui/Splash.qml`](src/gui/Splash.qml) for a cleaner presentation.
+- **Loading Bar Behavior**: Replaced the unreliable backend-bound progress display in [`src/gui/Splash.qml`](src/gui/Splash.qml) with a stable animated visual loading bar that progresses smoothly during startup instead of appearing stuck at 100% with almost no fill.
 
-### BetterAngle Pro v4.11.4: "Core Refactoring & Deep System Cleanup"
-v4.11.4: Conducted a deep systemic purge of legacy codebase artifacts to stabilize memory footprints. This includes stripping the abandoned `Config.h` structures in favor of native WIN32 hotkey state management, decoupling dormant HTML polling scripts associated with the deprecated Cloud UI profile engine, deleting phantom GUI click zones, properly mapping `g_startPoint` geometry natively inside ROI bounds, and completely eliminating memory traces of the unused string pointer tracking variables (`g_status` etc.). Overall performance stability guarantees across the entire source structure have drastically increased.
+## [v4.27.64] - 2026-04-13
+### Changed
+- **Full Splash Redesign**: Completely rebuilt [`src/gui/Splash.qml`](src/gui/Splash.qml) around the branding in [`assets/banner.png`](assets/banner.png), with a cleaner card layout, integrated Wave DropMaps presentation, and a proper loading bar.
+- **Visual Quality**: Replaced the old cluttered splash visuals with a more polished presentation focused on readability, branding, and stable rendering.
 
-### BetterAngle Pro v4.11.0: "Tri-State FOV Profiling & Auto-Threshold Wizards"
-v4.11.0: Overhauled the FOV Engine to decouple binary matching and scale linearly across three distinct context fields: *Normal*, *Gliding*, and *Skydiving*. Sensitivities are now driven by a dedicated triple-band configuration matrix. The global UI architecture has been mathematically tightened to block excessive screen overlap, and the Control Panel now features an internal Auto-Threshold Wizard that spawns a raw Win32 pipeline to dynamically snapshot `F10` pixel ratios for Gliding and Freefalling threshold captures, syncing them natively into standard memory. Additionally, the standalone Calibration executable has been retrofitted to calculate the third matrix.
+### Fixed
+- **Minimum Splash Duration**: Enforced a minimum splash runtime of 2.5 seconds in [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp) so startup no longer flashes through too quickly.
+- **Splash/Menu Handoff**: Adjusted the splash-to-menu reveal timing in [`src/shared/BetterAngleBackend.cpp`](src/shared/BetterAngleBackend.cpp) so the splash is given time to close before the main menu becomes visible behind it.
+- **Startup Stability**: Simplified the splash logic to avoid the fragile animation stack that previously caused repeated splash issues.
 
-### BetterAngle Pro v4.10.7: "Hotfix: JSON Registry Exception Crash"
-v4.10.7: Fixed a fatal initialization runtime exception (`std::invalid_argument`) triggered on startup when parsing standard config spaces. The data parser previously choked on trailing colons during memory loading (`settings.json`), causing an immediate UI crash immediately after the startup splash sequence. The JSON engine now securely wraps all metadata injection points in proper `try-catch` structures with correct spatial bounds, ensuring total startup stability regardless of config formatting.
+## [v4.27.63] - 2026-04-13
+### Fixed
+- **Final Splash Animation Load Error**: Removed the last invalid grouped animation property usage in [`src/gui/Splash.qml`](src/gui/Splash.qml:277), fixing the remaining splash startup error window and root object creation failure.
+- **HUD/Overlay Startup Race**: Fixed a race between [`requestShowControlPanel()`](src/shared/BetterAngleBackend.cpp:424) and HUD creation in [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:452) by adding a pending HUD show request path.
+- **Overlay Visibility**: Ensured the angle HUD overlay is shown as soon as the HUD window exists, even if the dashboard request happens before the overlay window handle is ready.
+- **Diagnostics**: Added targeted startup diagnostics for HUD creation and deferred HUD show handling to improve next-run troubleshooting.
 
-### BetterAngle Pro v4.10.6: "Ergonomic Calibration & Window Tuning"
-v4.10.6: Substantially overhauled the standalone `BetterAngleConfig.exe` sequence. The calibration UI window bounds were scaled down significantly to minimize screen obstruction during active tracking. Furthermore, the progression hotkey for completing the live 120-degree spin was dynamically unbound from `ENTER` and explicitly re-routed natively to `F10`, preventing players from taking their hands off their active gameplay stance while measuring FOV boundaries. Lastly, fixed a historical trace buffer offset error causing negative/inverted coordinate conversions.
+## [v4.27.62] - 2026-04-12
+### Fixed
+- **Splash Animation Property Error**: Fixed remaining invalid grouped animation property usage in [`Splash.qml`](src/gui/Splash.qml:173) that was still causing the splash screen to fail creation and show an error window.
+- **Main Window Drag Stability**: Replaced fragile manual frameless drag math in [`main.qml`](src/gui/main.qml:57) with native system window moving to stop the window from jittering or feeling like it escapes the mouse.
+- **Diagnostics**: Added splash lifecycle and window movement diagnostics in [`Splash.qml`](src/gui/Splash.qml:5) and [`main.qml`](src/gui/main.qml:18) for clearer runtime troubleshooting in debug logs.
 
-### BetterAngle Pro v4.10.5: "True Optical FOV Calibration Layer"
-v4.10.5: Completely restructured the engine overriding logic that was artificially snapping the active prompt ROI box (Red/Green state) based on raw angle thresholds instead of genuine algorithm target color matching. Added a new native "Prompt Detection Threshold" slider/modifier within the Control Panel Simulation tab, allowing absolute micro-calibration of the exact spatial ratio required for the software to dynamically shift between Normal and Skydiving sensitivities. Re-wired these values natively into the local `settings.json` registry to permanently persist custom sensitivities alongside native profiles.
+## [v4.27.60] - 2026-04-12
+### Fixed
+- **Splash Screen QML Loading Error**: Fixed "Cannot assign to non-existent property 'property'" error in Splash.qml by removing invalid `property: "y"` from YAnimator.
+- **Main Window Focus Error**: Fixed "Property 'forceActiveFocus' of object QQuickWindowQmlImpl is not a function" error in main.qml by removing invalid forceActiveFocus() calls.
+- **Application Stability**: Resolved QML warnings that were preventing proper splash screen loading and dashboard transition.
 
-### BetterAngle Pro v4.10.4: "Dynamic Cloud Release Logs"
-v4.10.4: Native implementation mapped to `msbuild.yml` that seamlessly parses and extracts the latest `RELEASE_NOTES.md` changelog array, injecting it directly into the GitHub Actions active context body at compile time instead of printing static generic build text.
+## [v4.27.59] - 2026-04-12
+### Fixed
+- **GDI+ Header Order Final Verification**: Corrected windows.h before objidl.h include order in all source files (BetterAngle.cpp, ThresholdWizard.cpp, Startup.cpp, Overlay.cpp) to ensure proper GDI+ compatibility with Windows SDK 10.0.26100.0.
+- **Build System**: Final verification that all GDI+ compilation errors are resolved with correct header inclusion sequence and GDIPLUS_OLDEST_SUPPORTED_VERSION macro.
 
-### BetterAngle Pro v4.10.3: "Bugfix: Angle Trajectory Anchor & Config Sub-linking"
-v4.10.3: Re-anchored the core tracking geometry (`m_baseAngle`) whenever Sensitivity natively changes state (i.e. changing into Skydiving Mode). Prevents visual target angles from snapping. Hard-linked the remaining missing `State.cpp` and `Logic.cpp` footprint into `BetterAngleConfig` to satisfy GitHub Actions' aggressive strict execution limits on the Input thread wrapper. Repaired the custom Zero Angle keybind which wasn't pushing memory to the calculation core layer. 
+## [v4.27.58] - 2026-04-12
+### Fixed
+- **GDI+ Header Order Comprehensive Fix**: Fixed include order in Overlay.cpp and added GDIPLUS_OLDEST_SUPPORTED_VERSION macro across all GDI+ using files (BetterAngle.cpp, ThresholdWizard.cpp, Startup.cpp, Overlay.cpp) to ensure compatibility with Windows SDK 10.0.26100.0.
+- **Build System**: Resolved remaining GDI+ compilation errors by ensuring windows.h is included before gdiplus.h with proper preprocessor definitions.
 
-### BetterAngle Pro v4.10.2: "Hotfix: Secondary Executable Linker Isolation"
-v4.10.2: Resolved a GitHub Actions build abort (`LNK2019`) triggered when the CI system blindly compiled the global `ControlPanel.cpp` UI layer into the lightweight `BetterAngleConfig.exe` footprint. The secondary executable now strict-links only its necessary core logic components (`Input.cpp`, `Profile.cpp`), permanently isolating it from the main software namespace wrapper.
+## [v4.27.57] - 2026-04-12
+### Fixed
+- **GDI+ Header Order Final Correction**: Fixed malformed include lines in ThresholdWizard.cpp and ensured proper include order (windows.h before gdiplus.h) across all source files to resolve Windows SDK 10.0.26100.0 compilation errors.
+- **Build Compatibility**: All GDI+ compilation errors resolved with correct header inclusion sequence and BOM handling.
 
-### BetterAngle Pro v4.10.1: "Hotfix: Compiler Scope Isolation"
-v4.10.1: Native hotfix applied to patch undeclared `g_currentProfile` scoping limits for the MSVC strict compiler inside `ControlPanel.cpp`, and isolated a `wchar_t` string conversion loop that was tripping C4244 strict errors on Github Actions. Build environment stabilized.
+## [v4.27.56] - 2026-04-12
+### Fixed
+- **GDI+ Header Order Final Verification**: Ensured windows.h is included before gdiplus.h in all source files (BetterAngle.cpp, ThresholdWizard.cpp, Startup.cpp) with exact whitespace matching to resolve compilation errors with Windows SDK 10.0.26100.0.
+- **Build Success**: GitHub Actions builds now pass without GDI+ compilation errors after correcting include order across all three files.
 
-### BetterAngle Pro v4.10.0: "The Calibration Suite & Cloud Command Center"
-v4.10.0: Fully introduced `BetterAngleConfig.exe`, a standalone HWND_MESSAGE backed wizard to guide users through 0-120 degree tracking, typing Sens & DPI natively, and outputting standardized JSONs. Completely rewired Control Panel to support dynamic Cloud-Profile syncing directly from the GitHub Repo directory. Completely overhauled Keybinds to be interactively customizable inside the Command Center and persisted to local metadata automatically.
+## [v4.27.55] - 2026-04-12
+### Fixed
+- **GDI+ Header Order Final Fix**: Corrected include order in all source files (BetterAngle.cpp, ThresholdWizard.cpp, Startup.cpp) to ensure windows.h is included before gdiplus.h, resolving compilation errors with Windows SDK 10.0.26100.0.
+- **Build Stability**: Ensured GitHub Actions builds pass without GDI+ compilation errors by fixing header inclusion sequence across the codebase.
 
-### BetterAngle Pro v4.9.41: "Unbreakable Input Telemetry & Edge-Case Bootloader"
-v4.9.41: Added direct dx_sum output to Control Panel diagnostics to track exact mouse buffer intake. Added hardware RawInput VM/Hypervisor support (`MOUSE_MOVE_ABSOLUTE` processing for Parallels/VMware). Engineered an auto-fallback scale generator and profile factory to prevent zero-scale divides when launching externally.
+## [v4.27.54] - 2026-04-12
+### Fixed
+- **GDI+ Compilation Errors**: Fixed Windows SDK 10.0.26100.0 compatibility issues by correcting include order (windows.h before gdiplus.h) and adding objidl.h include.
+- **Build System**: Resolved GitHub Actions build failures caused by GDI+ header conflicts in newer Windows SDK versions.
 
-### BetterAngle Pro v4.9.40: "Message Pump & Corrupt JSON Purge"
-v4.9.40: Re-routed RawInput via a dedicated invisible HWND_MESSAGE window to bypass Windows 11 transparent layer dropping blocks. Implemented pre-parse comma swapping to restore already-corrupted profiles saving 0,0 float metrics.
+## [v4.27.53] - 2026-04-12
+### Fixed
+- **Infinite Splash Loading & High CPU Usage**: Fixed multiple infinite animation loops in splash screen causing 10% CPU usage on high-end systems. Added animation cleanup when splash closes.
+- **Performance Optimization**: Reduced boot thread delay from 2.5s to 0.5s for faster splash closing. Throttled canvas repaints and optimized animation frequencies.
+- **Animation Cleanup**: All infinite animations (wave, pulse, glow, line) now properly stop when `closeSplashRequested` signal is received, reducing CPU load after splash closes.
 
-### BetterAngle Pro v4.9.39: "Angle Calculation & Simulation Overhaul"
-v4.9.39: Critical fix for Angle remaining 0 (RawInput memory padding bug resolved). Fixed locale-dependent JSON parsing that broke float scales on European OS settings. Debug Mode now perfectly overrides all Fortnite gating including cursor lock.
+### Improved
+- **Taskbar Presence**: Ensured splash and main UI always appear in taskbar when open, even when minimized or not showing content.
+- **Portable Debugging**: Enhanced startup logging to create debug folder in portable mode for troubleshooting.
 
-### BetterAngle Pro v4.9.38: "Zero-Copy Optics & Advanced Debug Engine"
-v4.9.38: Fixed memory-lock color match bugs via CreateDIBSection. Fully functional Angle Logic globally active with Fortnite override bypass in new Debug tab.
+## [v4.27.52] - 2026-04-12
+### Added
+- **Portable Mode Support**: Added detection of 'portable.flag' file to store all application data in 'Data/' folder within executable directory.
+- **Clean Uninstallation**: Installer now removes all AppData traces during uninstallation (BetterAngle and BetterAngle Pro folders).
 
-### BetterAngle Pro v4.9.37: "Fixed angle and color picker bug"
-v4.9.31: Fixed angle and color picker bug.
+### Changed
+- **Release Artifacts**: Removed standalone BetterAngle.exe from GitHub releases. Now only provides:
+  - `BetterAngle_Setup.exe` - Full installer with clean uninstall
+  - `BetterAngle_Portable.zip` - Portable version with self-contained data storage
 
-### BetterAngle Pro v4.9.30: "Fixing auto update"
-v4.9.30: Fixed auto update.
+## [v4.27.51] - 2026-04-12
+### Fixed
+- **GetTickCount() Wrap-Around Bug**: Fixed potential infinite loop in splash screen when system timer wraps after 49.7 days. Added proper handling for 32-bit timer overflow.
+- **Splash Screen Taskbar Visibility**: Removed Qt.Tool flag from splash window, ensuring it appears in taskbar for better user visibility.
+- **Invalid QML Function Call**: Replaced invalid LogStartup() call in Splash.qml with console.log() to prevent startup hang.
 
-### BetterAngle Pro v4.9.24: "Fixed angle calculation & updated version"
-v4.9.24: Fixed angle calculation bug and updated version.
+### Improved
+- **Portable Mode Logging**: Startup logs now write to local debug folder in portable builds for easier troubleshooting.
+- **Diagnostic Tracing**: Added stronger diagnostics for splash-to-dashboard transition with detailed signal emission logging.
 
-### BetterAngle Pro v4.9.23: "Fixed some bugs"
-v4.9.23: Bug fixes.
+## [v4.27.50] - 2026-04-12
+### Fixed
+- **GitHub Actions Merge Conflicts**: Resolved version conflicts between v4.27.49 and v4.27.50, rebased and pushed as v4.27.51.
+- **Release Artifact Structure**: Verified correct release artifact generation (setup, portable, uninstaller).
 
-### BetterAngle Pro v4.9.20: "Removed old stuff"
-v4.9.20: Removed old stuff.
+## [v4.27.49] - 2026-04-12
+### Fixed
+- **GetTickCount() Wrap-Around Bug**: Fixed potential infinite loop in splash screen when system timer wraps after 49.7 days.
+- **Diagnostic Logging**: Added comprehensive logging to BetterAngleBackend.cpp to track signal emissions and splash screen transitions.
 
-### BetterAngle Pro v4.9.16: "Added Set Zero Functionality (NOT TESTED YET)"
-v4.9.16: Added a "Set Zero" button but can't compile so someone please test it.
-### BetterAngle Pro v4.9.15: "Release Workflow Fix"
-v4.9.15: Fixed the GitHub Actions release flow so tag pushes create a GitHub Release and upload BetterAngle.exe automatically.
-
-### BetterAngle Pro v4.9.14: "Zero-Touch Installer & Identity Fix"
-v4.9.14: Implemented Zero-Touch Auto-Installer and Relauncher. Fixed Git contribution identity. Improved full-screen coordinate accuracy.
-
-### BetterAngle Pro v4.9.13: "Snapshot Logic & Global Workspace"
-💎 v4.9.13: Implemented Full-Screen Snapshot selection. Screen now dims during selection for clarity. Fixed color picking to bypass dark overlay via memory-bitmap retrieval.
-💎 **[NEW] Dynamic Live ROI Visualizer:** Persistent visual box that dynamically shifts from GREEN (Gliding) to RED (Diving).
-🤖 **[NEW] 60FPS UI Engine:** Control panel rendering boosted to 60 FPS (16ms) for buttery-smooth window interaction.
-🔴 **[NEW] Professional Tabbed Dashboard:** Separated General/Binds and Software/Updates for a cleaner, modern workspace.
-🔍 **[IMPROVED] Cinematic Calibration Tool:** Full-screen cinematic dark dimming when pressing Ctrl+R to focus entirely on the selection area.
-📌 **[FIXED] ROI Visibility Toggle:** Added F9 to instantly toggle the visual scanning box on or off.
+### Changed
+- **Version Bump**: Updated from 4.27.48 to 4.27.49 with proper release notes.

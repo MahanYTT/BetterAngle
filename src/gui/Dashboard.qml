@@ -1,9 +1,71 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import QtQuick.Window 2.15
 
 Item {
     id: root
+
+    // Window dragging MouseArea - allows dragging window by clicking anywhere on empty areas
+    MouseArea {
+        id: windowDragArea
+        anchors.fill: parent
+        propagateComposedEvents: true
+        hoverEnabled: true
+        cursorShape: containsMouse ? Qt.SizeAllCursor : Qt.ArrowCursor
+        
+        // Only start window drag if we're not clicking on interactive elements
+        onPressed: function(mouse) {
+            // Check if the mouse is over any interactive child
+            var interactiveChild = childAt(mouse.x, mouse.y);
+            var isInteractive = false;
+            
+            // Walk up the parent chain to see if we're over an interactive element
+            var item = interactiveChild;
+            while (item && item !== windowDragArea) {
+                // Check if this item is interactive
+                if (item.hasOwnProperty('hovered') || // Buttons have hovered property
+                    item.hasOwnProperty('pressed') || // Interactive items have pressed
+                    item.objectName === 'interactive' || // Custom marker
+                    (item.parent && item.parent.hasOwnProperty('currentIndex')) || // TabBar
+                    (item.toString().includes("TextField")) ||
+                    (item.toString().includes("Slider")) ||
+                    (item.toString().includes("Button")) ||
+                    (item.toString().includes("TabButton")) ||
+                    (item.toString().includes("ComboBox"))) {
+                    isInteractive = true;
+                    break;
+                }
+                item = item.parent;
+            }
+            
+            if (!isInteractive && mouse.button === Qt.LeftButton) {
+                console.log("[QML] Dashboard window drag started at", mouse.x, mouse.y);
+                // Start window system move
+                var mainWindow = Window.window;
+                if (mainWindow && mainWindow.startSystemMove) {
+                    mainWindow.startSystemMove();
+                    mouse.accepted = true;
+                } else {
+                    console.error("[QML] Could not access main window for dragging");
+                    mouse.accepted = false;
+                }
+            } else {
+                // Propagate event to child items
+                mouse.accepted = false;
+            }
+        }
+        
+        onReleased: function(mouse) {
+            // Always propagate release events
+            mouse.accepted = false;
+        }
+        
+        onPositionChanged: function(mouse) {
+            // Propagate move events
+            mouse.accepted = false;
+        }
+    }
 
     TabBar {
         id: bar
@@ -73,13 +135,14 @@ Item {
                             id: sensXField
                             width: parent.width
                             // Re-read when profile changes so value always shows on startup
-                            text: backend.sensX.toFixed(4)
+                            text: backend.sensX.toFixed(1)
                             color: "white"
+                            validator: DoubleValidator { bottom: 0.00001; top: 2.0; decimals: 1 }
                             background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: "#333"; border.width: 1 }
                             onEditingFinished: backend.sensX = parseFloat(text)
                             Connections {
                                 target: backend
-                                onProfileChanged: sensXField.text = backend.sensX.toFixed(4)
+                                function onProfileChanged() { sensXField.text = backend.sensX.toFixed(1) }
                             }
                         }
                     }
@@ -92,13 +155,14 @@ Item {
                         TextField {
                             id: sensYField
                             width: parent.width
-                            text: backend.sensY.toFixed(4)
+                            text: backend.sensY.toFixed(1)
                             color: "white"
+                            validator: DoubleValidator { bottom: 0.00001; top: 2.0; decimals: 1 }
                             background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: "#333"; border.width: 1 }
                             onEditingFinished: backend.sensY = parseFloat(text)
                             Connections {
                                 target: backend
-                                onProfileChanged: sensYField.text = backend.sensY.toFixed(4)
+                                function onProfileChanged() { sensYField.text = backend.sensY.toFixed(1) }
                             }
                         }
                     }
@@ -123,21 +187,63 @@ Item {
                     RowLayout {
                         Text { text: "Glide if match <"; color: "white"; Layout.preferredWidth: 100 }
                         Slider { 
-                            from: 1; to: 100; value: backend.glideThreshold * 100
-                            onValueChanged: backend.glideThreshold = value / 100.0
+                            from: 1; to: 100; value: Math.round(backend.glideThreshold * 100)
+                            onMoved: backend.glideThreshold = value / 100.0
                         }
                         Text { text: Math.round(backend.glideThreshold * 100).toString() + "%"; color: "#aaa" }
                     }
                     RowLayout {
                         Text { text: "Dive if match >"; color: "white"; Layout.preferredWidth: 100 }
                         Slider { 
-                            from: 1; to: 100; value: backend.freefallThreshold * 100
-                            onValueChanged: backend.freefallThreshold = value / 100.0
+                            from: 1; to: 100; value: Math.round(backend.freefallThreshold * 100)
+                            onMoved: backend.freefallThreshold = value / 100.0
                         }
                         Text { text: Math.round(backend.freefallThreshold * 100).toString() + "%"; color: "#aaa" }
                     }
 
                     Text { text: "HOTKEY CONFIGURATION"; color: "#666"; font.pixelSize: 11; font.bold: true; topPadding: 10 }
+                    
+                    // NEW: Hotkey Recording Logic
+                    function handleHotkey(event) {
+                        var mods = "";
+                        if (event.modifiers & Qt.ControlModifier) mods += "Ctrl+";
+                        if (event.modifiers & Qt.ShiftModifier) mods += "Shift+";
+                        if (event.modifiers & Qt.AltModifier)   mods += "Alt+";
+                        
+                        var key = "";
+                        // Only capture non-modifier keys as the "final" key
+                        if (event.key !== Qt.Key_Control && event.key !== Qt.Key_Shift && event.key !== Qt.Key_Alt && event.key !== Qt.Key_Meta) {
+                            if (event.key >= Qt.Key_F1 && event.key <= Qt.Key_F12) {
+                                key = "F" + (event.key - Qt.Key_F1 + 1);
+                            } else if (event.key === Qt.Key_Space) {
+                                key = "Space";
+                            } else if (event.key === Qt.Key_Tab) {
+                                key = "Tab";
+                            } else if (event.key === Qt.Key_Escape) {
+                                key = "Esc";
+                            } else if (event.key >= Qt.Key_A && event.key <= Qt.Key_Z) {
+                                key = String.fromCharCode(event.key);
+                            } else if (event.key >= Qt.Key_0 && event.key <= Qt.Key_9) {
+                                key = String.fromCharCode(event.key);
+                            } else if (event.key >= 0x01000020 && event.key <= 0x0100002b) {
+                                var names = ["0","1","2","3","4","5","6","7","8","9",".","/"];
+                                key = "Num" + names[event.key - 0x01000020];
+                            } else if (event.key >= Qt.Key_VolumeDown && event.key <= Qt.Key_VolumeMute) {
+                                var names = ["Vol-", "Vol+", "Mute"];
+                                key = names[event.key - Qt.Key_VolumeDown];
+                            } else if (event.key === Qt.Key_MediaPlay || event.key === Qt.Key_MediaStop) {
+                                key = (event.key === Qt.Key_MediaPlay ? "Play" : "Stop");
+                            } else {
+                                key = event.text.toUpperCase();
+                            }
+                        }
+                        
+                        var full = mods + key;
+                        var display = mods + (key !== "" ? key : "...");
+                        // Only finalize if we have a non-modifier key AND at least one modifier is still held (optional)
+                        var isFinal = (key !== "") && (event.modifiers !== 0 || mods === "");
+                        return { "full": full, "display": display, "isFinal": isFinal };
+                    }
                     
                     Column {
                         spacing: 8
@@ -146,42 +252,144 @@ Item {
                         RowLayout {
                             Text { text: "Toggle Dashboard:"; color: "white"; Layout.preferredWidth: 150 }
                             TextField { 
-                                text: backend.keyToggle; width: 120; color: "#00cca3"
-                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: "#333"; border.width: 1 }
-                                onTextChanged: backend.keyToggle = text
+                                property string recordingText: ""
+                                text: activeFocus ? (recordingText !== "" ? recordingText : "Press key...") : backend.keyToggle; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"
+                                background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
+                                Keys.onPressed: function(event) { 
+                                    var result = genCol.handleHotkey(event);
+                                    recordingText = result.display;
+                                    if (result.isFinal) {
+                                        backend.keyToggle = result.full;
+                                        backend.saveKeybinds();
+                                        focus = false; 
+                                        recordingText = "";
+                                    }
+                                    event.accepted = true; 
+                                }
+                                Keys.onReleased: function(event) {
+                                    // Update visual if they release modifiers WITHOUT pressing a key
+                                    var result = genCol.handleHotkey(event);
+                                    recordingText = result.display;
+                                    event.accepted = true;
+                                }
+                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
+                                placeholderText: "Press key..."
                             }
                         }
                         RowLayout {
                             Text { text: "Selection Overlay:"; color: "white"; Layout.preferredWidth: 150 }
                             TextField { 
-                                text: backend.keyRoi; width: 120; color: "#00cca3"
-                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: "#333"; border.width: 1 }
-                                onTextChanged: backend.keyRoi = text
+                                property string recordingText: ""
+                                text: activeFocus ? (recordingText !== "" ? recordingText : "Press key...") : backend.keyRoi; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"
+                                background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
+                                Keys.onPressed: function(event) { 
+                                    var result = genCol.handleHotkey(event);
+                                    recordingText = result.display;
+                                    if (result.isFinal) {
+                                        backend.keyRoi = result.full;
+                                        backend.saveKeybinds();
+                                        focus = false; 
+                                        recordingText = "";
+                                    }
+                                    event.accepted = true; 
+                                }
+                                Keys.onReleased: function(event) {
+                                    var result = genCol.handleHotkey(event);
+                                    recordingText = result.display;
+                                    event.accepted = true;
+                                }
+                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
+                                placeholderText: "Press key..."
                             }
                         }
                         RowLayout {
                             Text { text: "Toggle Crosshair:"; color: "white"; Layout.preferredWidth: 150 }
                             TextField { 
-                                text: backend.keyCross; width: 120; color: "#00cca3"
-                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: "#333"; border.width: 1 }
-                                onTextChanged: backend.keyCross = text
+                                property string recordingText: ""
+                                text: activeFocus ? (recordingText !== "" ? recordingText : "Press key...") : backend.keyCross; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"
+                                background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
+                                Keys.onPressed: function(event) { 
+                                    var result = genCol.handleHotkey(event);
+                                    recordingText = result.display;
+                                    if (result.isFinal) {
+                                        backend.keyCross = result.full;
+                                        backend.saveKeybinds();
+                                        focus = false; 
+                                        recordingText = "";
+                                    }
+                                    event.accepted = true; 
+                                }
+                                Keys.onReleased: function(event) {
+                                    var result = genCol.handleHotkey(event);
+                                    recordingText = result.display;
+                                    event.accepted = true;
+                                }
+                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
+                                placeholderText: "Press key..."
                             }
                         }
                         RowLayout {
                             Text { text: "Zero Counter:"; color: "white"; Layout.preferredWidth: 150 }
                             TextField { 
-                                text: backend.keyZero; width: 120; color: "#00cca3"
-                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: "#333"; border.width: 1 }
-                                onTextChanged: backend.keyZero = text
+                                property string recordingText: ""
+                                text: activeFocus ? (recordingText !== "" ? recordingText : "Press key...") : backend.keyZero; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"
+                                background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
+                                Keys.onPressed: function(event) { 
+                                    var result = genCol.handleHotkey(event);
+                                    recordingText = result.display;
+                                    if (result.isFinal) {
+                                        backend.keyZero = result.full;
+                                        backend.saveKeybinds();
+                                        focus = false; 
+                                        recordingText = "";
+                                    }
+                                    event.accepted = true; 
+                                }
+                                Keys.onReleased: function(event) {
+                                    var result = genCol.handleHotkey(event);
+                                    recordingText = result.display;
+                                    event.accepted = true;
+                                }
+                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
+                                placeholderText: "Press key..."
                             }
                         }
                         RowLayout {
                             Text { text: "Debug Overlay:"; color: "white"; Layout.preferredWidth: 150 }
                             TextField { 
-                                text: backend.keyDebug; width: 120; color: "#00cca3"
-                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: "#333"; border.width: 1 }
-                                onTextChanged: backend.keyDebug = text
+                                property string recordingText: ""
+                                text: activeFocus ? (recordingText !== "" ? recordingText : "Press key...") : backend.keyDebug; width: 120; color: activeFocus ? "#ffcc00" : "#00ffa3"
+                                background: Rectangle { color: parent.activeFocus ? "#24243a" : "#1c1c2e"; radius: 4; border.color: parent.activeFocus ? "#ffcc00" : "#333"; border.width: 1 }
+                                Keys.onPressed: function(event) { 
+                                    var result = genCol.handleHotkey(event);
+                                    recordingText = result.display;
+                                    if (result.isFinal) {
+                                        backend.keyDebug = result.full;
+                                        backend.saveKeybinds();
+                                        focus = false; 
+                                        recordingText = "";
+                                    }
+                                    event.accepted = true; 
+                                }
+                                Keys.onReleased: function(event) {
+                                    var result = genCol.handleHotkey(event);
+                                    recordingText = result.display;
+                                    event.accepted = true;
+                                }
+                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
+                                placeholderText: "Press key..."
                             }
+                        }
+                        
+                        Text {
+                            visible: backend.hotkeyError !== ""
+                            text: backend.hotkeyError
+                            color: "#ff6b6b"
+                            font.pixelSize: 11
+                            width: parent.width
+                            wrapMode: Text.WordWrap
+                            topPadding: 8
+                            bottomPadding: 8
                         }
                         
                         Button {
@@ -512,7 +720,7 @@ Item {
 
                         Connections {
                             target: backend
-                            onCrosshairPresetsChanged: presetList.model = backend.crosshairPresetNames()
+                            function onCrosshairPresetsChanged() { presetList.model = backend.crosshairPresetNames() }
                         }
 
                         ListView {
@@ -568,7 +776,7 @@ Item {
                 Slider {
                     width: parent.width
                     from: 0; to: 120; value: backend.tolerance
-                    onValueChanged: backend.tolerance = Math.round(value)
+                    onMoved: backend.tolerance = Math.round(value)
                 }
                 Text { text: "Value: " + backend.tolerance; color: "#aaa" }
             }
@@ -598,10 +806,10 @@ Item {
                 Text { text: "DIVE THRESHOLDS"; color: "#666"; font.pixelSize: 12; topPadding: 10 }
                 
                 Text { text: "Glide Threshold"; color: "white" }
-                Slider { width: parent.width; from: 0.01; to: 0.5; value: backend.glideThreshold; onValueChanged: backend.glideThreshold = value }
+                Slider { width: parent.width; from: 0.01; to: 0.5; value: backend.glideThreshold; onMoved: backend.glideThreshold = value }
 
                 Text { text: "Freefall Threshold"; color: "white" }
-                Slider { width: parent.width; from: 0.01; to: 0.5; value: backend.freefallThreshold; onValueChanged: backend.freefallThreshold = value }
+                Slider { width: parent.width; from: 0.01; to: 0.5; value: backend.freefallThreshold; onMoved: backend.freefallThreshold = value }
 
                 Button {
                     text: "SAVE THRESHOLDS"
