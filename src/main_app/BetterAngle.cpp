@@ -197,15 +197,26 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (wp == 1 && g_backend)
       g_backend->requestToggleControlPanel();
     if (wp == 2) {
-      g_currentSelection =
-          (g_currentSelection == SELECTING_ROI) ? NONE : SELECTING_ROI;
-      if (g_currentSelection == SELECTING_ROI) {
+      // Cancel any selection mode and return to NONE
+      if (g_currentSelection == SELECTING_COLOR) {
+        // Cancel color selection mode
+        g_currentSelection = NONE;
+        SetHUDClickable(hWnd, false);
+      } else if (g_currentSelection == SELECTING_ROI) {
+        // Cancel ROI selection mode
+        g_currentSelection = NONE;
+        if (g_screenSnapshot) {
+          DeleteObject(g_screenSnapshot);
+          g_screenSnapshot = nullptr;
+        }
+        SetHUDClickable(hWnd, false);
+      } else {
+        // Currently NONE, start ROI selection
+        g_currentSelection = SELECTING_ROI;
         if (g_screenSnapshot)
           DeleteObject(g_screenSnapshot);
         g_screenSnapshot = CaptureScreen();
         SetHUDClickable(hWnd, true);
-      } else {
-        SetHUDClickable(hWnd, false);
       }
       InvalidateRect(hWnd, NULL, FALSE);
     }
