@@ -1,5 +1,9 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.79] - 2026-04-13
+### Fixed
+- **Dashboard UI Not Clickable**: [`ControlPanel.cpp`](src/shared/ControlPanel.cpp:32) `SyncHUDWithPanelWindow` now toggles `WS_EX_TOPMOST` extended style on the HUD overlay when the dashboard is interactive, ensuring the panel window sits above the HUD and receives mouse clicks. Added detailed logging for region creation and window ordering.
+
 ## [v4.27.78] - 2026-04-13
 ### Fixed
 - **Custom Keybind Capture Race Conditions**: [`Dashboard.qml`](src/gui/Dashboard.qml:145) `handleHotkey` now requires a non-modifier key and ensures modifiers are still held before finalizing, reducing "ghost" keybinds when pressing modifiers slowly.

@@ -38,6 +38,12 @@ void SyncHUDWithPanelWindow(QWindow *panelWindow) {
   else
     hudExStyle &= ~WS_EX_TRANSPARENT;
 
+  // Ensure HUD is not topmost when panel is interactive (so panel can be above)
+  if (panelInteractive)
+    hudExStyle &= ~WS_EX_TOPMOST;
+  else
+    hudExStyle |= WS_EX_TOPMOST;
+
   SetWindowLongPtr(g_hHUD, GWL_EXSTYLE, hudExStyle);
 
   if (panelInteractive && g_hPanel) {
@@ -65,14 +71,17 @@ void SyncHUDWithPanelWindow(QWindow *panelWindow) {
       HRGN fullRegion = CreateRectRgn(0, 0, hudWidth, hudHeight);
       HRGN panelRegion =
           CreateRectRgn(panelLeft, panelTop, panelRight, panelBottom);
-      CombineRgn(fullRegion, fullRegion, panelRegion, RGN_DIFF);
-      SetWindowRgn(g_hHUD, fullRegion, TRUE);
+      int combineResult =
+          CombineRgn(fullRegion, fullRegion, panelRegion, RGN_DIFF);
+      BOOL setRegionResult = SetWindowRgn(g_hHUD, fullRegion, TRUE);
       DeleteObject(panelRegion);
 
       LogStartup(
           std::string("PanelWindowState: HUD hole-punch applied clientRect=") +
           std::to_string(panelLeft) + "," + std::to_string(panelTop) + "," +
-          std::to_string(panelRight) + "," + std::to_string(panelBottom));
+          std::to_string(panelRight) + "," + std::to_string(panelBottom) +
+          " combineResult=" + std::to_string(combineResult) +
+          " setRegionResult=" + std::to_string(setRegionResult));
     }
   } else {
     SetWindowRgn(g_hHUD, NULL, TRUE);
