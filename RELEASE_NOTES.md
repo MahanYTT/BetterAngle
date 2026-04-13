@@ -1,5 +1,10 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.74] - 2026-04-13
+### Fixed
+- **Native Panel Focus / Input Routing**: [`SyncHUDWithPanelWindow()`](src/shared/ControlPanel.cpp:16) now explicitly enables, foregrounds, focuses, and raises the native dashboard window while the HUD is pushed behind it, ensuring the active panel actually receives mouse drag and click interaction.
+- **UI Interactivity Restoration**: The native panel HWND is now forced above the HUD when interactive, addressing the remaining case where the dashboard looked active but still would not drag or accept clicks.
+
 ## [v4.27.73] - 2026-04-13
 ### Fixed
 - **HUD / Dashboard Coexistence**: [`SyncHUDWithPanelWindow()`](src/shared/ControlPanel.cpp:16) now keeps the HUD visible in click-through background mode while the dashboard is open, instead of hiding it outright, so the overlay and control panel can operate at the same time.

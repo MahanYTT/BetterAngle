@@ -46,11 +46,25 @@ void SyncHUDWithPanelWindow(QWindow *panelWindow) {
   UpdateWindow(g_hHUD);
   InvalidateRect(g_hHUD, NULL, FALSE);
 
+  if (g_hPanel) {
+    EnableWindow(g_hPanel, TRUE);
+    SetWindowPos(g_hPanel, panelInteractive ? HWND_TOPMOST : HWND_NOTOPMOST, 0,
+                 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+    if (panelInteractive) {
+      BringWindowToTop(g_hPanel);
+      SetForegroundWindow(g_hPanel);
+      SetActiveWindow(g_hPanel);
+      SetFocus(g_hPanel);
+    }
+  }
+
   LogStartup(
       std::string("PanelWindowState: HUD synchronized exStyleTransparent=") +
       ((hudExStyle & WS_EX_TRANSPARENT) ? "true" : "false") +
       " zOrder=" + (panelInteractive ? "NOTOPMOST" : "TOPMOST") +
-      " clickable=" + (hudShouldBeClickable ? "true" : "false"));
+      " clickable=" + (hudShouldBeClickable ? "true" : "false") +
+      " panelForcedTop=" + (panelInteractive ? "true" : "false"));
 }
 } // namespace
 
