@@ -4,7 +4,6 @@
 #include <QString>
 #include <QStringList>
 
-
 class BetterAngleBackend : public QObject {
   Q_OBJECT
   Q_PROPERTY(double sensX READ sensX WRITE setSensX NOTIFY profileChanged)
@@ -132,6 +131,7 @@ public:
   Q_INVOKABLE void requestShowControlPanel();
   Q_INVOKABLE void requestToggleControlPanel();
   Q_INVOKABLE void finishSetup();
+  Q_INVOKABLE void logDebugMessage(const QString &msg);
 
   // Crosshair preset management
   Q_INVOKABLE QStringList crosshairPresetNames() const;

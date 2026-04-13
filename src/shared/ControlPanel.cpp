@@ -29,17 +29,28 @@ void SyncHUDWithPanelWindow(QWindow *panelWindow) {
   if (!g_hHUD)
     return;
 
-  if (panelInteractive) {
-    ShowWindow(g_hHUD, SW_HIDE);
-    LogStartup(
-        "PanelWindowState: HUD hidden while control panel is interactive.");
-  } else {
-    ShowWindow(g_hHUD, SW_SHOWNA);
-    UpdateWindow(g_hHUD);
-    InvalidateRect(g_hHUD, NULL, FALSE);
-    LogStartup("PanelWindowState: HUD restored because control panel is not "
-               "interactive.");
-  }
+  LONG_PTR hudExStyle = GetWindowLongPtr(g_hHUD, GWL_EXSTYLE);
+  const bool hudShouldBeClickable =
+      !panelInteractive && (g_isDraggingHUD || g_currentSelection != NONE);
+
+  if (panelInteractive || !hudShouldBeClickable)
+    hudExStyle |= WS_EX_TRANSPARENT;
+  else
+    hudExStyle &= ~WS_EX_TRANSPARENT;
+
+  SetWindowLongPtr(g_hHUD, GWL_EXSTYLE, hudExStyle);
+  SetWindowPos(g_hHUD, panelInteractive ? HWND_NOTOPMOST : HWND_TOPMOST, 0, 0,
+               0, 0,
+               SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_NOACTIVATE |
+                   SWP_SHOWWINDOW);
+  UpdateWindow(g_hHUD);
+  InvalidateRect(g_hHUD, NULL, FALSE);
+
+  LogStartup(
+      std::string("PanelWindowState: HUD synchronized exStyleTransparent=") +
+      ((hudExStyle & WS_EX_TRANSPARENT) ? "true" : "false") +
+      " zOrder=" + (panelInteractive ? "NOTOPMOST" : "TOPMOST") +
+      " clickable=" + (hudShouldBeClickable ? "true" : "false"));
 }
 } // namespace
 

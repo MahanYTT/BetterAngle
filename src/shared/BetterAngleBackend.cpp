@@ -430,13 +430,22 @@ void BetterAngleBackend::requestShowControlPanel() {
   CreateControlPanel(g_hInstance);
 
   if (g_hHUD) {
-    ShowWindow(g_hHUD, SW_HIDE);
+    LONG_PTR hudExStyle = GetWindowLongPtr(g_hHUD, GWL_EXSTYLE);
+    hudExStyle |= WS_EX_TRANSPARENT;
+    SetWindowLongPtr(g_hHUD, GWL_EXSTYLE, hudExStyle);
+    ShowWindow(g_hHUD, SW_SHOWNA);
+    SetWindowPos(g_hHUD, HWND_NOTOPMOST, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_NOACTIVATE |
+                     SWP_SHOWWINDOW);
+    UpdateWindow(g_hHUD);
+    InvalidateRect(g_hHUD, NULL, FALSE);
     g_pendingShowHUD = false;
-    LogStartup("UI: HUD hidden before showing control panel.");
+    LogStartup(
+        "UI: HUD shown in click-through background mode before control panel.");
   } else {
-    g_pendingShowHUD = false;
-    LogStartup("UI: HUD window handle not available yet; skipping HUD show "
-               "while control panel opens.");
+    g_pendingShowHUD = true;
+    LogStartup("UI: HUD window handle not available yet. Marked pending HUD "
+               "show request.");
   }
 
   LogStartup("UI: Emitting showControlPanelRequested.");
@@ -445,6 +454,10 @@ void BetterAngleBackend::requestShowControlPanel() {
 
 void BetterAngleBackend::requestToggleControlPanel() {
   emit toggleControlPanelRequested();
+}
+
+void BetterAngleBackend::logDebugMessage(const QString &msg) {
+  LogStartup("QML_DEBUG: " + msg.toStdString());
 }
 
 void BetterAngleBackend::finishSetup() {
@@ -464,8 +477,17 @@ void BetterAngleBackend::finishSetup() {
 
   // 5. Final HUD/Dashboard reveal
   if (g_hHUD) {
-    ShowWindow(g_hHUD, SW_HIDE);
-    LogStartup("UI: HUD hidden during final dashboard reveal.");
+    LONG_PTR hudExStyle = GetWindowLongPtr(g_hHUD, GWL_EXSTYLE);
+    hudExStyle |= WS_EX_TRANSPARENT;
+    SetWindowLongPtr(g_hHUD, GWL_EXSTYLE, hudExStyle);
+    ShowWindow(g_hHUD, SW_SHOWNA);
+    SetWindowPos(g_hHUD, HWND_NOTOPMOST, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_NOACTIVATE |
+                     SWP_SHOWWINDOW);
+    UpdateWindow(g_hHUD);
+    InvalidateRect(g_hHUD, NULL, FALSE);
+    LogStartup(
+        "UI: HUD prepared in background mode during final dashboard reveal.");
   }
   emit profileChanged();
   emit showControlPanelRequested();
@@ -719,7 +741,6 @@ void BetterAngleBackend::setKeyToggle(const QString &s) {
     parseFullKey(s, g_allProfiles[g_selectedProfileIdx].keybinds.toggleMod,
                  g_allProfiles[g_selectedProfileIdx].keybinds.toggleKey);
     syncAndSaveProfile();
-    RefreshHotkeys(g_hHUD);
     emit hotkeysChanged();
   }
 }
@@ -737,7 +758,6 @@ void BetterAngleBackend::setKeyRoi(const QString &s) {
     parseFullKey(s, g_allProfiles[g_selectedProfileIdx].keybinds.roiMod,
                  g_allProfiles[g_selectedProfileIdx].keybinds.roiKey);
     syncAndSaveProfile();
-    RefreshHotkeys(g_hHUD);
     emit hotkeysChanged();
   }
 }
@@ -755,7 +775,6 @@ void BetterAngleBackend::setKeyCross(const QString &s) {
     parseFullKey(s, g_allProfiles[g_selectedProfileIdx].keybinds.crossMod,
                  g_allProfiles[g_selectedProfileIdx].keybinds.crossKey);
     syncAndSaveProfile();
-    RefreshHotkeys(g_hHUD);
     emit hotkeysChanged();
   }
 }
@@ -773,7 +792,6 @@ void BetterAngleBackend::setKeyZero(const QString &s) {
     parseFullKey(s, g_allProfiles[g_selectedProfileIdx].keybinds.zeroMod,
                  g_allProfiles[g_selectedProfileIdx].keybinds.zeroKey);
     syncAndSaveProfile();
-    RefreshHotkeys(g_hHUD);
     emit hotkeysChanged();
   }
 }
@@ -791,7 +809,6 @@ void BetterAngleBackend::setKeyDebug(const QString &s) {
     parseFullKey(s, g_allProfiles[g_selectedProfileIdx].keybinds.debugMod,
                  g_allProfiles[g_selectedProfileIdx].keybinds.debugKey);
     syncAndSaveProfile();
-    RefreshHotkeys(g_hHUD);
     emit hotkeysChanged();
   }
 }
@@ -802,6 +819,7 @@ void BetterAngleBackend::saveKeybinds() {
     return;
   Profile &p = g_allProfiles[g_selectedProfileIdx];
   p.Save(GetProfilesPath() + p.name + L".json");
+  LogStartup("HotkeyRegister: refreshing after explicit keybind save");
   RefreshHotkeys(g_hHUD);
 }
 

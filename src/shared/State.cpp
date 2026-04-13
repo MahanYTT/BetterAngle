@@ -292,10 +292,6 @@ void SaveSettings() {
 
   // Set to hidden after saving
   SetFileAttributesW(sp.c_str(), FILE_ATTRIBUTE_HIDDEN);
-
-  // Task A Fix: Refresh hotkeys immediately when settings are saved (v4.21.2)
-  if (g_hHUD)
-    RefreshHotkeys(g_hHUD);
 }
 
 bool g_showCrosshair = true;

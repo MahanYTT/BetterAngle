@@ -15,32 +15,63 @@ Window {
     // Frameless window style for a custom sleek look
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowSystemMenuHint | Qt.WindowMinimizeButtonHint | Qt.WindowStaysOnTopHint
 
-    onVisibleChanged: {
-        console.log("[QML] Main window visibility changed:", visible, "visibility=", visibility)
-        // No longer forcing crosshair state here to allow user preference to persist
+    function logState(prefix) {
+        if (backend && backend.logDebugMessage) {
+            backend.logDebugMessage(prefix + " visible=" + visible +
+                                    " visibility=" + visibility +
+                                    " active=" + active +
+                                    " x=" + x + " y=" + y +
+                                    " width=" + width + " height=" + height)
+        }
     }
 
-    onXChanged: console.log("[QML] Main window X changed:", x)
-    onYChanged: console.log("[QML] Main window Y changed:", y)
+    onVisibleChanged: {
+        console.log("[QML] Main window visibility changed:", visible, "visibility=", visibility)
+        logState("mainWindow.onVisibleChanged")
+    }
+
+    onVisibilityChanged: {
+        console.log("[QML] Main window visibility enum changed:", visibility)
+        logState("mainWindow.onVisibilityChanged")
+    }
+
+    onActiveChanged: {
+        console.log("[QML] Main window active changed:", active)
+        logState("mainWindow.onActiveChanged")
+    }
+
+    onXChanged: {
+        console.log("[QML] Main window X changed:", x)
+        logState("mainWindow.onXChanged")
+    }
+    onYChanged: {
+        console.log("[QML] Main window Y changed:", y)
+        logState("mainWindow.onYChanged")
+    }
 
     Connections {
         target: backend
         function onShowControlPanelRequested() {
             console.log("[QML] showControlPanelRequested before:", "visible=", mainWindow.visible, "visibility=", mainWindow.visibility, "active=", mainWindow.active)
+            mainWindow.logState("before showControlPanelRequested")
             mainWindow.showNormal()
             mainWindow.raise()
             mainWindow.requestActivate()
             console.log("[QML] showControlPanelRequested after:", "visible=", mainWindow.visible, "visibility=", mainWindow.visibility, "active=", mainWindow.active)
+            mainWindow.logState("after showControlPanelRequested")
         }
         function onToggleControlPanelRequested() {
             console.log("[QML] toggleControlPanelRequested:", "visible=", mainWindow.visible, "visibility=", mainWindow.visibility, "active=", mainWindow.active)
+            mainWindow.logState("before toggleControlPanelRequested")
             if (mainWindow.visible && mainWindow.visibility !== Window.Minimized) {
                 mainWindow.showMinimized()
+                mainWindow.logState("after toggleControlPanelRequested minimize")
             } else {
                 mainWindow.showNormal()
                 mainWindow.raise()
                 mainWindow.requestActivate()
                 console.log("[QML] toggleControlPanelRequested restore:", "visible=", mainWindow.visible, "visibility=", mainWindow.visibility, "active=", mainWindow.active)
+                mainWindow.logState("after toggleControlPanelRequested restore")
             }
         }
     }
@@ -66,10 +97,15 @@ Window {
             anchors.fill: parent
             onPressed: {
                 console.log("[QML] Title bar press at", mouse.x, mouse.y, "window", mainWindow.x, mainWindow.y)
+                mainWindow.logState("titleBar.onPressed mouseX=" + mouse.x + " mouseY=" + mouse.y)
                 mainWindow.startSystemMove()
+            }
+            onReleased: {
+                mainWindow.logState("titleBar.onReleased mouseX=" + mouse.x + " mouseY=" + mouse.y)
             }
             onDoubleClicked: {
                 console.log("[QML] Title bar double-click detected.")
+                mainWindow.logState("titleBar.onDoubleClicked")
             }
         }
 

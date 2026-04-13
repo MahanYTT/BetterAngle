@@ -1,5 +1,12 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.73] - 2026-04-13
+### Fixed
+- **HUD / Dashboard Coexistence**: [`SyncHUDWithPanelWindow()`](src/shared/ControlPanel.cpp:16) now keeps the HUD visible in click-through background mode while the dashboard is open, instead of hiding it outright, so the overlay and control panel can operate at the same time.
+- **Startup Overlay Visibility**: [`requestShowControlPanel()`](src/shared/BetterAngleBackend.cpp:426) and [`finishSetup()`](src/shared/BetterAngleBackend.cpp:450) now prepare the HUD behind the panel instead of hiding it, fixing the missing crosshair/overlay state while the dashboard is visible.
+- **Hotkey Re-registration Churn**: [`SaveSettings()`](src/shared/State.cpp:280) no longer re-registers all global hotkeys on every unrelated setting save, and the keybind setters in [`src/shared/BetterAngleBackend.cpp`](src/shared/BetterAngleBackend.cpp) no longer force duplicate refreshes before [`saveKeybinds()`](src/shared/BetterAngleBackend.cpp:803).
+- **Dashboard Button Interaction**: Removed the temporary full-surface debug `MouseArea` from [`src/gui/main.qml`](src/gui/main.qml), restoring normal button clicks for crosshair, updates, and other dashboard controls.
+
 ## [v4.27.72] - 2026-04-13
 ### Fixed
 - **Frozen Dashboard Input**: [`CreateControlPanel()`](src/shared/ControlPanel.cpp:82) now acquires the native Qt panel window and synchronizes it with the fullscreen HUD, hiding the HUD while the dashboard is interactive so mouse clicks and window dragging reach the control panel reliably.
