@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import QtQuick.Window 2.15
 
 Item {
     id: root
@@ -10,6 +11,8 @@ Item {
         id: windowDragArea
         anchors.fill: parent
         propagateComposedEvents: true
+        hoverEnabled: true
+        cursorShape: containsMouse ? Qt.SizeAllCursor : Qt.ArrowCursor
         
         // Only start window drag if we're not clicking on interactive elements
         onPressed: function(mouse) {
@@ -20,16 +23,16 @@ Item {
             // Walk up the parent chain to see if we're over an interactive element
             var item = interactiveChild;
             while (item && item !== windowDragArea) {
-                // Check if this item is interactive (Button, Slider, TextField, TabButton, etc.)
+                // Check if this item is interactive
                 if (item.hasOwnProperty('hovered') || // Buttons have hovered property
                     item.hasOwnProperty('pressed') || // Interactive items have pressed
                     item.objectName === 'interactive' || // Custom marker
                     (item.parent && item.parent.hasOwnProperty('currentIndex')) || // TabBar
-                    item instanceof TextField ||
-                    item instanceof Slider ||
-                    item instanceof Button ||
-                    item instanceof TabButton ||
-                    item instanceof ComboBox) {
+                    (item.toString().includes("TextField")) ||
+                    (item.toString().includes("Slider")) ||
+                    (item.toString().includes("Button")) ||
+                    (item.toString().includes("TabButton")) ||
+                    (item.toString().includes("ComboBox"))) {
                     isInteractive = true;
                     break;
                 }
@@ -39,17 +42,29 @@ Item {
             if (!isInteractive && mouse.button === Qt.LeftButton) {
                 console.log("[QML] Dashboard window drag started at", mouse.x, mouse.y);
                 // Start window system move
-                Window.window.startSystemMove();
-                mouse.accepted = true;
+                var mainWindow = Window.window;
+                if (mainWindow && mainWindow.startSystemMove) {
+                    mainWindow.startSystemMove();
+                    mouse.accepted = true;
+                } else {
+                    console.error("[QML] Could not access main window for dragging");
+                    mouse.accepted = false;
+                }
             } else {
                 // Propagate event to child items
                 mouse.accepted = false;
             }
         }
         
-        // Also handle mouse position changes for visual feedback
-        hoverEnabled: true
-        cursorShape: containsMouse ? Qt.SizeAllCursor : Qt.ArrowCursor
+        onReleased: function(mouse) {
+            // Always propagate release events
+            mouse.accepted = false;
+        }
+        
+        onPositionChanged: function(mouse) {
+            // Propagate move events
+            mouse.accepted = false;
+        }
     }
 
     TabBar {
