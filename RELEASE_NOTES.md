@@ -1,3 +1,7 @@
+### BetterAngle Pro v4.27.111
+- **Window Close Control Fix**: Removed the custom top-right `✕` button from [`src/gui/main.qml`](src/gui/main.qml:70) so the dashboard can no longer be hidden into a confusing overlay-only state by clicking the title-bar close control.
+- **Minimize-Only Title Bar**: The custom window chrome in [`src/gui/main.qml`](src/gui/main.qml:74) now exposes only the `_` minimize action, while full application exit remains intentionally routed through the red [`QUIT APP`](src/gui/Dashboard.qml:297) button.
+
 ### BetterAngle Pro v4.27.110
 - **True Crosshair Transparency**: Refactored the core Win32 rendering engine to use a 32-bpp `CreateDIBSection` with `UpdateLayeredWindow`. This completely eliminates the "black outline" alpha-blending artifact. The pulse animation now correctly fades from fully opaque to seamlessly transparent.
 - **Instant UI Synchronization**: Established a direct bidirectional signaling bridge between the global Win32 hotkeys and the Qt Dashboard. Toggling the crosshair via the F10 hotkey now instantly updates the UI button text and triggers a synchronous visual refresh.

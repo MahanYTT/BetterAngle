@@ -79,14 +79,6 @@ Window {
                 contentItem: Text { text: parent.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                 onClicked: mainWindow.showMinimized()
             }
-            Button {
-                text: "✕"
-                width: 40
-                height: 40
-                background: Rectangle { color: parent.hovered ? "#ff3333" : "transparent" }
-                contentItem: Text { text: parent.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
-                onClicked: mainWindow.hide()
-            }
         }
     }
 
