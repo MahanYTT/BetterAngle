@@ -36,6 +36,7 @@ using namespace Gdiplus;
 
 #include "shared/BetterAngleBackend.h"
 #include "shared/ControlPanel.h"
+#include "shared/EnhancedLogging.h"
 #include "shared/Input.h"
 #include "shared/Logic.h"
 #include "shared/Overlay.h"
@@ -102,26 +103,7 @@ void WriteDiagnosticTrace(const std::string &msg) {
 }
 } // namespace
 
-// Startup Diagnostic Logger
-void LogStartup(const std::string &msg) {
-  try {
-    static bool s_isFirstLog = true;
-    const std::wstring logPath = GetStartupLogPath();
-
-    std::ofstream ofs(logPath, s_isFirstLog ? std::ios::trunc : std::ios::app);
-    s_isFirstLog = false;
-
-    if (ofs.is_open()) {
-      auto now = std::chrono::system_clock::to_time_t(
-          std::chrono::system_clock::now());
-      ofs << std::put_time(std::localtime(&now), "[%Y-%m-%d %H:%M:%S] ") << msg
-          << std::endl;
-    }
-  } catch (...) {
-  }
-  WriteDiagnosticTrace(msg);
-}
-
+// LogStartup is now provided by EnhancedLogging.h
 // Helper Functions
 void SetHUDClickable(HWND hWnd, bool clickable) {
   LONG_PTR exStyle = GetWindowLongPtr(hWnd, GWL_EXSTYLE);
@@ -355,6 +337,9 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
   try {
+    // Initialize enhanced logging system
+    InitEnhancedLogging();
+
     // â”€â”€ GPU Stabilization Hints (Safe-Rendering Mode)
     // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
