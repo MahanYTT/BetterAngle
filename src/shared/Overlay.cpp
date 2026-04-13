@@ -271,12 +271,12 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
   }
 
   LinearGradientBrush bgBrush(Point(rx, ry), Point(rx, ry + rh),
-                              Color(150, 6, 8, 12), Color(150, 2, 3, 5));
+                              Color(200, 6, 8, 12), Color(200, 2, 3, 5));
   GraphicsPath path;
   AddRoundedRect(path, rx, ry, rw, rh, 8);
   graphics.FillPath(&bgBrush, &path);
   Color borderCol =
-      g_isDiving ? Color(200, 255, 255, 255) : Color(90, 50, 65, 80);
+      g_isDiving ? Color(200, 255, 255, 255) : Color(150, 50, 65, 80);
   Pen borderPen(borderCol, 1.5f);
   graphics.DrawPath(&borderPen, &path);
 
@@ -310,7 +310,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
                       &matchLabelB);
 
   int barX = rx + 14, barY = ry + rh - 38, barW = rw - 28, barH = 8;
-  SolidBrush barBgB(Color(60, 255, 255, 255));
+  SolidBrush barBgB(Color(120, 255, 255, 255));
   graphics.FillRectangle(&barBgB, barX, barY, barW, barH);
   float clampedRatio = detectionRatio > 1.0f ? 1.0f : detectionRatio;
   int fillW = int(clampedRatio * barW);
@@ -320,7 +320,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
                                 Color(200, r, g, 40), Color(200, r / 2, g, 80));
     graphics.FillRectangle(&barFill, barX, barY, fillW, barH);
   }
-  Pen barPen(Color(40, 255, 255, 255), 1.0f);
+  Pen barPen(Color(80, 255, 255, 255), 1.0f);
   graphics.DrawRectangle(&barPen, barX, barY, barW, barH);
 
   int swatchX = rx + rw - 28, swatchY = ry + 8;
@@ -331,7 +331,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
   graphics.DrawEllipse(&swatchP, swatchX, swatchY, 16, 16);
 
   Font tinyFont(&ff, 9, FontStyleRegular, UnitPixel);
-  SolidBrush tinyBrush(Color(g_isDraggingHUD ? 130 : 50, 200, 210, 220));
+  SolidBrush tinyBrush(Color(g_isDraggingHUD ? 130 : 100, 200, 210, 220));
   StringFormat sfCenter;
   sfCenter.SetAlignment(StringAlignmentCenter);
   graphics.DrawString(L":: drag", -1, &tinyFont,
