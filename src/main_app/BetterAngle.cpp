@@ -114,8 +114,7 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
                             LPARAM lParam) {
   if (message == WM_INPUT) {
     int dx = GetRawInputDeltaX(lParam);
-    // Only update angle accumulation (the decimal) if Fortnite is focused or
-    // debug mode is ON
+    // Update angle accumulation (the decimal) based on raw input
     g_logic.Update(dx);
     return 0;
   }
@@ -388,6 +387,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     Profile p;
     p.name = L"Default";
     p.tolerance = 2;
+    p.sensitivityX = 0.1; // Default Standard
+    p.sensitivityY = 0.1;
     p.roi_x = 760;
     p.roi_y = 640;
     p.roi_w = 400;

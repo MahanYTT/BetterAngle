@@ -11,7 +11,6 @@ class BetterAngleBackend : public QObject {
   Q_PROPERTY(double sensY READ sensY WRITE setSensY NOTIFY profileChanged)
   Q_PROPERTY(
       int tolerance READ tolerance WRITE setTolerance NOTIFY profileChanged)
-  Q_PROPERTY(QString syncResult READ syncResult NOTIFY syncResultChanged)
 
   Q_PROPERTY(bool crosshairOn READ crosshairOn WRITE setCrosshairOn NOTIFY
                  crosshairChanged)
@@ -76,7 +75,6 @@ public:
   int tolerance() const;
   void setTolerance(int v);
 
-  QString syncResult() const;
 
   bool crosshairOn() const;
   void setCrosshairOn(bool v);
@@ -121,7 +119,6 @@ public:
   bool hasCheckedForUpdates() const;
   bool isCheckingForUpdates() const;
 
-  Q_INVOKABLE void syncWithFortnite();
   Q_INVOKABLE void terminateApp();
   Q_INVOKABLE void checkForUpdates();
   Q_INVOKABLE void downloadUpdate();
@@ -150,7 +147,6 @@ public:
 
 signals:
   void profileChanged();
-  void syncResultChanged();
   void crosshairChanged();
   void debugChanged();
   void updateStatusChanged();
@@ -159,5 +155,4 @@ signals:
   void hotkeysChanged();
 
 private:
-  QString m_syncResult;
 };

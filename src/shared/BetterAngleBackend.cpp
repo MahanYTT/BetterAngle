@@ -14,7 +14,6 @@
 extern std::vector<Profile> g_allProfiles;
 extern int g_selectedProfileIdx;
 extern AngleLogic g_logic;
-extern double FetchFortniteSensitivity();
 
 static double g_pendingSetupSensX = 0.05;
 static double g_pendingSetupSensY = 0.05;
@@ -116,7 +115,6 @@ void BetterAngleBackend::setTolerance(int v) {
   emit profileChanged();
 }
 
-QString BetterAngleBackend::syncResult() const { return m_syncResult; }
 
 bool BetterAngleBackend::crosshairOn() const { return g_showCrosshair; }
 void BetterAngleBackend::setCrosshairOn(bool v) {
@@ -234,21 +232,6 @@ QString BetterAngleBackend::updateStatus() const {
   return "";
 }
 
-void BetterAngleBackend::syncWithFortnite() {
-  double synced = FetchFortniteSensitivity();
-  if (synced > 0.0) {
-    setSensX(synced);
-    setSensY(synced);
-    m_syncResult = QString("SYNC OK! Value: %1").arg(synced);
-  } else {
-    // More detailed diagnostic info for the user
-    wchar_t appdata[MAX_PATH] = {};
-    SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, appdata);
-    QString path = QString::fromWCharArray(appdata) + "\\FortniteGame\\Saved";
-    m_syncResult = QString("ERROR: No config found in %1 tree").arg(path);
-  }
-  emit syncResultChanged();
-}
 
 void BetterAngleBackend::terminateApp() {
   SaveSettings();

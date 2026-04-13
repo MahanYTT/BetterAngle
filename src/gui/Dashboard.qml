@@ -103,21 +103,7 @@ Item {
                         }
                     }
 
-                    Button {
-                        text: "SYNC SENSITIVITY WITH FORTNITE"
-                        width: parent.width
-                        height: 40
-                        contentItem: Text { text: parent.text; color: "white"; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
-                        background: Rectangle { color: parent.hovered ? "#00a382" : "#00cca3"; radius: 4 }
-                        onClicked: backend.syncWithFortnite()
-                    }
 
-                    Text {
-                        text: backend.syncResult
-                        color: backend.syncResult.includes("OK") ? "#00cca3" : "#ff3333"
-                        font.bold: true
-                        visible: backend.syncResult !== ""
-                    }
 
                     Text { text: "TRIGGER CALIBRATION (%)"; color: "#666"; font.pixelSize: 12; topPadding: 10 }
                     RowLayout {

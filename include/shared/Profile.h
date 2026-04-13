@@ -27,8 +27,8 @@ struct CrosshairPreset {
 
 struct Profile {
   std::wstring name;
-  double sensitivityX;
-  double sensitivityY;
+  double sensitivityX = 0.05;
+  double sensitivityY = 0.05;
 
   // Reference Metadata
   float fov;
