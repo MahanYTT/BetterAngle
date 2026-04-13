@@ -171,6 +171,8 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       break;
     case 5:
       g_debugMode = !g_debugMode;
+      InvalidateRect(hWnd, NULL, FALSE);
+      UpdateWindow(hWnd);
       break;
     }
     return 0;

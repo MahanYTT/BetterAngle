@@ -1,3 +1,7 @@
+### BetterAngle Pro v4.27.94
+- **Toggle Dashboard Fix**: Changed the dashboard hotkey from show-only to proper toggle (hide/show) in [`src/gui/main.qml`](src/gui/main.qml:18).
+- **Debug Overlay Fix**: Added window repaint after toggling debug mode via hotkey in [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:174).
+
 ### BetterAngle Pro v4.27.93
 - **QML Load Fix**: Removed the unsupported `focusPolicy` usage from the hotkey capture fields in [`src/gui/Dashboard.qml`](src/gui/Dashboard.qml:141), which was preventing [`main.qml`](src/gui/main.qml:5) from loading.
 - **Hotkey Field Cleanup**: Switched the capture fields to use explicit ids and `activeFocusOnTab`, keeping the keybind UI valid for Qt Quick Controls.

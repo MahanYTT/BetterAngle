@@ -16,9 +16,13 @@ Window {
     Connections {
         target: backend
         onShowControlPanelRequested: {
-            mainWindow.show()
-            mainWindow.raise()
-            mainWindow.requestActivate()
+            if (mainWindow.visible) {
+                mainWindow.hide()
+            } else {
+                mainWindow.show()
+                mainWindow.raise()
+                mainWindow.requestActivate()
+            }
         }
     }
 
