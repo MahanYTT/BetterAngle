@@ -2,6 +2,8 @@
 
 ## [v4.27.71] - 2026-04-13
 ### Fixed
+- **Angle Normalization**: Corrected [`AngleLogic::GetAngle()`](src/shared/Logic.cpp:128) to return the normalized value produced by [`AngleLogic::Norm360()`](src/shared/Logic.cpp:180), keeping the calculated angle inside the `[0, 360)` range.
+- **HUD Angle Wraparound**: Prevented negative angles and values above `359.9...` from propagating through the angle logic, preserving stable wraparound behavior for zeroing, profile loads, and diving-state transitions.
 - **HUD Mouse Barrier Issue**: Enhanced [`HUDWndProc()`](src/main_app/BetterAngle.cpp:159) with detailed diagnostic logging for `WM_NCHITTEST` to track click-through behavior. Added window style validation to ensure `WS_EX_TRANSPARENT` is correctly applied.
 - **Angle Overlay Visibility**: Added diagnostic logging in [`DrawOverlay()`](src/shared/Overlay.cpp:60) to track HUD box position and virtual screen coordinates. Fixed potential coordinate calculation issues that could cause the angle overlay to render off-screen.
 - **Enhanced Debug Logging**: Added comprehensive window creation diagnostics including window visibility state, styles, and extended styles after `ShowWindow()` calls to aid in troubleshooting HUD interaction issues.
