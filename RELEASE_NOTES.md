@@ -1,3 +1,10 @@
+### BetterAngle Pro v4.27.105
+- **Crosshair Auto-Save**: Implemented profile-level persistence for all crosshair settings in [`src/shared/BetterAngleBackend.cpp`](src/shared/BetterAngleBackend.cpp:115). Adjusting thickness, color, pulse, or offset now automatically updates and saves the active profile's `.json` configuration.
+- **UI Responsiveness Fix**: Enhanced the crosshair toggle and pulse buttons in [`src/gui/Dashboard.qml`](src/gui/Dashboard.qml:307) with tactile `pressed` states and clearer visual feedback.
+- **Hotkey Interface Overhaul**: Updated hotkey capture fields in [`src/gui/Dashboard.qml`](src/gui/Dashboard.qml:183) to show "Listening for keys..." with bold focus highlighting and hand cursors, improving interactive feedback for keybind recording.
+- **Branding Refinement**: Standardized the application logo across the UI ([`src/gui/main.qml`](src/gui/main.qml:47)) and generated a multi-resolution [`assets/icon.ico`](assets/icon.ico) from the refined transparent logo for Windows shortcuts and system tray.
+- **Labeling Fix**: Renamed the "SAVED POSITIONS" section to "SAVED CONFIG" in the crosshair management UI for better clarity.
+
 ### BetterAngle Pro v4.27.104
 - **Updater Payload Fix**: Switched the updater in [`src/shared/Updater.cpp`](src/shared/Updater.cpp:15) from downloading/replacing a raw [`BetterAngle.exe`](src/main_app/BetterAngle.cpp) to downloading the shipped installer asset [`BetterAngle_Setup.exe`](src/shared/Updater.cpp:17), preventing the corrupted restart path behind the Windows “Unsupported 16-Bit Application” error.
 - **Installer Apply Fix**: Reworked [`ApplyUpdateAndRestart()`](src/shared/Updater.cpp:150) to launch the downloaded installer silently instead of batch-swapping binaries in place, matching the actual release artifact flow.

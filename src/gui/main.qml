@@ -44,7 +44,7 @@ Window {
         
         Image {
             id: logo
-            source: "qrc:/assets/betterangle_refined_logo.png"
+            source: "qrc:/assets/logo.png"
             width: 24
             height: 24
             anchors.verticalCenter: parent.verticalCenter

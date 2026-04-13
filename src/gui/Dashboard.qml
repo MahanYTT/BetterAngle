@@ -186,10 +186,15 @@ Item {
                                 readOnly: true
                                 selectByMouse: false
                                 activeFocusOnTab: true
-                                text: activeFocus ? "Press keys..." : backend.keyToggle
-                                color: activeFocus ? "white" : "#00cca3"
-                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: keyToggleField.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
-                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
+                                text: activeFocus ? "Listening for keys..." : backend.keyToggle
+                                color: activeFocus ? "#00ffa3" : "white"
+                                font.bold: activeFocus
+                                background: Rectangle { 
+                                    color: "#1c1c2e"; radius: 4 
+                                    border.color: keyToggleField.activeFocus ? "#00cca3" : "#333"
+                                    border.width: keyToggleField.activeFocus ? 2 : 1 
+                                }
+                                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: parent.forceActiveFocus() }
                                 Keys.priority: Keys.BeforeItem
                                 Keys.onPressed: function(event) {
                                     parent.parent.captureHotkey(event, function(bind) { backend.keyToggle = bind })
@@ -204,10 +209,15 @@ Item {
                                 readOnly: true
                                 selectByMouse: false
                                 activeFocusOnTab: true
-                                text: activeFocus ? "Press keys..." : backend.keyRoi
-                                color: activeFocus ? "white" : "#00cca3"
-                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: keyRoiField.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
-                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
+                                text: activeFocus ? "Listening for keys..." : backend.keyRoi
+                                color: activeFocus ? "#00ffa3" : "white"
+                                font.bold: activeFocus
+                                background: Rectangle { 
+                                    color: "#1c1c2e"; radius: 4 
+                                    border.color: keyRoiField.activeFocus ? "#00cca3" : "#333"
+                                    border.width: keyRoiField.activeFocus ? 2 : 1 
+                                }
+                                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: parent.forceActiveFocus() }
                                 Keys.priority: Keys.BeforeItem
                                 Keys.onPressed: function(event) {
                                     parent.parent.captureHotkey(event, function(bind) { backend.keyRoi = bind })
@@ -222,10 +232,15 @@ Item {
                                 readOnly: true
                                 selectByMouse: false
                                 activeFocusOnTab: true
-                                text: activeFocus ? "Press keys..." : backend.keyCross
-                                color: activeFocus ? "white" : "#00cca3"
-                                background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: keyCrossField.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
-                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
+                                text: activeFocus ? "Listening for keys..." : backend.keyCross
+                                color: activeFocus ? "#00ffa3" : "white"
+                                font.bold: activeFocus
+                                background: Rectangle { 
+                                    color: "#1c1c2e"; radius: 4 
+                                    border.color: keyCrossField.activeFocus ? "#00cca3" : "#333"
+                                    border.width: keyCrossField.activeFocus ? 2 : 1 
+                                }
+                                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: parent.forceActiveFocus() }
                                 Keys.priority: Keys.BeforeItem
                                 Keys.onPressed: function(event) {
                                     parent.parent.captureHotkey(event, function(bind) { backend.keyCross = bind })
@@ -305,11 +320,17 @@ Item {
 
                     // Toggle
                     Button {
+                        id: crosshairToggleBtn
                         text: backend.crosshairOn ? "CROSSHAIR: ON" : "CROSSHAIR: OFF"
                         width: parent.width
                         height: 38
                         contentItem: Text { text: parent.text; color: "white"; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
-                        background: Rectangle { color: backend.crosshairOn ? (parent.hovered ? "#00a382" : "#00cca3") : (parent.hovered ? "#555" : "#333"); radius: 4 }
+                        background: Rectangle { 
+                            color: crosshairToggleBtn.pressed ? (backend.crosshairOn ? "#008a6e" : "#222") : (backend.crosshairOn ? (parent.hovered ? "#00b38f" : "#00cca3") : (parent.hovered ? "#444" : "#333"))
+                            radius: 4 
+                            border.color: crosshairToggleBtn.activeFocus ? "#00ffa3" : "transparent"
+                            border.width: 1
+                        }
                         onClicked: backend.crosshairOn = !backend.crosshairOn
                     }
 
@@ -562,8 +583,8 @@ Item {
                         background: Rectangle { color: parent.hovered ? "#6644aa" : "#4a3080"; radius: 4 }
                         onClicked: { backend.crossOffsetX = 0; backend.crossOffsetY = 0 } }
 
-                    // Saved Positions
-                    Text { text: "SAVED POSITIONS"; color: "#666"; font.pixelSize: 11; font.bold: true }
+                    // Saved Config
+                    Text { text: "SAVED CONFIG"; color: "#666"; font.pixelSize: 11; font.bold: true }
 
                     Row {
                         spacing: 8; width: parent.width

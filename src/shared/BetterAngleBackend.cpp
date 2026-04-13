@@ -115,6 +115,11 @@ void BetterAngleBackend::setTolerance(int v) {
 bool BetterAngleBackend::crosshairOn() const { return g_showCrosshair; }
 void BetterAngleBackend::setCrosshairOn(bool v) {
   g_showCrosshair = v;
+  if (!g_allProfiles.empty()) {
+    Profile &p = g_allProfiles[g_selectedProfileIdx];
+    p.showCrosshair = v;
+    p.Save(GetProfilesPath() + p.name + L".json");
+  }
   SaveSettings();
   emit crosshairChanged();
 }
@@ -122,20 +127,35 @@ void BetterAngleBackend::setCrosshairOn(bool v) {
 float BetterAngleBackend::crossThickness() const { return g_crossThickness; }
 void BetterAngleBackend::setCrossThickness(float v) {
   g_crossThickness = v;
+  if (!g_allProfiles.empty()) {
+    Profile &p = g_allProfiles[g_selectedProfileIdx];
+    p.crossThickness = v;
+    p.Save(GetProfilesPath() + p.name + L".json");
+  }
   SaveSettings();
   emit crosshairChanged();
 }
 
 float BetterAngleBackend::crossOffsetX() const { return g_crossOffsetX; }
 void BetterAngleBackend::setCrossOffsetX(float v) {
-  g_crossOffsetX = v;
+  g_crossOffsetX = (std::round(v * 2.0f) / 2.0f);
+  if (!g_allProfiles.empty()) {
+    Profile &p = g_allProfiles[g_selectedProfileIdx];
+    p.crossOffsetX = g_crossOffsetX;
+    p.Save(GetProfilesPath() + p.name + L".json");
+  }
   SaveSettings();
   emit crosshairChanged();
 }
 
 float BetterAngleBackend::crossOffsetY() const { return g_crossOffsetY; }
 void BetterAngleBackend::setCrossOffsetY(float v) {
-  g_crossOffsetY = v;
+  g_crossOffsetY = (std::round(v * 2.0f) / 2.0f);
+  if (!g_allProfiles.empty()) {
+    Profile &p = g_allProfiles[g_selectedProfileIdx];
+    p.crossOffsetY = g_crossOffsetY;
+    p.Save(GetProfilesPath() + p.name + L".json");
+  }
   SaveSettings();
   emit crosshairChanged();
 }
@@ -143,6 +163,11 @@ void BetterAngleBackend::setCrossOffsetY(float v) {
 bool BetterAngleBackend::crossPulse() const { return g_crossPulse; }
 void BetterAngleBackend::setCrossPulse(bool v) {
   g_crossPulse = v;
+  if (!g_allProfiles.empty()) {
+    Profile &p = g_allProfiles[g_selectedProfileIdx];
+    p.crossPulse = v;
+    p.Save(GetProfilesPath() + p.name + L".json");
+  }
   SaveSettings();
   emit crosshairChanged();
 }
@@ -153,6 +178,11 @@ QColor BetterAngleBackend::crossColor() const {
 }
 void BetterAngleBackend::setCrossColor(const QColor &c) {
   g_crossColor = RGB(c.red(), c.green(), c.blue());
+  if (!g_allProfiles.empty()) {
+    Profile &p = g_allProfiles[g_selectedProfileIdx];
+    p.crossColor = g_crossColor;
+    p.Save(GetProfilesPath() + p.name + L".json");
+  }
   SaveSettings();
   emit crosshairChanged();
 }

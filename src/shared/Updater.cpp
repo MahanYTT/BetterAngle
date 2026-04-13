@@ -121,7 +121,10 @@ bool CheckForUpdates() {
   }
 
   g_isCheckingForUpdates = false;
-  g_hasCheckedForUpdates = success;
+  g_hasCheckedForUpdates = true; // Always true after attempt, even if failed
+  if (!success) {
+    g_updateHistory = "Update check failed";
+  }
   return g_updateAvailable;
 }
 

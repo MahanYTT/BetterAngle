@@ -145,6 +145,19 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         SetWindowLong(hWnd, GWL_EXSTYLE, exStyle);
         SetForegroundWindow(hWnd);
       } else {
+        // Save the current ROI rectangle if valid before exiting selection
+        if (!g_allProfiles.empty() &&
+            g_selectionRect.right > g_selectionRect.left &&
+            g_selectionRect.bottom > g_selectionRect.top) {
+          Profile &p = g_allProfiles[g_selectedProfileIdx];
+          p.roi_x = g_selectionRect.left;
+          p.roi_y = g_selectionRect.top;
+          p.roi_w = g_selectionRect.right - g_selectionRect.left;
+          p.roi_h = g_selectionRect.bottom - g_selectionRect.top;
+          // Keep existing target_color unchanged
+          p.Save(GetProfilesPath() + p.name + L".json");
+          p.Save(GetProfilesPath() + L"last_calibrated.json");
+        }
         g_currentSelection = NONE;
         g_isSelectionActive = false;
         if (g_screenSnapshot) {
