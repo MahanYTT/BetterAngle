@@ -346,9 +346,37 @@ void __cdecl RefreshHotkeys(HWND hWnd) {
     return;
   const Keybinds &kb = g_allProfiles[g_selectedProfileIdx].keybinds;
 
-  RegisterHotKey(hWnd, HK_TOGGLE, kb.toggleMod, kb.toggleKey);
-  RegisterHotKey(hWnd, HK_ROI, kb.roiMod, kb.roiKey);
-  RegisterHotKey(hWnd, HK_CROSS, kb.crossMod, kb.crossKey);
-  RegisterHotKey(hWnd, HK_ZERO, kb.zeroMod, kb.zeroKey);
-  RegisterHotKey(hWnd, HK_DEBUG, kb.debugMod, kb.debugKey);
+  auto logRegister = [](const char *name, int id, UINT mods, UINT key,
+                        BOOL ok) {
+    std::ostringstream oss;
+    oss << "HotkeyRegister: " << name << " id=" << id << " mods=" << mods
+        << " key=" << key << " ok=" << (ok ? "true" : "false");
+    if (!ok)
+      oss << " error=" << GetLastError();
+    LogStartup(oss.str());
+  };
+
+  BOOL okToggle = RegisterHotKey(hWnd, HK_TOGGLE, kb.toggleMod, kb.toggleKey);
+  logRegister("toggle", HK_TOGGLE, kb.toggleMod, kb.toggleKey, okToggle);
+
+  BOOL okRoi = RegisterHotKey(hWnd, HK_ROI, kb.roiMod, kb.roiKey);
+  logRegister("roi", HK_ROI, kb.roiMod, kb.roiKey, okRoi);
+
+  UINT crossMods = kb.crossMod;
+  const bool isFunctionCrossKey = kb.crossKey >= VK_F1 && kb.crossKey <= VK_F24;
+  if (isFunctionCrossKey)
+    crossMods |= MOD_NOREPEAT;
+  BOOL okCross = RegisterHotKey(hWnd, HK_CROSS, crossMods, kb.crossKey);
+  logRegister("crosshair", HK_CROSS, crossMods, kb.crossKey, okCross);
+  if (!okCross && crossMods != kb.crossMod) {
+    okCross = RegisterHotKey(hWnd, HK_CROSS, kb.crossMod, kb.crossKey);
+    logRegister("crosshair-fallback", HK_CROSS, kb.crossMod, kb.crossKey,
+                okCross);
+  }
+
+  BOOL okZero = RegisterHotKey(hWnd, HK_ZERO, kb.zeroMod, kb.zeroKey);
+  logRegister("zero", HK_ZERO, kb.zeroMod, kb.zeroKey, okZero);
+
+  BOOL okDebug = RegisterHotKey(hWnd, HK_DEBUG, kb.debugMod, kb.debugKey);
+  logRegister("debug", HK_DEBUG, kb.debugMod, kb.debugKey, okDebug);
 }

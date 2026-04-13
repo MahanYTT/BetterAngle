@@ -7,21 +7,23 @@
 #include <objidl.h>
 #include <windows.h>
 
-
 // Define GDIPLUS_OLDEST_SUPPORTED_VERSION for Windows SDK 10.0.26100.0
 // compatibility
 #ifndef GDIPLUS_OLDEST_SUPPORTED_VERSION
 #define GDIPLUS_OLDEST_SUPPORTED_VERSION 0x0110
 #endif
+#include <climits>
 #include <gdiplus.h>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
 
+
 using namespace Gdiplus;
 
 bool IsFortniteFocused();
+void LogStartup(const std::string &msg);
 
 void AddRoundedRect(GraphicsPath &path, int x, int y, int width, int height,
                     int radius) {
@@ -208,8 +210,10 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
   if (showCrosshair) {
     int primW = GetSystemMetrics(SM_CXSCREEN),
         primH = GetSystemMetrics(SM_CYSCREEN);
-    float cx = (primW * 0.5f) - g_virtScreenX + g_crossOffsetX;
-    float cy = (primH * 0.5f) - g_virtScreenY + g_crossOffsetY;
+    const int originX = rect.left;
+    const int originY = rect.top;
+    float cx = (primW * 0.5f) - originX + g_crossOffsetX;
+    float cy = (primH * 0.5f) - originY + g_crossOffsetY;
     float hw = (primW > primH ? primW : primH) * 2.0f, hh = hw;
     float pulse = 1.0f;
     if (g_crossPulse)
@@ -224,6 +228,25 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
     graphics.DrawLine(&cPen, cx - hw, cy, cx + hw, cy);
     graphics.DrawLine(&cPen, cx, cy - hh, cx, cy + hh);
     graphics.ResetTransform();
+
+    static int s_lastOriginX = INT_MIN;
+    static int s_lastOriginY = INT_MIN;
+    static int s_lastCenterX = INT_MIN;
+    static int s_lastCenterY = INT_MIN;
+    const int drawX = int(cx);
+    const int drawY = int(cy);
+    if (s_lastOriginX != originX || s_lastOriginY != originY ||
+        s_lastCenterX != drawX || s_lastCenterY != drawY) {
+      std::ostringstream oss;
+      oss << "CrosshairRender: origin=(" << originX << "," << originY
+          << ") draw=(" << drawX << "," << drawY << ") offset=("
+          << g_crossOffsetX << "," << g_crossOffsetY << ")";
+      LogStartup(oss.str());
+      s_lastOriginX = originX;
+      s_lastOriginY = originY;
+      s_lastCenterX = drawX;
+      s_lastCenterY = drawY;
+    }
   }
 
   // HUD box

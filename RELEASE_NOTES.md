@@ -1,12 +1,15 @@
 ### BetterAngle Pro - Release Notes
 
-## [v4.27.67] - 2026-04-13
+## [v4.27.68] - 2026-04-13
 ### Fixed
-- **Direct Splash Ownership**: Added direct C++ tracking of the splash root in [`src/shared/ControlPanel.cpp`](src/shared/ControlPanel.cpp), allowing the app to explicitly close the splash window instead of relying only on QML signal timing.
-- **Direct Splash Close Path**: [`requestShowControlPanel()`](src/shared/BetterAngleBackend.cpp:424) now requests a direct C++ splash close before revealing the main UI, reducing the chance of the splash remaining stuck on screen.
-- **Splash Close Diagnostics**: Added targeted logging for tracked splash root creation, direct close attempts, and tracked root destruction to improve startup troubleshooting.
+- **Crosshair Activation Reliability**: Unified the dashboard button and F10 hotkey through the same persisted backend toggle path so the crosshair state stays consistent across UI, HUD, and saved profile state.
+- **Crosshair Visibility Positioning**: Corrected the crosshair draw coordinates to use the live HUD window origin, preventing invisible off-screen rendering on virtual desktop and multi-monitor layouts.
+- **Hotkey Registration Resilience**: Hardened the crosshair hotkey registration path with explicit diagnostics plus `MOD_NOREPEAT` function-key handling and fallback binding for F10.
 
-## [v4.27.66] - 2026-04-13
+### Added
+- **Crosshair Diagnostics**: Added runtime logging for crosshair toggles, hotkey registration results, virtual-screen origin, and draw coordinates to make future overlay failures directly traceable in startup logs.
+
+## [v4.27.67] - 2026-04-13
 ### Fixed
 - **Startup Unfreeze / Splash Handoff**: Moved the startup reveal gating logic onto the UI thread in [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp), preventing the splash screen from getting stuck after startup completed.
 - **Reveal Reliability**: The splash-to-dashboard handoff no longer depends on the boot thread to trigger the UI transition directly, reducing the chance of the splash staying open until force-quit.

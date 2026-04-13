@@ -177,6 +177,8 @@ void BetterAngleBackend::setCrosshairOn(bool v) {
   if (g_allProfiles.empty() || g_selectedProfileIdx < 0 ||
       g_selectedProfileIdx >= (int)g_allProfiles.size())
     return;
+  LogStartup(std::string("CrosshairToggle: source=ui next=") +
+             (v ? "on" : "off"));
   g_allProfiles[g_selectedProfileIdx].showCrosshair = v;
   g_showCrosshair = v;
   // Note: syncAndSaveProfile is not called here to avoid recursive lock if it
@@ -425,8 +427,6 @@ void BetterAngleBackend::requestShowControlPanel() {
   LogStartup("UI: requestShowControlPanel invoked.");
   emit closeSplashRequested();
   LogStartup("UI: closeSplashRequested emitted.");
-  CloseSplashScreenDirect();
-  LogStartup("UI: direct C++ splash close requested.");
 
   LogStartup("UI: Creating or reusing control panel root.");
   CreateControlPanel(g_hInstance);

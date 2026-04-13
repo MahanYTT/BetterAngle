@@ -186,8 +186,17 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
       InvalidateRect(hWnd, NULL, FALSE);
     }
     if (wp == 3) {
-      g_showCrosshair = !g_showCrosshair;
-      InvalidateRect(hWnd, NULL, FALSE);
+      const bool nextCrosshair =
+          g_backend ? !g_backend->crosshairOn() : !g_showCrosshair;
+      LogStartup(std::string("CrosshairToggle: source=hotkey next=") +
+                 (nextCrosshair ? "on" : "off"));
+      if (g_backend) {
+        g_backend->setCrosshairOn(nextCrosshair);
+      } else {
+        g_showCrosshair = nextCrosshair;
+        InvalidateRect(hWnd, NULL, FALSE);
+        UpdateWindow(hWnd);
+      }
     }
     if (wp == 4) {
       g_logic.SetZero();
@@ -475,15 +484,19 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
       RegisterRawMouse(hMsgWnd);
       int sw = GetSystemMetrics(SM_CXVIRTUALSCREEN),
           sh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+      g_virtScreenX = GetSystemMetrics(SM_XVIRTUALSCREEN);
+      g_virtScreenY = GetSystemMetrics(SM_YVIRTUALSCREEN);
+      LogStartup(
+          "Window: Virtual screen origin x=" + std::to_string(g_virtScreenX) +
+          " y=" + std::to_string(g_virtScreenY) +
+          " size=" + std::to_string(sw) + "x" + std::to_string(sh));
 
       LogStartup("Window: Spawning HUD Overlay...");
-      g_hHUD =
-          CreateWindowEx(WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TRANSPARENT |
-                             WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
-                         L"BetterAngleHUD", L"BetterAngle HUD", WS_POPUP,
-                         GetSystemMetrics(SM_XVIRTUALSCREEN),
-                         GetSystemMetrics(SM_YVIRTUALSCREEN), sw, sh, NULL,
-                         NULL, hInstance, NULL);
+      g_hHUD = CreateWindowEx(
+          WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW |
+              WS_EX_NOACTIVATE,
+          L"BetterAngleHUD", L"BetterAngle HUD", WS_POPUP, g_virtScreenX,
+          g_virtScreenY, sw, sh, NULL, NULL, hInstance, NULL);
       if (g_hHUD) {
         LogStartup("Window: HUD overlay created successfully.");
         SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA);
