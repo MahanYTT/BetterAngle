@@ -432,9 +432,13 @@ void BetterAngleBackend::requestShowControlPanel() {
   if (g_hHUD) {
     ShowWindow(g_hHUD, SW_SHOW);
     UpdateWindow(g_hHUD);
+    InvalidateRect(g_hHUD, NULL, FALSE);
+    g_pendingShowHUD = false;
     LogStartup("UI: HUD window shown.");
   } else {
-    LogStartup("UI: HUD window handle not available yet.");
+    g_pendingShowHUD = true;
+    LogStartup("UI: HUD window handle not available yet. Marked pending HUD "
+               "show request.");
   }
 
   LogStartup("UI: Emitting showControlPanelRequested.");

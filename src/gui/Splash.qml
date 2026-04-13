@@ -274,10 +274,8 @@ Window {
                         visible: progressBar.width > 0 && progressBar.width < 340
                         property alias glowOpacityAnimation: glowAnim
                         
-                        SequentialAnimation {
+                        SequentialAnimation on opacity {
                             id: glowAnim
-                            target: glowRect
-                            property: "opacity"
                             loops: Animation.Infinite
                             running: true
                             NumberAnimation { from: 0.5; to: 0.7; duration: 800 }

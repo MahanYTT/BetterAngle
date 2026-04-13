@@ -1,5 +1,12 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.63] - 2026-04-13
+### Fixed
+- **Final Splash Animation Load Error**: Removed the last invalid grouped animation property usage in [`src/gui/Splash.qml`](src/gui/Splash.qml:277), fixing the remaining splash startup error window and root object creation failure.
+- **HUD/Overlay Startup Race**: Fixed a race between [`requestShowControlPanel()`](src/shared/BetterAngleBackend.cpp:424) and HUD creation in [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:452) by adding a pending HUD show request path.
+- **Overlay Visibility**: Ensured the angle HUD overlay is shown as soon as the HUD window exists, even if the dashboard request happens before the overlay window handle is ready.
+- **Diagnostics**: Added targeted startup diagnostics for HUD creation and deferred HUD show handling to improve next-run troubleshooting.
+
 ## [v4.27.62] - 2026-04-12
 ### Fixed
 - **Splash Animation Property Error**: Fixed remaining invalid grouped animation property usage in [`Splash.qml`](src/gui/Splash.qml:173) that was still causing the splash screen to fail creation and show an error window.

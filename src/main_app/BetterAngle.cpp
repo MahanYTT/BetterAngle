@@ -5,7 +5,6 @@
 #include <shlobj.h>
 #include <windows.h>
 
-
 // Define GDIPLUS_OLDEST_SUPPORTED_VERSION for Windows SDK 10.0.26100.0
 // compatibility
 #ifndef GDIPLUS_OLDEST_SUPPORTED_VERSION
@@ -456,7 +455,19 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
                          GetSystemMetrics(SM_XVIRTUALSCREEN),
                          GetSystemMetrics(SM_YVIRTUALSCREEN), sw, sh, NULL,
                          NULL, hInstance, NULL);
-      SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA);
+      if (g_hHUD) {
+        LogStartup("Window: HUD overlay created successfully.");
+        SetLayeredWindowAttributes(g_hHUD, 0, 255, LWA_ALPHA);
+        if (g_pendingShowHUD) {
+          LogStartup("Window: Applying pending HUD show request.");
+          ShowWindow(g_hHUD, SW_SHOW);
+          UpdateWindow(g_hHUD);
+          InvalidateRect(g_hHUD, NULL, FALSE);
+          g_pendingShowHUD = false;
+        }
+      } else {
+        LogStartup("WINDOW_FATAL: CreateWindowEx failed for HUD overlay.");
+      }
       g_winInitialized = true;
 
       LogStartup("Window: Starting Control Panel Bridge...");
