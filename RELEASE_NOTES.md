@@ -1,5 +1,11 @@
 ### BetterAngle Pro - Release Notes
 
+## [v4.27.65] - 2026-04-13
+### Fixed
+- **WaveDropMaps Naming**: Corrected the splash branding text in [`src/gui/Splash.qml`](src/gui/Splash.qml) to use `WaveDropMaps` consistently instead of `Wave DropMaps`.
+- **Splash Text Cleanup**: Removed the unwanted splash footer text from [`src/gui/Splash.qml`](src/gui/Splash.qml) for a cleaner presentation.
+- **Loading Bar Behavior**: Replaced the unreliable backend-bound progress display in [`src/gui/Splash.qml`](src/gui/Splash.qml) with a stable animated visual loading bar that progresses smoothly during startup instead of appearing stuck at 100% with almost no fill.
+
 ## [v4.27.64] - 2026-04-13
 ### Changed
 - **Full Splash Redesign**: Completely rebuilt [`src/gui/Splash.qml`](src/gui/Splash.qml) around the branding in [`assets/banner.png`](assets/banner.png), with a cleaner card layout, integrated Wave DropMaps presentation, and a proper loading bar.

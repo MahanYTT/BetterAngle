@@ -13,8 +13,8 @@ Window {
     color: "transparent"
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
 
-    property int safeProgress: Math.max(0, Math.min(100, backend ? backend.loadingProgress : 0))
     property int dotPhase: 0
+    property real visualProgress: 0.08
 
     Component.onCompleted: {
         console.log("[QML] Splash redesign loaded successfully.")
@@ -29,6 +29,8 @@ Window {
         function onCloseSplashRequested() {
             console.log("[QML] closeSplashRequested received. Closing redesigned splash.")
             statusTimer.stop()
+            progressTimer.stop()
+            progressFinishAnimation.stop()
             shimmerAnimation.stop()
             splashWindow.close()
         }
@@ -53,6 +55,27 @@ Window {
         onTriggered: {
             dotPhase = (dotPhase + 1) % 4
         }
+    }
+
+    Timer {
+        id: progressTimer
+        interval: 70
+        running: true
+        repeat: true
+        onTriggered: {
+            if (visualProgress < 0.9) {
+                visualProgress = Math.min(0.9, visualProgress + 0.012)
+            }
+        }
+    }
+
+    NumberAnimation {
+        id: progressFinishAnimation
+        target: splashWindow
+        property: "visualProgress"
+        to: 1.0
+        duration: 220
+        easing.type: Easing.OutCubic
     }
 
     Rectangle {
@@ -151,7 +174,7 @@ Window {
                         }
 
                         Text {
-                            text: "Powered by Wave DropMaps"
+                            text: "Powered by WaveDropMaps"
                             color: "#93dfff"
                             font.pixelSize: 13
                             font.bold: true
@@ -180,7 +203,7 @@ Window {
                     }
 
                     Text {
-                        text: "Preparing the angle HUD, profiles, and DropMaps-powered startup experience."
+                        text: "Preparing the angle HUD, profiles, and WaveDropMaps-powered startup experience."
                         color: "#9fb1c2"
                         font.pixelSize: 14
                         wrapMode: Text.WordWrap
@@ -198,7 +221,7 @@ Window {
 
                         Rectangle {
                             id: progressFill
-                            width: Math.max(20, (safeProgress / 100.0) * progressTrack.width)
+                            width: Math.max(30, visualProgress * progressTrack.width)
                             height: parent.height
                             radius: 8
                             gradient: Gradient {
@@ -209,7 +232,7 @@ Window {
 
                             Behavior on width {
                                 NumberAnimation {
-                                    duration: 220
+                                    duration: 160
                                     easing.type: Easing.OutCubic
                                 }
                             }
@@ -233,7 +256,7 @@ Window {
                                 property: "x"
                                 from: -shimmer.width
                                 to: Math.max(progressFill.width, shimmer.width)
-                                duration: 1200
+                                duration: 1100
                                 loops: Animation.Infinite
                                 running: true
                             }
@@ -250,37 +273,7 @@ Window {
                             font.pixelSize: 13
                             font.bold: true
                         }
-
-                        Text {
-                            text: safeProgress + "%"
-                            color: "#8fe8ff"
-                            font.pixelSize: 13
-                            font.bold: true
-                        }
                     }
-                }
-            }
-
-            Item {
-                width: parent.width
-                height: 20
-
-                Text {
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "Wave DropMaps banner integrated"
-                    color: "#6e8294"
-                    font.pixelSize: 11
-                    font.letterSpacing: 0.8
-                }
-
-                Text {
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "Please wait while startup completes"
-                    color: "#6e8294"
-                    font.pixelSize: 11
-                    font.letterSpacing: 0.8
                 }
             }
         }
