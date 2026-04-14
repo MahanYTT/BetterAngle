@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.218..HEAD ### BetterAngle Pro v4.27.219
+- Automated build release.
+
 ### BetterAngle Pro v4.27.187
 - **Stage 2 Freezing Fix (Final)**: Applied comprehensive bounds checking for `GetPixel()` calls in Stage 2 color selection to prevent screen freezing when clicking prompt color. The fix ensures coordinates are validated against virtual screen dimensions before pixel sampling, with fallback to default color if out of bounds. This resolves the "completely freezes my whole screen" issue reported by users.
 
