@@ -12,6 +12,7 @@ PrivilegesRequired=admin
 OutputDir=bin
 OutputBaseFilename=BetterAngle_Setup
 SetupIconFile=assets\icon.ico
+UninstallDisplayIcon={app}\assets\icon.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern

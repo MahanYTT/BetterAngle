@@ -1,3 +1,7 @@
+### BetterAngle Pro v4.27.148
+- **Branding Hardening**: Explicitly configured the Inno Setup uninstaller to use the refined icon asset. This forces a system-wide refresh of the icon cache in the Windows Control Panel.
+- **Shortcut Integrity**: Verified and locked all desktop and program menu shortcuts to the standalone high-fidelity `.ico` asset to ensure 100% transparency.
+
 ### BetterAngle Pro v4.27.147
 - **Tuned Heartbeat Cadence**: Optimized the pulse animation by reducing the transparent hold duration by **25%** (to 1500ms). This results in a more rhythmic and predictable visual feedback cycle.
 - **Enhanced UI Nomenclature**: Renamed the calibration slider to **"Dive/glide match instead"** and added a detailed technical description: *"Dive to glide threshold match limit % match"*.
