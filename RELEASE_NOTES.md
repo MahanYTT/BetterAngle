@@ -1,3 +1,7 @@
+### BetterAngle Pro v4.27.121
+- **Final Diagnostic Build Fix**: Updated the remaining [`LogWindowInfo()`](include/shared/EnhancedLogging.h:35) call sites in [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:619) and [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:642) to pass the required label parameter, fixing the last CI compile failure in the diagnostic branch.
+- **Diagnostic Logging Preserved**: The input-gate state logging in [`MsgWndProc()`](src/main_app/BetterAngle.cpp:222) remains intact so the next green release can finally produce the evidence needed to isolate the broken normal-mode gate.
+
 ### BetterAngle Pro v4.27.120
 - **Qt Package Fix for GitHub Actions**: Corrected [`find_package()`](CMakeLists.txt:11) and [`target_link_libraries()`](CMakeLists.txt:32) to use Qt6 `QuickControls2` instead of the nonexistent `Controls2` package/target names, fixing the CI configure failure.
 - **Diagnostic Build Continuation**: This preserves the input-gate diagnostic logging in [`MsgWndProc()`](src/main_app/BetterAngle.cpp:222) while restoring a green GitHub Actions release path.
