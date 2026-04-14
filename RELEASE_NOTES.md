@@ -1,3 +1,6 @@
+### BetterAngle Pro v4.27.176
+- **Stage 2 Freezing Fix (Final)**: Applied comprehensive bounds checking for `GetPixel()` calls in Stage 2 color selection to prevent screen freezing when clicking prompt color. The fix ensures coordinates are validated against virtual screen dimensions before pixel sampling, with fallback to default color if out of bounds. This resolves the "completely freezes my whole screen" issue reported by users.
+
 ### BetterAngle Pro v4.27.173
 - **Build Compilation Fix**: Fixed compilation error where `g_pBackend` was undeclared in `NotifyBackendUpdateStatusChanged()` function. Changed to use `s_backendInstance` which is the correct variable name used throughout the codebase. This resolves the "not pushing out effectively" build issue.
 
