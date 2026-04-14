@@ -145,7 +145,9 @@ bool CheckForUpdates() {
   g_isCheckingForUpdates = false;
   g_hasCheckedForUpdates = true; // Always true after attempt, even if failed
   if (!success) {
-    g_updateHistory = "Update check failed";
+    g_updateHistory =
+        "Update check failed. Verify the latest GitHub release is a normal "
+        "release, not a prerelease.";
   }
   return g_updateAvailable;
 }
@@ -184,8 +186,8 @@ void ApplyUpdateAndRestart() {
 
   auto openReleasePage = []() {
     ShellExecuteW(NULL, L"open",
-                  L"https://github.com/MahanYTT/BetterAngle/releases/latest",
-                  NULL, NULL, SW_SHOWNORMAL);
+                  L"https://github.com/MahanYTT/BetterAngle/releases", NULL,
+                  NULL, SW_SHOWNORMAL);
   };
 
   if (GetFileAttributesW(installerPath.c_str()) == INVALID_FILE_ATTRIBUTES) {

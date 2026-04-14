@@ -2,8 +2,6 @@
 <qresource>
     <file>src/gui/main.qml</file>
     <file>src/gui/Dashboard.qml</file>
-    <file>src/gui/Splash.qml</file>
-    <file>src/gui/FirstTimeSetup.qml</file>
     <file>assets/banner.png</file>
     <file>assets/logo.png</file>
 </qresource>
