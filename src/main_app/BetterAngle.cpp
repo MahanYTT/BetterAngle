@@ -433,7 +433,11 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         bool lDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
         POINT pt;
         GetCursorPos(&pt);
-        if (lDown && !g_isDraggingHUD) {
+
+        // Prevent dragging when Fortnite is in focus
+        bool fortniteInFocus = IsFortniteForeground();
+
+        if (lDown && !g_isDraggingHUD && !fortniteInFocus) {
           if (pt.x >= g_hudX && pt.x <= g_hudX + 260 && pt.y >= g_hudY &&
               pt.y <= g_hudY + 150) {
             g_isDraggingHUD = true;
@@ -441,12 +445,14 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
             g_dragStartHUD.x = g_hudX;
             g_dragStartHUD.y = g_hudY;
           }
-        } else if (!lDown && g_isDraggingHUD) {
+        } else if ((!lDown && g_isDraggingHUD) ||
+                   (g_isDraggingHUD && fortniteInFocus)) {
+          // Stop dragging if mouse released OR Fortnite comes into focus
           g_isDraggingHUD = false;
           SaveSettings();
         }
 
-        if (g_isDraggingHUD && lDown) {
+        if (g_isDraggingHUD && lDown && !fortniteInFocus) {
           g_hudX = g_dragStartHUD.x + (pt.x - g_dragStartMouse.x);
           g_hudY = g_dragStartHUD.y + (pt.y - g_dragStartMouse.y);
           InvalidateRect(hWnd, NULL, FALSE);
