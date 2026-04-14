@@ -275,7 +275,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
     case 1: // Toggle Panel
       ShowControlPanel();
       break;
-    case 2: // ROI Select Toggle
+    case 2: // ROI Select Toggle (v123 Workflow)
       if (g_currentSelection == NONE) {
         CaptureDesktop(); // Capture before dimming
         g_currentSelection = SELECTING_ROI;
@@ -285,7 +285,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         SetWindowLong(hWnd, GWL_EXSTYLE, exStyle);
         SetForegroundWindow(hWnd);
       } else {
-        // Save the current ROI rectangle if valid before exiting selection
+        // Master Toggle Exit: Save the current ROI rectangle if valid before exiting
         if (!g_allProfiles.empty() &&
             g_selectionRect.right > g_selectionRect.left &&
             g_selectionRect.bottom > g_selectionRect.top) {
@@ -294,7 +294,6 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
           p.roi_y = g_selectionRect.top;
           p.roi_w = g_selectionRect.right - g_selectionRect.left;
           p.roi_h = g_selectionRect.bottom - g_selectionRect.top;
-          // Keep existing target_color unchanged
           p.Save(GetProfilesPath() + p.name + L".json");
           p.Save(GetProfilesPath() + L"last_calibrated.json");
         }
@@ -461,12 +460,13 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         POINT pt;
         GetCursorPos(&pt);
 
-        // Allow dragging if Fortnite is NOT centered, OR if the Dashboard is the foreground window
-        bool fortniteInFocus = IsFortniteForeground();
-        bool dashboardInFocus = (GetForegroundWindow() == g_hPanel);
-        bool canDrag = !fortniteInFocus || dashboardInFocus;
+        // Bulletproof Dragging Check (v123+ Improvements)
+        // Allow dragging whenever our app (Dashboard, etc.) is the active window
+        DWORD fgProcId = 0;
+        GetWindowThreadProcessId(GetForegroundWindow(), &fgProcId);
+        bool appHasFocus = (fgProcId == GetCurrentProcessId());
 
-        if (lDown && !g_isDraggingHUD && canDrag) {
+        if (lDown && !g_isDraggingHUD && appHasFocus) {
           // Use absolute screen coordinate check (more reliable than client remapping)
           if (pt.x >= g_hudX && pt.x <= g_hudX + 260 && 
               pt.y >= g_hudY && pt.y <= g_hudY + 150) {
