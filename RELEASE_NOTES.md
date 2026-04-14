@@ -1,3 +1,10 @@
+### BetterAngle Pro v4.27.135
+- **Shortcut Icon Refresh Enforcement**: Re-configured the installer to bundle `icon.ico` as a standalone asset and explicitly link Desktop/Start Menu shortcuts to it. This bypasses the Windows executable icon cache and ensures the new branding is visible immediately upon installation/update.
+- **Branding Consistency Fix**: Hardened the installer configuration to resolve persistent old-logo visibility on the user's desktop.
+
+### BetterAngle Pro v4.27.134
+- **Maintenance**: Automated technical version alignment and synchronization.
+
 ### BetterAngle Pro v4.27.133
 - **Hotkey Lifecycle Optimization**: Ensured all hotkey configuration changes (Toggle, ROI, Crosshair, Zero-Point, Debug) are automatically saved to both the user profile and global settings instantly.
 - **Workflow Stabilization**: Established a strict "Pull-Rebase-Push" protocol to prevent repository desynchronization and ensure atomic updates.

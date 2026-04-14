@@ -34,10 +34,11 @@ Type: filesandordirs; Name: "{app}"
 
 [Files]
 Source: "build\Release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "assets\icon.ico"; DestDir: "{app}\assets"; Flags: ignoreversion
 
 [Icons]
-Name: "{autoprograms}\BetterAngle Pro"; Filename: "{app}\BetterAngle.exe"
-Name: "{autodesktop}\BetterAngle Pro"; Filename: "{app}\BetterAngle.exe"; Tasks: desktopicon
+Name: "{autoprograms}\BetterAngle Pro"; Filename: "{app}\BetterAngle.exe"; IconFilename: "{app}\assets\icon.ico"
+Name: "{autodesktop}\BetterAngle Pro"; Filename: "{app}\BetterAngle.exe"; Tasks: desktopicon; IconFilename: "{app}\assets\icon.ico"
 Name: "{autoprograms}\BetterAngle Pro\Uninstall BetterAngle"; Filename: "{uninstallexe}"
 
 [Run]
