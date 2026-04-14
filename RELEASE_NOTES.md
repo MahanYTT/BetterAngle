@@ -1,7 +1,11 @@
-Generating release notes from commit range: v4.27.224..HEAD ### BetterAngle Pro v4.27.226
-- feat: Implement 'Breathing' pulse animation with 0.3s pause (v4.27.223)
+Generating release notes from commit range: v4.27.224..HEAD
 
-Generating release notes from commit range: v4.27.222..HEAD
+### BetterAngle Pro v4.27.227
+- **Crosshair Reset Button Fix**: Updated the reset crosshair button to properly turn the crosshair OFF and reset all crosshair settings to their default values (thickness: 1.0px, color: red, offsets: 0, pulse: off), matching fresh installation behavior.
+- **Crosshair Sub-Pixel Thickness Fix**: Fixed crosshair thickness loading logic to properly support sub-pixel values down to 0.1px. Previously, extremely small values (<0.01) were reset to 1.0px; now they're clamped to the UI minimum of 0.1px, ensuring the crosshair can be made visibly thinner.
+
+### BetterAngle Pro v4.27.226
+- **Breathing Pulse Animation**: Implemented a sophisticated 3.0-second crosshair pulse cycle. Features a 1.2s smooth fade-out, a distinct **0.3s transparency pause**, and a 1.5s slow return to full opacity for a premium "alive" look.
 
 ### BetterAngle Pro v4.27.225
 - **Breathing Pulse Animation**: Implemented a sophisticated 3.0-second crosshair pulse cycle. Features a 1.2s smooth fade-out, a distinct **0.3s transparency pause**, and a 1.5s slow return to full opacity for a premium "alive" look.
@@ -69,8 +73,3 @@ Generating release notes from commit range: v4.27.222..HEAD
 - **Branding Transparency Hardened**: Programmatically scrubbed the AI-generated checkerboard patterns from the master logo assets, ensuring 100% pure transparency for the cyan orb.
 - **Icon Cache-Busting**: Implemented a transition to `BetterAngle_v153.ico` (v154 build). This forces the Windows shell to ignore its old cached icons and display the new high-fidelity assets across the desktop, taskbar, and Control Panel immediately.
 - **Universal Asset Injection**: Updated the RC resource script and the Inno Setup configuration to ensure the uninstaller and all program shortcuts use the latest refined branding.
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 3305418 (feat: Implement 'Breathing' pulse animation with 0.3s pause (v4.27.223))
