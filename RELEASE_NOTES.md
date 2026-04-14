@@ -1,6 +1,10 @@
+### BetterAngle Pro v4.27.230
+- **Focus-Steal Transition Guard (replaces BlockInput)**: On dive/glide state transitions, BetterAngle now temporarily steals foreground focus to its own transparent HUD window (invisible to the user). Fortnite stops processing camera input for the animation duration (250ms glide→dive, 1000ms dive→glide), then focus is returned instantly. Keyboard input is unaffected throughout.
+- **Admin Requirement Removed**: No longer requires Administrator privileges. The UAC manifest flag and elevation check have been removed since `BlockInput` is no longer used.
+
 ### BetterAngle Pro v4.27.229
 - **Admin Elevation Enforced**: BetterAngle now requires and verifies Administrator privileges at startup. If not elevated, a clear error dialog is shown and the app does not launch. The CMake manifest now embeds `requireAdministrator` so Windows auto-prompts UAC on double-click.
-- **Input Freeze on State Transition**: Added `BlockInput` system-level input suspension on diving/gliding FOV animation transitions. Glide→Dive suspends all mouse+keyboard for 250ms; Dive→Glide for 1000ms to prevent FOV animation noise from corrupting the angle accumulator.
+- **Input Freeze on State Transition**: Added `BlockInput` system-level input suspension on diving/gliding FOV animation transitions. Glideâ†’Dive suspends all mouse+keyboard for 250ms; Diveâ†’Glide for 1000ms to prevent FOV animation noise from corrupting the angle accumulator.
 - **Screen Capture Exclusion**: The HUD overlay window is now excluded from Win32 `BitBlt`-based screen capture via `SetWindowDisplayAffinity(WDA_EXCLUDEFROMCAPTURE)`, preventing the UI from blocking the detector's pixel reads.
 - **Color Selection Dot Removed**: Removed the red dot from the Stage 2 magnifier cursor tip that was obscuring the pixel being aimed at.
 

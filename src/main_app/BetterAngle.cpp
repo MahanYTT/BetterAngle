@@ -39,6 +39,7 @@ FovDetector g_detector;
 // FOV Detector Thread
 void DetectorThread() {
   bool lastDiving = false;
+  HWND hFortniteCache = NULL;  // Fortnite HWND cached at transition moment
 
   while (g_running) {
     if (!g_allProfiles.empty() && g_currentSelection == NONE) {
@@ -59,22 +60,28 @@ void DetectorThread() {
 
       // Edge: Gliding -> Diving  (FOV zoom-in anim ~0.25s)
       if (nowDiving && !lastDiving) {
-        BlockInput(TRUE);
+        hFortniteCache = GetForegroundWindow();
+        // Steal focus to our invisible HUD — Fortnite stops camera input
+        SetForegroundWindow(g_hHUD);
         g_mouseSuspendedUntil = GetTickCount64() + 250;
-        LOG_INFO("Transition: glide->dive, blocking input for 250ms");
+        LOG_INFO("Transition: glide->dive, stole focus for 250ms");
       }
       // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)
       else if (!nowDiving && lastDiving) {
-        BlockInput(TRUE);
+        hFortniteCache = GetForegroundWindow();
+        SetForegroundWindow(g_hHUD);
         g_mouseSuspendedUntil = GetTickCount64() + 1000;
-        LOG_INFO("Transition: dive->glide, blocking input for 1000ms");
+        LOG_INFO("Transition: dive->glide, stole focus for 1000ms");
       }
 
-      // Release BlockInput once timer has expired
+      // Return focus to Fortnite once timer expires
       if (g_mouseSuspendedUntil > 0 && GetTickCount64() >= g_mouseSuspendedUntil) {
-        BlockInput(FALSE);
+        if (hFortniteCache) {
+          SetForegroundWindow(hFortniteCache);
+          hFortniteCache = NULL;
+        }
         g_mouseSuspendedUntil = 0;
-        LOG_INFO("BlockInput released");
+        LOG_INFO("Focus returned to Fortnite");
       }
 
       lastDiving = nowDiving;
@@ -83,11 +90,7 @@ void DetectorThread() {
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
-
-  // Safety: always release on thread exit
-  BlockInput(FALSE);
 }
-
 
 // Screen Snapshot for Flicker-Free Selection (v4.9.15)
 void CaptureDesktop() {
@@ -547,29 +550,10 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                    LPSTR lpCmdLine, int nCmdShow) {
-  // --- Administrator Privilege Check ---
-  // BlockInput requires elevation, so refuse to start without it.
-  BOOL isElevated = FALSE;
-  HANDLE hToken = NULL;
-  if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
-    TOKEN_ELEVATION elevation;
-    DWORD dwSize;
-    if (GetTokenInformation(hToken, TokenElevation, &elevation, sizeof(elevation), &dwSize))
-      isElevated = elevation.TokenIsElevated;
-    CloseHandle(hToken);
-  }
-  if (!isElevated) {
-    MessageBoxW(NULL,
-      L"BetterAngle must be run as Administrator to function correctly.\n"
-      L"Right-click the executable and choose 'Run as administrator'.",
-      L"BetterAngle - Elevation Required",
-      MB_OK | MB_ICONERROR);
-    return 1;
-  }
-
   SetProcessDPIAware();
   InitEnhancedLogging();
   LOG_INFO("WinMain entered");
+
 
   int argc = 1;
   char *argv[] = {(char *)"BetterAngle.exe", nullptr};
