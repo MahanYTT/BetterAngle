@@ -371,9 +371,13 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         }
 
         // SAFETY GUARD: Enforce Click-Through
-        long ex = GetWindowLong(hWnd, GWL_EXSTYLE);
-        if (!(ex & WS_EX_TRANSPARENT)) {
-          SetWindowLong(hWnd, GWL_EXSTYLE, ex | WS_EX_TRANSPARENT);
+        // BUT skip when we're in ROI/Color selection mode (window needs to be
+        // interactive)
+        if (g_currentSelection == NONE) {
+          long ex = GetWindowLong(hWnd, GWL_EXSTYLE);
+          if (!(ex & WS_EX_TRANSPARENT)) {
+            SetWindowLong(hWnd, GWL_EXSTYLE, ex | WS_EX_TRANSPARENT);
+          }
         }
       }
 

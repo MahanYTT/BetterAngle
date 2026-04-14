@@ -424,7 +424,20 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
   case WM_LBUTTONUP:
     if (g_currentSelection == SELECTING_ROI) {
-      g_currentSelection = SELECTING_COLOR;
+      if (g_selectionRect.right > g_selectionRect.left &&
+          g_selectionRect.bottom > g_selectionRect.top) {
+        g_currentSelection = SELECTING_COLOR;
+      } else {
+        g_currentSelection = NONE;
+        g_isSelectionActive = false;
+        if (g_screenSnapshot) {
+          DeleteObject(g_screenSnapshot);
+          g_screenSnapshot = NULL;
+        }
+        SetWindowLong(hWnd, GWL_EXSTYLE,
+                      GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
+        InvalidateRect(hWnd, NULL, FALSE);
+      }
       InvalidateRect(hWnd, NULL, FALSE);
     }
     // Release mouse capture if we have it
@@ -484,9 +497,13 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         }
 
         // SAFETY GUARD: Enforce Click-Through
-        long ex = GetWindowLong(hWnd, GWL_EXSTYLE);
-        if (!(ex & WS_EX_TRANSPARENT)) {
-          SetWindowLong(hWnd, GWL_EXSTYLE, ex | WS_EX_TRANSPARENT);
+        // BUT skip when we're in ROI/Color selection mode (window needs to be
+        // interactive)
+        if (g_currentSelection == NONE) {
+          long ex = GetWindowLong(hWnd, GWL_EXSTYLE);
+          if (!(ex & WS_EX_TRANSPARENT)) {
+            SetWindowLong(hWnd, GWL_EXSTYLE, ex | WS_EX_TRANSPARENT);
+          }
         }
       }
 

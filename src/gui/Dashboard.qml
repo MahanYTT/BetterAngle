@@ -746,12 +746,12 @@ Item {
                         contentItem: Text { text: parent.text; color: "white"; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                         background: Rectangle { color: parent.hovered ? "#6644aa" : "#4a3080"; radius: 4 }
                         onClicked: {
-                            backend.crosshairOn = false;
+                            backend.crosshairOn = true;
                             backend.crossThickness = 1.0;
-                            backend.crossColor = Qt.rgba(1, 0, 0, 1);
+                            backend.crossColor = Qt.rgba(0, 1, 1, 1);
                             backend.crossOffsetX = 0;
                             backend.crossOffsetY = 0;
-                            backend.crossPulse = false;
+                            backend.crossPulse = true;
                         } }
 
                     // Saved Config
