@@ -41,6 +41,11 @@ class BetterAngleBackend : public QObject {
                  updateStatusChanged)
   Q_PROPERTY(bool isDownloading READ isDownloading NOTIFY updateStatusChanged)
 
+  // Debug Diagnostics
+  Q_PROPERTY(bool fnRunning READ fnRunning NOTIFY debugDataChanged)
+  Q_PROPERTY(bool fnFocused READ fnFocused NOTIFY debugDataChanged)
+  Q_PROPERTY(bool fnMouseHidden READ fnMouseHidden NOTIFY debugDataChanged)
+
   // Custom Keybinds
   Q_PROPERTY(
       QString keyToggle READ keyToggle WRITE setKeyToggle NOTIFY hotkeysChanged)
@@ -92,6 +97,11 @@ public:
   bool hasCheckedForUpdates() const;
   bool isCheckingForUpdates() const;
 
+  bool fnRunning() const;
+  bool fnFocused() const;
+  bool fnMouseHidden() const;
+  Q_INVOKABLE void refreshDebugData();
+
 
   Q_INVOKABLE void terminateApp();
   Q_INVOKABLE void checkForUpdates();
@@ -125,6 +135,7 @@ signals:
 
   void updateStatusChanged();
   void showControlPanelRequested();
+  void debugDataChanged();
 
 private:
 };

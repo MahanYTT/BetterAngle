@@ -9,7 +9,7 @@ Item {
         interval: 100
         running: bar.currentIndex === 3 // Debug tab index
         repeat: true
-        onTriggered: backend.debugDataChanged()
+        onTriggered: backend.refreshDebugData()
     }
 
     TabBar {
@@ -36,6 +36,11 @@ Item {
         }
         TabButton {
             text: qsTr("UPDATES")
+            contentItem: Text { text: parent.text; color: parent.checked ? "#00ffcc" : "#888"; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+            background: Rectangle { color: parent.checked ? "#1a1a2e" : "transparent" }
+        }
+        TabButton {
+            text: qsTr("DEBUG")
             contentItem: Text { text: parent.text; color: parent.checked ? "#00ffcc" : "#888"; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
             background: Rectangle { color: parent.checked ? "#1a1a2e" : "transparent" }
         }
@@ -915,6 +920,42 @@ Item {
                     width: parent.width
                 }
 
+            }
+        }
+
+        // ─── DEBUG ────────────────────────────────────────────────
+        Rectangle {
+            color: "#0d0d12"
+            Column {
+                anchors.fill: parent
+                anchors.margins: 20
+                spacing: 15
+
+                Text { text: "DEBUG DIAGNOSTICS"; color: "#666"; font.pixelSize: 11; font.bold: true }
+
+                Rectangle {
+                    width: parent.width; height: 120; radius: 6; color: "#161625"; border.color: "#333"; border.width: 1
+                    Column {
+                        anchors.fill: parent; anchors.margins: 15; spacing: 12
+                        RowLayout {
+                            Text { text: "Fortnite Running:"; color: "white"; font.pixelSize: 14; Layout.preferredWidth: 200 }
+                            Text { text: backend.fnRunning ? "YES" : "NO"; color: backend.fnRunning ? "#00ffcc" : "#ff4c4c"; font.bold: true; font.pixelSize: 14 }
+                        }
+                        RowLayout {
+                            Text { text: "Fortnite Focused:"; color: "white"; font.pixelSize: 14; Layout.preferredWidth: 200 }
+                            Text { text: backend.fnFocused ? "YES" : "NO"; color: backend.fnFocused ? "#00ffcc" : "#ff4c4c"; font.bold: true; font.pixelSize: 14 }
+                        }
+                        RowLayout {
+                            Text { text: "Mouse Attached (Hidden):"; color: "white"; font.pixelSize: 14; Layout.preferredWidth: 200 }
+                            Text { text: backend.fnMouseHidden ? "YES" : "NO"; color: backend.fnMouseHidden ? "#00ffcc" : "#ff4c4c"; font.bold: true; font.pixelSize: 14 }
+                        }
+                    }
+                }
+
+                Text { 
+                    text: "Angle calculation only updates when BOTH Fortnite is focused AND Mouse is attached. Monitoring here will NOT bypass that requirement."
+                    color: "#888"; font.pixelSize: 12; width: parent.width; wrapMode: Text.WordWrap 
+                }
             }
         }
     }

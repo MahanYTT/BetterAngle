@@ -3,7 +3,10 @@
 #include "shared/Profile.h"
 #include "shared/State.h"
 #include "shared/Updater.h"
+#include "shared/Input.h"
 #include <QGuiApplication>
+#include <QTimer>
+#include <tlhelp32.h>
 #include <QTimer>
 #include <algorithm>
 #include <cmath>
@@ -786,4 +789,40 @@ void NotifyBackendUpdateStatusChanged() {
   if (s_backendInstance) {
     emit s_backendInstance->updateStatusChanged();
   }
+}
+
+static bool IsFortniteExe(const wchar_t *processName) {
+  if (!processName || !processName[0]) return false;
+  return (_wcsnicmp(processName, L"FortniteClient-Win64-Shipping", 29) == 0 ||
+          _wcsnicmp(processName, L"FortniteLauncher", 16) == 0 ||
+          _wcsnicmp(processName, L"FortniteClient", 14) == 0);
+}
+
+bool BetterAngleBackend::fnRunning() const {
+  HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if (hSnap == INVALID_HANDLE_VALUE) return false;
+  PROCESSENTRY32W pe;
+  pe.dwSize = sizeof(pe);
+  if (Process32FirstW(hSnap, &pe)) {
+    do {
+      if (IsFortniteExe(pe.szExeFile)) {
+        CloseHandle(hSnap);
+        return true;
+      }
+    } while (Process32NextW(hSnap, &pe));
+  }
+  CloseHandle(hSnap);
+  return false;
+}
+
+bool BetterAngleBackend::fnFocused() const {
+  return IsFortniteForeground();
+}
+
+bool BetterAngleBackend::fnMouseHidden() const {
+  return !IsCursorCurrentlyVisible();
+}
+
+void BetterAngleBackend::refreshDebugData() {
+  emit debugDataChanged();
 }

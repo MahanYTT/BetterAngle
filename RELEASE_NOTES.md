@@ -1,9 +1,6 @@
-Generating release notes from commit range: v4.27.219..HEAD ### BetterAngle Pro v4.27.220
-- Automated build release.
-
-Generating release notes from commit range: v4.27.218..HEAD ### BetterAngle Pro v4.27.219
-- Automated build release.
-
+### BetterAngle Pro v4.27.221
+- **Angle Wrap Formatting**: Fixed angle calculation UI logic so that the value dynamically formats and correctly resets precisely at the wrap point (359.9 to 0.0), ensuring the angle is faithfully bounded and doesn't display as 360.0.
+- **Debug Diagnostics Tab**: Added a new 'DEBUG' tab to the QML Dashboard providing real-time hardware and operating system hooks to monitor Fortnite process detection, window focus, and mouse hidden states. This operates entirely independently of the core angle calculation logic, ensuring allowAngleUpdate continues to strictly require Fortnite to be focused and the mouse hidden without being bypassed by debug monitoring.
 ### BetterAngle Pro v4.27.187
 - **Stage 2 Freezing Fix (Final)**: Applied comprehensive bounds checking for `GetPixel()` calls in Stage 2 color selection to prevent screen freezing when clicking prompt color. The fix ensures coordinates are validated against virtual screen dimensions before pixel sampling, with fallback to default color if out of bounds. This resolves the "completely freezes my whole screen" issue reported by users.
 
@@ -58,3 +55,4 @@ Generating release notes from commit range: v4.27.218..HEAD ### BetterAngle Pro 
 - **Branding Transparency Hardened**: Programmatically scrubbed the AI-generated checkerboard patterns from the master logo assets, ensuring 100% pure transparency for the cyan orb.
 - **Icon Cache-Busting**: Implemented a transition to `BetterAngle_v153.ico` (v154 build). This forces the Windows shell to ignore its old cached icons and display the new high-fidelity assets across the desktop, taskbar, and Control Panel immediately.
 - **Universal Asset Injection**: Updated the RC resource script and the Inno Setup configuration to ensure the uninstaller and all program shortcuts use the latest refined branding.
+
