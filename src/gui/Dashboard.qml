@@ -126,6 +126,7 @@ Item {
                     Text { text: "HOTKEY CONFIGURATION"; color: "#666"; font.pixelSize: 11; font.bold: true; topPadding: 10 }
                     
                     Column {
+                        id: hotkeyColumn
                         spacing: 8
                         width: parent.width
 
@@ -134,19 +135,66 @@ Item {
                             if (event.modifiers & Qt.ControlModifier) parts.push("Ctrl")
                             if (event.modifiers & Qt.ShiftModifier) parts.push("Shift")
                             if (event.modifiers & Qt.AltModifier) parts.push("Alt")
+                            if (event.modifiers & Qt.MetaModifier) parts.push("Win")
 
-                            if (event.key === Qt.Key_Control || event.key === Qt.Key_Shift || event.key === Qt.Key_Alt)
+                            if (event.key === Qt.Key_Control || event.key === Qt.Key_Shift || event.key === Qt.Key_Alt || event.key === Qt.Key_Meta)
                                 return ""
 
                             var key = ""
                             if (event.key >= Qt.Key_F1 && event.key <= Qt.Key_F12)
                                 key = "F" + (event.key - Qt.Key_F1 + 1)
+                            else if ((event.modifiers & Qt.KeypadModifier) && event.key >= Qt.Key_0 && event.key <= Qt.Key_9)
+                                key = "Numpad" + String.fromCharCode(event.key)
+                            else if ((event.modifiers & Qt.KeypadModifier) && event.key === Qt.Key_Plus)
+                                key = "Add"
+                            else if ((event.modifiers & Qt.KeypadModifier) && event.key === Qt.Key_Minus)
+                                key = "Subtract"
+                            else if ((event.modifiers & Qt.KeypadModifier) && event.key === Qt.Key_Asterisk)
+                                key = "Multiply"
+                            else if ((event.modifiers & Qt.KeypadModifier) && event.key === Qt.Key_Slash)
+                                key = "Divide"
+                            else if ((event.modifiers & Qt.KeypadModifier) && (event.key === Qt.Key_Period || event.key === Qt.Key_Comma))
+                                key = "Decimal"
                             else if (event.key === Qt.Key_Space)
                                 key = "Space"
                             else if (event.key === Qt.Key_Tab)
                                 key = "Tab"
                             else if (event.key === Qt.Key_Escape)
                                 key = "Esc"
+                            else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
+                                key = "Enter"
+                            else if (event.key === Qt.Key_Backspace)
+                                key = "Backspace"
+                            else if (event.key === Qt.Key_Insert)
+                                key = "Insert"
+                            else if (event.key === Qt.Key_Delete)
+                                key = "Delete"
+                            else if (event.key === Qt.Key_Home)
+                                key = "Home"
+                            else if (event.key === Qt.Key_End)
+                                key = "End"
+                            else if (event.key === Qt.Key_PageUp)
+                                key = "PageUp"
+                            else if (event.key === Qt.Key_PageDown)
+                                key = "PageDown"
+                            else if (event.key === Qt.Key_Up)
+                                key = "Up"
+                            else if (event.key === Qt.Key_Down)
+                                key = "Down"
+                            else if (event.key === Qt.Key_Left)
+                                key = "Left"
+                            else if (event.key === Qt.Key_Right)
+                                key = "Right"
+                            else if (event.key === Qt.Key_CapsLock)
+                                key = "CapsLock"
+                            else if (event.key === Qt.Key_NumLock)
+                                key = "NumLock"
+                            else if (event.key === Qt.Key_ScrollLock)
+                                key = "ScrollLock"
+                            else if (event.key === Qt.Key_Print)
+                                key = "PrintScreen"
+                            else if (event.key === Qt.Key_Pause)
+                                key = "Pause"
                             else if (event.key >= Qt.Key_A && event.key <= Qt.Key_Z)
                                 key = String.fromCharCode(event.key)
                             else if (event.key >= Qt.Key_0 && event.key <= Qt.Key_9)
@@ -156,6 +204,32 @@ Item {
                                 return ""
 
                             parts.push(key)
+                            return parts.join(" + ")
+                        }
+
+                        function formatCapturedMouseButton(mouse) {
+                            var parts = []
+                            if (mouse.modifiers & Qt.ControlModifier) parts.push("Ctrl")
+                            if (mouse.modifiers & Qt.ShiftModifier) parts.push("Shift")
+                            if (mouse.modifiers & Qt.AltModifier) parts.push("Alt")
+                            if (mouse.modifiers & Qt.MetaModifier) parts.push("Win")
+
+                            var button = ""
+                            if (mouse.button === Qt.LeftButton)
+                                button = "Mouse1"
+                            else if (mouse.button === Qt.RightButton)
+                                button = "Mouse2"
+                            else if (mouse.button === Qt.MiddleButton)
+                                button = "Mouse3"
+                            else if (mouse.button === Qt.BackButton)
+                                button = "Mouse4"
+                            else if (mouse.button === Qt.ForwardButton)
+                                button = "Mouse5"
+
+                            if (button === "")
+                                return ""
+
+                            parts.push(button)
                             return parts.join(" + ")
                         }
 
@@ -177,6 +251,16 @@ Item {
                             root.forceActiveFocus()
                             event.accepted = true
                         }
+
+                        function captureMouseHotkey(mouse, applyBinding) {
+                            var bind = formatCapturedMouseButton(mouse)
+                            if (bind === "")
+                                return
+
+                            applyBinding(bind)
+                            backend.saveKeybinds()
+                            root.forceActiveFocus()
+                        }
                         
                         RowLayout {
                             Text { text: "Toggle Dashboard:"; color: "white"; Layout.preferredWidth: 150 }
@@ -194,10 +278,20 @@ Item {
                                     border.color: keyToggleField.activeFocus ? "#00cca3" : "#333"
                                     border.width: keyToggleField.activeFocus ? 2 : 1 
                                 }
-                                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: parent.forceActiveFocus() }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    acceptedButtons: Qt.AllButtons
+                                    cursorShape: Qt.PointingHandCursor
+                                    onPressed: function(mouse) {
+                                        if (keyToggleField.activeFocus)
+                                            hotkeyColumn.captureMouseHotkey(mouse, function(bind) { backend.keyToggle = bind })
+                                        else
+                                            keyToggleField.forceActiveFocus()
+                                    }
+                                }
                                 Keys.priority: Keys.BeforeItem
                                 Keys.onPressed: function(event) {
-                                    parent.parent.captureHotkey(event, function(bind) { backend.keyToggle = bind })
+                                    hotkeyColumn.captureHotkey(event, function(bind) { backend.keyToggle = bind })
                                 }
                             }
                         }
@@ -217,10 +311,20 @@ Item {
                                     border.color: keyRoiField.activeFocus ? "#00cca3" : "#333"
                                     border.width: keyRoiField.activeFocus ? 2 : 1 
                                 }
-                                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: parent.forceActiveFocus() }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    acceptedButtons: Qt.AllButtons
+                                    cursorShape: Qt.PointingHandCursor
+                                    onPressed: function(mouse) {
+                                        if (keyRoiField.activeFocus)
+                                            hotkeyColumn.captureMouseHotkey(mouse, function(bind) { backend.keyRoi = bind })
+                                        else
+                                            keyRoiField.forceActiveFocus()
+                                    }
+                                }
                                 Keys.priority: Keys.BeforeItem
                                 Keys.onPressed: function(event) {
-                                    parent.parent.captureHotkey(event, function(bind) { backend.keyRoi = bind })
+                                    hotkeyColumn.captureHotkey(event, function(bind) { backend.keyRoi = bind })
                                 }
                             }
                         }
@@ -240,10 +344,20 @@ Item {
                                     border.color: keyCrossField.activeFocus ? "#00cca3" : "#333"
                                     border.width: keyCrossField.activeFocus ? 2 : 1 
                                 }
-                                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: parent.forceActiveFocus() }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    acceptedButtons: Qt.AllButtons
+                                    cursorShape: Qt.PointingHandCursor
+                                    onPressed: function(mouse) {
+                                        if (keyCrossField.activeFocus)
+                                            hotkeyColumn.captureMouseHotkey(mouse, function(bind) { backend.keyCross = bind })
+                                        else
+                                            keyCrossField.forceActiveFocus()
+                                    }
+                                }
                                 Keys.priority: Keys.BeforeItem
                                 Keys.onPressed: function(event) {
-                                    parent.parent.captureHotkey(event, function(bind) { backend.keyCross = bind })
+                                    hotkeyColumn.captureHotkey(event, function(bind) { backend.keyCross = bind })
                                 }
                             }
                         }
@@ -258,10 +372,20 @@ Item {
                                 text: activeFocus ? "Press keys..." : backend.keyZero
                                 color: activeFocus ? "white" : "#00cca3"
                                 background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: keyZeroField.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
-                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    acceptedButtons: Qt.AllButtons
+                                    cursorShape: Qt.PointingHandCursor
+                                    onPressed: function(mouse) {
+                                        if (keyZeroField.activeFocus)
+                                            hotkeyColumn.captureMouseHotkey(mouse, function(bind) { backend.keyZero = bind })
+                                        else
+                                            keyZeroField.forceActiveFocus()
+                                    }
+                                }
                                 Keys.priority: Keys.BeforeItem
                                 Keys.onPressed: function(event) {
-                                    parent.parent.captureHotkey(event, function(bind) { backend.keyZero = bind })
+                                    hotkeyColumn.captureHotkey(event, function(bind) { backend.keyZero = bind })
                                 }
                             }
                         }
@@ -276,10 +400,20 @@ Item {
                                 text: activeFocus ? "Press keys..." : backend.keyDebug
                                 color: activeFocus ? "white" : "#00cca3"
                                 background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: keyDebugField.activeFocus ? "#00cca3" : "#333"; border.width: 1 }
-                                MouseArea { anchors.fill: parent; onClicked: parent.forceActiveFocus() }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    acceptedButtons: Qt.AllButtons
+                                    cursorShape: Qt.PointingHandCursor
+                                    onPressed: function(mouse) {
+                                        if (keyDebugField.activeFocus)
+                                            hotkeyColumn.captureMouseHotkey(mouse, function(bind) { backend.keyDebug = bind })
+                                        else
+                                            keyDebugField.forceActiveFocus()
+                                    }
+                                }
                                 Keys.priority: Keys.BeforeItem
                                 Keys.onPressed: function(event) {
-                                    parent.parent.captureHotkey(event, function(bind) { backend.keyDebug = bind })
+                                    hotkeyColumn.captureHotkey(event, function(bind) { backend.keyDebug = bind })
                                 }
                             }
                         }

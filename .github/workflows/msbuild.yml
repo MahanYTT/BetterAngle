@@ -116,11 +116,10 @@ jobs:
         shell: pwsh
         run: |
           $ver = (Get-Content VERSION).Trim()
-          $shortSha = "${{ github.sha }}".Substring(0, 7)
-          $tag = "ci-$ver-${{ github.run_number }}-$shortSha"
+          $tag = "v$ver"
           echo "RELEASE_TAG=$tag" >> $env:GITHUB_ENV
-          echo "RELEASE_NAME=BetterAngle CI $tag" >> $env:GITHUB_ENV
-          echo "RELEASE_PRERELEASE=true" >> $env:GITHUB_ENV
+          echo "RELEASE_NAME=BetterAngle Pro $tag" >> $env:GITHUB_ENV
+          echo "RELEASE_PRERELEASE=false" >> $env:GITHUB_ENV
 
       - name: Create GitHub Release
         if: github.event_name != 'pull_request'

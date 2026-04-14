@@ -1,86 +1,69 @@
 #pragma once
 
-#include <atomic>
-#include <cstdarg>
-#include <fstream>
-#include <memory>
-#include <mutex>
 #include <string>
+#include <fstream>
+#include <mutex>
+#include <sstream>
+#include <chrono>
+#include <iomanip>
+#include <atomic>
+#include <memory>
+#include <windows.h>
 
-struct HWND__;
-typedef HWND__ *HWND;
+// Handle Windows ERROR macro collision
+#ifdef ERROR
+#undef ERROR
+#endif
 
 enum class LogLevel {
-  Trace = 0,
-  Debug = 1,
-  Info = 2,
-  Warn = 3,
-  Error = 4,
-  Fatal = 5
+    Trace,
+    Debug,
+    Info,
+    Warning,
+    Error,
+    Fatal
 };
 
-#define LOG_TRACE(...)                                                         \
-  LogMessage(LogLevel::Trace, __FILE__, __LINE__, __VA_ARGS__)
-#define LOG_DEBUG(...)                                                         \
-  LogMessage(LogLevel::Debug, __FILE__, __LINE__, __VA_ARGS__)
-#define LOG_INFO(...)                                                          \
-  LogMessage(LogLevel::Info, __FILE__, __LINE__, __VA_ARGS__)
-#define LOG_WARN(...)                                                          \
-  LogMessage(LogLevel::Warn, __FILE__, __LINE__, __VA_ARGS__)
-#define LOG_ERROR(...)                                                         \
-  LogMessage(LogLevel::Error, __FILE__, __LINE__, __VA_ARGS__)
-#define LOG_FATAL(...)                                                         \
-  LogMessage(LogLevel::Fatal, __FILE__, __LINE__, __VA_ARGS__)
+// Global level control
+extern std::atomic<LogLevel> g_logLevel;
 
-#define LOG_WINDOW_EVENT(hwnd, event, ...)                                     \
-  LogWindowEvent(hwnd, event, __FILE__, __LINE__, __VA_ARGS__)
-#define LOG_MOUSE_EVENT(x, y, button, action, ...)                             \
-  LogMouseEvent(x, y, button, action, __FILE__, __LINE__, __VA_ARGS__)
-#define LOG_KEY_EVENT(vk, action, ...)                                         \
-  LogKeyEvent(vk, action, __FILE__, __LINE__, __VA_ARGS__)
-#define LOG_WINDOW_DRAG_EVENT(hwnd, x, y, action, ...)                         \
-  LogWindowDragEvent(hwnd, x, y, action, __FILE__, __LINE__, __VA_ARGS__)
-
+// Global functions
 void InitEnhancedLogging();
 void ShutdownEnhancedLogging();
 void SetLogLevel(LogLevel level);
-LogLevel GetLogLevel();
-void SetLogToFile(bool enable);
-void SetLogToConsole(bool enable);
-void SetLogFilePath(const std::wstring &path);
-
-void LogMessage(LogLevel level, const char *file, int line, const char *format,
-                ...);
-void LogWindowEvent(HWND hwnd, const std::string &event, const char *file,
-                    int line, const char *format = "", ...);
-void LogMouseEvent(int x, int y, const std::string &button,
-                   const std::string &action, const char *file, int line,
-                   const char *format = "", ...);
-void LogKeyEvent(int vk, const std::string &action, const char *file, int line,
-                 const char *format = "", ...);
-void LogWindowDragEvent(HWND hwnd, int x, int y, const std::string &action,
-                        const char *file, int line, const char *format = "",
-                        ...);
-
-void LogSystemInfo();
-void LogMemoryUsage();
-void LogThreadInfo();
-void LogWindowInfo(HWND hwnd);
-void LogProcessInfo();
 void LogStartup();
+void LogWindowInfo(const wchar_t* label, HWND hwnd);
 
-std::wstring GetDebugFolderPath();
-bool EnsureDebugFolderExists();
-std::wstring GetLogFilePath();
+// Core logging functions (Overloaded for ANSI and Wide strings)
+void LogMessage(LogLevel level, const char* file, int line, const char* format, ...);
+void LogMessage(LogLevel level, const char* file, int line, const wchar_t* format, ...);
 
-std::string LogLevelToString(LogLevel level);
-std::string GetCurrentTimeString();
-std::string FormatString(const char *format, ...);
-std::string VFormatString(const char *format, va_list args);
+// Macros
+#define LOG_TRACE(fmt, ...) LogMessage(LogLevel::Trace, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_DEBUG(fmt, ...) LogMessage(LogLevel::Debug, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_INFO(fmt, ...)  LogMessage(LogLevel::Info,  __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_WARN(fmt, ...)  LogMessage(LogLevel::Warning, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_ERROR(fmt, ...) LogMessage(LogLevel::Error, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_FATAL(fmt, ...) LogMessage(LogLevel::Fatal, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
-extern std::atomic<LogLevel> g_logLevel;
-extern std::atomic<bool> g_logToFile;
-extern std::atomic<bool> g_logToConsole;
-extern std::wstring g_logFilePath;
-extern std::mutex g_logMutex;
-extern std::unique_ptr<std::ofstream> g_logFile;
+class EnhancedLogger {
+public:
+    static EnhancedLogger& Instance();
+
+    void Initialize(const std::wstring& logPath);
+    void Log(LogLevel level, const char* file, int line, const std::string& message);
+    void Log(LogLevel level, const char* file, int line, const std::wstring& message);
+    void Flush();
+
+private:
+    EnhancedLogger() = default;
+    ~EnhancedLogger();
+
+    std::ofstream m_stream;
+    std::mutex m_mutex;
+    bool m_initialized = false;
+
+    std::string LevelToString(LogLevel level) const;
+    std::string TimestampNow() const;
+    std::string ToNarrow(const std::wstring& wstr);
+};

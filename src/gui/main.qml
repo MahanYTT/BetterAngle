@@ -32,9 +32,7 @@ Window {
         }
     }
 
-    FirstTimeSetup {
-        id: setupWindow
-    }
+
 
     Rectangle {
         id: titleBar
