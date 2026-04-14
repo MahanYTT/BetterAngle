@@ -114,12 +114,17 @@ Item {
 
                     Text { text: "TRIGGER CALIBRATION (%)"; color: "#666"; font.pixelSize: 12; topPadding: 10 }
                     RowLayout {
-                        Text { text: "Dive/Glide Match"; color: "white"; Layout.preferredWidth: 100 }
-                        Slider { 
+                        Text { text: "Dive/glide match instead"; color: "white"; Layout.preferredWidth: 160; font.pixelSize: 12 }
+                        Slider {
+                            Layout.fillWidth: true
                             from: 1; to: 20; value: backend.diveGlideMatch
                             onValueChanged: backend.diveGlideMatch = value
                         }
                         Text { text: Math.round(backend.diveGlideMatch).toString() + "%"; color: "#aaa" }
+                    }
+                    Text { 
+                        text: "Dive to glide threshold match limt % match"; 
+                        color: "#666"; font.pixelSize: 11; font.italic: true 
                     }
 
                     Text { text: "HOTKEY CONFIGURATION"; color: "#666"; font.pixelSize: 11; font.bold: true; topPadding: 10 }

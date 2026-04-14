@@ -1,3 +1,7 @@
+### BetterAngle Pro v4.27.147
+- **Tuned Heartbeat Cadence**: Optimized the pulse animation by reducing the transparent hold duration by **25%** (to 1500ms). This results in a more rhythmic and predictable visual feedback cycle.
+- **Enhanced UI Nomenclature**: Renamed the calibration slider to **"Dive/glide match instead"** and added a detailed technical description: *"Dive to glide threshold match limit % match"*.
+
 ### BetterAngle Pro v4.27.146
 - **Full-State Crosshair Presets**: Presets now save and restore all visual attributes, including **Thickness**, **Color**, and **Pulse state**. 
 - **Dynamic UI Sync**: Loading a preset now automatically synchronizes the Dashboard sliders and color pickers.
