@@ -460,15 +460,16 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         bool lDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
         POINT pt;
         GetCursorPos(&pt);
-        POINT localPt = pt;
-        ScreenToClient(g_hHUD, &localPt);
 
-        // Prevent dragging when Fortnite is in focus
+        // Allow dragging if Fortnite is NOT centered, OR if the Dashboard is the foreground window
         bool fortniteInFocus = IsFortniteForeground();
+        bool dashboardInFocus = (GetForegroundWindow() == g_hPanel);
+        bool canDrag = !fortniteInFocus || dashboardInFocus;
 
-        if (lDown && !g_isDraggingHUD && !fortniteInFocus) {
-          if (localPt.x >= g_hudX && localPt.x <= g_hudX + 260 && 
-              localPt.y >= g_hudY && localPt.y <= g_hudY + 150) {
+        if (lDown && !g_isDraggingHUD && canDrag) {
+          // Use absolute screen coordinate check (more reliable than client remapping)
+          if (pt.x >= g_hudX && pt.x <= g_hudX + 260 && 
+              pt.y >= g_hudY && pt.y <= g_hudY + 150) {
             g_isDraggingHUD = true;
             g_dragStartMouse = pt;
             g_dragStartHUD.x = g_hudX;
