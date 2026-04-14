@@ -1,3 +1,11 @@
+### BetterAngle Pro v4.27.157
+- **UI Nomenclature Update**: Renamed the calibration slider in the General tab to **"Dive to glide threshold match limit %"** per user feedback.
+- **Improved Layout**: Cleaned up redundant descriptive text in the General tab for a higher-precision dashboard layout.
+
+### BetterAngle Pro v4.27.157
+- **UI Nomenclature Update**: Renamed the calibration slider in the General tab to **"Dive to glide threshold match limit %"** per user feedback.
+- **Improved Layout**: Cleaned up redundant descriptive text in the General tab for a higher-precision dashboard layout.
+
 ### BetterAngle Pro v4.27.154
 - **Branding Transparency Hardened**: Programmatically scrubbed the AI-generated checkerboard patterns from the master logo assets, ensuring 100% pure transparency for the cyan orb.
 - **Icon Cache-Busting**: Implemented a transition to `BetterAngle_v153.ico` (v154 build). This forces the Windows shell to ignore its old cached icons and display the new high-fidelity assets across the desktop, taskbar, and Control Panel immediately.
