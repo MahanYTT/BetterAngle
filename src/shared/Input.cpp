@@ -1,5 +1,6 @@
 #include "shared/Input.h"
 #include <cwchar>
+#include <tlhelp32.h>
 #include <windows.h>
 
 namespace {
@@ -7,11 +8,8 @@ bool IsFortniteProcessName(const wchar_t *processName) {
   if (!processName || !processName[0])
     return false;
 
-  const wchar_t *knownPrefixes[] = {
-      L"FortniteClient-Win64-Shipping",
-      L"FortniteLauncher",
-      L"FortniteClient"
-  };
+  const wchar_t *knownPrefixes[] = {L"FortniteClient-Win64-Shipping",
+                                    L"FortniteLauncher", L"FortniteClient"};
 
   for (const wchar_t *prefix : knownPrefixes) {
     const size_t prefixLen = wcslen(prefix);
@@ -118,10 +116,39 @@ int GetRawInputDeltaX(LPARAM lparam) {
 }
 
 bool IsFortniteForeground() {
+  HWND fg = GetForegroundWindow();
+  if (!fg)
+    return false;
+
+  DWORD pid = 0;
+  GetWindowThreadProcessId(fg, &pid);
+  if (pid == 0)
+    return false;
+
+  // Method 1: Try OpenProcess + QueryFullProcessImageNameW
   wchar_t processPath[MAX_PATH] = {};
-  const wchar_t *processName =
-      GetProcessBaseName(GetForegroundWindow(), processPath, MAX_PATH);
-  return IsFortniteProcessName(processName);
+  const wchar_t *processName = GetProcessBaseName(fg, processPath, MAX_PATH);
+  if (processName && processName[0] && IsFortniteProcessName(processName))
+    return true;
+
+  // Method 2: Fallback using CreateToolhelp32Snapshot.
+  // This works even when OpenProcess is blocked by anti-cheat (EAC/BattlEye).
+  HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if (snap != INVALID_HANDLE_VALUE) {
+    PROCESSENTRY32W pe = {};
+    pe.dwSize = sizeof(PROCESSENTRY32W);
+    if (Process32FirstW(snap, &pe)) {
+      do {
+        if (pe.th32ProcessID == pid) {
+          CloseHandle(snap);
+          return IsFortniteProcessName(pe.szExeFile);
+        }
+      } while (Process32NextW(snap, &pe));
+    }
+    CloseHandle(snap);
+  }
+
+  return false;
 }
 
 bool IsCursorCurrentlyVisible() {
