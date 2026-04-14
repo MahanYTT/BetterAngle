@@ -64,6 +64,8 @@ class BetterAngleBackend : public QObject {
       QString keyZero READ keyZero WRITE setKeyZero NOTIFY hotkeysChanged)
   Q_PROPERTY(
       QString keyDebug READ keyDebug WRITE setKeyDebug NOTIFY hotkeysChanged)
+  Q_PROPERTY(float detectionRatio READ detectionRatio NOTIFY debugDataChanged)
+  Q_PROPERTY(bool isDiving READ isDiving NOTIFY debugDataChanged)
 
 public:
   explicit BetterAngleBackend(QObject *parent = nullptr);
@@ -120,6 +122,9 @@ public:
   bool isDownloading() const;
   bool downloadComplete() const;
   QString updateHistory() const;
+
+  float detectionRatio() const;
+  bool isDiving() const;
   QString updateStatus() const;
   bool hasCheckedForUpdates() const;
   bool isCheckingForUpdates() const;
@@ -158,6 +163,7 @@ signals:
   void updateStatusChanged();
   void crosshairPresetsChanged();
   void showControlPanelRequested();
+  void debugDataChanged();
   void hotkeysChanged();
 
 private:

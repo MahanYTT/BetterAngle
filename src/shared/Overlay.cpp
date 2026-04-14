@@ -226,7 +226,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
       float pulse = 1.0f;
       if (g_crossPulse) {
         ULONGLONG t = GetTickCount64();
-        pulse = 0.6f + 0.4f * sinf(float(t) * 0.0025f);
+        pulse = 0.6f + 0.4f * sinf(float(t) * 0.00125f);
       }
 
       BYTE alpha = BYTE(200 * pulse);

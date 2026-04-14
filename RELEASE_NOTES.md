@@ -1,3 +1,8 @@
+### BetterAngle Pro v4.27.136
+- **Animation Polish**: Slowed the crosshair pulse effect by 50% for a smoother, more premium visual experience.
+- **Deep Diagnostics**: Overhauled the Debug tab with a "Live Diagnostics" console. It now displays real-time match ratios and active logic states (Diving/Gliding).
+- **Hardened Debug Logic**: Ensured all debug telemetry data is correctly synchronized between the core engine and the UI.
+
 ### BetterAngle Pro v4.27.135
 - **Shortcut Icon Refresh Enforcement**: Re-configured the installer to bundle `icon.ico` as a standalone asset and explicitly link Desktop/Start Menu shortcuts to it. This bypasses the Windows executable icon cache and ensures the new branding is visible immediately upon installation/update.
 - **Branding Consistency Fix**: Hardened the installer configuration to resolve persistent old-logo visibility on the user's desktop.

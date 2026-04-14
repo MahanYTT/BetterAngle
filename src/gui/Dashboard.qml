@@ -5,6 +5,13 @@ import QtQuick.Layouts 1.15
 Item {
     id: root
 
+    Timer {
+        interval: 100
+        running: bar.currentIndex === 3 // Debug tab index
+        repeat: true
+        onTriggered: backend.debugDataChanged()
+    }
+
     TabBar {
         id: bar
         width: parent.width
@@ -827,6 +834,35 @@ Item {
                     contentItem: Text { text: parent.text; color: "white"; leftPadding: parent.indicator.width + 10 }
                 }
 
+                Text { text: "LIVE DIAGNOSTICS"; color: "#666"; font.pixelSize: 12; topPadding: 15 }
+                
+                Rectangle {
+                    width: parent.width
+                    height: 80
+                    color: "#1a1a24"
+                    radius: 6
+                    
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 8
+                        
+                        Text {
+                            text: "Match Ratio: " + (backend.detectionRatio * 100).toFixed(1) + "%"
+                            color: "white"
+                            font.pixelSize: 18
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+                        
+                        Text {
+                            text: backend.isDiving ? "STATE: DIVING" : "STATE: GLIDING"
+                            color: backend.isDiving ? "#ff4d4d" : "#4d94ff"
+                            font.pixelSize: 14
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+                    }
+                }
             }
         }
 

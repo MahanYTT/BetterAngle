@@ -271,6 +271,9 @@ QString BetterAngleBackend::updateHistory() const {
   return QString::fromStdString(g_updateHistory);
 }
 
+float BetterAngleBackend::detectionRatio() const { return g_detectionRatio; }
+bool BetterAngleBackend::isDiving() const { return g_isDiving; }
+
 QString BetterAngleBackend::updateStatus() const {
   if (g_isDownloadingUpdate)
     return "Downloading installer...";
