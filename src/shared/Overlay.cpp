@@ -172,19 +172,42 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
       POINT cur = curScr;
       ScreenToClient(hwnd, &cur);
 
-      int mx = curScr.x - 40, my = curScr.y - 40, mw = 80, mh = 80;
-      HDC hdcZoom = CreateCompatibleDC(hdcMem);
-      HBITMAP hbmZoom = CreateCompatibleBitmap(hdcMem, mw * 3, mh * 3);
-      SelectObject(hdcZoom, hbmZoom);
-
       if (g_screenSnapshot) {
-        HDC hdcSnap = CreateCompatibleDC(hdcZoom);
-        SelectObject(hdcSnap, g_screenSnapshot);
-        int sx = GetSystemMetrics(SM_XVIRTUALSCREEN);
-        int sy = GetSystemMetrics(SM_YVIRTUALSCREEN);
-        StretchBlt(hdcZoom, 0, 0, mw * 3, mh * 3, hdcSnap, mx - sx, my - sy, mw,
-                   mh, SRCCOPY);
-        DeleteDC(hdcSnap);
+        // Use a static-cached bitmap to avoid performance drops (PC Freeze fix)
+        static Gdiplus::Bitmap* s_cachedBmp = nullptr;
+        static HBITMAP s_lastHbm = NULL;
+
+        if (g_screenSnapshot != s_lastHbm) {
+          if (s_cachedBmp) delete s_cachedBmp;
+          s_cachedBmp = new Gdiplus::Bitmap(g_screenSnapshot, NULL);
+          s_lastHbm = g_screenSnapshot;
+        }
+
+        if (s_cachedBmp) {
+          // 1. Draw the dimmed background
+          graphics.DrawImage(s_cachedBmp, 0, 0, sw, sh);
+          SolidBrush dimBrush(Color(120, 0, 0, 0));
+          graphics.FillRectangle(&dimBrush, 0, 0, sw, sh);
+
+          // 2. Draw Magnifier (100% GDI+ Unified Rendering)
+          int mw = 80, mh = 80;
+          int zx = (cur.x + 20 + mw * 3 < sw) ? (cur.x + 20) : (cur.x - mw * 3 - 20);
+          int zy = (cur.y + mh * 3 < sh) ? cur.y : (sh - mh * 3);
+
+          // Draw the zoomed image directly from the cached bitmap source
+          graphics.DrawImage(s_cachedBmp,
+                            Rect(zx, zy, mw * 3, mh * 3),        // Destination
+                            mx, my, mw, mh,                      // Source
+                            UnitPixel);
+
+          Pen magBorder(Color(255, 255, 255, 255), 2.0f);
+          graphics.DrawRectangle(&magBorder, zx, zy, mw * 3, mh * 3);
+
+          // Crosshair inside magnifier
+          Pen magCross(Color(180, 255, 0, 0), 1.0f);
+          graphics.DrawLine(&magCross, zx + (mw * 3 / 2), zy, zx + (mw * 3 / 2), zy + (mh * 3));
+          graphics.DrawLine(&magCross, zx, zy + (mh * 3 / 2), zx + (mw * 3), zy + (mh * 3 / 2));
+        }
       }
 
       // Position magnifier relative to client cursor
