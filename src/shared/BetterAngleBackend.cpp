@@ -309,6 +309,10 @@ void BetterAngleBackend::terminateApp() {
   QCoreApplication::quit();
 }
 void BetterAngleBackend::checkForUpdates() {
+  if (g_isCheckingForUpdates)
+    return;
+
+  g_isCheckingForUpdates = true;
   g_hasCheckedForUpdates = false;
   g_updateAvailable = false;
   emit updateStatusChanged();

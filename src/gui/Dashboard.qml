@@ -913,7 +913,7 @@ Item {
                     }
                     width: parent.width
                     height: 44
-                    enabled: !backend.isDownloading
+                    enabled: !backend.isDownloading && !backend.isCheckingForUpdates
                     contentItem: Text { text: parent.text; color: "white"; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                     background: Rectangle { 
                         color: backend.downloadComplete ? "#6a4cff" : (parent.hovered ? "#00cca3" : "#00a382")
