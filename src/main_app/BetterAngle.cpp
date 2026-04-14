@@ -370,22 +370,27 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
         POINT cur;
         GetCursorPos(&cur);
-        // Adjust color sample coord by the same virtual screen offset used in
-        // CaptureDesktop
         int sampleX = cur.x - sx;
         int sampleY = cur.y - sy;
 
-        COLORREF pixel;
+        COLORREF pixel = RGB(255, 0, 0);
         if (sampleX >= 0 && sampleX < sw && sampleY >= 0 && sampleY < sh) {
           pixel = GetPixel(hdcMem, sampleX, sampleY);
-        } else {
-          pixel = RGB(255, 0, 0); // fallback to red if out of bounds
         }
 
         g_pickedColor = pixel;
         g_targetColor = pixel;
         SelectObject(hdcMem, hOld);
         DeleteDC(hdcMem);
+      }
+
+      // Restore click-through immediately
+      SetWindowLong(hWnd, GWL_EXSTYLE,
+                    GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
+      
+      // Release mouse capture to prevent input lockouts
+      if (GetCapture() == hWnd) {
+        ReleaseCapture();
       }
 
       // Finalize and Exit Selection
@@ -395,13 +400,6 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         DeleteObject(g_screenSnapshot);
         g_screenSnapshot = NULL;
       }
-
-      // CRITICAL: Release mouse capture to prevent whole-PC lockups
-      if (GetCapture() == hWnd) {
-        ReleaseCapture();
-      }
-      SetWindowLong(hWnd, GWL_EXSTYLE,
-                    GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
       InvalidateRect(hWnd, NULL, FALSE);
 
       if (!g_allProfiles.empty()) {
@@ -411,15 +409,10 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         p.roi_y = g_selectionRect.top;
         p.roi_w = g_selectionRect.right - g_selectionRect.left;
         p.roi_h = g_selectionRect.bottom - g_selectionRect.top;
-
-        // Save to the actual profile path
-        std::wstring profilePath = GetProfilesPath() + p.name + L".json";
-        p.Save(profilePath);
-
-        // Also maintain the legacy 'last_calibrated' for quick-load logic if
-        // needed
+        p.Save(GetProfilesPath() + p.name + L".json");
         p.Save(GetProfilesPath() + L"last_calibrated.json");
       }
+      SetForegroundWindow(GetDesktopWindow());
     }
     return 0;
 
@@ -451,34 +444,12 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         }
         SetWindowLong(hWnd, GWL_EXSTYLE,
                       GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
+        if (GetCapture() == hWnd) {
+          ReleaseCapture();
+        }
         InvalidateRect(hWnd, NULL, FALSE);
       }
       InvalidateRect(hWnd, NULL, FALSE);
-    }
-    // Release mouse capture if we have it
-    if (GetCapture() == hWnd) {
-      ReleaseCapture();
-    }
-    return 0;
-
-  case WM_KEYDOWN:
-    // ESC key cancels ROI/color selection and returns to normal mode
-    if (wParam == VK_ESCAPE && g_currentSelection != NONE) {
-      g_currentSelection = NONE;
-      g_isSelectionActive = false;
-      if (g_screenSnapshot) {
-        DeleteObject(g_screenSnapshot);
-        g_screenSnapshot = NULL;
-      }
-      SetWindowLong(hWnd, GWL_EXSTYLE,
-                    GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
-      InvalidateRect(hWnd, NULL, FALSE);
-      // Release mouse capture if we have it
-      if (GetCapture() == hWnd) {
-        ReleaseCapture();
-      }
-      // Ensure window loses focus after cancelling selection
-      SetForegroundWindow(GetDesktopWindow());
     }
     return 0;
 
