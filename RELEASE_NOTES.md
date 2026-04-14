@@ -1,3 +1,8 @@
+### BetterAngle Pro v4.27.172
+- **Stage 2 Freezing Fix**: Fixed critical bug where Stage 2 (color selection) would completely freeze after clicking. The issue was caused by `GetPixel()` being called with out-of-bounds coordinates, which could hang or crash. Added bounds checking before calling `GetPixel()` in both BetterAngle.cpp and FirstTimeSetup.cpp.
+- **ESC Key Enhancement**: Improved ESC key handling to ensure proper window focus management when cancelling ROI/color selection. Added `SetForegroundWindow(GetDesktopWindow())` to release focus after ESC is pressed.
+- **Bounds Validation**: Color selection now validates that sample coordinates are within virtual screen bounds before attempting to read pixel data, preventing hangs and crashes.
+
 ### BetterAngle Pro v4.27.169
 - **Update Concurrency Guard**: Implemented robust lock guards in the UI and backend to prevent "double processing" or redundant update threads.
 - **RAII Thread Safety**: Added an RAII guard to the update cycle to ensure that progress flags are always cleared and the UI is notified, even if network requests fail.

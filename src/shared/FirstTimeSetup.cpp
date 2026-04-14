@@ -336,6 +336,8 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       if (GetCapture() == hWnd) {
         ReleaseCapture();
       }
+      // Ensure window loses focus after cancelling selection
+      SetForegroundWindow(GetDesktopWindow());
     }
     return 0;
 
