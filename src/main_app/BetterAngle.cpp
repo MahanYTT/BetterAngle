@@ -348,8 +348,11 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       g_startPoint = cur;
       g_selectionRect = {cur.x, cur.y, cur.x, cur.y};
     } else if (g_currentSelection == SELECTING_COLOR) {
+      LOG_INFO("Stage 2 LBUTTONDOWN executed");
       // STAGE 2: PRECISION COLOR PICK (Snap-Shot Bypass)
+      LOG_INFO("Stage 2 LBUTTONDOWN: Starting to finalize selection");
       if (g_screenSnapshot) {
+        LOG_TRACE("Sampling color from g_screenSnapshot...");
         HDC hdcScreen = GetDC(NULL);
         HDC hdcMem = CreateCompatibleDC(hdcScreen);
         HGDIOBJ hOld = SelectObject(hdcMem, g_screenSnapshot);
@@ -368,9 +371,11 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         SelectObject(hdcMem, hOld);
         DeleteDC(hdcMem);
         ReleaseDC(NULL, hdcScreen);
+        LOG_TRACE("Color sampled successfully.");
       }
 
       // Finalize and Exit Selection
+      LOG_INFO("Resetting selection state...");
       g_currentSelection = NONE;
       g_isSelectionActive = false;
       if (g_screenSnapshot) {
@@ -391,7 +396,9 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
         // Save to the actual profile path
         std::wstring profilePath = GetProfilesPath() + p.name + L".json";
+        LOG_INFO("Calling Save to profilePath");
         p.Save(profilePath);
+        LOG_INFO("Save complete");
 
         // Also maintain the legacy 'last_calibrated' for quick-load logic if
         // needed
