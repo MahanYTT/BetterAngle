@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.228..HEAD ### BetterAngle Pro v4.27.230
+- feat: Admin elevation required, BlockInput transition gates, WDA_EXCLUDEFROMCAPTURE, remove selection dot
+
 ### BetterAngle Pro v4.27.229
 - **Admin Elevation Enforced**: BetterAngle now requires and verifies Administrator privileges at startup. If not elevated, a clear error dialog is shown and the app does not launch. The CMake manifest now embeds `requireAdministrator` so Windows auto-prompts UAC on double-click.
 - **Input Freeze on State Transition**: Added `BlockInput` system-level input suspension on diving/gliding FOV animation transitions. Glide→Dive suspends all mouse+keyboard for 250ms; Dive→Glide for 1000ms to prevent FOV animation noise from corrupting the angle accumulator.
