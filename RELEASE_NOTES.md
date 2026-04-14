@@ -1,3 +1,13 @@
+### BetterAngle Pro v4.27.133
+- **Hotkey Lifecycle Optimization**: Ensured all hotkey configuration changes (Toggle, ROI, Crosshair, Zero-Point, Debug) are automatically saved to both the user profile and global settings instantly.
+- **Workflow Stabilization**: Established a strict "Pull-Rebase-Push" protocol to prevent repository desynchronization and ensure atomic updates.
+
+### BetterAngle Pro v4.27.132
+- **Maintenance**: Technical version alignment and synchronization.
+
+### BetterAngle Pro v4.27.131
+- **Maintenance**: Auto-increment stabilization.
+
 ### BetterAngle Pro v4.27.130
 - **Trigger Calibration Consolidation**: Replaced individual Glide and Freefall threshold sliders with a unified "Dive/Glide Match" control.
 - **Auto-Save Sensitivity**: Sensitivity changes are now saved instantly to user settings for a smoother configuration experience.
