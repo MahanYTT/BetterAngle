@@ -18,7 +18,9 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ded3ab96-8c88-4192-9044-339706012801" name="Changes" comment="" />
+    <list default="true" id="ded3ab96-8c88-4192-9044-339706012801" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/src/shared/FirstTimeSetup.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/shared/FirstTimeSetup.cpp" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

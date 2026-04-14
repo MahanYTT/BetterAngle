@@ -13,6 +13,7 @@
 
 #include "shared/ControlPanel.h"
 #include "shared/Detector.h"
+#include "shared/EnhancedLogging.h"
 #include "shared/Input.h"
 #include "shared/Logic.h"
 #include "shared/Overlay.h"
@@ -409,6 +410,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   app.setQuitOnLastWindowClosed(
       false); // Prevent premature exit if windows are still initializing
 
+  InitEnhancedLogging();
+  LOG_INFO(L"BetterAngle starting");
+  SetLogLevel(LogLevel::Debug);
+  LogStartup();
+
   // Phase 0: Kick off version check in background — never blocks startup.
   // g_updateAvailable will be set when done; the control panel UPDATES tab
   // shows it.
@@ -418,6 +424,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, NULL);
 
   LoadSettings();
+  SetLogLevel(g_debugMode ? LogLevel::Debug : LogLevel::Info);
+  LogStartup();
   CleanupUpdateJunk();
 
   g_currentSelection = NONE;
@@ -505,9 +513,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   HWND hMsgWnd = CreateWindowEx(0, L"BetterAngleMsgWnd", NULL, 0, 0, 0, 0, 0,
                                 HWND_MESSAGE, NULL, hInstance, NULL);
   RegisterRawMouse(hMsgWnd);
+  LOG_INFO(L"Raw input message window created");
+  LogWindowInfo(L"Raw input message window handle", hMsgWnd);
 
   // Phase 2: Create Control Panel (Interactive) via Qt
   g_hPanel = CreateControlPanel(hInstance);
+  LOG_INFO(L"Control panel created");
+  LogWindowInfo(L"Control panel handle", g_hPanel);
 
   // Phase 3: Create HUD Window (Transparent Overlay)
   WNDCLASS wc = {0};
@@ -534,6 +546,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   SetWindowPos(g_hHUD, HWND_TOPMOST, 0, 0, 0, 0,
                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
   UpdateWindow(g_hHUD);
+  LOG_INFO(L"HUD window shown");
+  LogWindowInfo(L"HUD handle", g_hHUD);
   SetTimer(g_hHUD, 1, 16, NULL);    // 60fps (~16ms) Repaint Timer
   SetTimer(g_hHUD, 2, 30000, NULL); // 30s Auto-Save Timer
 
@@ -541,6 +555,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
   // Run Qt Event Loop
   int exitCode = app.exec();
+  LOG_INFO(L"Qt event loop exited");
 
   g_running = false;
   if (detThread.joinable())
@@ -557,5 +572,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
   RemoveSystrayIcon(g_hHUD);
   GdiplusShutdown(g_gdiplusToken);
+  ShutdownEnhancedLogging();
   return exitCode;
 }
