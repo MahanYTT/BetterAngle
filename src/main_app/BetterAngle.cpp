@@ -304,6 +304,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         SetWindowLong(hWnd, GWL_EXSTYLE,
                       GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
         InvalidateRect(hWnd, NULL, FALSE);
+        g_forceRedraw = true;
       }
       break;
     case 3:
@@ -341,6 +342,22 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
   case WM_COMMAND:
     if (LOWORD(wParam) == ID_TRAY_EXIT) {
       SendMessage(hWnd, WM_CLOSE, 0, 0);
+    }
+    return 0;
+
+  case WM_KEYDOWN:
+    if (wParam == VK_ESCAPE && g_currentSelection != NONE) {
+      LOG_INFO("Selection cancelled via ESCAPE");
+      g_currentSelection = NONE;
+      g_isSelectionActive = false;
+      if (g_screenSnapshot) {
+        DeleteObject(g_screenSnapshot);
+        g_screenSnapshot = NULL;
+      }
+      SetWindowLong(hWnd, GWL_EXSTYLE,
+                    GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
+      InvalidateRect(hWnd, NULL, FALSE);
+      g_forceRedraw = true;
     }
     return 0;
   case WM_LBUTTONDOWN:
@@ -387,6 +404,8 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       SetWindowLong(hWnd, GWL_EXSTYLE,
                     GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
       InvalidateRect(hWnd, NULL, FALSE);
+      g_forceRedraw = true;
+      LOG_INFO("Stage 2 Redraw Forced Handle Cleaned.");
 
       if (!g_allProfiles.empty()) {
         Profile &p = g_allProfiles[g_selectedProfileIdx];

@@ -100,6 +100,7 @@ static void SetHudInteractiveMode(HWND hWnd, bool interactive) {
                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_FRAMECHANGED);
   InvalidateRect(hWnd, NULL, FALSE);
   UpdateWindow(hWnd);
+  g_forceRedraw = true;
 }
 
 // Refreshes all global hotkeys for the HUD window
