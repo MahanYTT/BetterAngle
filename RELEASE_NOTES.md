@@ -1,3 +1,8 @@
+### BetterAngle Pro v4.27.112
+- **Deep Icon Sweep**: Generated a high-fidelity, multi-resolution `icon.ico` from the new transparent logo. The update propagates across the executable, desktop shortcut, and installer for a consistent high-end brand experience.
+- **Build Core Fix**: Resolved a critical MSVC compilation error (`C2039`) in `BetterAngle.cpp` by correcting the scope of the `Keybinds` struct reference.
+- **Enhanced Keybinding Engine**: Expanded the hotkey system to support a comprehensive range of special keys (ESC, CTRL, SHIFT, WIN) and Mouse Button inputs (MB1-MB5).
+
 ### BetterAngle Pro v4.27.111
 - **Window Close Control Fix**: Removed the custom top-right `✕` button from [`src/gui/main.qml`](src/gui/main.qml:70) so the dashboard can no longer be hidden into a confusing overlay-only state by clicking the title-bar close control.
 - **Minimize-Only Title Bar**: The custom window chrome in [`src/gui/main.qml`](src/gui/main.qml:74) now exposes only the `_` minimize action, while full application exit remains intentionally routed through the red [`QUIT APP`](src/gui/Dashboard.qml:297) button.

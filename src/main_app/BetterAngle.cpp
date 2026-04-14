@@ -117,7 +117,7 @@ bool RefreshHotkeys(HWND hWnd) {
     return false;
 
   // Cache the current keybinds to avoid unnecessary re-registration
-  static Profile::Keybinds lastKeybinds = {};
+  static Keybinds lastKeybinds = {};
   static int lastProfileIdx = -1;
 
   if (g_allProfiles.empty())
