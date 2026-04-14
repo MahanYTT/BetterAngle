@@ -748,10 +748,10 @@ Item {
                         onClicked: {
                             backend.crosshairOn = true;
                             backend.crossThickness = 1.0;
-                            backend.crossColor = Qt.rgba(0, 1, 1, 1);
+                            backend.crossColor = Qt.rgba(1, 0, 0, 1);
                             backend.crossOffsetX = 0;
                             backend.crossOffsetY = 0;
-                            backend.crossPulse = true;
+                            backend.crossPulse = false;
                         } }
 
                     // Saved Config
