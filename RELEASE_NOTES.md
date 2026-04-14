@@ -1,3 +1,8 @@
+### BetterAngle Pro v4.27.154
+- **Branding Transparency Hardened**: Programmatically scrubbed the AI-generated checkerboard patterns from the master logo assets, ensuring 100% pure transparency for the cyan orb.
+- **Icon Cache-Busting**: Implemented a transition to `BetterAngle_v153.ico` (v154 build). This forces the Windows shell to ignore its old cached icons and display the new high-fidelity assets across the desktop, taskbar, and Control Panel immediately.
+- **Universal Asset Injection**: Updated the RC resource script and the Inno Setup configuration to ensure the uninstaller and all program shortcuts use the latest refined branding.
+
 ### BetterAngle Pro v4.27.152
 - **Visual Standardization**: Unified the styling of all hotkey configuration fields. Resolved an inconsistency where some fields (Zero Counter, Debug Overlay) used different colors and border behaviors compared to the rest of the dashboard.
 - **Improved UX Feedback**: Applied the "Cyan Glow" logic consistently across all inputs to clearly indicate when the software is listening for new key combinations.
