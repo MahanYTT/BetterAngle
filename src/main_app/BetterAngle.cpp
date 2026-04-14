@@ -462,6 +462,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
         // Bulletproof Dragging Check (v123+ Improvements)
         // Allow dragging whenever our app (Dashboard, etc.) is the active window
+        bool fortniteInFocus = IsFortniteForeground();
         DWORD fgProcId = 0;
         GetWindowThreadProcessId(GetForegroundWindow(), &fgProcId);
         bool appHasFocus = (fgProcId == GetCurrentProcessId());
