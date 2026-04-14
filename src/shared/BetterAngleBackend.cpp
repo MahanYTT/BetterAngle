@@ -910,7 +910,7 @@ void BetterAngleBackend::saveKeybinds() {
 }
 
 void NotifyBackendUpdateStatusChanged() {
-  if (g_pBackend) {
-    emit g_pBackend->updateStatusChanged();
+  if (s_backendInstance) {
+    emit s_backendInstance->updateStatusChanged();
   }
 }

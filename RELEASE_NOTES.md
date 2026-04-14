@@ -1,3 +1,6 @@
+### BetterAngle Pro v4.27.173
+- **Build Compilation Fix**: Fixed compilation error where `g_pBackend` was undeclared in `NotifyBackendUpdateStatusChanged()` function. Changed to use `s_backendInstance` which is the correct variable name used throughout the codebase. This resolves the "not pushing out effectively" build issue.
+
 ### BetterAngle Pro v4.27.172
 - **Stage 2 Freezing Fix**: Fixed critical bug where Stage 2 (color selection) would completely freeze after clicking. The issue was caused by `GetPixel()` being called with out-of-bounds coordinates, which could hang or crash. Added bounds checking before calling `GetPixel()` in both BetterAngle.cpp and FirstTimeSetup.cpp.
 - **ESC Key Enhancement**: Improved ESC key handling to ensure proper window focus management when cancelling ROI/color selection. Added `SetForegroundWindow(GetDesktopWindow())` to release focus after ESC is pressed.
