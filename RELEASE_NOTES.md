@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.222..HEAD ### BetterAngle Pro v4.27.224
+- feat: Restore diveGlideMatch bindings and inject real-time GDI+ debug performance overlay
+
 ### BetterAngle Pro v4.27.223
 - **Trigger Calibration Restore**: Fixed the 'NaN%' render issue on the Dive-to-Glide Match Limit slider in the frontend. The Qt binding has been fully restored and directly hooks into the master C++ detector logic arrays, bypassing hardcoded magic bounds.
 - **Advanced Diagnostic Sub-Overlay**: Introduced a new toggle in the DEBUG tab allowing users to project an analytics glass sub-panel beneath the master Win32 Angle HUD on-screen. This renders real-time engine tracking metrics including dynamic FPS, algorithmic core thread detection lag bounds, and precision hardware state synchronization (Fortnite context matching).

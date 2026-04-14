@@ -23,7 +23,7 @@ extern std::atomic<bool> g_showDebugOverlay;
 #ifndef V_MAJ
 #define V_MAJ 4
 #define V_MIN 27
-#define V_PAT 223
+#define V_PAT 224
 #endif
 extern std::string g_lastVersionRun;
 
