@@ -1,3 +1,8 @@
+### BetterAngle Pro v4.27.151
+- **Sub-Pixel Precision Locked**: Switched the crosshair rendering from Pen-lines to **Geometric Rectangles** (`FillRectangle`). This bypasses driver-level pixel snapping, achieving absolute 0.5px and 0.1px visual clarity with smooth anti-aliasing.
+- **Improved Compositing Quality**: Enabled `CompositingQualityHighQuality` for perfect alpha blending on the overlay.
+- **Spatial Integrity**: Maintained full rotation and pulse logic compatibility with the new high-precision rendering method.
+
 ### BetterAngle Pro v4.27.149
 - **Precision Sub-Pixel Crosshairs**: Re-engineered the rendering engine with **PenAlignmentCenter** and high-quality anti-aliasing. You can now use ultra-thin crosshair thicknesses (e.g., **0.5px**) without pixel snapping.
 - **UI Consolidation**: Merged the "COLORS" tab into the "GENERAL" tab. All targeting settings, including **Tolerance** and **Target Color**, are now conveniently located under the "Trigger Calibration" section.

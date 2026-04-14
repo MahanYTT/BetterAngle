@@ -99,9 +99,10 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
 
   Bitmap bmp(sw, sh, sw * 4, PixelFormat32bppPARGB, (BYTE *)pBits);
   Graphics graphics(&bmp);
-  graphics.SetSmoothingMode(SmoothingModeAntiAlias);
+  graphics.SetSmoothingMode(SmoothingModeHighQuality);
   graphics.SetInterpolationMode(InterpolationModeHighQuality);
   graphics.SetPixelOffsetMode(PixelOffsetModeHighQuality);
+  graphics.SetCompositingQuality(CompositingQualityHighQuality);
   graphics.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
 
   // Two-stage selection overlay
@@ -242,9 +243,6 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
 
       BYTE alpha = BYTE(200 * pulse);
       COLORREF cc = g_crossColor;
-      Pen cPen(Color(alpha, GetRValue(cc), GetGValue(cc), GetBValue(cc)),
-               g_crossThickness);
-      cPen.SetAlignment(PenAlignmentCenter);
       Matrix rot;
       rot.RotateAt(g_crossAngle, PointF(cx, cy));
       graphics.SetTransform(&rot);
@@ -253,8 +251,13 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
       PixelOffsetMode oldOffset = graphics.GetPixelOffsetMode();
       graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
 
-      graphics.DrawLine(&cPen, cx - hw, cy, cx + hw, cy);
-      graphics.DrawLine(&cPen, cx, cy - hh, cx, cy + hh);
+      SolidBrush cBrush(Color(alpha, GetRValue(cc), GetGValue(cc), GetBValue(cc)));
+      float t = g_crossThickness;
+
+      // Horizontal line as a thin rectangle
+      graphics.FillRectangle(&cBrush, (REAL)(cx - hw), (REAL)(cy - t * 0.5f), (REAL)(hw * 2.0f), (REAL)t);
+      // Vertical line as a thin rectangle
+      graphics.FillRectangle(&cBrush, (REAL)(cx - t * 0.5f), (REAL)(cy - hh), (REAL)t, (REAL)(hh * 2.0f));
 
       graphics.SetPixelOffsetMode(oldOffset);
       graphics.ResetTransform();
