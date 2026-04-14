@@ -49,16 +49,11 @@ void DetectorThread() {
       LOG_INFO("DetectorThread: Calling g_detector.Scan");
       g_detectionRatio = g_detector.Scan(cfg);
       LOG_INFO("DetectorThread: Scan complete");
-      if (g_forceDetection)
-        g_detectionRatio = 1.0f;
 
-      if (g_forceDiving) {
+      if (g_detectionRatio >= 0.20f) {
         g_isDiving = true;
         g_logic.SetDivingState(true);
-      } else if (g_detectionRatio >= g_freefallThreshold) {
-        g_isDiving = true;
-        g_logic.SetDivingState(true);
-      } else if (g_detectionRatio <= g_glideThreshold) {
+      } else if (g_detectionRatio <= 0.05f) {
         g_isDiving = false;
         g_logic.SetDivingState(false);
       }
@@ -134,12 +129,8 @@ bool RefreshHotkeys(HWND hWnd) {
                           p.keybinds.toggleKey != lastKeybinds.toggleKey) ||
                          (p.keybinds.roiMod != lastKeybinds.roiMod ||
                           p.keybinds.roiKey != lastKeybinds.roiKey) ||
-                         (p.keybinds.crossMod != lastKeybinds.crossMod ||
-                          p.keybinds.crossKey != lastKeybinds.crossKey) ||
                          (p.keybinds.zeroMod != lastKeybinds.zeroMod ||
-                          p.keybinds.zeroKey != lastKeybinds.zeroKey) ||
-                         (p.keybinds.debugMod != lastKeybinds.debugMod ||
-                          p.keybinds.debugKey != lastKeybinds.debugKey);
+                          p.keybinds.zeroKey != lastKeybinds.zeroKey);
 
   if (!keybindsChanged) {
     // Keybinds haven't changed, no need to re-register

@@ -120,7 +120,9 @@ public:
 signals:
   void profileChanged();
   void crosshairChanged();
+  void crosshairPresetsChanged();
   void hotkeysChanged();
+
   void updateStatusChanged();
   void showControlPanelRequested();
 

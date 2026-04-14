@@ -213,13 +213,6 @@ void BetterAngleBackend::setCrossColor(const QColor &c) {
   emit crosshairChanged();
 }
 
-int BetterAngleBackend::diveGlideMatch() const {
-  return 10; // Fixed default
-}
-
-void BetterAngleBackend::setDiveGlideMatch(int v) {
-}
-
 QString BetterAngleBackend::versionStr() const {
   return QString::fromLatin1(VERSION_STR);
 }

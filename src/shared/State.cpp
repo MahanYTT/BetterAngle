@@ -25,8 +25,7 @@ int g_selectedProfileIdx = 0;
 
 // Global g_keybinds removed (v4.20.37)
 std::wstring g_lastLoadedProfileName = L"";
-float g_glideThreshold = 0.05f;
-float g_freefallThreshold = 0.20f;
+
 
 #include <fstream>
 #include <locale>
@@ -103,8 +102,7 @@ void LoadSettings() {
       }
     };
 
-    g_glideThreshold = eFloat("glideThreshold", 0.05f);
-    g_freefallThreshold = eFloat("freefallThreshold", 0.20f);
+
     g_hudX = eInt("hudX", 40);
     g_hudY = eInt("hudY", 40);
 

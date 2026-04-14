@@ -79,8 +79,6 @@ bool Profile::Load(const std::wstring &path) {
   keybinds.crossKey = (UINT)extractDouble("kb_crossKey");
   keybinds.zeroMod = (UINT)extractDouble("kb_zeroMod");
   keybinds.zeroKey = (UINT)extractDouble("kb_zeroKey");
-  keybinds.debugMod = (UINT)extractDouble("kb_debugMod");
-  keybinds.debugKey = (UINT)extractDouble("kb_debugKey");
 
   // Fallback defaults for new files or legacy ones
   if (keybinds.toggleKey == 0) {
@@ -206,8 +204,7 @@ bool Profile::Save(const std::wstring &path) {
   oss << L"  \"kb_crossKey\": " << keybinds.crossKey << L",\n";
   oss << L"  \"kb_zeroMod\": " << keybinds.zeroMod << L",\n";
   oss << L"  \"kb_zeroKey\": " << keybinds.zeroKey << L",\n";
-  oss << L"  \"kb_debugMod\": " << keybinds.debugMod << L",\n";
-  oss << L"  \"kb_debugKey\": " << keybinds.debugKey << L",\n";
+
   oss << L"  \"crossThickness\": " << crossThickness << L",\n";
   oss << L"  \"showCrosshair\": " << (showCrosshair ? 1 : 0) << L",\n";
   oss << L"  \"crossColor\": " << (float)crossColor << L",\n";
