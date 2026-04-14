@@ -232,6 +232,8 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       GetCursorPos(&cur);
       g_startPoint = cur;
       g_selectionRect = {cur.x, cur.y, cur.x, cur.y};
+      // Capture mouse to continue receiving messages even outside window
+      SetCapture(hWnd);
     } else if (g_currentSelection == SELECTING_COLOR) {
       // STAGE 2: PRECISION COLOR PICK (Snap-Shot Bypass)
       if (g_screenSnapshot) {
@@ -312,6 +314,28 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         SetHudInteractiveMode(hWnd, false);
       }
       InvalidateRect(hWnd, NULL, FALSE);
+    }
+    // Release mouse capture if we have it
+    if (GetCapture() == hWnd) {
+      ReleaseCapture();
+    }
+    return 0;
+
+  case WM_KEYDOWN:
+    // ESC key cancels ROI/color selection and returns to normal mode
+    if (wParam == VK_ESCAPE && g_currentSelection != NONE) {
+      g_currentSelection = NONE;
+      g_isSelectionActive = false;
+      if (g_screenSnapshot) {
+        DeleteObject(g_screenSnapshot);
+        g_screenSnapshot = NULL;
+      }
+      SetHudInteractiveMode(hWnd, false);
+      InvalidateRect(hWnd, NULL, FALSE);
+      // Release mouse capture if we have it
+      if (GetCapture() == hWnd) {
+        ReleaseCapture();
+      }
     }
     return 0;
 

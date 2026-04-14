@@ -1,3 +1,8 @@
+### BetterAngle Pro v4.27.162
+- **ROI Selection Fix**: Added proper mouse capture (`SetCapture`/`ReleaseCapture`) during ROI drag operations to prevent losing mouse messages when dragging outside the window.
+- **ESC Key Support**: Pressing ESC now cancels ROI/color selection and returns to normal mode, with proper cleanup of mouse capture and screen snapshot.
+- **Decimal UI Movement Fix**: Resolved bug where decimal UI couldn't be moved even when Fortnite was not in focus by refining drag logic condition ordering.
+
 ### BetterAngle Pro v4.27.161
 - **Final Branding Restored**: Re-integrated the characteristic **">" symbol** into the center of the master cyan orb assets.
 - **Deep Shave & Luma Scrub**: Applied a refined 6% margin shave and darkness-threshold filter to the new branding, ensuring absolute transparency with zero black artifacts.
