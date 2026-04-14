@@ -106,8 +106,8 @@ bool Profile::Load(const std::wstring &path) {
 
   // Load Crosshair (with defaults for legacy files)
   crossThickness = (float)extractDouble("crossThickness");
-  if (crossThickness < 0.01f)
-    crossThickness = 1.0f;
+  if (crossThickness < 0.1f)
+    crossThickness = 0.1f;
 
   crossColor = (COLORREF)extractDouble("crossColor");
   if (crossColor == 0)
@@ -153,9 +153,11 @@ bool Profile::Load(const std::wstring &path) {
       cp.offsetY = exD("y");
       cp.angle = exD("a");
       cp.thickness = exD("t");
-      if (cp.thickness < 0.1f) cp.thickness = 1.0f;
+      if (cp.thickness < 0.1f)
+        cp.thickness = 1.0f;
       cp.color = (COLORREF)exD("c");
-      if (cp.color == 0) cp.color = RGB(255, 0, 0);
+      if (cp.color == 0)
+        cp.color = RGB(255, 0, 0);
       cp.pulse = exD("p") > 0.5f;
       crosshairPresets.push_back(cp);
       objPos = objEnd + 1;
@@ -164,7 +166,8 @@ bool Profile::Load(const std::wstring &path) {
 
   // Ensure default if empty
   if (crosshairPresets.empty()) {
-    CrosshairPreset def = {L"🎯 Screen Center", 0.0f, 0.0f, 0.0f, 1.0f, RGB(255, 0, 0), false};
+    CrosshairPreset def = {L"🎯 Screen Center", 0.0f, 0.0f, 0.0f, 1.0f,
+                           RGB(255, 0, 0),      false};
     crosshairPresets.push_back(def);
   }
 
@@ -225,7 +228,7 @@ bool Profile::Save(const std::wstring &path) {
   for (size_t i = 0; i < crosshairPresets.size(); i++) {
     const auto &cp = crosshairPresets[i];
     oss << L"    {\"name\": \"" << cp.name << L"\", \"x\": " << cp.offsetX
-        << L", \"y\": " << cp.offsetY << L", \"a\": " << cp.angle 
+        << L", \"y\": " << cp.offsetY << L", \"a\": " << cp.angle
         << L", \"t\": " << cp.thickness << L", \"c\": " << (float)cp.color
         << L", \"p\": " << (cp.pulse ? 1 : 0) << L"}";
     if (i < crosshairPresets.size() - 1)

@@ -23,8 +23,9 @@ extern std::atomic<bool> g_showDebugOverlay;
 #ifndef V_MAJ
 #define V_MAJ 4
 #define V_MIN 27
-#define V_PAT 224
+#define V_PAT 225
 #endif
+
 extern std::string g_lastVersionRun;
 
 #define VERSION_STR APP_STR_Y(V_MAJ) "." APP_STR_Y(V_MIN) "." APP_STR_Y(V_PAT)

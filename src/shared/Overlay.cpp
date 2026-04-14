@@ -253,8 +253,21 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
     float pulse = 1.0f;
     if (g_crossPulse) {
       ULONGLONG t = GetTickCount64();
-      pulse = 0.75f + 0.25f * sinf(float(t) * 0.003f);
+      ULONGLONG period = 3000; // 3 second total cycle
+      ULONGLONG modT = t % period;
+
+      if (modT < 1200) {
+        // Phase 1: Fade Down (1.2s)
+        pulse = 1.0f - (float)modT / 1200.0f;
+      } else if (modT < 1500) {
+        // Phase 2: Transparency Pause (0.3s)
+        pulse = 0.0f;
+      } else {
+        // Phase 3: Slow Fade Up (1.5s)
+        pulse = (float)(modT - 1500) / 1500.0f;
+      }
     }
+
 
     BYTE alpha = BYTE(255 * pulse);
 
