@@ -5,7 +5,6 @@
 #include <fstream>
 #include <gdiplus.h>
 #include <iostream>
-#include <shellapi.h>
 #include <shlobj.h>
 #include <string>
 #include <thread>
@@ -23,7 +22,6 @@
 #include "shared/Updater.h"
 #include <QCoreApplication>
 #include <QGuiApplication>
-#include <QIcon>
 
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "gdiplus.lib")
@@ -41,8 +39,7 @@ FovDetector g_detector;
 // FOV Detector Thread
 void DetectorThread() {
   while (g_running) {
-    if (!g_allProfiles.empty() && g_currentSelection == NONE &&
-        IsFortniteForeground()) {
+    if (!g_allProfiles.empty() && g_currentSelection == NONE) {
       Profile &p = g_allProfiles[g_selectedProfileIdx];
       g_logic.LoadProfile(p.sensitivityX);
 
@@ -147,8 +144,8 @@ bool RefreshHotkeys(HWND hWnd) {
     return true;
   }
 
-  // Unregister all hotkeys first (we register IDs 1-5)
-  for (int i = 1; i <= 5; i++) {
+  // Unregister all hotkeys first
+  for (int i = 1; i <= 6; i++) {
     UnregisterHotKey(hWnd, i);
   }
 
@@ -212,11 +209,9 @@ bool RefreshHotkeys(HWND hWnd) {
     // Try to register at least some hotkeys (fallback to defaults for failed
     // ones) This ensures the app remains somewhat functional even if some
     // hotkeys conflict
-    // Use less common keys: Ctrl+Shift+1 through Ctrl+Shift+5
     for (int i = 1; i <= 5; i++) {
-      RegisterHotKey(hWnd, i, MOD_CONTROL | MOD_SHIFT | 0x4000,
-                     '1' + i -
-                         1); // Ctrl+Shift+1, Ctrl+Shift+2, etc. as fallback
+      RegisterHotKey(hWnd, i, MOD_CONTROL | 0x4000,
+                     'A' + i - 1); // Ctrl+A, Ctrl+B, etc. as fallback
     }
   }
 
@@ -275,7 +270,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
     case 1: // Toggle Panel
       ShowControlPanel();
       break;
-    case 2: // ROI Select Toggle (v123 Workflow)
+    case 2: // ROI Select Toggle
       if (g_currentSelection == NONE) {
         CaptureDesktop(); // Capture before dimming
         g_currentSelection = SELECTING_ROI;
@@ -285,7 +280,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         SetWindowLong(hWnd, GWL_EXSTYLE, exStyle);
         SetForegroundWindow(hWnd);
       } else {
-        // Master Toggle Exit: Save the current ROI rectangle if valid before exiting
+        // Save the current ROI rectangle if valid before exiting selection
         if (!g_allProfiles.empty() &&
             g_selectionRect.right > g_selectionRect.left &&
             g_selectionRect.bottom > g_selectionRect.top) {
@@ -294,6 +289,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
           p.roi_y = g_selectionRect.top;
           p.roi_w = g_selectionRect.right - g_selectionRect.left;
           p.roi_h = g_selectionRect.bottom - g_selectionRect.top;
+          // Keep existing target_color unchanged
           p.Save(GetProfilesPath() + p.name + L".json");
           p.Save(GetProfilesPath() + L"last_calibrated.json");
         }
@@ -326,9 +322,6 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       break;
     case 5:
       g_debugMode = !g_debugMode;
-      g_forceRedraw = true;
-      SaveSettings();
-      NotifyBackendDebugChanged();
       InvalidateRect(hWnd, NULL, FALSE);
       UpdateWindow(hWnd);
       break;
@@ -354,55 +347,40 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       GetCursorPos(&cur);
       g_startPoint = cur;
       g_selectionRect = {cur.x, cur.y, cur.x, cur.y};
-      // Capture mouse to continue receiving messages even outside window
-      SetCapture(hWnd);
-      // ATOMIC RESTORATION (v123 Hardening): Restore live HUD state immediately to prevent "Frozen Screen" visual hang
-      SetWindowLong(hWnd, GWL_EXSTYLE,
-                    GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
-      
-      if (GetCapture() == hWnd) {
-        ReleaseCapture();
-      }
-
+    } else if (g_currentSelection == SELECTING_COLOR) {
       // STAGE 2: PRECISION COLOR PICK (Snap-Shot Bypass)
       if (g_screenSnapshot) {
-        // Multi-Monitor Aware Coordinate Mapping
+        HDC hdcScreen = GetDC(NULL);
+        HDC hdcMem = CreateCompatibleDC(hdcScreen);
+        HGDIOBJ hOld = SelectObject(hdcMem, g_screenSnapshot);
+
         int sx = GetSystemMetrics(SM_XVIRTUALSCREEN);
         int sy = GetSystemMetrics(SM_YVIRTUALSCREEN);
-        int sw = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-        int sh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-
-        HDC hdcMem = CreateCompatibleDC(NULL);
-        HGDIOBJ hOld = SelectObject(hdcMem, g_screenSnapshot);
 
         POINT cur;
         GetCursorPos(&cur);
-        int sampleX = cur.x - sx; // Correct offset for multi-monitor
-        int sampleY = cur.y - sy;
-
-        COLORREF pixel = RGB(255, 0, 0);
-        if (sampleX >= 0 && sampleX < sw && sampleY >= 0 && sampleY < sh) {
-          pixel = GetPixel(hdcMem, sampleX, sampleY);
-        }
+        // Adjust color sample coord by the same virtual screen offset used in
+        // CaptureDesktop
+        COLORREF pixel = GetPixel(hdcMem, cur.x - sx, cur.y - sy);
 
         g_pickedColor = pixel;
         g_targetColor = pixel;
         SelectObject(hdcMem, hOld);
         DeleteDC(hdcMem);
+        ReleaseDC(NULL, hdcScreen);
       }
 
-      // Finalize and Signal Logic
+      // Finalize and Exit Selection
       g_currentSelection = NONE;
       g_isSelectionActive = false;
       if (g_screenSnapshot) {
         DeleteObject(g_screenSnapshot);
         g_screenSnapshot = NULL;
       }
-      
+      SetWindowLong(hWnd, GWL_EXSTYLE,
+                    GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
       InvalidateRect(hWnd, NULL, FALSE);
-      UpdateWindow(hWnd); // Force immediate redraw of now-transparent window
 
-      // Deferred Saving: Profile IO happens AFTER the UI is un-frozen
       if (!g_allProfiles.empty()) {
         Profile &p = g_allProfiles[g_selectedProfileIdx];
         p.target_color = g_pickedColor;
@@ -410,10 +388,15 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         p.roi_y = g_selectionRect.top;
         p.roi_w = g_selectionRect.right - g_selectionRect.left;
         p.roi_h = g_selectionRect.bottom - g_selectionRect.top;
-        p.Save(GetProfilesPath() + p.name + L".json");
+
+        // Save to the actual profile path
+        std::wstring profilePath = GetProfilesPath() + p.name + L".json";
+        p.Save(profilePath);
+
+        // Also maintain the legacy 'last_calibrated' for quick-load logic if
+        // needed
         p.Save(GetProfilesPath() + L"last_calibrated.json");
       }
-      SetForegroundWindow(GetDesktopWindow());
     }
     return 0;
 
@@ -433,100 +416,57 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
   case WM_LBUTTONUP:
     if (g_currentSelection == SELECTING_ROI) {
-      if (g_selectionRect.right > g_selectionRect.left &&
-          g_selectionRect.bottom > g_selectionRect.top) {
-        g_currentSelection = SELECTING_COLOR;
-      } else {
-        g_currentSelection = NONE;
-        g_isSelectionActive = false;
-        if (g_screenSnapshot) {
-          DeleteObject(g_screenSnapshot);
-          g_screenSnapshot = NULL;
-        }
-        SetWindowLong(hWnd, GWL_EXSTYLE,
-                      GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
-        if (GetCapture() == hWnd) {
-          ReleaseCapture();
-        }
-        InvalidateRect(hWnd, NULL, FALSE);
-      }
+      g_currentSelection = SELECTING_COLOR;
       InvalidateRect(hWnd, NULL, FALSE);
     }
     return 0;
 
   case WM_TIMER: {
     if (wParam == 1) { // 60fps HUD / Input processing timer
-      if (true) {
+      if (g_currentSelection == NONE) {
         bool lDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
         POINT pt;
         GetCursorPos(&pt);
-
-        // Bulletproof Dragging Check (v123+ Improvements)
-        // Allow dragging whenever our app (Dashboard, etc.) is the active window
-        bool fortniteInFocus = IsFortniteForeground();
-        DWORD fgProcId = 0;
-        GetWindowThreadProcessId(GetForegroundWindow(), &fgProcId);
-        bool appHasFocus = (fgProcId == GetCurrentProcessId());
-
-        if (lDown && !g_isDraggingHUD && appHasFocus) {
-          // Use absolute screen coordinate check (more reliable than client remapping)
-          if (pt.x >= g_hudX && pt.x <= g_hudX + 260 && 
-              pt.y >= g_hudY && pt.y <= g_hudY + 150) {
+        if (lDown && !g_isDraggingHUD) {
+          if (pt.x >= g_hudX && pt.x <= g_hudX + 260 && pt.y >= g_hudY &&
+              pt.y <= g_hudY + 150) {
             g_isDraggingHUD = true;
             g_dragStartMouse = pt;
             g_dragStartHUD.x = g_hudX;
             g_dragStartHUD.y = g_hudY;
           }
-        } else if ((!lDown && g_isDraggingHUD) ||
-                   (g_isDraggingHUD && fortniteInFocus)) {
-          // Stop dragging if mouse released OR Fortnite comes into focus
+        } else if (!lDown && g_isDraggingHUD) {
           g_isDraggingHUD = false;
           SaveSettings();
         }
 
-        if (g_isDraggingHUD && lDown && !fortniteInFocus) {
+        if (g_isDraggingHUD && lDown) {
           g_hudX = g_dragStartHUD.x + (pt.x - g_dragStartMouse.x);
           g_hudY = g_dragStartHUD.y + (pt.y - g_dragStartMouse.y);
           InvalidateRect(hWnd, NULL, FALSE);
         }
 
-        // SAFETY GUARD: Enforce Click-Through when Fortnite is in focus
-        // Window should be interactive (not transparent) when Fortnite is out
-        // of focus to allow dragging the decimal UI
-        if (g_currentSelection == NONE) {
-          long ex = GetWindowLong(hWnd, GWL_EXSTYLE);
-          if (fortniteInFocus) {
-            // Fortnite is in focus: make window transparent (click-through)
-            if (!(ex & WS_EX_TRANSPARENT)) {
-              SetWindowLong(hWnd, GWL_EXSTYLE, ex | WS_EX_TRANSPARENT);
-            }
-          } else {
-            // Fortnite is NOT in focus: make window interactive (not
-            // transparent) to allow dragging the decimal UI
-            if (ex & WS_EX_TRANSPARENT) {
-              SetWindowLong(hWnd, GWL_EXSTYLE, ex & ~WS_EX_TRANSPARENT);
-            }
-          }
+        // SAFETY GUARD: Enforce Click-Through
+        long ex = GetWindowLong(hWnd, GWL_EXSTYLE);
+        if (!(ex & WS_EX_TRANSPARENT)) {
+          SetWindowLong(hWnd, GWL_EXSTYLE, ex | WS_EX_TRANSPARENT);
         }
       }
 
       static float lastAngle = -9999.0f;
       static bool lastDiving = false;
       static bool lastCursor = false;
-      static bool lastDebug = false;
       g_isCursorVisible = IsCursorCurrentlyVisible();
       float ang = g_logic.GetAngle();
 
       bool pulseActive = (g_showCrosshair && g_crossPulse);
 
       if (ang != lastAngle || g_isDiving != lastDiving ||
-          g_isCursorVisible != lastCursor || g_debugMode != lastDebug ||
-          g_currentSelection != NONE || g_showCrosshair || pulseActive ||
-          g_forceRedraw.load()) {
+          g_isCursorVisible != lastCursor || g_currentSelection != NONE ||
+          g_showCrosshair || pulseActive || g_forceRedraw.load()) {
         lastAngle = ang;
         lastDiving = g_isDiving;
         lastCursor = g_isCursorVisible;
-        lastDebug = g_debugMode;
         g_forceRedraw.store(false);
         DrawOverlay(hWnd, ang, g_detectionRatio, g_showCrosshair);
       }
@@ -575,23 +515,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   InitEnhancedLogging();
   LOG_INFO("WinMain entered");
 
-  int nArgs;
-  LPWSTR *szArglist = CommandLineToArgvW(GetCommandLineW(), &nArgs);
-  bool forceDebug = false;
-  if (szArglist) {
-    for (int i = 0; i < nArgs; i++) {
-      if (wcscmp(szArglist[i], L"--debug") == 0 ||
-          wcscmp(szArglist[i], L"-d") == 0) {
-        forceDebug = true;
-      }
-    }
-    LocalFree(szArglist);
-  }
-
   int argc = 1;
   char *argv[] = {(char *)"BetterAngle.exe", nullptr};
   QGuiApplication app(argc, argv);
-  app.setWindowIcon(QIcon(":/assets/logo.png"));
   app.setQuitOnLastWindowClosed(
       false); // Prevent premature exit if windows are still initializing
 
@@ -604,8 +530,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, NULL);
 
   LoadSettings();
-  if (forceDebug)
-    g_debugMode = true;
   SetLogLevel(g_debugMode ? LogLevel::Trace : LogLevel::Info);
   LogStartup();
   CleanupUpdateJunk();
@@ -617,10 +541,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     p.tolerance = 2;
     p.sensitivityX = 0.1; // Default Standard
     p.sensitivityY = 0.1;
-    p.roi_x = 0;
-    p.roi_y = 0;
-    p.roi_w = 0;
-    p.roi_h = 0;
+    p.roi_x = 760;
+    p.roi_y = 640;
+    p.roi_w = 400;
+    p.roi_h = 70;
     p.target_color = RGB(150, 150, 150);
     p.crossThickness = 1.0f;
     p.crossColor = RGB(255, 0, 0);
