@@ -211,6 +211,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
         }
       }
 
+  }
     goto render_done;
   }
 
