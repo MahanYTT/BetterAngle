@@ -800,6 +800,8 @@ void BetterAngleBackend::setKeyToggle(const QString &s) {
   if (!g_allProfiles.empty()) {
     parseFullKey(s, g_allProfiles[g_selectedProfileIdx].keybinds.toggleMod,
                  g_allProfiles[g_selectedProfileIdx].keybinds.toggleKey);
+    saveKeybinds();
+    SaveSettings();
     emit hotkeysChanged();
   }
 }
@@ -814,6 +816,8 @@ void BetterAngleBackend::setKeyRoi(const QString &s) {
   if (!g_allProfiles.empty()) {
     parseFullKey(s, g_allProfiles[g_selectedProfileIdx].keybinds.roiMod,
                  g_allProfiles[g_selectedProfileIdx].keybinds.roiKey);
+    saveKeybinds();
+    SaveSettings();
     emit hotkeysChanged();
   }
 }
@@ -828,6 +832,8 @@ void BetterAngleBackend::setKeyCross(const QString &s) {
   if (!g_allProfiles.empty()) {
     parseFullKey(s, g_allProfiles[g_selectedProfileIdx].keybinds.crossMod,
                  g_allProfiles[g_selectedProfileIdx].keybinds.crossKey);
+    saveKeybinds();
+    SaveSettings();
     emit hotkeysChanged();
   }
 }
@@ -842,6 +848,8 @@ void BetterAngleBackend::setKeyZero(const QString &s) {
   if (!g_allProfiles.empty()) {
     parseFullKey(s, g_allProfiles[g_selectedProfileIdx].keybinds.zeroMod,
                  g_allProfiles[g_selectedProfileIdx].keybinds.zeroKey);
+    saveKeybinds();
+    SaveSettings();
     emit hotkeysChanged();
   }
 }
@@ -856,6 +864,8 @@ void BetterAngleBackend::setKeyDebug(const QString &s) {
   if (!g_allProfiles.empty()) {
     parseFullKey(s, g_allProfiles[g_selectedProfileIdx].keybinds.debugMod,
                  g_allProfiles[g_selectedProfileIdx].keybinds.debugKey);
+    saveKeybinds();
+    SaveSettings();
     emit hotkeysChanged();
   }
 }
