@@ -427,7 +427,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
   case WM_TIMER: {
     if (wParam == 1) { // 60fps HUD / Input processing timer
-      if (g_currentSelection == NONE) {
+      if (true) {
         bool lDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
         POINT pt;
         GetCursorPos(&pt);

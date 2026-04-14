@@ -132,8 +132,7 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
     int dx = GetRawInputDeltaX(lParam);
     g_isCursorVisible = IsCursorCurrentlyVisible();
 
-    const bool allowAngleUpdate =
-        g_debugMode || IsFortniteForeground();
+    const bool allowAngleUpdate = g_debugMode || IsFortniteForeground();
     if (allowAngleUpdate) {
       // Update angle accumulation (the decimal) based on raw input
       g_logic.Update(dx);
@@ -193,7 +192,9 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       g_forceRedraw = true;
       if (!g_allProfiles.empty()) {
         g_allProfiles[g_selectedProfileIdx].showCrosshair = g_showCrosshair;
-        g_allProfiles[g_selectedProfileIdx].Save(GetProfilesPath() + g_allProfiles[g_selectedProfileIdx].name + L".json");
+        g_allProfiles[g_selectedProfileIdx].Save(
+            GetProfilesPath() + g_allProfiles[g_selectedProfileIdx].name +
+            L".json");
       }
       SaveSettings();
       NotifyBackendCrosshairChanged();
@@ -314,7 +315,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
   case WM_TIMER: {
     if (wParam == 1) { // 60fps HUD / Input processing timer
-      if (g_currentSelection == NONE) {
+      if (true) {
         bool lDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
         POINT pt;
         GetCursorPos(&pt);

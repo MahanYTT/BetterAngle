@@ -1,3 +1,8 @@
+### BetterAngle Pro v4.27.149
+- **Precision Sub-Pixel Crosshairs**: Re-engineered the rendering engine with **PenAlignmentCenter** and high-quality anti-aliasing. You can now use ultra-thin crosshair thicknesses (e.g., **0.5px**) without pixel snapping.
+- **UI Consolidation**: Merged the "COLORS" tab into the "GENERAL" tab. All targeting settings, including **Tolerance** and **Target Color**, are now conveniently located under the "Trigger Calibration" section.
+- **Improved Sliders**: Updated the thickness slider with fine-grained **0.1px steps** for maximum visual precision.
+
 ### BetterAngle Pro v4.27.148
 - **Branding Hardening**: Explicitly configured the Inno Setup uninstaller to use the refined icon asset. This forces a system-wide refresh of the icon cache in the Windows Control Panel.
 - **Shortcut Integrity**: Verified and locked all desktop and program menu shortcuts to the standalone high-fidelity `.ico` asset to ensure 100% transparency.

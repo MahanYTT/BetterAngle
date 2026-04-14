@@ -35,11 +35,6 @@ Item {
             background: Rectangle { color: parent.checked ? "#1a1a2e" : "transparent" }
         }
         TabButton {
-            text: qsTr("COLORS")
-            contentItem: Text { text: parent.text; color: parent.checked ? "#00ffcc" : "#888"; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
-            background: Rectangle { color: parent.checked ? "#1a1a2e" : "transparent" }
-        }
-        TabButton {
             text: qsTr("DEBUG")
             contentItem: Text { text: parent.text; color: parent.checked ? "#00ffcc" : "#888"; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
             background: Rectangle { color: parent.checked ? "#1a1a2e" : "transparent" }
@@ -123,8 +118,29 @@ Item {
                         Text { text: Math.round(backend.diveGlideMatch).toString() + "%"; color: "#aaa" }
                     }
                     Text { 
-                        text: "Dive to glide threshold match limt % match"; 
+                        text: "Dive to glide threshold match limit % match"; 
                         color: "#666"; font.pixelSize: 11; font.italic: true 
+                    }
+
+                    Text { text: "TARGET COLOR SETTINGS"; color: "#666"; font.pixelSize: 12; topPadding: 15 }
+                    RowLayout {
+                        spacing: 10
+                        Rectangle {
+                            width: 30; height: 30; radius: 4
+                            color: backend.targetColor
+                            border.color: "#333"; border.width: 1
+                        }
+                        ColumnLayout {
+                            Text { text: "Tolerance (color match ±)"; color: "white"; font.pixelSize: 12 }
+                            RowLayout {
+                                Slider {
+                                    Layout.fillWidth: true
+                                    from: 0; to: 120; value: backend.tolerance
+                                    onValueChanged: backend.tolerance = Math.round(value)
+                                }
+                                Text { text: backend.tolerance; color: "#aaa"; Layout.preferredWidth: 30 }
+                            }
+                        }
                     }
 
                     Text { text: "HOTKEY CONFIGURATION"; color: "#666"; font.pixelSize: 11; font.bold: true; topPadding: 10 }
@@ -477,7 +493,7 @@ Item {
                         Text { text: "Line Thickness: " + backend.crossThickness.toFixed(1) + " px"; color: "white"; font.pixelSize: 12 }
                         Slider {
                             width: parent.width
-                            from: 0.1; to: 10.0
+                            from: 0.1; to: 10.0; stepSize: 0.1
                             value: backend.crossThickness
                             onMoved: backend.crossThickness = value
                         }
@@ -800,23 +816,6 @@ Item {
             }
         }
 
-        // ─── COLORS ─────────────────────────────────────────────────
-        Rectangle {
-            color: "#0d0d12"
-            Column {
-                anchors.fill: parent
-                anchors.margins: 20
-                spacing: 15
-
-                Text { text: "Tolerance (color match ±)"; color: "white" }
-                Slider {
-                    width: parent.width
-                    from: 0; to: 120; value: backend.tolerance
-                    onValueChanged: backend.tolerance = Math.round(value)
-                }
-                Text { text: "Value: " + backend.tolerance; color: "#aaa" }
-            }
-        }
 
         // ─── DEBUG ──────────────────────────────────────────────────
         Rectangle {
