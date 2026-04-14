@@ -32,10 +32,11 @@ void InitEnhancedLogging();
 void ShutdownEnhancedLogging();
 void SetLogLevel(LogLevel level);
 void LogStartup();
-void LogWindowInfo(HWND hwnd);
+void LogWindowInfo(const wchar_t* label, HWND hwnd);
 
-// Core logging functions
+// Core logging functions (Overloaded for ANSI and Wide strings)
 void LogMessage(LogLevel level, const char* file, int line, const char* format, ...);
+void LogMessage(LogLevel level, const char* file, int line, const wchar_t* format, ...);
 
 // Macros
 #define LOG_TRACE(fmt, ...) LogMessage(LogLevel::Trace, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
@@ -51,6 +52,7 @@ public:
 
     void Initialize(const std::wstring& logPath);
     void Log(LogLevel level, const char* file, int line, const std::string& message);
+    void Log(LogLevel level, const char* file, int line, const std::wstring& message);
     void Flush();
 
 private:
@@ -63,4 +65,5 @@ private:
 
     std::string LevelToString(LogLevel level) const;
     std::string TimestampNow() const;
+    std::string ToNarrow(const std::wstring& wstr);
 };

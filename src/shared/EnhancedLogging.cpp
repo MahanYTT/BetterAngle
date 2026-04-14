@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <cstdarg>
 #include <iostream>
+#include <vector>
 #include "shared/State.h"
 
 std::atomic<LogLevel> g_logLevel(LogLevel::Info);
@@ -22,24 +23,27 @@ void SetLogLevel(LogLevel level) {
 
 void LogStartup() {
     LOG_INFO("--- BetterAngle Pro Startup ---");
-    LOG_INFO("Build Version: 4.27.116");
+    LOG_INFO("Build Version: 4.27.117");
     
-    // Log basic system info
     SYSTEM_INFO si;
     GetSystemInfo(&si);
     LOG_INFO("Processor Architecture: %u", si.wProcessorArchitecture);
     LOG_INFO("Number of Processors: %u", si.dwNumberOfProcessors);
 }
 
-void LogWindowInfo(HWND hwnd) {
-    if (!hwnd) return;
+void LogWindowInfo(const wchar_t* label, HWND hwnd) {
+    if (!hwnd) {
+        LOG_INFO(L"%ls: (NULL)", label);
+        return;
+    }
     char className[256];
     GetClassNameA(hwnd, className, sizeof(className));
     char title[256];
     GetWindowTextA(hwnd, title, sizeof(title));
-    LOG_INFO("Window Info: HWND=%p, Class=%s, Title=%s", hwnd, className, title);
+    LOG_INFO(L"%ls: HWND=%p, Class=%hs, Title=%hs", label, hwnd, className, title);
 }
 
+// ANSI LogMessage
 void LogMessage(LogLevel level, const char* file, int line, const char* format, ...) {
     if (level < g_logLevel) return;
 
@@ -49,10 +53,22 @@ void LogMessage(LogLevel level, const char* file, int line, const char* format, 
     vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
 
-    EnhancedLogger::Instance().Log(level, file, line, buffer);
+    EnhancedLogger::Instance().Log(level, file, line, std::string(buffer));
 }
 
-// Class Implementation
+// Wide LogMessage
+void LogMessage(LogLevel level, const char* file, int line, const wchar_t* format, ...) {
+    if (level < g_logLevel) return;
+
+    va_list args;
+    va_start(args, format);
+    wchar_t buffer[4096];
+    vswprintf(buffer, 4096, format, args);
+    va_end(args);
+
+    EnhancedLogger::Instance().Log(level, file, line, std::wstring(buffer));
+}
+
 EnhancedLogger& EnhancedLogger::Instance() {
     static EnhancedLogger instance;
     return instance;
@@ -76,7 +92,6 @@ void EnhancedLogger::Log(LogLevel level, const char* file, int line, const std::
     std::lock_guard<std::mutex> lock(m_mutex);
     if (!m_initialized || !m_stream.is_open()) return;
 
-    // Optional: Only log basename of file
     std::string filename = file;
     size_t lastSlash = filename.find_last_of("\\/");
     if (lastSlash != std::string::npos) {
@@ -86,6 +101,10 @@ void EnhancedLogger::Log(LogLevel level, const char* file, int line, const std::
     m_stream << "[" << TimestampNow() << "] [" << LevelToString(level) << "] [" 
              << filename << ":" << line << "] " << message << "\n";
     m_stream.flush();
+}
+
+void EnhancedLogger::Log(LogLevel level, const char* file, int line, const std::wstring& message) {
+    Log(level, file, line, ToNarrow(message));
 }
 
 void EnhancedLogger::Flush() {
@@ -120,4 +139,12 @@ std::string EnhancedLogger::TimestampNow() const {
     std::stringstream ss;
     ss << std::put_time(&tmValue, "%Y-%m-%d %H:%M:%S");
     return ss.str();
+}
+
+std::string EnhancedLogger::ToNarrow(const std::wstring& wstr) {
+    if (wstr.empty()) return std::string();
+    int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
+    std::string strTo(size_needed, 0);
+    WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
+    return strTo;
 }

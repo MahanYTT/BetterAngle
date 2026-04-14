@@ -1,3 +1,8 @@
+### BetterAngle Pro v4.27.117
+- **Dual-Mode Logging Support**: Implemented overloads for `LogMessage` to support both `char*` and `wchar_t*` strings, resolving build errors in `BetterAngle.cpp`.
+- **System Synchronization**: Updated `LogWindowInfo` signature to include diagnostic labels, aligning with the project's extended debugging requirements.
+- **UTF-8 Log Storage**: Internal logger now converts wide-string log messages to UTF-8 for consistent, portable log file encoding.
+
 ### BetterAngle Pro v4.27.116
 - **Logging System Restoration**: Completely rebuilt the `EnhancedLogging` system to resolve the v4.27.115 build failure.
   - Restored `InitEnhancedLogging`, `LogStartup`, and `LogWindowInfo` functions.
