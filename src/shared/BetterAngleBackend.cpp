@@ -37,7 +37,7 @@ BetterAngleBackend::BetterAngleBackend(QObject *parent) : QObject(parent) {
   // Emit profileChanged once the Qt event loop starts so QML fields
   // refresh with whatever sensitivityX is in g_allProfiles (set by setup or
   // loaded from disk).
-  QTimer::singleShot(0, this, [this]() { emit profileChanged(); });
+  QTimer::singleShot(0, this, [this]() {\n    emit profileChanged();\n    emit debugChanged();\n    emit crosshairChanged();\n    emit hotkeysChanged();\n  });
 
   QTimer *timer = new QTimer(this);
   connect(timer, &QTimer::timeout, this, [this]() {
