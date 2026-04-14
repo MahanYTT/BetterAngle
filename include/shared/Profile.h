@@ -32,10 +32,10 @@ struct Profile {
   double sensitivityY = 0.05;
 
   // Reference Metadata
-  float fov;
-  int resolutionWidth;
-  int resolutionHeight;
-  float renderScale;
+  float fov = 80.0f;
+  int resolutionWidth = 1920;
+  int resolutionHeight = 1080;
+  float renderScale = 100.0f;
 
   // Detector Logic
   int roi_x = 0, roi_y = 0, roi_w = 0, roi_h = 0;

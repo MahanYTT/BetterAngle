@@ -204,7 +204,7 @@ bool Profile::Save(const std::wstring &path) {
   oss << L"  \"roi_y\": " << roi_y << L",\n";
   oss << L"  \"roi_w\": " << roi_w << L",\n";
   oss << L"  \"roi_h\": " << roi_h << L",\n";
-  oss << L"  \"target_color\": " << (float)target_color << L",\n";
+  oss << L"  \"target_color\": " << (unsigned long)target_color << L",\n";
   oss << L"  \"tolerance\": " << tolerance << L",\n";
   oss << L"  \"diveGlideMatch\": " << diveGlideMatch << L",\n";
   oss << L"  \"kb_toggleMod\": " << keybinds.toggleMod << L",\n";
@@ -218,7 +218,7 @@ bool Profile::Save(const std::wstring &path) {
 
   oss << L"  \"crossThickness\": " << crossThickness << L",\n";
   oss << L"  \"showCrosshair\": " << (showCrosshair ? 1 : 0) << L",\n";
-  oss << L"  \"crossColor\": " << (float)crossColor << L",\n";
+  oss << L"  \"crossColor\": " << (unsigned long)crossColor << L",\n";
   oss << L"  \"crossOffsetX\": " << crossOffsetX << L",\n";
   oss << L"  \"crossOffsetY\": " << crossOffsetY << L",\n";
   oss << L"  \"crossAngle\": " << crossAngle << L",\n";
@@ -229,7 +229,7 @@ bool Profile::Save(const std::wstring &path) {
     const auto &cp = crosshairPresets[i];
     oss << L"    {\"name\": \"" << cp.name << L"\", \"x\": " << cp.offsetX
         << L", \"y\": " << cp.offsetY << L", \"a\": " << cp.angle
-        << L", \"t\": " << cp.thickness << L", \"c\": " << (float)cp.color
+        << L", \"t\": " << cp.thickness << L", \"c\": " << (unsigned long)cp.color
         << L", \"p\": " << (cp.pulse ? 1 : 0) << L"}";
     if (i < crosshairPresets.size() - 1)
       oss << L",";

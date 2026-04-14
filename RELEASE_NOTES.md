@@ -1,6 +1,10 @@
+### BetterAngle Pro v4.27.234
+- **Profile Precision Fix**: Fixed a bug where `target_color` and `crossColor` values were being serialized to JSON using `(float)` casts. This caused 32-bit `COLORREF` integers to lose precision in their lower bits and write out in scientific notation (e.g. `1.67772e+07`). When loaded back in, the color drift caused the angle detector to completely mismatch colors, making it seem like the calibration was wiped / ignored after a restart. Colors are now guaranteed to save losslessly as exactly `(unsigned long)` numbers.
+- **Profile Initialization Safety**: Added default values inside the `Profile` struct to prevent random memory garbage values (like `fov = 1.59075e+25` or negative resolutions) from being written to newly created configurations.
+
 ### BetterAngle Pro v4.27.233
 - **VERSION_STR Fix**: Restored missing `#define V_MAJ/V_MIN/V_PAT` macros in `State.h` that were accidentally dropped in a prior edit. This caused `VERSION_STR` to expand literally (showing "V_MAJ.V_MIN.V_PAT"), breaking the version display in the updater UI and causing an infinite update loop since the version comparison always failed.
-- **Updater Infinite Loop Fixed**: With `VERSION_STR` now resolving correctly, version comparison against GitHub releases works as expected — no spurious "update available" flags.
+- **Updater Infinite Loop Fixed**: With `VERSION_STR` now resolving correctly, version comparison against GitHub releases works as expected â€” no spurious "update available" flags.
 - **ROI Prompt Suppressed on First Launch**: Default profile no longer seeds hardcoded ROI coordinates. The detection zone prompt is invisible until the user runs the ROI selector hotkey for the first time.
 - **ROI Prompt Shows Keybind**: The DIVING/GLIDING label on the ROI box now prefixes the configured hotkey (e.g. `[Ctrl+R] GLIDING`) so users know exactly how to toggle it.
 - **ROI Prompt Turns Purple During Focus-Lock**: When the focus-steal input suspension is active during a dive/glide transition animation, the ROI box turns purple and shows `LOCKING` with remaining milliseconds.
@@ -15,18 +19,18 @@ Generating release notes from commit range: v4.27.230..HEAD ### BetterAngle Pro 
 
 ### BetterAngle Pro v4.27.231
 - **Crosshair Thickness Clamp Fix**: Added additional validation in `setCrossThickness` to clamp values between 0.1px and 10.0px, ensuring the crosshair thickness can properly go below 1px as intended by the UI slider. This provides an extra safeguard beyond the profile loading logic.
-- **Focus-Steal Transition Guard (replaces BlockInput)**: On dive/glide state transitions, BetterAngle now temporarily steals foreground focus to its own transparent HUD window (invisible to the user). Fortnite stops processing camera input for the animation duration (250ms glideâ†’dive, 1000ms diveâ†’glide), then focus is returned instantly. Keyboard input is unaffected throughout.
+- **Focus-Steal Transition Guard (replaces BlockInput)**: On dive/glide state transitions, BetterAngle now temporarily steals foreground focus to its own transparent HUD window (invisible to the user). Fortnite stops processing camera input for the animation duration (250ms glideÃ¢â€ â€™dive, 1000ms diveÃ¢â€ â€™glide), then focus is returned instantly. Keyboard input is unaffected throughout.
 - **Admin Requirement Removed**: No longer requires Administrator privileges. The UAC manifest flag and elevation check have been removed since `BlockInput` is no longer used.
 - feat: Restore Reset Crosshair button and backend API (v4.27.229)
 - chore: auto-increment version for release
 
 ### BetterAngle Pro v4.27.230
-- **Focus-Steal Transition Guard (replaces BlockInput)**: On dive/glide state transitions, BetterAngle now temporarily steals foreground focus to its own transparent HUD window (invisible to the user). Fortnite stops processing camera input for the animation duration (250ms glideâ†’dive, 1000ms diveâ†’glide), then focus is returned instantly. Keyboard input is unaffected throughout.
+- **Focus-Steal Transition Guard (replaces BlockInput)**: On dive/glide state transitions, BetterAngle now temporarily steals foreground focus to its own transparent HUD window (invisible to the user). Fortnite stops processing camera input for the animation duration (250ms glideÃ¢â€ â€™dive, 1000ms diveÃ¢â€ â€™glide), then focus is returned instantly. Keyboard input is unaffected throughout.
 - **Admin Requirement Removed**: No longer requires Administrator privileges. The UAC manifest flag and elevation check have been removed since `BlockInput` is no longer used.
 
 ### BetterAngle Pro v4.27.229
 - **Admin Elevation Enforced**: BetterAngle now requires and verifies Administrator privileges at startup. If not elevated, a clear error dialog is shown and the app does not launch. The CMake manifest now embeds `requireAdministrator` so Windows auto-prompts UAC on double-click.
-- **Input Freeze on State Transition**: Added `BlockInput` system-level input suspension on diving/gliding FOV animation transitions. Glideâ†’Dive suspends all mouse+keyboard for 250ms; Diveâ†’Glide for 1000ms to prevent FOV animation noise from corrupting the angle accumulator.
+- **Input Freeze on State Transition**: Added `BlockInput` system-level input suspension on diving/gliding FOV animation transitions. GlideÃ¢â€ â€™Dive suspends all mouse+keyboard for 250ms; DiveÃ¢â€ â€™Glide for 1000ms to prevent FOV animation noise from corrupting the angle accumulator.
 - **Screen Capture Exclusion**: The HUD overlay window is now excluded from Win32 `BitBlt`-based screen capture via `SetWindowDisplayAffinity(WDA_EXCLUDEFROMCAPTURE)`, preventing the UI from blocking the detector's pixel reads.
 - **Color Selection Dot Removed**: Removed the red dot from the Stage 2 magnifier cursor tip that was obscuring the pixel being aimed at.
 
