@@ -26,6 +26,12 @@ void NotifyBackendCrosshairChanged() {
   }
 }
 
+void NotifyBackendDebugChanged() {
+  if (s_backendInstance) {
+    emit s_backendInstance->debugChanged();
+  }
+}
+
 BetterAngleBackend::BetterAngleBackend(QObject *parent) : QObject(parent) {
   s_backendInstance = this;
   // Emit profileChanged once the Qt event loop starts so QML fields
