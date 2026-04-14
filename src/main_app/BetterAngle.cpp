@@ -38,12 +38,13 @@ FovDetector g_detector;
 
 // FOV Detector Thread
 void DetectorThread() {
+  bool lastDiving = false;
+
   while (g_running) {
     if (!g_allProfiles.empty() && g_currentSelection == NONE) {
       Profile &p = g_allProfiles[g_selectedProfileIdx];
       g_logic.LoadProfile(p.sensitivityX);
 
-      // Only scan and change angle scale when in debug mode or if always active
       RoiConfig cfg = {p.roi_x, p.roi_y,        p.roi_w,
                        p.roi_h, p.target_color, p.tolerance};
       LOG_INFO("DetectorThread: Calling g_detector.Scan");
@@ -54,17 +55,39 @@ void DetectorThread() {
       LOG_INFO("DetectorThread: Scan complete");
 
       float threshold = p.diveGlideMatch / 100.0f;
-      if (g_detectionRatio >= threshold) {
-        g_isDiving = true;
-        g_logic.SetDivingState(true);
-      } else {
-        g_isDiving = false;
-        g_logic.SetDivingState(false);
+      bool nowDiving = (g_detectionRatio >= threshold);
+
+      // Edge: Gliding -> Diving  (FOV zoom-in anim ~0.25s)
+      if (nowDiving && !lastDiving) {
+        BlockInput(TRUE);
+        g_mouseSuspendedUntil = GetTickCount64() + 250;
+        LOG_INFO("Transition: glide->dive, blocking input for 250ms");
       }
+      // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)
+      else if (!nowDiving && lastDiving) {
+        BlockInput(TRUE);
+        g_mouseSuspendedUntil = GetTickCount64() + 1000;
+        LOG_INFO("Transition: dive->glide, blocking input for 1000ms");
+      }
+
+      // Release BlockInput once timer has expired
+      if (g_mouseSuspendedUntil > 0 && GetTickCount64() >= g_mouseSuspendedUntil) {
+        BlockInput(FALSE);
+        g_mouseSuspendedUntil = 0;
+        LOG_INFO("BlockInput released");
+      }
+
+      lastDiving = nowDiving;
+      g_isDiving = nowDiving;
+      g_logic.SetDivingState(nowDiving);
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
+
+  // Safety: always release on thread exit
+  BlockInput(FALSE);
 }
+
 
 // Screen Snapshot for Flicker-Free Selection (v4.9.15)
 void CaptureDesktop() {
@@ -524,6 +547,26 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                    LPSTR lpCmdLine, int nCmdShow) {
+  // --- Administrator Privilege Check ---
+  // BlockInput requires elevation, so refuse to start without it.
+  BOOL isElevated = FALSE;
+  HANDLE hToken = NULL;
+  if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
+    TOKEN_ELEVATION elevation;
+    DWORD dwSize;
+    if (GetTokenInformation(hToken, TokenElevation, &elevation, sizeof(elevation), &dwSize))
+      isElevated = elevation.TokenIsElevated;
+    CloseHandle(hToken);
+  }
+  if (!isElevated) {
+    MessageBoxW(NULL,
+      L"BetterAngle must be run as Administrator to function correctly.\n"
+      L"Right-click the executable and choose 'Run as administrator'.",
+      L"BetterAngle - Elevation Required",
+      MB_OK | MB_ICONERROR);
+    return 1;
+  }
+
   SetProcessDPIAware();
   InitEnhancedLogging();
   LOG_INFO("WinMain entered");
@@ -650,6 +693,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW,
       L"BetterAngleHUD", L"BetterAngle HUD", WS_POPUP, screenX, screenY,
       screenW, screenH, NULL, NULL, hInstance, NULL);
+
+  // Exclude overlay from screen capture so it cannot interfere with
+  // the detector's BitBlt screen reads (requires Win10 2004+)
+  SetWindowDisplayAffinity(g_hHUD, WDA_EXCLUDEFROMCAPTURE);
 
   AddSystrayIcon(g_hHUD);
   LOG_INFO("HUD created: hwnd=0x%p", g_hHUD);

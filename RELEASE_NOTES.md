@@ -1,3 +1,9 @@
+### BetterAngle Pro v4.27.229
+- **Admin Elevation Enforced**: BetterAngle now requires and verifies Administrator privileges at startup. If not elevated, a clear error dialog is shown and the app does not launch. The CMake manifest now embeds `requireAdministrator` so Windows auto-prompts UAC on double-click.
+- **Input Freeze on State Transition**: Added `BlockInput` system-level input suspension on diving/gliding FOV animation transitions. Glide→Dive suspends all mouse+keyboard for 250ms; Dive→Glide for 1000ms to prevent FOV animation noise from corrupting the angle accumulator.
+- **Screen Capture Exclusion**: The HUD overlay window is now excluded from Win32 `BitBlt`-based screen capture via `SetWindowDisplayAffinity(WDA_EXCLUDEFROMCAPTURE)`, preventing the UI from blocking the detector's pixel reads.
+- **Color Selection Dot Removed**: Removed the red dot from the Stage 2 magnifier cursor tip that was obscuring the pixel being aimed at.
+
 Generating release notes from commit range: v4.27.226..HEAD ### BetterAngle Pro v4.27.228
 - fix: Crosshair sub-pixel thickness and reset button behavior
 

@@ -207,11 +207,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
       graphics.DrawLine(&magCross, zx, zy + (mh * 3 / 2), zx + (mw * 3),
                         zy + (mh * 3 / 2));
 
-      // Precision dot at cursor tip
-      SolidBrush dotBrush(Color(255, 255, 0, 0));
-      graphics.FillEllipse(&dotBrush, (int)cur.x - 2, (int)cur.y - 2, 4, 4);
-      Pen dotOuter(Color(255, 255, 255, 255), 1.0f);
-      graphics.DrawEllipse(&dotOuter, (int)cur.x - 2, (int)cur.y - 2, 4, 4);
+      // Precision dot removed
 
       DeleteObject(hbmZoom);
       DeleteDC(hdcZoom);

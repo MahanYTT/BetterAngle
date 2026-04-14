@@ -19,6 +19,7 @@ std::wstring GetProfilesPath();
 
 extern std::atomic<long long> g_detectionDelayMs;
 extern std::atomic<bool> g_showDebugOverlay;
+extern std::atomic<ULONGLONG> g_mouseSuspendedUntil;
 
 extern std::string g_lastVersionRun;
 
