@@ -1,3 +1,6 @@
+### BetterAngle Pro v4.27.163
+- **Maintenance Release**: Version bump for deployment pipeline synchronization and clean build environment.
+
 ### BetterAngle Pro v4.27.162
 - **ROI Selection Fix**: Added proper mouse capture (`SetCapture`/`ReleaseCapture`) during ROI drag operations to prevent losing mouse messages when dragging outside the window.
 - **ESC Key Support**: Pressing ESC now cancels ROI/color selection and returns to normal mode, with proper cleanup of mouse capture and screen snapshot.
