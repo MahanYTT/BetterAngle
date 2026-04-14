@@ -11,8 +11,8 @@ DisableProgramGroupPage=yes
 PrivilegesRequired=admin
 OutputDir=bin
 OutputBaseFilename=BetterAngle_Setup
-SetupIconFile=assets\BetterAngle_v160.ico
-UninstallDisplayIcon={app}\assets\BetterAngle_v160.ico
+SetupIconFile=assets\BetterAngle_v161.ico
+UninstallDisplayIcon={app}\assets\BetterAngle_v161.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -37,11 +37,11 @@ Type: filesandordirs; Name: "{app}"
 
 [Files]
 Source: "build\Release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "assets\BetterAngle_v160.ico"; DestDir: "{app}\assets"; Flags: ignoreversion
+Source: "assets\BetterAngle_v161.ico"; DestDir: "{app}\assets"; Flags: ignoreversion
 
 [Icons]
-Name: "{autoprograms}\BetterAngle Pro"; Filename: "{app}\BetterAngle.exe"; IconFilename: "{app}\assets\BetterAngle_v160.ico"
-Name: "{autodesktop}\BetterAngle Pro"; Filename: "{app}\BetterAngle.exe"; Tasks: desktopicon; IconFilename: "{app}\assets\BetterAngle_v160.ico"
+Name: "{autoprograms}\BetterAngle Pro"; Filename: "{app}\BetterAngle.exe"; IconFilename: "{app}\assets\BetterAngle_v161.ico"
+Name: "{autodesktop}\BetterAngle Pro"; Filename: "{app}\BetterAngle.exe"; Tasks: desktopicon; IconFilename: "{app}\assets\BetterAngle_v161.ico"
 Name: "{autoprograms}\BetterAngle Pro\Uninstall BetterAngle"; Filename: "{uninstallexe}"
 
 [Run]
