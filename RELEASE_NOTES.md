@@ -1,3 +1,8 @@
+### BetterAngle Pro v4.27.114
+- **Windows CI Fix**: Renamed the logger enum members in [`include/shared/EnhancedLogging.h`](include/shared/EnhancedLogging.h:13) to avoid the Win32 `ERROR` macro collision that broke MSVC parsing in the previous release.
+- **Build Recovery**: Updated the logger implementation in [`src/shared/EnhancedLogging.cpp`](src/shared/EnhancedLogging.cpp:170) and startup integration in [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:512) so the restored logging system compiles cleanly on Windows.
+- **Version Metadata Sync**: Synced [`VERSION`](VERSION), [`CMakeLists.txt`](CMakeLists.txt:2), and fallback constants in [`include/shared/State.h`](include/shared/State.h:20) to `4.27.114`.
+
 ### BetterAngle Pro v4.27.113
 - **Debug Folder Restore**: Recreated the dedicated [`debug`](debug) log output folder through the new logger in [`src/shared/EnhancedLogging.cpp`](src/shared/EnhancedLogging.cpp:1), restoring on-disk diagnostics instead of silent-only runtime failures.
 - **Portable Mode Log Path**: [`GetDebugFolderPath()`](src/shared/EnhancedLogging.cpp:183) now writes logs beside the executable when [`portable.flag`](portable.flag) is present, while still falling back to the existing app-data root from [`GetAppRootPath()`](src/shared/State.cpp:40) for normal installs.

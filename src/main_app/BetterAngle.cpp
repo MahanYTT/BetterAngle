@@ -509,7 +509,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, NULL);
 
   LoadSettings();
-  SetLogLevel(g_debugMode ? LogLevel::TRACE : LogLevel::INFO);
+  SetLogLevel(g_debugMode ? LogLevel::Trace : LogLevel::Info);
   LogStartup();
   CleanupUpdateJunk();
 
