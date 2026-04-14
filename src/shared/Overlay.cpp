@@ -152,23 +152,13 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
       POINT cur = curScr;
       ScreenToClient(hwnd, &cur);
 
-      int sx = GetSystemMetrics(SM_XVIRTUALSCREEN);
-      int sy = GetSystemMetrics(SM_YVIRTUALSCREEN);
-      int mx = curScr.x - sx - 40, my = curScr.y - sy - 40, mw = 80, mh = 80;
-
-      HDC hdcSnap = CreateCompatibleDC(hdcMem);
-      HGDIOBJ hOldSnap = SelectObject(hdcSnap, g_screenSnapshot);
-
+      int mx = curScr.x - 40, my = curScr.y - 40, mw = 80, mh = 80;
+      HDC hdcScr = GetDC(NULL);
       HDC hdcZoom = CreateCompatibleDC(hdcMem);
       HBITMAP hbmZoom = CreateCompatibleBitmap(hdcMem, mw * 3, mh * 3);
-      HGDIOBJ hOldZoom = SelectObject(hdcZoom, hbmZoom);
-      
-      StretchBlt(hdcZoom, 0, 0, mw * 3, mh * 3, hdcSnap, mx, my, mw, mh,
+      SelectObject(hdcZoom, hbmZoom);
+      StretchBlt(hdcZoom, 0, 0, mw * 3, mh * 3, hdcScr, mx, my, mw, mh,
                  SRCCOPY);
-
-      SelectObject(hdcZoom, hOldZoom);
-      SelectObject(hdcSnap, hOldSnap);
-      DeleteDC(hdcSnap);
 
       // Position magnifier relative to client cursor
       int zx =
@@ -196,6 +186,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
 
       DeleteObject(hbmZoom);
       DeleteDC(hdcZoom);
+      ReleaseDC(NULL, hdcScr);
     }
 
     goto render_done;
@@ -225,7 +216,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
   // Crosshair
   if (showCrosshair) {
     float cx = sw * 0.5f + g_crossOffsetX;
-    float cy = sh * 0.5f - g_crossOffsetY;
+    float cy = sh * 0.5f + g_crossOffsetY;
     // Make crosshair massive like the Java reference
     float hw = (sw > sh ? sw : sh) * 3.0f;
     float hh = hw;
