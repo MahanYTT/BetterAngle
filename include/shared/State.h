@@ -20,7 +20,7 @@ std::wstring GetProfilesPath();
 #ifndef V_MAJ
 #define V_MAJ 4
 #define V_MIN 27
-#define V_PAT 215
+#define V_PAT 216
 #endif
 extern std::string g_lastVersionRun;
 
