@@ -1,3 +1,9 @@
+### BetterAngle Pro v4.27.115
+- **Cartesian Coordinate Migration**: Re-engineered the crosshair offset logic to follow standard Cartesian coordinates.
+    - **Y-Axis**: Positive values now move the crosshair **UP**, and negative values move it **DOWN**.
+    - **UI Enhancements**: Added directional arrows (↑, ↓, ←, →) to the fine-positioning buttons for 100% intuitive control.
+- **Version Metadata Sync**: Synced [`VERSION`](VERSION), [`CMakeLists.txt`](CMakeLists.txt:2), and fallback constants in [`include/shared/State.h`](include/shared/State.h:20) to `4.27.115`.
+
 ### BetterAngle Pro v4.27.114
 - **Windows CI Fix**: Renamed the logger enum members in [`include/shared/EnhancedLogging.h`](include/shared/EnhancedLogging.h:13) to avoid the Win32 `ERROR` macro collision that broke MSVC parsing in the previous release.
 - **Build Recovery**: Updated the logger implementation in [`src/shared/EnhancedLogging.cpp`](src/shared/EnhancedLogging.cpp:170) and startup integration in [`src/main_app/BetterAngle.cpp`](src/main_app/BetterAngle.cpp:512) so the restored logging system compiles cleanly on Windows.

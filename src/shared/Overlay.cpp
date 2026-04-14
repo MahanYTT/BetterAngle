@@ -216,7 +216,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
   // Crosshair
   if (showCrosshair) {
     float cx = sw * 0.5f + g_crossOffsetX;
-    float cy = sh * 0.5f + g_crossOffsetY;
+    float cy = sh * 0.5f - g_crossOffsetY;
     // Make crosshair massive like the Java reference
     float hw = (sw > sh ? sw : sh) * 3.0f;
     float hh = hw;

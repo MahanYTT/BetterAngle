@@ -557,11 +557,11 @@ Item {
                     Row {
                         spacing: 6; width: parent.width
                         Text { text: "X: " + backend.crossOffsetX.toFixed(1); color: "white"; verticalAlignment: Text.AlignVCenter; width: 80 }
-                        Button { text: "X −0.5"; width: 70; height: 30
+                        Button { text: "← X −0.5"; width: 70; height: 30
                             contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                             background: Rectangle { color: parent.hovered ? "#555" : "#333"; radius: 4 }
                             onClicked: backend.crossOffsetX = backend.crossOffsetX - 0.5 }
-                        Button { text: "X +0.5"; width: 70; height: 30
+                        Button { text: "X +0.5 →"; width: 70; height: 30
                             contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                             background: Rectangle { color: parent.hovered ? "#555" : "#333"; radius: 4 }
                             onClicked: backend.crossOffsetX = backend.crossOffsetX + 0.5 }
@@ -569,11 +569,11 @@ Item {
                     Row {
                         spacing: 6; width: parent.width
                         Text { text: "Y: " + backend.crossOffsetY.toFixed(1); color: "white"; verticalAlignment: Text.AlignVCenter; width: 80 }
-                        Button { text: "Y −0.5"; width: 70; height: 30
+                        Button { text: "↓ Y −0.5"; width: 70; height: 30
                             contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                             background: Rectangle { color: parent.hovered ? "#555" : "#333"; radius: 4 }
                             onClicked: backend.crossOffsetY = backend.crossOffsetY - 0.5 }
-                        Button { text: "Y +0.5"; width: 70; height: 30
+                        Button { text: "↑ Y +0.5"; width: 70; height: 30
                             contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                             background: Rectangle { color: parent.hovered ? "#555" : "#333"; radius: 4 }
                             onClicked: backend.crossOffsetY = backend.crossOffsetY + 0.5 }
