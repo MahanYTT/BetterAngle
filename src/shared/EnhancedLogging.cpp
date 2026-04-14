@@ -52,6 +52,66 @@ void LogMessage(LogLevel level, const char* file, int line, const char* format, 
     EnhancedLogger::Instance().Log(level, file, line, buffer);
 }
 
+// Helper: convert wide string to UTF-8
+static std::string WStringToUtf8(const std::wstring &w) {
+    if (w.empty()) return {};
+    int size_needed = WideCharToMultiByte(CP_UTF8, 0, w.c_str(), (int)w.size(), NULL, 0, NULL, NULL);
+    if (size_needed <= 0) return {};
+    std::string strTo(size_needed, 0);
+    WideCharToMultiByte(CP_UTF8, 0, w.c_str(), (int)w.size(), &strTo[0], size_needed, NULL, NULL);
+    return strTo;
+}
+
+// Wide-char format overload
+void LogMessage(LogLevel level, const wchar_t* format, ...) {
+    if (level < g_logLevel) return;
+    if (!format) return;
+
+    // Format wide string into a wide buffer
+    wchar_t wbuf[4096];
+    va_list args;
+    va_start(args, format);
+    _vsnwprintf_s(wbuf, _countof(wbuf), _TRUNCATE, format, args);
+    va_end(args);
+
+    // Convert to UTF-8 and log
+    std::string msg = WStringToUtf8(std::wstring(wbuf));
+    EnhancedLogger::Instance().Log(level, "", 0, msg);
+}
+
+// Wide format with file/line (matches macros using __FILE__/__LINE__)
+void LogMessage(LogLevel level, const char* file, int line, const wchar_t* format, ...) {
+    if (level < g_logLevel) return;
+    if (!format) return;
+
+    wchar_t wbuf[4096];
+    va_list args;
+    va_start(args, format);
+    _vsnwprintf_s(wbuf, _countof(wbuf), _TRUNCATE, format, args);
+    va_end(args);
+
+    std::string msg = WStringToUtf8(std::wstring(wbuf));
+    EnhancedLogger::Instance().Log(level, file, line, msg);
+}
+
+// Wide-char label overload for window info
+void LogWindowInfo(const wchar_t* label, HWND hwnd) {
+    if (!hwnd) return;
+    // Get class and title as wide strings
+    wchar_t classNameW[256] = {};
+    wchar_t titleW[256] = {};
+    GetClassNameW(hwnd, classNameW, (int)_countof(classNameW));
+    GetWindowTextW(hwnd, titleW, (int)_countof(titleW));
+
+    std::string labelA = WStringToUtf8(label ? label : L"");
+    std::string classA = WStringToUtf8(classNameW);
+    std::string titleA = WStringToUtf8(titleW);
+
+    char buf[1024];
+    snprintf(buf, sizeof(buf), "%s: HWND=%p, Class=%s, Title=%s", labelA.c_str(), hwnd, classA.c_str(), titleA.c_str());
+    EnhancedLogger::Instance().Log(LogLevel::Info, "", 0, std::string(buf));
+}
+
 // Class Implementation
 EnhancedLogger& EnhancedLogger::Instance() {
     static EnhancedLogger instance;
