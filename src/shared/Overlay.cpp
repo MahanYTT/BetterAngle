@@ -231,6 +231,8 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
     COLORREF cc = g_crossColor;
     Pen cPen(Color(alpha, GetRValue(cc), GetGValue(cc), GetBValue(cc)),
              g_crossThickness);
+    cPen.SetAlignment(PenAlignmentCenter);
+
     Matrix rot;
     rot.RotateAt(g_crossAngle, PointF(cx, cy));
     graphics.SetTransform(&rot);

@@ -81,24 +81,6 @@ public:
   QColor crossColor() const;
   void setCrossColor(const QColor &c);
 
-  bool debugMode() const;
-  void setDebugMode(bool v);
-
-  bool forceDiving() const;
-  void setForceDiving(bool v);
-
-  bool forceDetection() const;
-  void setForceDetection(bool v);
-
-  float glideThreshold() const;
-  void setGlideThreshold(float v);
-
-  float freefallThreshold() const;
-  void setFreefallThreshold(float v);
-
-  int diveGlideMatch() const;
-  void setDiveGlideMatch(int v);
-
   QString versionStr() const;
   QString latestVersion() const;
   bool updateAvailable() const;
@@ -106,18 +88,16 @@ public:
   bool downloadComplete() const;
   QString updateHistory() const;
 
-  float detectionRatio() const;
-  bool isDiving() const;
   QString updateStatus() const;
   bool hasCheckedForUpdates() const;
   bool isCheckingForUpdates() const;
 
+
   Q_INVOKABLE void terminateApp();
   Q_INVOKABLE void checkForUpdates();
   Q_INVOKABLE void downloadUpdate();
-  Q_INVOKABLE void saveThresholds();
   Q_INVOKABLE void requestShowControlPanel();
-  Q_INVOKABLE void finishSetup();
+
 
   // Crosshair preset management
   Q_INVOKABLE QStringList crosshairPresetNames() const;
@@ -134,7 +114,7 @@ public:
   void setKeyCross(const QString &s);
   QString keyZero() const;
   void setKeyZero(const QString &s);
-  QString keyDebug() const;
+
   Q_INVOKABLE void saveKeybinds();
 
 signals:

@@ -239,8 +239,7 @@ QString BetterAngleBackend::updateHistory() const {
   return QString::fromStdString(g_updateHistory);
 }
 
-float BetterAngleBackend::detectionRatio() const { return 0.0f; }
-bool BetterAngleBackend::isDiving() const { return false; }
+
 
 QString BetterAngleBackend::updateStatus() const {
   if (g_isDownloadingUpdate)
@@ -293,67 +292,13 @@ void BetterAngleBackend::downloadUpdate() {
   UpdateApp();
 }
 
-void BetterAngleBackend::saveThresholds() { SaveSettings(); }
+
 
 void BetterAngleBackend::requestShowControlPanel() {
   emit showControlPanelRequested();
 }
 
-void BetterAngleBackend::finishSetup() {
-  if (g_allProfiles.empty()) {
-    Profile p;
-    p.name = L"Default";
-    p.tolerance = 2;
-    p.roi_x = 760;
-    p.roi_y = 640;
-    p.roi_w = 400;
-    p.roi_h = 70;
-    p.target_color = RGB(150, 150, 150);
-    p.fov = 80.0f;
-    p.resolutionWidth = GetSystemMetrics(SM_CXSCREEN);
-    p.resolutionHeight = GetSystemMetrics(SM_CYSCREEN);
-    p.renderScale = 100.0f;
-    p.sensitivityX = g_pendingSetupSensX;
-    p.sensitivityY = g_pendingSetupSensY;
-    p.showCrosshair = g_showCrosshair;
-    p.crossThickness = g_crossThickness;
-    p.crossColor = g_crossColor;
-    p.crossOffsetX = g_crossOffsetX;
-    p.crossOffsetY = g_crossOffsetY;
-    p.crossAngle = g_crossAngle;
-    p.crossPulse = g_crossPulse;
-    p.Save(GetProfilesPath() + L"Default.json");
-    g_allProfiles.push_back(p);
-    g_selectedProfileIdx = 0;
-    g_lastLoadedProfileName = p.name;
-  } else {
-    if (g_selectedProfileIdx < 0 ||
-        g_selectedProfileIdx >= (int)g_allProfiles.size()) {
-      g_selectedProfileIdx = 0;
-    }
-    Profile &p = g_allProfiles[g_selectedProfileIdx];
-    p.sensitivityX = g_pendingSetupSensX;
-    p.sensitivityY = g_pendingSetupSensY;
-    p.showCrosshair = g_showCrosshair;
-    p.crossThickness = g_crossThickness;
-    p.crossColor = g_crossColor;
-    p.crossOffsetX = g_crossOffsetX;
-    p.crossOffsetY = g_crossOffsetY;
-    p.crossAngle = g_crossAngle;
-    p.crossPulse = g_crossPulse;
-    p.Save(GetProfilesPath() + p.name + L".json");
-    g_lastLoadedProfileName = p.name;
-  }
 
-  SaveSettings();
-
-  if (!g_allProfiles.empty())
-    g_logic.LoadProfile(g_allProfiles[g_selectedProfileIdx].sensitivityX);
-
-
-
-  emit profileChanged();
-}
 
 QStringList BetterAngleBackend::crosshairPresetNames() const {
   QStringList list;
