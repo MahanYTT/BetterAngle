@@ -1,35 +1,22 @@
 #pragma once
 
 #include <string>
-#include <fstream>
-#include <mutex>
-#include <sstream>
-#include <chrono>
-#include <iomanip>
 
 enum class LogLevel {
+    Debug,
     Info,
     Warning,
-    Error,
-    Debug
+    Error
 };
 
-class EnhancedLogger {
-public:
-    static EnhancedLogger& Instance();
+void InitEnhancedLogging();
+void ShutdownEnhancedLogging();
+void SetLogLevel(LogLevel level);
+void LogStartup();
+void LogWindowInfo(const wchar_t* label, void* hwnd);
+void LogMessage(LogLevel level, const wchar_t* message);
 
-    void Initialize(const std::wstring& logPath);
-    void Log(LogLevel level, const std::wstring& message);
-    void Flush();
-
-private:
-    EnhancedLogger() = default;
-    ~EnhancedLogger();
-
-    std::wofstream m_stream;
-    std::mutex m_mutex;
-    bool m_initialized = false;
-
-    std::wstring LevelToString(LogLevel level) const;
-    std::wstring TimestampNow() const;
-};
+#define LOG_INFO(msg) LogMessage(LogLevel::Info, msg)
+#define LOG_WARNING(msg) LogMessage(LogLevel::Warning, msg)
+#define LOG_ERROR(msg) LogMessage(LogLevel::Error, msg)
+#define LOG_DEBUG(msg) LogMessage(LogLevel::Debug, msg)

@@ -491,14 +491,16 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                    LPSTR lpCmdLine, int nCmdShow) {
   SetProcessDPIAware();
-  InitEnhancedLogging();
-  LOG_INFO("WinMain entered");
-
   int argc = 1;
   char *argv[] = {(char *)"BetterAngle.exe", nullptr};
   QGuiApplication app(argc, argv);
   app.setQuitOnLastWindowClosed(
       false); // Prevent premature exit if windows are still initializing
+
+  InitEnhancedLogging();
+  LOG_INFO(L"BetterAngle starting");
+  SetLogLevel(LogLevel::Debug);
+  LogStartup();
 
   // Phase 0: Kick off version check in background — never blocks startup.
   // g_updateAvailable will be set when done; the control panel UPDATES tab
@@ -595,8 +597,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
   // Phase 2: Create Control Panel (Interactive) via Qt
   g_hPanel = CreateControlPanel(hInstance);
-  LOG_INFO("Control panel created: hwnd=0x%p", g_hPanel);
-  LogWindowInfo(g_hPanel);
+  LOG_INFO(L"Control panel created");
+  LogWindowInfo(L"Control panel handle", g_hPanel);
 
   // Phase 3: Create HUD Window (Transparent Overlay)
   WNDCLASS wc = {0};
@@ -618,13 +620,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       screenW, screenH, NULL, NULL, hInstance, NULL);
 
   AddSystrayIcon(g_hHUD);
-  LOG_INFO("HUD created: hwnd=0x%p", g_hHUD);
-  LogWindowInfo(g_hHUD);
   ShowControlPanel(); // Force Dashboard to show on startup
   ShowWindow(g_hHUD, SW_SHOW);
   SetWindowPos(g_hHUD, HWND_TOPMOST, 0, 0, 0, 0,
                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
   UpdateWindow(g_hHUD);
+  LOG_INFO(L"HUD window shown");
+  LogWindowInfo(L"HUD handle", g_hHUD);
   SetTimer(g_hHUD, 1, 16, NULL);    // 60fps (~16ms) Repaint Timer
   SetTimer(g_hHUD, 2, 30000, NULL); // 30s Auto-Save Timer
 
