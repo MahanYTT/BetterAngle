@@ -1,3 +1,9 @@
+### BetterAngle Pro v4.27.113
+- **Debug Folder Restore**: Recreated the dedicated [`debug`](debug) log output folder through the new logger in [`src/shared/EnhancedLogging.cpp`](src/shared/EnhancedLogging.cpp:1), restoring on-disk diagnostics instead of silent-only runtime failures.
+- **Portable Mode Log Path**: [`GetDebugFolderPath()`](src/shared/EnhancedLogging.cpp:183) now writes logs beside the executable when [`portable.flag`](portable.flag) is present, while still falling back to the existing app-data root from [`GetAppRootPath()`](src/shared/State.cpp:40) for normal installs.
+- **Startup Logging Integration**: Wired [`InitEnhancedLogging()`](src/main_app/BetterAngle.cpp:494), [`LogStartup()`](src/main_app/BetterAngle.cpp:513), and [`ShutdownEnhancedLogging()`](src/main_app/BetterAngle.cpp:650) into app lifecycle startup/shutdown so panel/HUD creation and runtime state are captured immediately.
+- **Version Metadata Sync**: Synced [`VERSION`](VERSION), [`CMakeLists.txt`](CMakeLists.txt:2), and fallback constants in [`include/shared/State.h`](include/shared/State.h:20) to `4.27.113`.
+
 ### BetterAngle Pro v4.27.112
 - **Deep Icon Sweep**: Generated a high-fidelity, multi-resolution `icon.ico` from the new transparent logo. The update propagates across the executable, desktop shortcut, and installer for a consistent high-end brand experience.
 - **Build Core Fix**: Resolved a critical MSVC compilation error (`C2039`) in `BetterAngle.cpp` by correcting the scope of the `Keybinds` struct reference.
