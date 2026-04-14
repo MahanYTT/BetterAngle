@@ -1,3 +1,8 @@
+Generating release notes from commit range: v4.27.228..HEAD ### BetterAngle Pro v4.27.231
+- feat: Restore Reset Crosshair button and backend API (v4.27.229)
+- chore: auto-increment version for release
+- feat: Admin elevation required, BlockInput transition gates, WDA_EXCLUDEFROMCAPTURE, remove selection dot
+
 Generating release notes from commit range: v4.27.228..HEAD ### BetterAngle Pro v4.27.230
 - feat: Admin elevation required, BlockInput transition gates, WDA_EXCLUDEFROMCAPTURE, remove selection dot
 
