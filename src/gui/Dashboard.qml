@@ -711,6 +711,28 @@ Item {
                             onClicked: backend.crossOffsetY = backend.crossOffsetY + 0.5 }
                     }
 
+                    // Reset to Defaults
+                    Button {
+                        text: "RESET TO DEFAULTS"
+                        width: parent.width
+                        height: 36
+                        contentItem: Text {
+                            text: parent.text
+                            color: "white"
+                            font.pixelSize: 12
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        background: Rectangle {
+                            color: parent.hovered ? "#cc3333" : "#aa2222"
+                            radius: 6
+                            border.color: "#ff6666"
+                            border.width: 1
+                        }
+                        onClicked: backend.resetCrosshairToDefaults()
+                    }
+
                     // Saved Config
                     Text { text: "SAVED CONFIG"; color: "#666"; font.pixelSize: 11; font.bold: true }
 

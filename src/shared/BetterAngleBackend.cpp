@@ -390,6 +390,36 @@ void BetterAngleBackend::deleteCrosshairPreset(int index) {
   emit crosshairPresetsChanged();
 }
 
+void BetterAngleBackend::resetCrosshairToDefaults() {
+  // Reset global state to defaults
+  g_showCrosshair = false;
+  g_crossThickness = 1.0f;
+  g_crossColor = RGB(255, 0, 0); // Red
+  g_crossOffsetX = 0.0f;
+  g_crossOffsetY = 0.0f;
+  g_crossAngle = 0.0f;
+  g_crossPulse = false;
+
+  // Update current profile
+  if (!g_allProfiles.empty()) {
+    Profile &p = g_allProfiles[g_selectedProfileIdx];
+    p.showCrosshair = g_showCrosshair;
+    p.crossThickness = g_crossThickness;
+    p.crossColor = g_crossColor;
+    p.crossOffsetX = g_crossOffsetX;
+    p.crossOffsetY = g_crossOffsetY;
+    p.crossAngle = g_crossAngle;
+    p.crossPulse = g_crossPulse;
+
+    // Save to disk
+    p.Save(GetProfilesPath() + p.name + L".json");
+  }
+
+  // Force redraw and notify UI
+  g_forceRedraw = true;
+  emit crosshairChanged();
+}
+
 // --- Hotkey Helpers ---
 static UINT stringToVk(const QString &s) {
   QString upper = s.toUpper().trimmed();

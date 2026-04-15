@@ -4,14 +4,14 @@
 #include <QString>
 #include <QStringList>
 
-
 class BetterAngleBackend : public QObject {
   Q_OBJECT
   Q_PROPERTY(double sensX READ sensX WRITE setSensX NOTIFY profileChanged)
   Q_PROPERTY(double sensY READ sensY WRITE setSensY NOTIFY profileChanged)
   Q_PROPERTY(
       int tolerance READ tolerance WRITE setTolerance NOTIFY profileChanged)
-  Q_PROPERTY(double diveGlideMatch READ diveGlideMatch WRITE setDiveGlideMatch NOTIFY profileChanged)
+  Q_PROPERTY(double diveGlideMatch READ diveGlideMatch WRITE setDiveGlideMatch
+                 NOTIFY profileChanged)
 
   Q_PROPERTY(bool crosshairOn READ crosshairOn WRITE setCrosshairOn NOTIFY
                  crosshairChanged)
@@ -46,9 +46,12 @@ class BetterAngleBackend : public QObject {
   Q_PROPERTY(bool fnRunning READ fnRunning NOTIFY debugDataChanged)
   Q_PROPERTY(bool fnFocused READ fnFocused NOTIFY debugDataChanged)
   Q_PROPERTY(bool fnMouseHidden READ fnMouseHidden NOTIFY debugDataChanged)
-  Q_PROPERTY(bool showDebugOverlay READ showDebugOverlay WRITE setShowDebugOverlay NOTIFY debugDataChanged)
-  Q_PROPERTY(long long detectionDelayMs READ detectionDelayMs NOTIFY debugDataChanged)
-  Q_PROPERTY(int detectionRatioPct READ detectionRatioPct NOTIFY debugDataChanged)
+  Q_PROPERTY(bool showDebugOverlay READ showDebugOverlay WRITE
+                 setShowDebugOverlay NOTIFY debugDataChanged)
+  Q_PROPERTY(
+      long long detectionDelayMs READ detectionDelayMs NOTIFY debugDataChanged)
+  Q_PROPERTY(
+      int detectionRatioPct READ detectionRatioPct NOTIFY debugDataChanged)
   Q_PROPERTY(bool inputLocked READ inputLocked NOTIFY debugDataChanged)
   Q_PROPERTY(bool isDiving READ isDiving NOTIFY debugDataChanged)
 
@@ -116,18 +119,17 @@ public:
   bool isDiving() const;
   Q_INVOKABLE void refreshDebugData();
 
-
   Q_INVOKABLE void terminateApp();
   Q_INVOKABLE void checkForUpdates();
   Q_INVOKABLE void downloadUpdate();
   Q_INVOKABLE void requestShowControlPanel();
-
 
   // Crosshair preset management
   Q_INVOKABLE QStringList crosshairPresetNames() const;
   Q_INVOKABLE void saveCrosshairPreset(const QString &name);
   Q_INVOKABLE void loadCrosshairPreset(int index);
   Q_INVOKABLE void deleteCrosshairPreset(int index);
+  Q_INVOKABLE void resetCrosshairToDefaults();
 
   // Keybind management
   QString keyToggle() const;
