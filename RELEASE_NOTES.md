@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.252..HEAD ### BetterAngle Pro v4.27.253
+- Fix keyboard ghosting, rapid tap, and spacebar double-press issues
+
 Generating release notes from commit range: v4.27.251..HEAD ### BetterAngle Pro v4.27.252
 - Fix keyboard ghosting and input synchronization issues
 
