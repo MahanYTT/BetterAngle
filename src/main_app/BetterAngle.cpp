@@ -71,114 +71,22 @@ void DetectorThread() {
       // Edge: Gliding -> Diving  (FOV zoom-in anim ~0.25s)
       if (nowDiving && !lastDiving) {
         g_mouseSuspendedUntil = GetTickCount64() + 250;
+        EnableMouseLock(true);
         std::thread([]() {
-          // Record keys pressed before blocking
-          std::vector<int> preKeys;
-          for (int i = 1; i < 255; i++) {
-            if (GetAsyncKeyState(i) & 0x8000)
-              preKeys.push_back(i);
-          }
-
-          // Check if spacebar is pressed - we'll handle it specially
-          bool spaceWasPressed = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
-
-          // Flush pending mouse messages before blocking to prevent ghosting
-          FlushPendingInputMessages();
-
-          // Block all input (keyboard and mouse)
-          BlockInput(TRUE);
           Sleep(250);
-          BlockInput(FALSE);
-
-          // Small delay to allow system to process block release
-          Sleep(30);
-
-          // Sync key states to prevent ghosting
-          SyncKeyStates(preKeys);
-
-          // Special handling for spacebar: if it was pressed before blocking
-          // and is still pressed now, ensure the game sees it
-          if (spaceWasPressed) {
-            bool spaceStillPressed = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
-            if (spaceStillPressed) {
-              // Space is still held down - ensure game sees it
-              // Synthesize a KEYDOWN followed by KEYUP to "refresh" the key
-              // state
-              INPUT inDown = {0};
-              inDown.type = INPUT_KEYBOARD;
-              inDown.ki.wVk = VK_SPACE;
-              inDown.ki.wScan = MapVirtualKeyW(VK_SPACE, MAPVK_VK_TO_VSC);
-              inDown.ki.dwFlags = KEYEVENTF_SCANCODE;
-
-              INPUT inUp = {0};
-              inUp.type = INPUT_KEYBOARD;
-              inUp.ki.wVk = VK_SPACE;
-              inUp.ki.wScan = MapVirtualKeyW(VK_SPACE, MAPVK_VK_TO_VSC);
-              inUp.ki.dwFlags = KEYEVENTF_KEYUP | KEYEVENTF_SCANCODE;
-
-              SendInput(1, &inDown, sizeof(INPUT));
-              Sleep(1);
-              SendInput(1, &inUp, sizeof(INPUT));
-            }
-          }
+          EnableMouseLock(false);
         }).detach();
-        LOG_INFO("Transition: glide->dive, BlockInput for 250ms with spacebar "
-                 "handling");
+        LOG_INFO("Transition: glide->dive, Mouse Lock for 250ms");
       }
       // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)
       else if (!nowDiving && lastDiving) {
         g_mouseSuspendedUntil = GetTickCount64() + 1000;
+        EnableMouseLock(true);
         std::thread([]() {
-          // Record keys pressed before blocking
-          std::vector<int> preKeys;
-          for (int i = 1; i < 255; i++) {
-            if (GetAsyncKeyState(i) & 0x8000)
-              preKeys.push_back(i);
-          }
-
-          // Check if spacebar is pressed - we'll handle it specially
-          bool spaceWasPressed = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
-
-          // Flush pending mouse messages before blocking to prevent ghosting
-          FlushPendingInputMessages();
-
-          // Block all input (keyboard and mouse) - but reduce time for keyboard
-          // Actually, we need to block for the full animation to prevent input
-          // during zoom
-          BlockInput(TRUE);
           Sleep(1000);
-          BlockInput(FALSE);
-
-          // Longer delay to allow system to process block release
-          Sleep(50);
-
-          // Sync key states to prevent ghosting
-          SyncKeyStates(preKeys);
-
-          // Special handling for spacebar
-          if (spaceWasPressed) {
-            bool spaceStillPressed = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
-            if (spaceStillPressed) {
-              INPUT inDown = {0};
-              inDown.type = INPUT_KEYBOARD;
-              inDown.ki.wVk = VK_SPACE;
-              inDown.ki.wScan = MapVirtualKeyW(VK_SPACE, MAPVK_VK_TO_VSC);
-              inDown.ki.dwFlags = KEYEVENTF_SCANCODE;
-
-              INPUT inUp = {0};
-              inUp.type = INPUT_KEYBOARD;
-              inUp.ki.wVk = VK_SPACE;
-              inUp.ki.wScan = MapVirtualKeyW(VK_SPACE, MAPVK_VK_TO_VSC);
-              inUp.ki.dwFlags = KEYEVENTF_KEYUP | KEYEVENTF_SCANCODE;
-
-              SendInput(1, &inDown, sizeof(INPUT));
-              Sleep(1);
-              SendInput(1, &inUp, sizeof(INPUT));
-            }
-          }
+          EnableMouseLock(false);
         }).detach();
-        LOG_INFO("Transition: dive->glide, BlockInput for 1000ms with spacebar "
-                 "handling");
+        LOG_INFO("Transition: dive->glide, Mouse Lock for 1000ms");
       }
 
       // Reset UI tracker once timer expires
@@ -350,7 +258,7 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
     g_isCursorVisible = IsCursorCurrentlyVisible();
     const bool isFortniteForeground = IsFortniteForeground();
 
-    const bool allowAngleUpdate = (isFortniteForeground && !g_isCursorVisible);
+    const bool allowAngleUpdate = (isFortniteForeground && !g_isCursorVisible && GetTickCount64() >= g_mouseSuspendedUntil);
 
     static bool lastAllowAngleUpdate = true;
     static bool lastIsFortniteForeground = false;
