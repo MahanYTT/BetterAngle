@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.249..HEAD ### BetterAngle Pro v4.27.250
+- Improve input blocking to prevent ghosting and fix spacebar double-press issue
+
 Generating release notes from commit range: v4.27.248..HEAD ### BetterAngle Pro v4.27.249
 - Fix installer elevation error (740) by adding shellexec flag
 
