@@ -471,7 +471,7 @@ Item {
                         Text { text: "Line Thickness: " + backend.crossThickness.toFixed(2) + " px"; color: "white"; font.pixelSize: 12 }
                         Slider {
                             width: parent.width
-                            from: 0.1; to: 10.0; stepSize: 0.1
+                            from: 0.1; to: 10.0; stepSize: 0.01
                             value: backend.crossThickness
                             onMoved: backend.crossThickness = value
                         }

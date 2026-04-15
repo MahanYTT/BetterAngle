@@ -8,7 +8,9 @@
 #include <QTimer>
 #include <algorithm>
 #include <cmath>
+#include <iomanip>
 #include <shlobj.h>
+#include <sstream>
 #include <thread>
 #include <tlhelp32.h>
 #include <windows.h>
@@ -164,10 +166,12 @@ void BetterAngleBackend::setCrossThickness(float v) {
   const float maxThickness = 10.0f;
   const float epsilon = 0.001f;
 
-  // Always log for debugging the thickness issue
-  OutputDebugStringW((L"[Crosshair] setCrossThickness called with: " +
-                      std::to_wstring(v) + L"\n")
-                         .c_str());
+  // Always log for debugging the thickness issue with full precision
+  std::wstringstream ws1;
+  ws1 << std::fixed << std::setprecision(6) << v;
+  OutputDebugStringW(
+      (L"[Crosshair] setCrossThickness called with: " + ws1.str() + L"\n")
+          .c_str());
 
   // Clamp to valid range with epsilon for floating point precision
   if (v < minThickness - epsilon)
@@ -179,12 +183,14 @@ void BetterAngleBackend::setCrossThickness(float v) {
   if (v < minThickness)
     v = minThickness;
 
-  OutputDebugStringW((L"[Crosshair] setCrossThickness final value: " +
-                      std::to_wstring(v) + L"\n")
-                         .c_str());
-  OutputDebugStringW((L"[Crosshair] g_crossThickness will be set to: " +
-                      std::to_wstring(v) + L"\n")
-                         .c_str());
+  std::wstringstream ws2;
+  ws2 << std::fixed << std::setprecision(6) << v;
+  OutputDebugStringW(
+      (L"[Crosshair] setCrossThickness final value: " + ws2.str() + L"\n")
+          .c_str());
+  OutputDebugStringW(
+      (L"[Crosshair] g_crossThickness will be set to: " + ws2.str() + L"\n")
+          .c_str());
 
   g_crossThickness = v;
   g_forceRedraw = true;

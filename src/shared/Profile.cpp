@@ -217,7 +217,7 @@ bool Profile::Save(const std::wstring &path) {
   oss << L"  \"kb_zeroMod\": " << keybinds.zeroMod << L",\n";
   oss << L"  \"kb_zeroKey\": " << keybinds.zeroKey << L",\n";
 
-  oss << L"  \"crossThickness\": " << std::fixed << std::setprecision(3)
+  oss << L"  \"crossThickness\": " << std::fixed << std::setprecision(6)
       << crossThickness << L",\n";
   oss << L"  \"showCrosshair\": " << (showCrosshair ? 1 : 0) << L",\n";
   oss << L"  \"crossColor\": " << (unsigned long)crossColor << L",\n";
