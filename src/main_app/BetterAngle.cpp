@@ -39,14 +39,12 @@ FovDetector g_detector;
 // Helper function to flush pending input messages before blocking
 static void FlushPendingInputMessages() {
   MSG msg;
-  // Remove all pending keyboard and mouse messages from the queue
-  while (PeekMessageW(&msg, NULL, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE)) {
-  }
+  // Remove all pending mouse messages from the queue (mouse movement can cause
+  // ghosting)
   while (PeekMessageW(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE)) {
   }
-  // Also flush any other input messages
-  while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
-  }
+  // Don't flush keyboard messages to avoid losing keypresses like spacebar
+  // Keyboard messages will be blocked by BlockInput(TRUE) anyway
 }
 
 // FOV Detector Thread
@@ -81,7 +79,10 @@ void DetectorThread() {
               preKeys.push_back(i);
           }
 
-          // Flush pending input messages before blocking to prevent ghosting
+          // Check if spacebar is pressed - we'll handle it specially
+          bool spaceWasPressed = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
+
+          // Flush pending mouse messages before blocking to prevent ghosting
           FlushPendingInputMessages();
 
           // Block all input (keyboard and mouse)
@@ -90,16 +91,39 @@ void DetectorThread() {
           BlockInput(FALSE);
 
           // Small delay to allow system to process block release
-          Sleep(20);
+          Sleep(30);
 
           // Sync key states to prevent ghosting
           SyncKeyStates(preKeys);
 
-          // Additional flush after syncing to ensure clean state
-          FlushPendingInputMessages();
+          // Special handling for spacebar: if it was pressed before blocking
+          // and is still pressed now, ensure the game sees it
+          if (spaceWasPressed) {
+            bool spaceStillPressed = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
+            if (spaceStillPressed) {
+              // Space is still held down - ensure game sees it
+              // Synthesize a KEYDOWN followed by KEYUP to "refresh" the key
+              // state
+              INPUT inDown = {0};
+              inDown.type = INPUT_KEYBOARD;
+              inDown.ki.wVk = VK_SPACE;
+              inDown.ki.wScan = MapVirtualKeyW(VK_SPACE, MAPVK_VK_TO_VSC);
+              inDown.ki.dwFlags = KEYEVENTF_SCANCODE;
+
+              INPUT inUp = {0};
+              inUp.type = INPUT_KEYBOARD;
+              inUp.ki.wVk = VK_SPACE;
+              inUp.ki.wScan = MapVirtualKeyW(VK_SPACE, MAPVK_VK_TO_VSC);
+              inUp.ki.dwFlags = KEYEVENTF_KEYUP | KEYEVENTF_SCANCODE;
+
+              SendInput(1, &inDown, sizeof(INPUT));
+              Sleep(1);
+              SendInput(1, &inUp, sizeof(INPUT));
+            }
+          }
         }).detach();
-        LOG_INFO("Transition: glide->dive, BlockInput for 250ms with input "
-                 "flushing");
+        LOG_INFO("Transition: glide->dive, BlockInput for 250ms with spacebar "
+                 "handling");
       }
       // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)
       else if (!nowDiving && lastDiving) {
@@ -112,25 +136,49 @@ void DetectorThread() {
               preKeys.push_back(i);
           }
 
-          // Flush pending input messages before blocking to prevent ghosting
+          // Check if spacebar is pressed - we'll handle it specially
+          bool spaceWasPressed = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
+
+          // Flush pending mouse messages before blocking to prevent ghosting
           FlushPendingInputMessages();
 
-          // Block all input (keyboard and mouse)
+          // Block all input (keyboard and mouse) - but reduce time for keyboard
+          // Actually, we need to block for the full animation to prevent input
+          // during zoom
           BlockInput(TRUE);
           Sleep(1000);
           BlockInput(FALSE);
 
-          // Small delay to allow system to process block release
-          Sleep(20);
+          // Longer delay to allow system to process block release
+          Sleep(50);
 
           // Sync key states to prevent ghosting
           SyncKeyStates(preKeys);
 
-          // Additional flush after syncing to ensure clean state
-          FlushPendingInputMessages();
+          // Special handling for spacebar
+          if (spaceWasPressed) {
+            bool spaceStillPressed = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
+            if (spaceStillPressed) {
+              INPUT inDown = {0};
+              inDown.type = INPUT_KEYBOARD;
+              inDown.ki.wVk = VK_SPACE;
+              inDown.ki.wScan = MapVirtualKeyW(VK_SPACE, MAPVK_VK_TO_VSC);
+              inDown.ki.dwFlags = KEYEVENTF_SCANCODE;
+
+              INPUT inUp = {0};
+              inUp.type = INPUT_KEYBOARD;
+              inUp.ki.wVk = VK_SPACE;
+              inUp.ki.wScan = MapVirtualKeyW(VK_SPACE, MAPVK_VK_TO_VSC);
+              inUp.ki.dwFlags = KEYEVENTF_KEYUP | KEYEVENTF_SCANCODE;
+
+              SendInput(1, &inDown, sizeof(INPUT));
+              Sleep(1);
+              SendInput(1, &inUp, sizeof(INPUT));
+            }
+          }
         }).detach();
-        LOG_INFO("Transition: dive->glide, BlockInput for 1000ms with input "
-                 "flushing");
+        LOG_INFO("Transition: dive->glide, BlockInput for 1000ms with spacebar "
+                 "handling");
       }
 
       // Reset UI tracker once timer expires
