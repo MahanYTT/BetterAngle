@@ -68,6 +68,7 @@ void DetectorThread() {
           BlockInput(TRUE);
           Sleep(250);
           BlockInput(FALSE);
+          Sleep(50); // Flush queue before synthesis
           SyncKeyStates(preKeys);
         }).detach();
         LOG_INFO("Transition: glide->dive, BlockInput for 250ms");
@@ -83,6 +84,7 @@ void DetectorThread() {
           BlockInput(TRUE);
           Sleep(1000);
           BlockInput(FALSE);
+          Sleep(50); // Flush queue before synthesis
           SyncKeyStates(preKeys);
         }).detach();
         LOG_INFO("Transition: dive->glide, BlockInput for 1000ms");
@@ -507,6 +509,13 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       float ang = g_logic.GetAngle();
 
       bool pulseActive = (g_showCrosshair && g_crossPulse);
+
+      static bool lastFortniteFoc = false;
+      bool fnFoc = IsFortniteForeground();
+      if (fnFoc != lastFortniteFoc) {
+          lastFortniteFoc = fnFoc;
+          g_forceRedraw = true;
+      }
 
       if (ang != lastAngle || g_isDiving != lastDiving ||
           g_isCursorVisible != lastCursor || g_currentSelection != NONE ||

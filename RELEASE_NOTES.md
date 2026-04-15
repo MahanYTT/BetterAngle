@@ -1,5 +1,6 @@
-Generating release notes from commit range: v4.27.236..HEAD ### BetterAngle Pro v4.27.237
-- fix: Removed WDA_EXCLUDEFROMCAPTURE to allow overlay recording via OBS
+### BetterAngle Pro v4.27.237
+- **Anti-Ghosting Sync Fix**: Interjected a 50ms queue-flush deferral before deploying the synthetic key synchronizations directly into the Windows pipeline. Previously, EAC (or just Windows' internal latency) was inadvertently dropping the unstick injections because they arrived while the OS was still busy deconstructing the hardware gate.
+- **Prompt Color Focus Sync**: Added foreground detection evaluations directly into the 60FPS UI loop; the ROI state visualizer now reflects application bounds correctly during Alt-Tab regardless of whether raw mouse updates are being intercepted.
 
 ### BetterAngle Pro v4.27.236
 - **Broadcast & Recording Fix**: The BetterAngle crosshair and debug overlay will now properly appear in gameplay recordings (OBS, ShadowPlay, Discord Streaming, etc). We completely stripped the obscure internal Windows flag (`WDA_EXCLUDEFROMCAPTURE`) that was artificially cloaking the transparent HUD.
@@ -72,4 +73,5 @@ Generating release notes from commit range: v4.27.224..HEAD
 ### BetterAngle Pro v4.27.221
 - **Angle Wrap Formatting**: Fixed angle calculation UI logic so that the value dynamically formats and correctly resets precisely at the wrap point (359.9 to 0.0), ensuring the angle is faithfully bounded and doesn't display as 360.0.
 - **Debug Diagnostics Tab**: Added a new 'DEBUG' tab to the QML Dashboard providing real-time hardware and operating system hooks to monitor Fortnite process detection, window focus, and mouse hidden states. This operates entirely independent of the core angle calculation logic.
+
 
