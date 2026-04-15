@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.241..HEAD ### BetterAngle Pro v4.27.242
+- Fix crosshair thickness issue and add reset button
+
 Generating release notes from commit range: v4.27.240..HEAD ### BetterAngle Pro v4.27.241
 - feat: Add crosshair reset button to UI
 
