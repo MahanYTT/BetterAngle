@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.248..HEAD ### BetterAngle Pro v4.27.249
+- Fix installer elevation error (740) by adding shellexec flag
+
 Generating release notes from commit range: v4.27.246..HEAD ### BetterAngle Pro v4.27.248
 - Fix compiler error 'cc' undeclared in Overlay.cpp
 - chore: auto-increment version for release
