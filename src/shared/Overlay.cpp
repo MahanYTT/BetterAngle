@@ -293,6 +293,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
                              .c_str());
 #endif
 
+      COLORREF cc = g_crossColor;
       float drawThickness = g_crossThickness;
       float finalAlpha = (float)alpha;
 
