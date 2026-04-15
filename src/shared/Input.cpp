@@ -156,30 +156,47 @@ bool IsMouseLocked() { return g_mouseLocked; }
 
 void SyncKeyStates(const std::vector<int> &keysToRestore) {
   // For each key that was pressed before blocking,
-  // ensure the system knows it's still pressed
+  // refresh its state to prevent ghosting
   for (int vk : keysToRestore) {
-    // Check if the key is currently physically pressed
+    // Check current physical state
     SHORT currentState = GetAsyncKeyState(vk);
     bool currentlyPressed = (currentState & 0x8000) != 0;
 
     if (currentlyPressed) {
-      // Key is still pressed - send a synthetic key down/up to refresh state
-      INPUT inputDown = {0};
-      inputDown.type = INPUT_KEYBOARD;
-      inputDown.ki.wVk = static_cast<WORD>(vk);
-      inputDown.ki.wScan = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-      inputDown.ki.dwFlags = KEYEVENTF_SCANCODE;
-
+      // Key is still physically pressed. Some games may lose track of
+      // held keys during input blocking. Send a brief key-up then key-down
+      // to "refresh" the key state without actually releasing it.
       INPUT inputUp = {0};
       inputUp.type = INPUT_KEYBOARD;
       inputUp.ki.wVk = static_cast<WORD>(vk);
       inputUp.ki.wScan = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
       inputUp.ki.dwFlags = KEYEVENTF_KEYUP | KEYEVENTF_SCANCODE;
 
-      // Send the key events
+      INPUT inputDown = {0};
+      inputDown.type = INPUT_KEYBOARD;
+      inputDown.ki.wVk = static_cast<WORD>(vk);
+      inputDown.ki.wScan = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+      inputDown.ki.dwFlags = KEYEVENTF_SCANCODE;
+
+      // Send key-up then key-down very quickly
+      // This tells the game the key was released and re-pressed,
+      // which should clear any stuck state while maintaining the
+      // perception of continuous hold (the gap is <5ms)
+      SendInput(1, &inputUp, sizeof(INPUT));
+      Sleep(2); // Very short delay
       SendInput(1, &inputDown, sizeof(INPUT));
-      Sleep(1); // Tiny delay
+    } else {
+      // Key is no longer physically pressed but might be stuck
+      // in pressed state in the game. Send a key-up to ensure it's released.
+      INPUT inputUp = {0};
+      inputUp.type = INPUT_KEYBOARD;
+      inputUp.ki.wVk = static_cast<WORD>(vk);
+      inputUp.ki.wScan = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+      inputUp.ki.dwFlags = KEYEVENTF_KEYUP | KEYEVENTF_SCANCODE;
       SendInput(1, &inputUp, sizeof(INPUT));
     }
+
+    // Tiny delay between keys to avoid overwhelming the input system
+    Sleep(1);
   }
 }

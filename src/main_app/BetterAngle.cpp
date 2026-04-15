@@ -40,21 +40,48 @@ FovDetector g_detector;
 static void FlushPendingInputMessages() {
   MSG msg;
   // Remove all pending mouse messages from the queue (mouse movement can cause
-  // ghosting)
+  // ghosting). Include mouse wheel messages as well.
   while (PeekMessageW(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE)) {
+  }
+  // Also flush mouse wheel messages (WM_MOUSEWHEEL, WM_MOUSEHWHEEL)
+  while (PeekMessageW(&msg, NULL, WM_MOUSEWHEEL, WM_MOUSEWHEEL, PM_REMOVE)) {
+  }
+  while (PeekMessageW(&msg, NULL, WM_MOUSEHWHEEL, WM_MOUSEHWHEEL, PM_REMOVE)) {
   }
   // Don't flush keyboard messages to avoid losing keypresses like spacebar
   // Keyboard messages will be blocked by BlockInput(TRUE) anyway
 }
 
-// Helper function to get currently pressed keys
+// Helper function to get currently pressed keys (only common game keys)
 static std::vector<int> GetCurrentlyPressedKeys() {
   std::vector<int> pressedKeys;
-  for (int i = 1; i < 255; i++) {
-    if (GetAsyncKeyState(i) & 0x8000) {
-      pressedKeys.push_back(i);
+
+  // Common game keys: WASD, arrow keys, space, shift, ctrl, alt, tab, escape,
+  // etc.
+  const int relevantKeys[] = {
+      'A',          'B',          'C',         'D',         'E',
+      'F',          'G',          'H',         'I',         'J',
+      'K',          'L',          'M',         'N',         'O',
+      'P',          'Q',          'R',         'S',         'T',
+      'U',          'V',          'W',         'X',         'Y',
+      'Z',          '0',          '1',         '2',         '3',
+      '4',          '5',          '6',         '7',         '8',
+      '9',          VK_SPACE,     VK_SHIFT,    VK_CONTROL,  VK_MENU, // Alt
+      VK_TAB,       VK_ESCAPE,    VK_RETURN,   VK_LEFT,     VK_RIGHT,
+      VK_UP,        VK_DOWN,      VK_F1,       VK_F2,       VK_F3,
+      VK_F4,        VK_F5,        VK_F6,       VK_F7,       VK_F8,
+      VK_F9,        VK_F10,       VK_F11,      VK_F12,      VK_LSHIFT,
+      VK_RSHIFT,    VK_LCONTROL,  VK_RCONTROL, VK_LMENU,    VK_RMENU,
+      VK_OEM_1,     VK_OEM_2,     VK_OEM_3,    VK_OEM_4,    VK_OEM_5,
+      VK_OEM_6,     VK_OEM_7,     VK_OEM_8,    VK_OEM_PLUS, VK_OEM_COMMA,
+      VK_OEM_MINUS, VK_OEM_PERIOD};
+
+  for (int vk : relevantKeys) {
+    if (GetAsyncKeyState(vk) & 0x8000) {
+      pressedKeys.push_back(vk);
     }
   }
+
   return pressedKeys;
 }
 
@@ -86,37 +113,42 @@ void DetectorThread() {
         std::vector<int> preKeys = GetCurrentlyPressedKeys();
         bool spaceWasPressed = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
 
+        // Flush pending mouse messages before locking to prevent ghosting
+        FlushPendingInputMessages();
         EnableMouseLock(true);
         std::thread([preKeys, spaceWasPressed]() {
           Sleep(250);
           EnableMouseLock(false);
 
-          // Small delay to allow system to process
-          Sleep(30);
+          // Give system more time to process mouse unlock before syncing keys
+          Sleep(50);
 
           // Sync key states to prevent ghosting
           SyncKeyStates(preKeys);
 
-          // Special handling for spacebar
+          // Flush any leftover messages from synthetic inputs
+          FlushPendingInputMessages();
+
+          // Special handling for spacebar - refresh state without releasing
           if (spaceWasPressed) {
             bool spaceStillPressed = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
             if (spaceStillPressed) {
-              // Refresh spacebar state
-              INPUT inDown = {0};
-              inDown.type = INPUT_KEYBOARD;
-              inDown.ki.wVk = VK_SPACE;
-              inDown.ki.wScan = MapVirtualKeyW(VK_SPACE, MAPVK_VK_TO_VSC);
-              inDown.ki.dwFlags = KEYEVENTF_SCANCODE;
-
+              // Refresh spacebar state (key-up then key-down to maintain hold)
               INPUT inUp = {0};
               inUp.type = INPUT_KEYBOARD;
               inUp.ki.wVk = VK_SPACE;
               inUp.ki.wScan = MapVirtualKeyW(VK_SPACE, MAPVK_VK_TO_VSC);
               inUp.ki.dwFlags = KEYEVENTF_KEYUP | KEYEVENTF_SCANCODE;
 
-              SendInput(1, &inDown, sizeof(INPUT));
-              Sleep(1);
+              INPUT inDown = {0};
+              inDown.type = INPUT_KEYBOARD;
+              inDown.ki.wVk = VK_SPACE;
+              inDown.ki.wScan = MapVirtualKeyW(VK_SPACE, MAPVK_VK_TO_VSC);
+              inDown.ki.dwFlags = KEYEVENTF_SCANCODE;
+
               SendInput(1, &inUp, sizeof(INPUT));
+              Sleep(2);
+              SendInput(1, &inDown, sizeof(INPUT));
             }
           }
         }).detach();
@@ -129,37 +161,42 @@ void DetectorThread() {
         std::vector<int> preKeys = GetCurrentlyPressedKeys();
         bool spaceWasPressed = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
 
+        // Flush pending mouse messages before locking to prevent ghosting
+        FlushPendingInputMessages();
         EnableMouseLock(true);
         std::thread([preKeys, spaceWasPressed]() {
           Sleep(1000);
           EnableMouseLock(false);
 
-          // Longer delay to allow system to process
-          Sleep(50);
+          // Longer delay to allow system to process mouse unlock
+          Sleep(80);
 
           // Sync key states to prevent ghosting
           SyncKeyStates(preKeys);
 
-          // Special handling for spacebar
+          // Flush any leftover messages from synthetic inputs
+          FlushPendingInputMessages();
+
+          // Special handling for spacebar - refresh state without releasing
           if (spaceWasPressed) {
             bool spaceStillPressed = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
             if (spaceStillPressed) {
-              // Refresh spacebar state
-              INPUT inDown = {0};
-              inDown.type = INPUT_KEYBOARD;
-              inDown.ki.wVk = VK_SPACE;
-              inDown.ki.wScan = MapVirtualKeyW(VK_SPACE, MAPVK_VK_TO_VSC);
-              inDown.ki.dwFlags = KEYEVENTF_SCANCODE;
-
+              // Refresh spacebar state (key-up then key-down to maintain hold)
               INPUT inUp = {0};
               inUp.type = INPUT_KEYBOARD;
               inUp.ki.wVk = VK_SPACE;
               inUp.ki.wScan = MapVirtualKeyW(VK_SPACE, MAPVK_VK_TO_VSC);
               inUp.ki.dwFlags = KEYEVENTF_KEYUP | KEYEVENTF_SCANCODE;
 
-              SendInput(1, &inDown, sizeof(INPUT));
-              Sleep(1);
+              INPUT inDown = {0};
+              inDown.type = INPUT_KEYBOARD;
+              inDown.ki.wVk = VK_SPACE;
+              inDown.ki.wScan = MapVirtualKeyW(VK_SPACE, MAPVK_VK_TO_VSC);
+              inDown.ki.dwFlags = KEYEVENTF_SCANCODE;
+
               SendInput(1, &inUp, sizeof(INPUT));
+              Sleep(2);
+              SendInput(1, &inDown, sizeof(INPUT));
             }
           }
         }).detach();
