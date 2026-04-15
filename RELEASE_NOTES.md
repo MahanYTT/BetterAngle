@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.236..HEAD ### BetterAngle Pro v4.27.237
+- fix: Removed WDA_EXCLUDEFROMCAPTURE to allow overlay recording via OBS
+
 ### BetterAngle Pro v4.27.236
 - **Broadcast & Recording Fix**: The BetterAngle crosshair and debug overlay will now properly appear in gameplay recordings (OBS, ShadowPlay, Discord Streaming, etc). We completely stripped the obscure internal Windows flag (`WDA_EXCLUDEFROMCAPTURE`) that was artificially cloaking the transparent HUD.
 
