@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.244..HEAD ### BetterAngle Pro v4.27.245
+- Restore Reset to Defaults button and fix 0.1px crosshair rendering precision
+
 Generating release notes from commit range: v4.27.243..HEAD ### BetterAngle Pro v4.27.244
 - Fix decimal precision for crosshair thickness (6.7px becoming 6px issue)
 
