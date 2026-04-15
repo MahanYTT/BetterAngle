@@ -684,10 +684,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       L"BetterAngleHUD", L"BetterAngle HUD", WS_POPUP, screenX, screenY,
       screenW, screenH, NULL, NULL, hInstance, NULL);
 
-  // Exclude overlay from screen capture so it cannot interfere with
-  // the detector's BitBlt screen reads (requires Win10 2004+)
-  SetWindowDisplayAffinity(g_hHUD, WDA_EXCLUDEFROMCAPTURE);
-
   AddSystrayIcon(g_hHUD);
   LOG_INFO("HUD created: hwnd=0x%p", g_hHUD);
   LogWindowInfo(L"HUD handle", g_hHUD);
