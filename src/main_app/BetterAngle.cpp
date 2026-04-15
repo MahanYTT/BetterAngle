@@ -36,6 +36,19 @@ ULONG_PTR g_gdiplusToken;
 std::atomic<bool> g_running(true);
 FovDetector g_detector;
 
+// Helper function to flush pending input messages before blocking
+static void FlushPendingInputMessages() {
+  MSG msg;
+  // Remove all pending keyboard and mouse messages from the queue
+  while (PeekMessageW(&msg, NULL, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE)) {
+  }
+  while (PeekMessageW(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE)) {
+  }
+  // Also flush any other input messages
+  while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
+  }
+}
+
 // FOV Detector Thread
 void DetectorThread() {
   bool lastDiving = false;
@@ -61,35 +74,63 @@ void DetectorThread() {
       if (nowDiving && !lastDiving) {
         g_mouseSuspendedUntil = GetTickCount64() + 250;
         std::thread([]() {
+          // Record keys pressed before blocking
           std::vector<int> preKeys;
           for (int i = 1; i < 255; i++) {
             if (GetAsyncKeyState(i) & 0x8000)
               preKeys.push_back(i);
           }
+
+          // Flush pending input messages before blocking to prevent ghosting
+          FlushPendingInputMessages();
+
+          // Block all input (keyboard and mouse)
           BlockInput(TRUE);
           Sleep(250);
           BlockInput(FALSE);
-          Sleep(50); // Flush queue before synthesis
+
+          // Small delay to allow system to process block release
+          Sleep(20);
+
+          // Sync key states to prevent ghosting
           SyncKeyStates(preKeys);
+
+          // Additional flush after syncing to ensure clean state
+          FlushPendingInputMessages();
         }).detach();
-        LOG_INFO("Transition: glide->dive, BlockInput for 250ms");
+        LOG_INFO("Transition: glide->dive, BlockInput for 250ms with input "
+                 "flushing");
       }
       // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)
       else if (!nowDiving && lastDiving) {
         g_mouseSuspendedUntil = GetTickCount64() + 1000;
         std::thread([]() {
+          // Record keys pressed before blocking
           std::vector<int> preKeys;
           for (int i = 1; i < 255; i++) {
             if (GetAsyncKeyState(i) & 0x8000)
               preKeys.push_back(i);
           }
+
+          // Flush pending input messages before blocking to prevent ghosting
+          FlushPendingInputMessages();
+
+          // Block all input (keyboard and mouse)
           BlockInput(TRUE);
           Sleep(1000);
           BlockInput(FALSE);
-          Sleep(50); // Flush queue before synthesis
+
+          // Small delay to allow system to process block release
+          Sleep(20);
+
+          // Sync key states to prevent ghosting
           SyncKeyStates(preKeys);
+
+          // Additional flush after syncing to ensure clean state
+          FlushPendingInputMessages();
         }).detach();
-        LOG_INFO("Transition: dive->glide, BlockInput for 1000ms");
+        LOG_INFO("Transition: dive->glide, BlockInput for 1000ms with input "
+                 "flushing");
       }
 
       // Reset UI tracker once timer expires
