@@ -293,9 +293,20 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
                              .c_str());
 #endif
 
-      COLORREF cc = g_crossColor;
-      Pen cPen(Color(alpha, GetRValue(cc), GetGValue(cc), GetBValue(cc)),
-               g_crossThickness);
+      float drawThickness = g_crossThickness;
+      float finalAlpha = (float)alpha;
+
+      // "Cool Shit" Trick: If thickness is sub-pixel (< 1.0), use a 1.0px pen
+      // but scale the alpha to simulate the thinness. This prevents GDI+ from
+      // clamping or dropping the line due to mathematical disappearing bugs
+      // on certain resolutions/displays.
+      if (drawThickness < 1.0f) {
+        finalAlpha *= drawThickness;
+        drawThickness = 1.0f;
+      }
+
+      Pen cPen(Color((BYTE)finalAlpha, GetRValue(cc), GetGValue(cc), GetBValue(cc)),
+               drawThickness);
       cPen.SetAlignment(PenAlignmentCenter);
       // Set line join and cap for better thin line rendering
       cPen.SetLineJoin(LineJoinRound);
