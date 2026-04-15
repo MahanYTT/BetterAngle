@@ -1,3 +1,7 @@
+Generating release notes from commit range: v4.27.250..HEAD ### BetterAngle Pro v4.27.251
+- Replace BlockInput with targeted Mouse Hook to fix ghosting and Space responsiveness
+- Fix ghosting issues with A/D keys and spacebar double-press
+
 Generating release notes from commit range: v4.27.249..HEAD ### BetterAngle Pro v4.27.250
 - Improve input blocking to prevent ghosting and fix spacebar double-press issue
 
