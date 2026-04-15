@@ -144,13 +144,42 @@ LRESULT CALLBACK MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam) {
 void EnableMouseLock(bool enable) {
   g_mouseLocked = enable;
   if (enable && g_hMouseHook == NULL) {
-    g_hMouseHook = SetWindowsHookEx(WH_MOUSE_LL, MouseHookProc, GetModuleHandle(NULL), 0);
+    g_hMouseHook =
+        SetWindowsHookEx(WH_MOUSE_LL, MouseHookProc, GetModuleHandle(NULL), 0);
   } else if (!enable && g_hMouseHook != NULL) {
     UnhookWindowsHookEx(g_hMouseHook);
     g_hMouseHook = NULL;
   }
 }
 
-bool IsMouseLocked() {
-  return g_mouseLocked;
+bool IsMouseLocked() { return g_mouseLocked; }
+
+void SyncKeyStates(const std::vector<int> &keysToRestore) {
+  // For each key that was pressed before blocking,
+  // ensure the system knows it's still pressed
+  for (int vk : keysToRestore) {
+    // Check if the key is currently physically pressed
+    SHORT currentState = GetAsyncKeyState(vk);
+    bool currentlyPressed = (currentState & 0x8000) != 0;
+
+    if (currentlyPressed) {
+      // Key is still pressed - send a synthetic key down/up to refresh state
+      INPUT inputDown = {0};
+      inputDown.type = INPUT_KEYBOARD;
+      inputDown.ki.wVk = static_cast<WORD>(vk);
+      inputDown.ki.wScan = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+      inputDown.ki.dwFlags = KEYEVENTF_SCANCODE;
+
+      INPUT inputUp = {0};
+      inputUp.type = INPUT_KEYBOARD;
+      inputUp.ki.wVk = static_cast<WORD>(vk);
+      inputUp.ki.wScan = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+      inputUp.ki.dwFlags = KEYEVENTF_KEYUP | KEYEVENTF_SCANCODE;
+
+      // Send the key events
+      SendInput(1, &inputDown, sizeof(INPUT));
+      Sleep(1); // Tiny delay
+      SendInput(1, &inputUp, sizeof(INPUT));
+    }
+  }
 }

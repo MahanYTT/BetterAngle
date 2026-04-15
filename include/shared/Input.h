@@ -17,4 +17,7 @@ bool IsCursorCurrentlyVisible();
 void EnableMouseLock(bool enable);
 bool IsMouseLocked();
 
+// Keyboard state synchronization
+void SyncKeyStates(const std::vector<int> &keysToRestore);
+
 #endif // INPUT_H

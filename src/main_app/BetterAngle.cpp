@@ -47,6 +47,17 @@ static void FlushPendingInputMessages() {
   // Keyboard messages will be blocked by BlockInput(TRUE) anyway
 }
 
+// Helper function to get currently pressed keys
+static std::vector<int> GetCurrentlyPressedKeys() {
+  std::vector<int> pressedKeys;
+  for (int i = 1; i < 255; i++) {
+    if (GetAsyncKeyState(i) & 0x8000) {
+      pressedKeys.push_back(i);
+    }
+  }
+  return pressedKeys;
+}
+
 // FOV Detector Thread
 void DetectorThread() {
   bool lastDiving = false;
@@ -71,22 +82,89 @@ void DetectorThread() {
       // Edge: Gliding -> Diving  (FOV zoom-in anim ~0.25s)
       if (nowDiving && !lastDiving) {
         g_mouseSuspendedUntil = GetTickCount64() + 250;
+        // Record keys pressed before locking
+        std::vector<int> preKeys = GetCurrentlyPressedKeys();
+        bool spaceWasPressed = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
+
         EnableMouseLock(true);
-        std::thread([]() {
+        std::thread([preKeys, spaceWasPressed]() {
           Sleep(250);
           EnableMouseLock(false);
+
+          // Small delay to allow system to process
+          Sleep(30);
+
+          // Sync key states to prevent ghosting
+          SyncKeyStates(preKeys);
+
+          // Special handling for spacebar
+          if (spaceWasPressed) {
+            bool spaceStillPressed = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
+            if (spaceStillPressed) {
+              // Refresh spacebar state
+              INPUT inDown = {0};
+              inDown.type = INPUT_KEYBOARD;
+              inDown.ki.wVk = VK_SPACE;
+              inDown.ki.wScan = MapVirtualKeyW(VK_SPACE, MAPVK_VK_TO_VSC);
+              inDown.ki.dwFlags = KEYEVENTF_SCANCODE;
+
+              INPUT inUp = {0};
+              inUp.type = INPUT_KEYBOARD;
+              inUp.ki.wVk = VK_SPACE;
+              inUp.ki.wScan = MapVirtualKeyW(VK_SPACE, MAPVK_VK_TO_VSC);
+              inUp.ki.dwFlags = KEYEVENTF_KEYUP | KEYEVENTF_SCANCODE;
+
+              SendInput(1, &inDown, sizeof(INPUT));
+              Sleep(1);
+              SendInput(1, &inUp, sizeof(INPUT));
+            }
+          }
         }).detach();
-        LOG_INFO("Transition: glide->dive, Mouse Lock for 250ms");
+        LOG_INFO("Transition: glide->dive, Mouse Lock for 250ms with key sync");
       }
       // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)
       else if (!nowDiving && lastDiving) {
         g_mouseSuspendedUntil = GetTickCount64() + 1000;
+        // Record keys pressed before locking
+        std::vector<int> preKeys = GetCurrentlyPressedKeys();
+        bool spaceWasPressed = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
+
         EnableMouseLock(true);
-        std::thread([]() {
+        std::thread([preKeys, spaceWasPressed]() {
           Sleep(1000);
           EnableMouseLock(false);
+
+          // Longer delay to allow system to process
+          Sleep(50);
+
+          // Sync key states to prevent ghosting
+          SyncKeyStates(preKeys);
+
+          // Special handling for spacebar
+          if (spaceWasPressed) {
+            bool spaceStillPressed = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
+            if (spaceStillPressed) {
+              // Refresh spacebar state
+              INPUT inDown = {0};
+              inDown.type = INPUT_KEYBOARD;
+              inDown.ki.wVk = VK_SPACE;
+              inDown.ki.wScan = MapVirtualKeyW(VK_SPACE, MAPVK_VK_TO_VSC);
+              inDown.ki.dwFlags = KEYEVENTF_SCANCODE;
+
+              INPUT inUp = {0};
+              inUp.type = INPUT_KEYBOARD;
+              inUp.ki.wVk = VK_SPACE;
+              inUp.ki.wScan = MapVirtualKeyW(VK_SPACE, MAPVK_VK_TO_VSC);
+              inUp.ki.dwFlags = KEYEVENTF_KEYUP | KEYEVENTF_SCANCODE;
+
+              SendInput(1, &inDown, sizeof(INPUT));
+              Sleep(1);
+              SendInput(1, &inUp, sizeof(INPUT));
+            }
+          }
         }).detach();
-        LOG_INFO("Transition: dive->glide, Mouse Lock for 1000ms");
+        LOG_INFO(
+            "Transition: dive->glide, Mouse Lock for 1000ms with key sync");
       }
 
       // Reset UI tracker once timer expires
@@ -258,7 +336,8 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
     g_isCursorVisible = IsCursorCurrentlyVisible();
     const bool isFortniteForeground = IsFortniteForeground();
 
-    const bool allowAngleUpdate = (isFortniteForeground && !g_isCursorVisible && GetTickCount64() >= g_mouseSuspendedUntil);
+    const bool allowAngleUpdate = (isFortniteForeground && !g_isCursorVisible &&
+                                   GetTickCount64() >= g_mouseSuspendedUntil);
 
     static bool lastAllowAngleUpdate = true;
     static bool lastIsFortniteForeground = false;
