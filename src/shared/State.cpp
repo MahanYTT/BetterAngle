@@ -29,7 +29,6 @@ int g_selectedProfileIdx = 0;
 // Global g_keybinds removed (v4.20.37)
 std::wstring g_lastLoadedProfileName = L"";
 
-
 #include <fstream>
 #include <locale>
 #include <shlobj.h>
@@ -104,7 +103,6 @@ void LoadSettings() {
         return def;
       }
     };
-
 
     g_hudX = eInt("hudX", 40);
     g_hudY = eInt("hudY", 40);
@@ -181,7 +179,7 @@ void SaveSettings() {
 }
 
 bool g_showCrosshair = false;
-float g_crossThickness = 1.0f;
+float g_crossThickness = 0.1f;
 COLORREF g_crossColor = RGB(255, 0, 0);
 float g_crossOffsetX = 0.0f;
 float g_crossOffsetY = 0.0f;

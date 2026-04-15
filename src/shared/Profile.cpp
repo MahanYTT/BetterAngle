@@ -167,7 +167,7 @@ bool Profile::Load(const std::wstring &path) {
 
   // Ensure default if empty
   if (crosshairPresets.empty()) {
-    CrosshairPreset def = {L"🎯 Screen Center", 0.0f, 0.0f, 0.0f, 1.0f,
+    CrosshairPreset def = {L"🎯 Screen Center", 0.0f, 0.0f, 0.0f, 0.1f,
                            RGB(255, 0, 0),      false};
     crosshairPresets.push_back(def);
   }

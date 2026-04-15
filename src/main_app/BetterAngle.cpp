@@ -63,7 +63,8 @@ void DetectorThread() {
         std::thread([]() {
           std::vector<int> preKeys;
           for (int i = 1; i < 255; i++) {
-            if (GetAsyncKeyState(i) & 0x8000) preKeys.push_back(i);
+            if (GetAsyncKeyState(i) & 0x8000)
+              preKeys.push_back(i);
           }
           BlockInput(TRUE);
           Sleep(250);
@@ -79,7 +80,8 @@ void DetectorThread() {
         std::thread([]() {
           std::vector<int> preKeys;
           for (int i = 1; i < 255; i++) {
-            if (GetAsyncKeyState(i) & 0x8000) preKeys.push_back(i);
+            if (GetAsyncKeyState(i) & 0x8000)
+              preKeys.push_back(i);
           }
           BlockInput(TRUE);
           Sleep(1000);
@@ -91,7 +93,8 @@ void DetectorThread() {
       }
 
       // Reset UI tracker once timer expires
-      if (g_mouseSuspendedUntil > 0 && GetTickCount64() >= g_mouseSuspendedUntil) {
+      if (g_mouseSuspendedUntil > 0 &&
+          GetTickCount64() >= g_mouseSuspendedUntil) {
         g_mouseSuspendedUntil = 0;
       }
 
@@ -510,8 +513,9 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
       // Clear the forced redraw flag occasionally set elsewhere
       g_forceRedraw.store(false);
-      
-      // Unconditionally draw overlay at 60FPS to keep Debug stats (FPS/Delay) synced live
+
+      // Unconditionally draw overlay at 60FPS to keep Debug stats (FPS/Delay)
+      // synced live
       DrawOverlay(hWnd, ang, g_detectionRatio, g_showCrosshair);
     } else if (wParam == 2) { // 30s Auto-Save Periodic Timer
       SaveSettings();
@@ -558,7 +562,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   InitEnhancedLogging();
   LOG_INFO("WinMain entered");
 
-
   int argc = 1;
   char *argv[] = {(char *)"BetterAngle.exe", nullptr};
   QGuiApplication app(argc, argv);
@@ -587,7 +590,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     p.sensitivityY = 0.1;
     // roi_x/y/w/h left at 0: user must run the ROI selector before
     // the detection zone is shown. This avoids a confusing default box.
-    p.crossThickness = 1.0f;
+    p.crossThickness = 0.1f;
     p.crossColor = RGB(255, 0, 0);
     p.Save(GetProfilesPath() + L"Default.json");
 

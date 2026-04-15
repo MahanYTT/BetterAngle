@@ -417,7 +417,7 @@ void BetterAngleBackend::deleteCrosshairPreset(int index) {
 void BetterAngleBackend::resetCrosshairToDefaults() {
   // Reset global state to defaults
   g_showCrosshair = false;
-  g_crossThickness = 1.0f;
+  g_crossThickness = 1.0f; // Reset to standard 1.0px default
   g_crossColor = RGB(255, 0, 0); // Red
   g_crossOffsetX = 0.0f;
   g_crossOffsetY = 0.0f;
@@ -438,6 +438,8 @@ void BetterAngleBackend::resetCrosshairToDefaults() {
     // Save to disk
     p.Save(GetProfilesPath() + p.name + L".json");
   }
+
+  SaveSettings();
 
   // Force redraw and notify UI
   g_forceRedraw = true;

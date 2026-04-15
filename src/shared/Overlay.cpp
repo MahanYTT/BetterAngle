@@ -132,9 +132,11 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
   Graphics graphics(&bmp);
   graphics.SetSmoothingMode(SmoothingModeHighQuality);
   graphics.SetInterpolationMode(InterpolationModeHighQuality);
-  // Use PixelOffsetModeNone for more predictable sub-pixel line rendering
-  // PixelOffsetModeHalf can cause very thin lines (< 1px) to disappear
-  graphics.SetPixelOffsetMode(PixelOffsetModeNone);
+  // Use PixelOffsetModeHalf for precise sub-pixel centering of lines.
+  // This is often more reliable than PixelOffsetModeHighQuality for very thin lines.
+  graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
+  graphics.SetCompositingQuality(CompositingQualityHighQuality);
+  graphics.SetCompositingMode(CompositingModeSourceOver);
   graphics.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
 
   // Two-stage selection overlay
@@ -302,8 +304,18 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
       Matrix rot;
       rot.RotateAt(g_crossAngle, PointF(cx, cy));
       graphics.SetTransform(&rot);
-      graphics.DrawLine(&cPen, cx - hw, cy, cx + hw, cy);
-      graphics.DrawLine(&cPen, cx, cy - hh, cx, cy + hh);
+      
+      // Use AntiAlias specifically for the crosshair
+      graphics.SetSmoothingMode(SmoothingModeAntiAlias);
+      
+      // Use a GraphicsPath for drawing the crosshair lines.
+      // This can provide better sub-pixel precision in GDI+ than DrawLine.
+      GraphicsPath crossPath;
+      crossPath.AddLine(cx - hw, cy, cx + hw, cy);
+      crossPath.StartFigure(); // New segment
+      crossPath.AddLine(cx, cy - hh, cx, cy + hh);
+      
+      graphics.DrawPath(&cPen, &crossPath);
       graphics.ResetTransform();
     }
 
