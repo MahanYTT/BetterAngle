@@ -234,19 +234,9 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
       roiPen.SetDashPattern(dash, 2);
       graphics.DrawRectangle(&roiPen, p.roi_x, p.roi_y, p.roi_w, p.roi_h);
 
-      // Build keybind string for label
-      std::wstring kb;
-      if (p.keybinds.roiMod & MOD_CONTROL) kb += L"Ctrl+";
-      if (p.keybinds.roiMod & MOD_ALT)     kb += L"Alt+";
-      if (p.keybinds.roiMod & MOD_SHIFT)   kb += L"Shift+";
-      wchar_t keyName[32] = {};
-      UINT sc = MapVirtualKeyW(p.keybinds.roiKey, MAPVK_VK_TO_VSC);
-      GetKeyNameTextW((LONG)(sc << 16), keyName, 32);
-      kb += keyName;
-
       std::wstring stateLabel = suspended ? L"LOCKING"
                               : g_isDiving ? L"DIVING" : L"GLIDING";
-      std::wstring label = L"[" + kb + L"] " + stateLabel;
+      std::wstring label = stateLabel;
 
       FontFamily roiFF(L"Segoe UI");
       Font roiFont(&roiFF, 10, FontStyleBold, UnitPixel);

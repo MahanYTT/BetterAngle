@@ -476,7 +476,10 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         bool lDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
         POINT pt;
         GetCursorPos(&pt);
-        if (lDown && !g_isDraggingHUD) {
+
+        bool canDrag = !(IsFortniteForeground() && !IsCursorCurrentlyVisible());
+
+        if (lDown && !g_isDraggingHUD && canDrag) {
           if (pt.x >= g_hudX && pt.x <= g_hudX + 260 && pt.y >= g_hudY &&
               pt.y <= g_hudY + 150) {
             g_isDraggingHUD = true;
@@ -502,31 +505,14 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         }
       }
 
-      static float lastAngle = -9999.0f;
-      static bool lastDiving = false;
-      static bool lastCursor = false;
       g_isCursorVisible = IsCursorCurrentlyVisible();
       float ang = g_logic.GetAngle();
 
-      bool pulseActive = (g_showCrosshair && g_crossPulse);
-
-      static bool lastFortniteFoc = false;
-      bool fnFoc = IsFortniteForeground();
-      if (fnFoc != lastFortniteFoc) {
-          lastFortniteFoc = fnFoc;
-          g_forceRedraw = true;
-      }
-
-      if (ang != lastAngle || g_isDiving != lastDiving ||
-          g_isCursorVisible != lastCursor || g_currentSelection != NONE ||
-          g_showCrosshair || pulseActive || g_forceRedraw.load()) {
-        lastAngle = ang;
-        lastDiving = g_isDiving;
-        lastCursor = g_isCursorVisible;
-        g_forceRedraw.store(false);
-        LOG_INFO("WM_TIMER: Calling DrawOverlay");
-        DrawOverlay(hWnd, ang, g_detectionRatio, g_showCrosshair);
-      }
+      // Clear the forced redraw flag occasionally set elsewhere
+      g_forceRedraw.store(false);
+      
+      // Unconditionally draw overlay at 60FPS to keep Debug stats (FPS/Delay) synced live
+      DrawOverlay(hWnd, ang, g_detectionRatio, g_showCrosshair);
     } else if (wParam == 2) { // 30s Auto-Save Periodic Timer
       SaveSettings();
       if (!g_allProfiles.empty() &&

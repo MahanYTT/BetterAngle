@@ -1,3 +1,3 @@
 ﻿No commit range provided, using default release notes
-### BetterAngle Pro v4.27.237
+### BetterAngle Pro v4.27.238
 - Automated build release.

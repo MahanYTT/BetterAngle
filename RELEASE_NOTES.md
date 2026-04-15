@@ -1,5 +1,7 @@
-Generating release notes from commit range: v4.27.237..HEAD ### BetterAngle Pro v4.27.238
-- fix: Queue-flush deferral for SyncKeyStates and Alt-Tab Prompt Sync
+### BetterAngle Pro v4.27.238
+- **Continuous UI Updates**: Disabled the performance-saving redraw cull on the GDI HUD. The overlay now blindly paints at 60Hz instead of waiting for internal thresholds to cross. This ensures that the telemetry metrics (like Ping, FPS, Delay, and Foreground Status) remain fully visible and up-to-date even when the mouse is entirely dormant or when Fortnite is completely minimized.
+- **UX: Clutter Removed**: The ROI indicator logic no longer visually echoes its assigned hotkey parameter (e.g. [Ctrl+R]) into the main viewport.
+- **Drag Safeguard Active Gameplay**: The overlay window can no longer be physically dragged on the screen while Fortnite retains exclusive foreground capture of the mouse device.
 
 ### BetterAngle Pro v4.27.237
 - **Anti-Ghosting Sync Fix**: Interjected a 50ms queue-flush deferral before deploying the synthetic key synchronizations directly into the Windows pipeline. Previously, EAC (or just Windows' internal latency) was inadvertently dropping the unstick injections because they arrived while the OS was still busy deconstructing the hardware gate.
@@ -76,5 +78,6 @@ Generating release notes from commit range: v4.27.224..HEAD
 ### BetterAngle Pro v4.27.221
 - **Angle Wrap Formatting**: Fixed angle calculation UI logic so that the value dynamically formats and correctly resets precisely at the wrap point (359.9 to 0.0), ensuring the angle is faithfully bounded and doesn't display as 360.0.
 - **Debug Diagnostics Tab**: Added a new 'DEBUG' tab to the QML Dashboard providing real-time hardware and operating system hooks to monitor Fortnite process detection, window focus, and mouse hidden states. This operates entirely independent of the core angle calculation logic.
+
 
 
