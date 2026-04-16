@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.286..HEAD ### BetterAngle Pro v4.27.287
+- fix: resolve critical QML syntax error, loading bar scaling, and randomization logic
+
 Generating release notes from commit range: v4.27.285..HEAD ### BetterAngle Pro v4.27.286
 - Automated build release.
 
