@@ -1,3 +1,10 @@
+Generating release notes from commit range: v4.27.282..HEAD ### BetterAngle Pro v4.27.296
+- chore: launch v4.27.295 with full stabilization and 3-variant maps
+- chore: release v4.27.291 with 3-variant maps and HUD sync
+- chore: auto-increment version for v4.27.290 release
+- chore: auto-increment version for release
+- fix: stabilize original Release 282 (purge incompatible QML syntax)
+
 ### BetterAngle Pro v4.27.291
 - feat: re-enabled 3rd landscape loading variant
 - fix: synchronized HUD crosshair visibility with C++ boot sequence
