@@ -1,3 +1,7 @@
+Generating release notes from commit range: v4.27.361..HEAD ### BetterAngle Pro v4.27.363
+- chore: bump version to v4.27.362 with HUD loading fix
+- fix: hide HUD (crosshair overlay) until loading screen completes
+
 Generating release notes from commit range: v4.27.282..HEAD ### BetterAngle Pro v4.27.362
 - fix: hide HUD (crosshair overlay) until loading screen completes
 
