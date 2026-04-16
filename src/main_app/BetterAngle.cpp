@@ -77,9 +77,6 @@ void DetectorThread() {
       float threshold = p.diveGlideMatch / 100.0f;
       bool nowDiving = (g_detectionRatio >= threshold);
 
-      float threshold = p.diveGlideMatch / 100.0f;
-      bool nowDiving = (g_detectionRatio >= threshold);
-
       // Edge: Gliding -> Diving  (FOV zoom-in anim ~0.25s)
       if (nowDiving && !lastDiving) {
         g_mouseSuspendedUntil = GetTickCount64() + 250;
