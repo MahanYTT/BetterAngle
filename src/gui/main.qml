@@ -17,6 +17,12 @@ Window {
     color: "#0a0a0f"
     
     property bool isBooting: true
+    onIsBootingChanged: {
+        if (isBooting) {
+            splashImage.splashIndex = Math.floor(Math.random() * 3) + 1
+        }
+    }
+
     
     Timer {
         id: bootTimer
@@ -41,7 +47,6 @@ Window {
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton
-        // Don't prevent stealing - let child MouseAreas (like buttons) get the event first
         propagateComposedEvents: true
         
         onPressed: (mouse) => {
@@ -291,7 +296,7 @@ Window {
                 PropertyAnimation on width {
                     id: progressAnim
                     from: 0
-                    to: 520
+                    to: loadingTrack.width
                     duration: 5000
                     running: mainWindow.isBooting
                 }
