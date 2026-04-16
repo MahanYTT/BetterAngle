@@ -1016,6 +1016,15 @@ Item {
                     text: "Angle updates only when Fortnite is focused AND mouse is hidden. Input locking pauses camera during FOV transitions."
                     color: "#555"; font.pixelSize: 11; width: parent.width; wrapMode: Text.WordWrap
                 }
+
+                Item { height: 10 }
+
+                Text { text: "PRO TIPS & SHORTCUTS"; color: "#666"; font.pixelSize: 11; font.bold: true }
+
+                Text {
+                    text: "ROI Cancel: Press ROI key or Esc when in selection stages."
+                    color: "#aaa"; font.pixelSize: 11; width: parent.width; wrapMode: Text.WordWrap
+                }
             }
         }
     }
