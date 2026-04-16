@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.261..HEAD ### BetterAngle Pro v4.27.263
+- v4.27.262: Final Splash Screen and Hotkey Fixes
+
 Generating release notes from commit range: v4.27.259..HEAD ### BetterAngle Pro v4.27.261
 - v4.27.260: Keybind fixes, duplicate protection, and UI synchronization
 
