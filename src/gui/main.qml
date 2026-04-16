@@ -99,11 +99,14 @@ Window {
         Text {
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: logo.right
+            anchors.right: windowControls.left
             anchors.leftMargin: 10
+            anchors.rightMargin: 10
             text: "BetterAngle Pro"
             color: "#ffffff"
             font.bold: true
             font.pixelSize: 16
+            horizontalAlignment: Text.AlignHCenter
         }
 
         MouseArea {
@@ -113,8 +116,10 @@ Window {
 
         // Window Controls
         Row {
+            id: windowControls
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
+            spacing: 0
             Button {
                 text: "—"
                 width: 40
@@ -122,6 +127,14 @@ Window {
                 background: Rectangle { color: parent.hovered ? "#303040" : "transparent" }
                 contentItem: Text { text: parent.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                 onClicked: mainWindow.showMinimized()
+            }
+            Button {
+                text: "×"
+                width: 40
+                height: 40
+                background: Rectangle { color: parent.hovered ? "#ff4c4c" : "transparent" }
+                contentItem: Text { text: parent.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; font.pixelSize: 20 }
+                onClicked: backend.terminateApp()
             }
         }
     }
