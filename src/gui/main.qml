@@ -35,6 +35,36 @@ Window {
         // No longer forcing crosshair state here to allow user preference to persist
     }
 
+    // Make entire window draggable from any empty area
+    // This MouseArea covers the whole window but is below interactive controls
+    // (placed before resize handles so they can still capture edge clicks)
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton
+        // Don't prevent stealing - let child MouseAreas (like buttons) get the event first
+        propagateComposedEvents: true
+        
+        onPressed: (mouse) => {
+            // Check if we're over a resize handle area (edges and corners)
+            var isOverResizeArea =
+                mouse.x < 5 || mouse.x > parent.width - 5 || // left/right edges
+                mouse.y < 5 || mouse.y > parent.height - 5 || // top/bottom edges
+                (mouse.x < 10 && mouse.y < 10) || // top-left corner
+                (mouse.x > parent.width - 10 && mouse.y < 10) || // top-right corner
+                (mouse.x < 10 && mouse.y > parent.height - 10) || // bottom-left corner
+                (mouse.x > parent.width - 10 && mouse.y > parent.height - 10); // bottom-right corner
+            
+            if (!isOverResizeArea) {
+                // Start window drag
+                mainWindow.startSystemMove()
+                mouse.accepted = true
+            } else {
+                // Let resize handles handle it
+                mouse.accepted = false
+            }
+        }
+    }
+
     Connections {
         target: backend
         onShowControlPanelRequested: {
