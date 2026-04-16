@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.267..HEAD ### BetterAngle Pro v4.27.268
+- fix: include crossMod/crossKey in keybindsChanged check
+
 Generating release notes from commit range: v4.27.265..HEAD ### BetterAngle Pro v4.27.267
 - v4.27.266: Restoring hotkey responsiveness and removing boot gate
 
