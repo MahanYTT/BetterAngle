@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.258..HEAD ### BetterAngle Pro v4.27.259
+- Change crosshair thickness slider to integer values 1-10
+
 Generating release notes from commit range: v4.27.257..HEAD ### BetterAngle Pro v4.27.258
 - Fix crosshair Y-axis movement inversion for intuitive UI
 
