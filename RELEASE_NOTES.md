@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.272..HEAD ### BetterAngle Pro v4.27.274
+- v4.27.273: Fully reverted splash to V1 as requested
+
 Generating release notes from commit range: v4.27.270..HEAD ### BetterAngle Pro v4.27.272
 - v4.27.271: Updated Splash V3 (No Labels) and Sychronized HUD reveal
 
