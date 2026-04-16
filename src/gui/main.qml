@@ -17,12 +17,6 @@ Window {
     color: "#0a0a0f"
     
     property bool isBooting: true
-    onIsBootingChanged: {
-        if (isBooting) {
-            splashImage.splashIndex = Math.floor(Math.random() * 3) + 1
-        }
-    }
-
     
     Timer {
         id: bootTimer
@@ -49,7 +43,7 @@ Window {
         acceptedButtons: Qt.LeftButton
         propagateComposedEvents: true
         
-        onPressed: (mouse) => {
+        onPressed: {
             // Check if we're over a resize handle area (edges and corners)
             var isOverResizeArea =
                 mouse.x < 5 || mouse.x > parent.width - 5 || // left/right edges
