@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.288..HEAD ### BetterAngle Pro v4.27.289
+- fix: resolve critical QML syntax errors in Dashboard and main UI
+
 Generating release notes from commit range: v4.27.287..HEAD ### BetterAngle Pro v4.27.288
 - Remove problematic onIsBootingChanged handler
 
