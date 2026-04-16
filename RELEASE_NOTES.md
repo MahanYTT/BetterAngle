@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.270..HEAD ### BetterAngle Pro v4.27.272
+- v4.27.271: Updated Splash V3 (No Labels) and Sychronized HUD reveal
+
 Generating release notes from commit range: v4.27.268..HEAD ### BetterAngle Pro v4.27.270
 - v4.27.269: Updated Splash Screen V2 with 'Hard Quote' and enlarged glider
 
