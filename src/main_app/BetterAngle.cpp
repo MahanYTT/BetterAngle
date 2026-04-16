@@ -518,7 +518,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
     return 0;
 
   case WM_TIMER: {
-    if (wParam == 1) { // 60fps HUD / Input processing timer
+    if (wParam == 3) { KillTimer(hWnd, 3); ShowWindow(hWnd, SW_SHOW); SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW); UpdateWindow(hWnd); return 0; } if (wParam == 1) { // 60fps HUD / Input processing timer
       if (g_currentSelection == NONE) {
         bool lDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
         POINT pt;
@@ -730,7 +730,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   LOG_INFO("HUD created: hwnd=0x%p", g_hHUD);
   LogWindowInfo(L"HUD handle", g_hHUD);
   ShowControlPanel(); // Force Dashboard to show on startup
-  ShowWindow(g_hHUD, SW_SHOW);
+  SetTimer(g_hHUD, 3, 5000, NULL);
   SetWindowPos(g_hHUD, HWND_TOPMOST, 0, 0, 0, 0,
                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
   UpdateWindow(g_hHUD);
