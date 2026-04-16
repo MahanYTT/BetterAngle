@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.284..HEAD ### BetterAngle Pro v4.27.285
+- Delay overlay window display until after loading screen
+
 Generating release notes from commit range: v4.27.283..HEAD ### BetterAngle Pro v4.27.284
 - feat: add window drag from anywhere, X close button, centered title, scrollbars for all tabs
 
