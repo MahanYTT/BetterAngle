@@ -161,11 +161,11 @@ void BetterAngleBackend::setCrosshairOn(bool v) {
 
 float BetterAngleBackend::crossThickness() const { return g_crossThickness; }
 void BetterAngleBackend::setCrossThickness(float v) {
-  // Enforce 0.1px increments to prevent drift (e.g. 0.92px)
-  v = std::round(v * 10.0f) / 10.0f;
+  // Enforce integer values 1-10 (no decimals)
+  v = std::round(v);
 
-  // Clamp to valid range (0.1 to 10.0) to match UI slider
-  const float minThickness = 0.1f;
+  // Clamp to valid range (1 to 10) to match UI slider
+  const float minThickness = 1.0f;
   const float maxThickness = 10.0f;
 
   if (v < minThickness)
@@ -397,7 +397,7 @@ void BetterAngleBackend::deleteCrosshairPreset(int index) {
 void BetterAngleBackend::resetCrosshairToDefaults() {
   // Reset global state to defaults
   g_showCrosshair = false;
-  g_crossThickness = 1.0f; // Reset to standard 1.0px default
+  g_crossThickness = 1.0f;       // Reset to standard 1.0px default
   g_crossColor = RGB(255, 0, 0); // Red
   g_crossOffsetX = 0.0f;
   g_crossOffsetY = 0.0f;

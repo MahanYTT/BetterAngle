@@ -468,12 +468,12 @@ Item {
 
                     // Thickness
                     Column { spacing: 4; width: parent.width
-                        Text { text: "Line Thickness: " + backend.crossThickness.toFixed(1) + " px"; color: "white"; font.pixelSize: 12 }
+                        Text { text: "Line Thickness: " + Math.round(backend.crossThickness) + " px"; color: "white"; font.pixelSize: 12 }
                         Slider {
                             width: parent.width
-                            from: 0.1; to: 10.0; stepSize: 0.1
+                            from: 1; to: 10; stepSize: 1
                             value: backend.crossThickness
-                            onMoved: backend.crossThickness = value
+                            onMoved: backend.crossThickness = Math.round(value)
                         }
                     }
 
