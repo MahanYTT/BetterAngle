@@ -89,6 +89,7 @@ extern HWND g_hPanel;
 
 bool RefreshHotkeys(HWND hWnd);
 extern std::atomic<bool> g_forceRedraw;
+extern std::atomic<bool> g_keybindAssignmentActive;
 void NotifyBackendCrosshairChanged();
 void NotifyBackendUpdateStatusChanged();
 

@@ -18,6 +18,7 @@
 #include "shared/Logic.h"
 #include "shared/Overlay.h"
 #include "shared/Profile.h"
+#include "shared/State.h"
 #include "shared/Tray.h"
 #include "shared/Updater.h"
 #include <QCoreApplication>
