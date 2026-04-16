@@ -221,6 +221,8 @@ bool RefreshHotkeys(HWND hWnd) {
                           p.keybinds.toggleKey != lastKeybinds.toggleKey) ||
                          (p.keybinds.roiMod != lastKeybinds.roiMod ||
                           p.keybinds.roiKey != lastKeybinds.roiKey) ||
+                         (p.keybinds.crossMod != lastKeybinds.crossMod ||
+                          p.keybinds.crossKey != lastKeybinds.crossKey) ||
                          (p.keybinds.zeroMod != lastKeybinds.zeroMod ||
                           p.keybinds.zeroKey != lastKeybinds.zeroKey);
 
@@ -284,7 +286,7 @@ bool RefreshHotkeys(HWND hWnd) {
   // Update cache
   lastKeybinds = p.keybinds;
   lastProfileIdx = g_selectedProfileIdx;
-  
+
   return ok;
 }
 
