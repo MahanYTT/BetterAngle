@@ -4,5 +4,6 @@
     <file>src/gui/Dashboard.qml</file>
     <file>assets/banner.png</file>
     <file>assets/logo.png</file>
+    <file>assets/loading.jpg</file>
 </qresource>
 </RCC>

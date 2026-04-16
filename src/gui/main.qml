@@ -11,6 +11,18 @@ Window {
     visible: false
     title: qsTr("BetterAngle Pro Angle HUD")
     color: "#0a0a0f"
+    
+    property bool isBooting: true
+    
+    Timer {
+        id: bootTimer
+        interval: 5000
+        running: true
+        repeat: false
+        onTriggered: {
+            mainWindow.isBooting = false
+        }
+    }
 
     // Frameless window style for a custom sleek look
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowSystemMenuHint | Qt.WindowMinimizeButtonHint
@@ -22,6 +34,7 @@ Window {
     Connections {
         target: backend
         onShowControlPanelRequested: {
+            if (mainWindow.isBooting) return; 
             if (mainWindow.visible) {
                 mainWindow.hide()
             } else {
@@ -85,5 +98,49 @@ Window {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
+        enabled: !mainWindow.isBooting
+        opacity: mainWindow.isBooting ? 0 : 1
+        
+        Behavior on opacity { NumberAnimation { duration: 500 } }
+    }
+
+    // Splash Screen Overlay
+    Rectangle {
+        id: splashScreen
+        anchors.fill: parent
+        color: "#0a0a0f"
+        visible: mainWindow.isBooting
+        z: 1000
+
+        Image {
+            id: splashImage
+            source: "qrc:/assets/loading.jpg"
+            anchors.fill: parent
+            fillMode: Image.PreserveAspectCrop
+            opacity: 0
+            
+            Component.onCompleted: fadeIn.start()
+            
+            NumberAnimation on opacity {
+                id: fadeIn
+                to: 1
+                duration: 1000
+            }
+        }
+
+        // Loading Indicator (Sleek line at bottom)
+        Rectangle {
+            width: parent.width
+            height: 3
+            color: "#00ffa3"
+            anchors.bottom: parent.bottom
+            
+            NumberAnimation on width {
+                from: 0
+                to: splashScreen.width
+                duration: 5000
+                running: mainWindow.isBooting
+            }
+        }
     }
 }
