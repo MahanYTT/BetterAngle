@@ -70,6 +70,8 @@ bool Profile::Load(const std::wstring &path) {
   roi_h = (int)extractDouble("roi_h");
   target_color = (COLORREF)extractDouble("target_color");
   tolerance = (int)extractDouble("tolerance");
+  if (tolerance <= 0)
+    tolerance = 2;
 
   if (content.find("\"diveGlideMatch\"") != std::string::npos) {
     diveGlideMatch = (float)extractDouble("diveGlideMatch");

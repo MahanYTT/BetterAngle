@@ -75,10 +75,10 @@ void DetectorThread() {
         std::thread([]() {
           // First flush any pending input messages to ensure clean state
           FlushPendingInputMessages();
-          
+
           // Small delay to allow flush to take effect
           Sleep(5);
-          
+
           // Record keys pressed before blocking (after flush)
           std::vector<int> preKeys;
           for (int i = 1; i < 255; i++) {
@@ -94,7 +94,8 @@ void DetectorThread() {
           // Small delay to allow system to process block release
           Sleep(20);
 
-          // Sync key states to prevent ghosting (handles both KEYUP and KEYDOWN)
+          // Sync key states to prevent ghosting (handles both KEYUP and
+          // KEYDOWN)
           SyncKeyStates(preKeys);
 
           // Additional flush after syncing to ensure clean state
@@ -109,10 +110,10 @@ void DetectorThread() {
         std::thread([]() {
           // First flush any pending input messages to ensure clean state
           FlushPendingInputMessages();
-          
+
           // Small delay to allow flush to take effect
           Sleep(5);
-          
+
           // Record keys pressed before blocking (after flush)
           std::vector<int> preKeys;
           for (int i = 1; i < 255; i++) {
@@ -128,7 +129,8 @@ void DetectorThread() {
           // Small delay to allow system to process block release
           Sleep(20);
 
-          // Sync key states to prevent ghosting (handles both KEYUP and KEYDOWN)
+          // Sync key states to prevent ghosting (handles both KEYUP and
+          // KEYDOWN)
           SyncKeyStates(preKeys);
 
           // Additional flush after syncing to ensure clean state
@@ -304,27 +306,31 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
                             LPARAM lParam) {
   if (message == WM_INPUT) {
     int dx = GetRawInputDeltaX(lParam);
-    
+
     // Performance Optimization: Cache process checks
     static ULONGLONG lastStatusUpdate = 0;
     static bool cachedIsFortnite = false;
     static bool cachedIsCursorVisible = false;
     static bool cachedMouseSuspended = false;
-    
+
     ULONGLONG now = GetTickCount64();
-    if (now - lastStatusUpdate >= 250) { // Update every 250ms instead of every delta
-        lastStatusUpdate = now;
-        cachedIsFortnite = IsFortniteForeground();
-        cachedIsCursorVisible = IsCursorCurrentlyVisible();
-        cachedMouseSuspended = (g_mouseSuspendedUntil > 0 && now < g_mouseSuspendedUntil);
-        g_isCursorVisible = cachedIsCursorVisible; // Sync global state
+    if (now - lastStatusUpdate >=
+        250) { // Update every 250ms instead of every delta
+      lastStatusUpdate = now;
+      cachedIsFortnite = IsFortniteForeground();
+      cachedIsCursorVisible = IsCursorCurrentlyVisible();
+      cachedMouseSuspended =
+          (g_mouseSuspendedUntil > 0 && now < g_mouseSuspendedUntil);
+      g_isCursorVisible = cachedIsCursorVisible; // Sync global state
     }
 
-    const bool allowAngleUpdate = (cachedIsFortnite && !cachedIsCursorVisible && !cachedMouseSuspended);
+    const bool allowAngleUpdate =
+        (cachedIsFortnite && !cachedIsCursorVisible && !cachedMouseSuspended);
 
     static bool lastAllowAngleUpdate = true;
     if (allowAngleUpdate != lastAllowAngleUpdate) {
-      LOG_INFO("Input gate changed: allow=%d dx=%d", allowAngleUpdate ? 1 : 0, dx);
+      LOG_INFO("Input gate changed: allow=%d dx=%d", allowAngleUpdate ? 1 : 0,
+               dx);
       lastAllowAngleUpdate = allowAngleUpdate;
     }
 
@@ -634,7 +640,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   if (g_allProfiles.empty()) {
     Profile p;
     p.name = L"Default";
-    p.tolerance = 1;
+    p.tolerance = 2;
     p.sensitivityX = 0.1;
     p.sensitivityY = 0.1;
     // roi_x/y/w/h left at 0: user must run the ROI selector before

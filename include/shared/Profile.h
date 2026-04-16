@@ -40,7 +40,7 @@ struct Profile {
   // Detector Logic
   int roi_x = 0, roi_y = 0, roi_w = 0, roi_h = 0;
   COLORREF target_color = 0;
-  int tolerance = 1;
+  int tolerance = 2;
   float diveGlideMatch = 9.0f;
 
   // Crosshair Settings
