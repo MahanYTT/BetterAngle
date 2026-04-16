@@ -24,6 +24,7 @@ Window {
         running: true
         repeat: false
         onTriggered: {
+            backend.finishBooting()
             mainWindow.isBooting = false
         }
     }
