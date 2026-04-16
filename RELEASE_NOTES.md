@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.277..HEAD ### BetterAngle Pro v4.27.278
+- feat: add Pro Tips section to Debug tab
+
 Generating release notes from commit range: v4.27.276..HEAD ### BetterAngle Pro v4.27.277
 - feat: add quote to Updates tab
 
