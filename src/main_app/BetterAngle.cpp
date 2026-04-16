@@ -59,13 +59,23 @@ void DetectorThread() {
       Profile &p = g_allProfiles[g_selectedProfileIdx];
       g_logic.LoadProfile(p.sensitivityX);
 
-      RoiConfig cfg = {p.roi_x, p.roi_y,        p.roi_w,
-                       p.roi_h, p.target_color, p.tolerance};
-      // g_detectionRatio = g_detector.Scan(cfg);
-      ULONGLONG startMs = GetTickCount64();
-      g_detectionRatio = g_detector.Scan(cfg);
-      ULONGLONG endMs = GetTickCount64();
-      g_detectionDelayMs = endMs - startMs;
+      // Only scan ROI when Fortnite is the foreground window
+      if (IsFortniteForeground()) {
+        RoiConfig cfg = {p.roi_x, p.roi_y,        p.roi_w,
+                         p.roi_h, p.target_color, p.tolerance};
+        // g_detectionRatio = g_detector.Scan(cfg);
+        ULONGLONG startMs = GetTickCount64();
+        g_detectionRatio = g_detector.Scan(cfg);
+        ULONGLONG endMs = GetTickCount64();
+        g_detectionDelayMs = endMs - startMs;
+      } else {
+        // Fortnite not focused, reset detection ratio to 0
+        g_detectionRatio = 0.0f;
+        g_detectionDelayMs = 0;
+      }
+
+      float threshold = p.diveGlideMatch / 100.0f;
+      bool nowDiving = (g_detectionRatio >= threshold);
 
       float threshold = p.diveGlideMatch / 100.0f;
       bool nowDiving = (g_detectionRatio >= threshold);
@@ -352,6 +362,11 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       break;
     case 2: // ROI Select Toggle
       if (g_currentSelection == NONE) {
+        // Only allow ROI selection when Fortnite is focused
+        if (!IsFortniteForeground()) {
+          LOG_INFO("ROI selection blocked: Fortnite not focused");
+          break;
+        }
         CaptureDesktop(); // Capture before dimming
         g_currentSelection = SELECTING_ROI;
         g_isSelectionActive = true;
@@ -517,8 +532,24 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
   case WM_LBUTTONUP:
     if (g_currentSelection == SELECTING_ROI) {
-      g_currentSelection = SELECTING_COLOR;
-      InvalidateRect(hWnd, NULL, FALSE);
+      // Only allow transition to color selection when Fortnite is focused
+      if (!IsFortniteForeground()) {
+        LOG_INFO("Color selection blocked: Fortnite not focused");
+        // Cancel selection instead?
+        g_currentSelection = NONE;
+        g_isSelectionActive = false;
+        if (g_screenSnapshot) {
+          DeleteObject(g_screenSnapshot);
+          g_screenSnapshot = NULL;
+        }
+        SetWindowLong(hWnd, GWL_EXSTYLE,
+                      GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
+        InvalidateRect(hWnd, NULL, FALSE);
+        g_forceRedraw = true;
+      } else {
+        g_currentSelection = SELECTING_COLOR;
+        InvalidateRect(hWnd, NULL, FALSE);
+      }
     }
     return 0;
 
