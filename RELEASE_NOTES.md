@@ -1,4 +1,7 @@
-Generating release notes from commit range: v4.27.282..HEAD ### BetterAngle Pro v4.27.361
+Generating release notes from commit range: v4.27.282..HEAD ### BetterAngle Pro v4.27.362
+- fix: hide HUD (crosshair overlay) until loading screen completes
+
+### BetterAngle Pro v4.27.361
 - fix: optimize logo rendering quality and launch v4.27.360
 - fix: stabilize restored v4.27.325 and launch v4.27.355
 - feat: add close button to dashboard and launch v4.27.325
