@@ -954,3 +954,9 @@ bool BetterAngleBackend::inputLocked() const {
   return g_mouseSuspendedUntil > 0 && GetTickCount64() < g_mouseSuspendedUntil;
 }
 bool BetterAngleBackend::isDiving() const { return g_isDiving; }
+
+void BetterAngleBackend::finishBooting() {
+  if (g_hHUD) {
+    ShowWindow(g_hHUD, SW_SHOW);
+  }
+}

@@ -1,3 +1,7 @@
+### BetterAngle Pro v4.27.315
+- fix: synchronized HUD crosshair visibility with C++ boot sequence
+- fix: ensured decimal UI (crosshair) only loads after splash screen finish
+
 ### BetterAngle Pro v4.27.310
 - fix: resolved black loading screens by converting map assets to valid PNG format
 
