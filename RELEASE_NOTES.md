@@ -1,4 +1,9 @@
-Generating release notes from commit range: v4.27.253..HEAD ### BetterAngle Pro v4.27.254
+Generating release notes from commit range: v4.27.253..HEAD ### BetterAngle Pro v4.27.255
+- Performance: Optimized high-frequency process checks to reduce CPU overhead.
+- Fix: Resolved UI lagginess and "Not Responding" states by caching foreground status.
+- Logging: Reduced background noise and removed synchronous disk flushes to prevent thread contention.
+
+### BetterAngle Pro v4.27.254
 - chore: auto-increment version for release
 - New Technology Update: Synced with core upstream (byu163)
 

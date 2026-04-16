@@ -102,9 +102,7 @@ void EnhancedLogger::Log(LogLevel level, const char* file, int line, const std::
     m_stream << "[" << TimestampNow() << "] [" << LevelToString(level) << "] [" 
              << filename << ":" << line << "] " << message << "\n";
     
-    // Hardened for freeze diagnostics: Flush immediately unconditionally
-    m_stream.flush();
-
+    // Check rotation occasionally
     CheckRotation();
 }
 

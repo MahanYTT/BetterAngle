@@ -116,23 +116,37 @@ int GetRawInputDeltaX(LPARAM lparam) {
 }
 
 bool IsFortniteForeground() {
+  static ULONGLONG lastCheck = 0;
+  static bool lastResult = false;
+  ULONGLONG now = GetTickCount64();
+
+  // Cache result for 1 second to avoid spamming snapshots
+  if (now - lastCheck < 1000)
+    return lastResult;
+
+  lastCheck = now;
   HWND fg = GetForegroundWindow();
-  if (!fg)
+  if (!fg) {
+    lastResult = false;
     return false;
+  }
 
   DWORD pid = 0;
   GetWindowThreadProcessId(fg, &pid);
-  if (pid == 0)
+  if (pid == 0) {
+    lastResult = false;
     return false;
+  }
 
-  // Method 1: Try OpenProcess + QueryFullProcessImageNameW
+  // Method 1: Try OpenProcess + QueryFullProcessImageNameW (Fastest)
   wchar_t processPath[MAX_PATH] = {};
   const wchar_t *processName = GetProcessBaseName(fg, processPath, MAX_PATH);
-  if (processName && processName[0] && IsFortniteProcessName(processName))
+  if (processName && processName[0] && IsFortniteProcessName(processName)) {
+    lastResult = true;
     return true;
+  }
 
-  // Method 2: Fallback using CreateToolhelp32Snapshot.
-  // This works even when OpenProcess is blocked by anti-cheat (EAC/BattlEye).
+  // Method 2: Fallback using CreateToolhelp32Snapshot (Slowest, only if needed)
   HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
   if (snap != INVALID_HANDLE_VALUE) {
     PROCESSENTRY32W pe = {};
@@ -141,13 +155,15 @@ bool IsFortniteForeground() {
       do {
         if (pe.th32ProcessID == pid) {
           CloseHandle(snap);
-          return IsFortniteProcessName(pe.szExeFile);
+          lastResult = IsFortniteProcessName(pe.szExeFile);
+          return lastResult;
         }
       } while (Process32NextW(snap, &pe));
     }
     CloseHandle(snap);
   }
 
+  lastResult = false;
   return false;
 }
 

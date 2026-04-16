@@ -60,12 +60,11 @@ void DetectorThread() {
 
       RoiConfig cfg = {p.roi_x, p.roi_y,        p.roi_w,
                        p.roi_h, p.target_color, p.tolerance};
-      LOG_INFO("DetectorThread: Calling g_detector.Scan");
+      // g_detectionRatio = g_detector.Scan(cfg);
       ULONGLONG startMs = GetTickCount64();
       g_detectionRatio = g_detector.Scan(cfg);
       ULONGLONG endMs = GetTickCount64();
       g_detectionDelayMs = endMs - startMs;
-      LOG_INFO("DetectorThread: Scan complete");
 
       float threshold = p.diveGlideMatch / 100.0f;
       bool nowDiving = (g_detectionRatio >= threshold);
@@ -305,31 +304,28 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
                             LPARAM lParam) {
   if (message == WM_INPUT) {
     int dx = GetRawInputDeltaX(lParam);
-    g_isCursorVisible = IsCursorCurrentlyVisible();
-    const bool isFortniteForeground = IsFortniteForeground();
     
-    // Check if mouse input is suspended (during FOV transition)
-    const bool mouseSuspended = (g_mouseSuspendedUntil > 0 && GetTickCount64() < g_mouseSuspendedUntil);
+    // Performance Optimization: Cache process checks
+    static ULONGLONG lastStatusUpdate = 0;
+    static bool cachedIsFortnite = false;
+    static bool cachedIsCursorVisible = false;
+    static bool cachedMouseSuspended = false;
+    
+    ULONGLONG now = GetTickCount64();
+    if (now - lastStatusUpdate >= 250) { // Update every 250ms instead of every delta
+        lastStatusUpdate = now;
+        cachedIsFortnite = IsFortniteForeground();
+        cachedIsCursorVisible = IsCursorCurrentlyVisible();
+        cachedMouseSuspended = (g_mouseSuspendedUntil > 0 && now < g_mouseSuspendedUntil);
+        g_isCursorVisible = cachedIsCursorVisible; // Sync global state
+    }
 
-    const bool allowAngleUpdate = (isFortniteForeground && !g_isCursorVisible && !mouseSuspended);
+    const bool allowAngleUpdate = (cachedIsFortnite && !cachedIsCursorVisible && !cachedMouseSuspended);
 
     static bool lastAllowAngleUpdate = true;
-    static bool lastIsFortniteForeground = false;
-    static bool lastCursorVisible = false;
-    static bool lastMouseSuspended = false;
-
-    if (allowAngleUpdate != lastAllowAngleUpdate ||
-        isFortniteForeground != lastIsFortniteForeground ||
-        g_isCursorVisible != lastCursorVisible ||
-        mouseSuspended != lastMouseSuspended) {
-      LOG_INFO("Input gate changed: fortnite=%d cursorVisible=%d "
-               "mouseSuspended=%d allow=%d dx=%d",
-               isFortniteForeground ? 1 : 0, g_isCursorVisible ? 1 : 0,
-               mouseSuspended ? 1 : 0, allowAngleUpdate ? 1 : 0, dx);
+    if (allowAngleUpdate != lastAllowAngleUpdate) {
+      LOG_INFO("Input gate changed: allow=%d dx=%d", allowAngleUpdate ? 1 : 0, dx);
       lastAllowAngleUpdate = allowAngleUpdate;
-      lastIsFortniteForeground = isFortniteForeground;
-      lastCursorVisible = g_isCursorVisible;
-      lastMouseSuspended = mouseSuspended;
     }
 
     if (allowAngleUpdate) {
