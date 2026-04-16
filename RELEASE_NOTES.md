@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.282..HEAD ### BetterAngle Pro v4.27.283
+- fix: stabilize original Release 282 (purge incompatible QML syntax)
+
 Generating release notes from commit range: v4.27.281..HEAD ### BetterAngle Pro v4.27.282
 - feat: implement randomized loading screen rotation with 2 variants
 
