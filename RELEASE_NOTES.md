@@ -1,8 +1,10 @@
 Generating release notes from commit range: v4.27.361..HEAD ### BetterAngle Pro v4.27.363
+- fix: properly show HUD after loading screen using SetWindowPos instead of ShowWindow
+- fix: hide HUD during loading screen to prevent visual glitch
 - chore: bump version to v4.27.362 with HUD loading fix
 - fix: hide HUD (crosshair overlay) until loading screen completes
 
-Generating release notes from commit range: v4.27.282..HEAD ### BetterAngle Pro v4.27.362
+### BetterAngle Pro v4.27.362
 - fix: hide HUD (crosshair overlay) until loading screen completes
 
 ### BetterAngle Pro v4.27.361
@@ -52,202 +54,266 @@ Generating release notes from commit range: v4.27.280..HEAD ### BetterAngle Pro 
 Generating release notes from commit range: v4.27.278..HEAD ### BetterAngle Pro v4.27.280
 - Fix compilation error for g_keybindAssignmentActive
 - chore: auto-increment version for release
-- feat: block hotkey execution during keybind assignment
 
-Generating release notes from commit range: v4.27.278..HEAD ### BetterAngle Pro v4.27.279
-- feat: block hotkey execution during keybind assignment
+Generating release notes from commit range: v4.27.277..HEAD ### BetterAngle Pro v4.27.279
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.277..HEAD ### BetterAngle Pro v4.27.278
-- feat: add Pro Tips section to Debug tab
+Generating release notes from commit range: v4.27.276..HEAD ### BetterAngle Pro v4.27.278
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.276..HEAD ### BetterAngle Pro v4.27.277
-- feat: add quote to Updates tab
+Generating release notes from commit range: v4.27.275..HEAD ### BetterAngle Pro v4.27.277
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.275..HEAD ### BetterAngle Pro v4.27.276
-- fix: resolve loading bar animation issue
+Generating release notes from commit range: v4.27.274..HEAD ### BetterAngle Pro v4.27.276
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.274..HEAD ### BetterAngle Pro v4.27.275
-- feat: finalize Splash V14, premium fire loading bar, and brand scrubbing
+Generating release notes from commit range: v4.27.273..HEAD ### BetterAngle Pro v4.27.275
+- fix: resolve missing include for std::vector
 
 Generating release notes from commit range: v4.27.272..HEAD ### BetterAngle Pro v4.27.274
-- v4.27.273: Fully reverted splash to V1 as requested
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.271..HEAD ### BetterAngle Pro v4.27.273
+- fix: resolve missing include for std::vector
 
 Generating release notes from commit range: v4.27.270..HEAD ### BetterAngle Pro v4.27.272
-- v4.27.271: Updated Splash V3 (No Labels) and Sychronized HUD reveal
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.269..HEAD ### BetterAngle Pro v4.27.271
+- fix: resolve missing include for std::vector
 
 Generating release notes from commit range: v4.27.268..HEAD ### BetterAngle Pro v4.27.270
-- v4.27.269: Updated Splash Screen V2 with 'Hard Quote' and enlarged glider
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.267..HEAD ### BetterAngle Pro v4.27.268
-- fix: include crossMod/crossKey in keybindsChanged check
+Generating release notes from commit range: v4.27.267..HEAD ### BetterAngle Pro v4.27.269
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.266..HEAD ### BetterAngle Pro v4.27.268
+- fix: resolve missing include for std::vector
 
 Generating release notes from commit range: v4.27.265..HEAD ### BetterAngle Pro v4.27.267
-- v4.27.266: Restoring hotkey responsiveness and removing boot gate
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.261..HEAD ### BetterAngle Pro v4.27.265
-- v4.27.264: Final build fix for missing assets
-- chore: auto-increment version for release
-- v4.27.262: Final Splash Screen and Hotkey Fixes
+Generating release notes from commit range: v4.27.264..HEAD ### BetterAngle Pro v4.27.266
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.263..HEAD ### BetterAngle Pro v4.27.265
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.262..HEAD ### BetterAngle Pro v4.27.264
+- fix: resolve missing include for std::vector
 
 Generating release notes from commit range: v4.27.261..HEAD ### BetterAngle Pro v4.27.263
-- v4.27.262: Final Splash Screen and Hotkey Fixes
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.260..HEAD ### BetterAngle Pro v4.27.262
+- fix: resolve missing include for std::vector
 
 Generating release notes from commit range: v4.27.259..HEAD ### BetterAngle Pro v4.27.261
-- v4.27.260: Keybind fixes, duplicate protection, and UI synchronization
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.258..HEAD ### BetterAngle Pro v4.27.259
-- Change crosshair thickness slider to integer values 1-10
+Generating release notes from commit range: v4.27.258..HEAD ### BetterAngle Pro v4.27.260
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.257..HEAD ### BetterAngle Pro v4.27.258
-- Fix crosshair Y-axis movement inversion for intuitive UI
+Generating release notes from commit range: v4.27.257..HEAD ### BetterAngle Pro v4.27.259
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.256..HEAD ### BetterAngle Pro v4.27.257
-- feat: set default colour match tolerance to 2
+Generating release notes from commit range: v4.27.256..HEAD ### BetterAngle Pro v4.27.258
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.250..HEAD ### BetterAngle Pro v4.27.256
-- v4.27.255: UI and performance optimization
-- chore: update MahanYTT to v4.27.254 (Synced with byu163 New Tech)
-- chore: auto-increment version for release
-- Fix ghosting issue and improve input synchronization
-- drugs
-- v4.27.117: Build Recovery - Dual-Mode (ANSI/Wide) Logging Support
-- Angle possibly fixed
-- v4.27.116: Build Recovery - Restored Logging System
-- Angle possibly fixed
-- Fix Fortnite focus detection: wrong strncmp length and anti-cheat fallback
-- v4.27.115: Cartesian Coordinate Migration & UI Enhancements
-- Angle possibly fixed
+Generating release notes from commit range: v4.27.255..HEAD ### BetterAngle Pro v4.27.257
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.254..HEAD ### BetterAngle Pro v4.27.256
+- fix: resolve missing include for std::vector
 
 Generating release notes from commit range: v4.27.253..HEAD ### BetterAngle Pro v4.27.255
-- Performance: Optimized high-frequency process checks to reduce CPU overhead.
-- Fix: Resolved UI lagginess and "Not Responding" states by caching foreground status.
-- Logging: Reduced background noise and removed synchronous disk flushes to prevent thread contention.
+- fix: resolve missing include for std::vector
 
-### BetterAngle Pro v4.27.254
-- chore: auto-increment version for release
-- New Technology Update: Synced with core upstream (byu163)
+Generating release notes from commit range: v4.27.252..HEAD ### BetterAngle Pro v4.27.254
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v0.0.0..HEAD ### BetterAngle Pro v4.27.251
-- Automated build release.
+Generating release notes from commit range: v4.27.251..HEAD ### BetterAngle Pro v4.27.253
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.249..HEAD ### BetterAngle Pro v4.27.250
-- Improve input blocking to prevent ghosting and fix spacebar double-press issue
+Generating release notes from commit range: v4.27.250..HEAD ### BetterAngle Pro v4.27.252
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.248..HEAD ### BetterAngle Pro v4.27.249
-- Fix installer elevation error (740) by adding shellexec flag
+Generating release notes from commit range: v4.27.249..HEAD ### BetterAngle Pro v4.27.251
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.248..HEAD ### BetterAngle Pro v4.27.250
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.247..HEAD ### BetterAngle Pro v4.27.249
+- fix: resolve missing include for std::vector
 
 Generating release notes from commit range: v4.27.246..HEAD ### BetterAngle Pro v4.27.248
-- Fix compiler error 'cc' undeclared in Overlay.cpp
-- chore: auto-increment version for release
-- Implement alpha-scaling sub-pixel drawing trick for crosshair
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.246..HEAD ### BetterAngle Pro v4.27.247
-- Implement alpha-scaling sub-pixel drawing trick for crosshair
+Generating release notes from commit range: v4.27.245..HEAD ### BetterAngle Pro v4.27.247
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.245..HEAD ### BetterAngle Pro v4.27.246
-- Enforce 0.1px increments and 1.0px default for crosshair thickness
+Generating release notes from commit range: v4.27.244..HEAD ### BetterAngle Pro v4.27.246
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.244..HEAD ### BetterAngle Pro v4.27.245
-- Restore Reset to Defaults button and fix 0.1px crosshair rendering precision
+Generating release notes from commit range: v4.27.243..HEAD ### BetterAngle Pro v4.27.245
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.243..HEAD ### BetterAngle Pro v4.27.244
-- Fix decimal precision for crosshair thickness (6.7px becoming 6px issue)
+Generating release notes from commit range: v4.27.242..HEAD ### BetterAngle Pro v4.27.244
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.242..HEAD ### BetterAngle Pro v4.27.243
-- Fix crosshair thickness below 1px with Java-inspired improvements
+Generating release notes from commit range: v4.27.241..HEAD ### BetterAngle Pro v4.27.243
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.241..HEAD ### BetterAngle Pro v4.27.242
-- Fix crosshair thickness issue and add reset button
+Generating release notes from commit range: v4.27.240..HEAD ### BetterAngle Pro v4.27.242
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.240..HEAD ### BetterAngle Pro v4.27.241
-- feat: Add crosshair reset button to UI
+Generating release notes from commit range: v4.27.239..HEAD ### BetterAngle Pro v4.27.241
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.239..HEAD ### BetterAngle Pro v4.27.240
-- fix: Ensure crosshair thickness can go below 1px with proper precision
+Generating release notes from commit range: v4.27.238..HEAD ### BetterAngle Pro v4.27.240
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.238..HEAD ### BetterAngle Pro v4.27.239
-- feat: Unconditional 60Hz UI repaint and Drag safeguard
+Generating release notes from commit range: v4.27.237..HEAD ### BetterAngle Pro v4.27.239
+- fix: resolve missing include for std::vector
 
-### BetterAngle Pro v4.27.238
-- **Continuous UI Updates**: Disabled the performance-saving redraw cull on the GDI HUD. The overlay now blindly paints at 60Hz instead of waiting for internal thresholds to cross. This ensures that the telemetry metrics (like Ping, FPS, Delay, and Foreground Status) remain fully visible and up-to-date even when the mouse is entirely dormant or when Fortnite is completely minimized.
-- **UX: Clutter Removed**: The ROI indicator logic no longer visually echoes its assigned hotkey parameter (e.g. [Ctrl+R]) into the main viewport.
-- **Drag Safeguard Active Gameplay**: The overlay window can no longer be physically dragged on the screen while Fortnite retains exclusive foreground capture of the mouse device.
+Generating release notes from commit range: v4.27.236..HEAD ### BetterAngle Pro v4.27.238
+- fix: resolve missing include for std::vector
 
-### BetterAngle Pro v4.27.237
-- **Anti-Ghosting Sync Fix**: Interjected a 50ms queue-flush deferral before deploying the synthetic key synchronizations directly into the Windows pipeline. Previously, EAC (or just Windows' internal latency) was inadvertently dropping the unstick injections because they arrived while the OS was still busy deconstructing the hardware gate.
-- **Prompt Color Focus Sync**: Added foreground detection evaluations directly into the 60FPS UI loop; the ROI state visualizer now reflects application bounds correctly during Alt-Tab regardless of whether raw mouse updates are being intercepted.
+Generating release notes from commit range: v4.27.235..HEAD ### BetterAngle Pro v4.27.237
+- fix: resolve missing include for std::vector
 
-### BetterAngle Pro v4.27.236
-- **Broadcast & Recording Fix**: The BetterAngle crosshair and debug overlay will now properly appear in gameplay recordings (OBS, ShadowPlay, Discord Streaming, etc). We completely stripped the obscure internal Windows flag (`WDA_EXCLUDEFROMCAPTURE`) that was artificially cloaking the transparent HUD.
+Generating release notes from commit range: v4.27.234..HEAD ### BetterAngle Pro v4.27.236
+- fix: resolve missing include for std::vector
 
-### BetterAngle Pro v4.27.235
-- **Anti-Ghosting Motion Lock [Hardware Edition]**: Completely ripped out the focus-stealing system which caused character movement drops in some games due to internal key-state panics. We've reverted to the highly reliable system-level `BlockInput` interceptor, but engineered a hardcore **Physical-State Synchronizer** alongside it to permanently fix the annoying keyboard ghosting issue.
-- **How the Anti-Ghosting Works**: Right before blocking your input for the 0.25s / 1.00s FOV animations, the app snapshots every single key you are physically holding (like 'W'). The moment the hardware block ends, the app re-evaluates physical reality vs logical state. If you released 'W' *during* the block, the app instantly injects a synthetic `KEYUP` directly to the system to cleanly cut off the ghosting. 
-- **Administrator Privileges Required**: Because `BlockInput` modifies the Windows kernel input stack to temporarily paralyze raw mouse input, the `.exe` will now natively prompt for UAC Administrator permissions on launch once again.
+Generating release notes from commit range: v4.27.233..HEAD ### BetterAngle Pro v4.27.235
+- fix: resolve missing include for std::vector
 
-### BetterAngle Pro v4.27.234
-- **Profile Precision Fix**: Fixed a bug where `target_color` and `crossColor` values were being serialized to JSON using `(float)` casts. This caused 32-bit `COLORREF` integers to lose precision in their lower bits and write out in scientific notation (e.g. `1.67772e+07`). When loaded back in, the color drift caused the angle detector to completely mismatch colors, making it seem like the calibration was wiped / ignored after a restart. Colors are now guaranteed to save losslessly as exactly `(unsigned long)` numbers.
-- **Profile Initialization Safety**: Added default values inside the `Profile` struct to prevent random memory garbage values (like `fov = 1.59075e+25` or negative resolutions) from being written to newly created configurations.
+Generating release notes from commit range: v4.27.232..HEAD ### BetterAngle Pro v4.27.234
+- fix: resolve missing include for std::vector
 
-### BetterAngle Pro v4.27.233
-- **VERSION_STR Fix**: Restored missing `#define V_MAJ/V_MIN/V_PAT` macros in `State.h` that were accidentally dropped in a prior edit. This caused `VERSION_STR` to expand literally (showing "V_MAJ.V_MIN.V_PAT"), breaking the version display in the updater UI and causing an infinite update loop since the version comparison always failed.
-- **Updater Infinite Loop Fixed**: With `VERSION_STR` now resolving correctly, version comparison against GitHub releases works as expected â€” no spurious "update available" flags.
-- **ROI Prompt Suppressed on First Launch**: Default profile no longer seeds hardcoded ROI coordinates. The detection zone prompt is invisible until the user runs the ROI selector hotkey for the first time.
-- **ROI Prompt Shows Keybind**: The DIVING/GLIDING label on the ROI box now prefixes the configured hotkey (e.g. `[Ctrl+R] GLIDING`) so users know exactly how to toggle it.
-- **ROI Prompt Turns Purple During Focus-Lock**: When the focus-steal input suspension is active during a dive/glide transition animation, the ROI box turns purple and shows `LOCKING` with remaining milliseconds.
-- **Expanded Debug Overlay (GDI+)**: On-screen debug panel now shows 10 rows: FPS, scanner delay, match ratio, threshold %, dive state, input lock timer, Fortnite running/focused/mouse hidden, and active profile name.
-- **Expanded Debug Tab (Dashboard)**: QML debug panel now shows scanner delay, match ratio, dive state, input lock status, separated from game-gate indicators by a divider.
-- **Tolerance Defaults to 1**: New profiles and the default profile now start with tolerance = 1 instead of 2.
+Generating release notes from commit range: v4.27.231..HEAD ### BetterAngle Pro v4.27.233
+- fix: resolve missing include for std::vector
 
 Generating release notes from commit range: v4.27.230..HEAD ### BetterAngle Pro v4.27.232
-- fix: Ensure crosshair thickness can go below 1px with proper clamping
-- chore: auto-increment version for release
-- feat: Replace BlockInput with focus-steal transition guard, remove admin requirement
+- fix: resolve missing include for std::vector
 
-### BetterAngle Pro v4.27.231
-- **Crosshair Thickness Clamp Fix**: Added additional validation in `setCrossThickness` to clamp values between 0.1px and 10.0px, ensuring the crosshair thickness can properly go below 1px as intended by the UI slider. This provides an extra safeguard beyond the profile loading logic.
-- **Focus-Steal Transition Guard (replaces BlockInput)**: On dive/glide state transitions, BetterAngle now temporarily steals foreground focus to its own transparent HUD window (invisible to the user). Fortnite stops processing camera input for the animation duration (250ms glideÃ¢â€ â€™dive, 1000ms diveÃ¢â€ â€™glide), then focus is returned instantly. Keyboard input is unaffected throughout.
-- **Admin Requirement Removed**: No longer requires Administrator privileges. The UAC manifest flag and elevation check have been removed since `BlockInput` is no longer used.
-- feat: Restore Reset Crosshair button and backend API (v4.27.229)
-- chore: auto-increment version for release
+Generating release notes from commit range: v4.27.229..HEAD ### BetterAngle Pro v4.27.231
+- fix: resolve missing include for std::vector
 
-### BetterAngle Pro v4.27.230
-- **Focus-Steal Transition Guard (replaces BlockInput)**: On dive/glide state transitions, BetterAngle now temporarily steals foreground focus to its own transparent HUD window (invisible to the user). Fortnite stops processing camera input for the animation duration (250ms glideÃ¢â€ â€™dive, 1000ms diveÃ¢â€ â€™glide), then focus is returned instantly. Keyboard input is unaffected throughout.
-- **Admin Requirement Removed**: No longer requires Administrator privileges. The UAC manifest flag and elevation check have been removed since `BlockInput` is no longer used.
+Generating release notes from commit range: v4.27.228..HEAD ### BetterAngle Pro v4.27.230
+- fix: resolve missing include for std::vector
 
-### BetterAngle Pro v4.27.229
-- **Admin Elevation Enforced**: BetterAngle now requires and verifies Administrator privileges at startup. If not elevated, a clear error dialog is shown and the app does not launch. The CMake manifest now embeds `requireAdministrator` so Windows auto-prompts UAC on double-click.
-- **Input Freeze on State Transition**: Added `BlockInput` system-level input suspension on diving/gliding FOV animation transitions. GlideÃ¢â€ â€™Dive suspends all mouse+keyboard for 250ms; DiveÃ¢â€ â€™Glide for 1000ms to prevent FOV animation noise from corrupting the angle accumulator.
-- **Screen Capture Exclusion**: The HUD overlay window is now excluded from Win32 `BitBlt`-based screen capture via `SetWindowDisplayAffinity(WDA_EXCLUDEFROMCAPTURE)`, preventing the UI from blocking the detector's pixel reads.
-- **Color Selection Dot Removed**: Removed the red dot from the Stage 2 magnifier cursor tip that was obscuring the pixel being aimed at.
+Generating release notes from commit range: v4.27.227..HEAD ### BetterAngle Pro v4.27.229
+- fix: resolve missing include for std::vector
 
 Generating release notes from commit range: v4.27.226..HEAD ### BetterAngle Pro v4.27.228
-- fix: Crosshair sub-pixel thickness and reset button behavior
+- fix: resolve missing include for std::vector
 
-Generating release notes from commit range: v4.27.224..HEAD
+Generating release notes from commit range: v4.27.225..HEAD ### BetterAngle Pro v4.27.227
+- fix: resolve missing include for std::vector
 
-### BetterAngle Pro v4.27.227
-- **Crosshair Reset Button Fix**: Updated the reset crosshair button to properly turn the crosshair OFF and reset all crosshair settings to their default values (thickness: 1.0px, color: red, offsets: 0, pulse: off), matching fresh installation behavior.
-- **Crosshair Sub-Pixel Thickness Fix**: Fixed crosshair thickness loading logic to properly support sub-pixel values down to 0.1px. Previously, extremely small values (<0.01) were reset to 1.0px; now they're clamped to the UI minimum of 0.1px, ensuring the crosshair can be made visibly thinner.
+Generating release notes from commit range: v4.27.224..HEAD ### BetterAngle Pro v4.27.226
+- fix: resolve missing include for std::vector
 
-### BetterAngle Pro v4.27.226
-- **Breathing Pulse Animation**: Implemented a sophisticated 3.0-second crosshair pulse cycle. Features a 1.2s smooth fade-out, a distinct **0.3s transparency pause**, and a 1.5s slow return to full opacity for a premium "alive" look.
+Generating release notes from commit range: v4.27.223..HEAD ### BetterAngle Pro v4.27.225
+- fix: resolve missing include for std::vector
 
-### BetterAngle Pro v4.27.225
-- **Breathing Pulse Animation**: Implemented a sophisticated 3.0-second crosshair pulse cycle. Features a 1.2s smooth fade-out, a distinct **0.3s transparency pause**, and a 1.5s slow return to full opacity for a premium "alive" look.
+Generating release notes from commit range: v4.27.222..HEAD ### BetterAngle Pro v4.27.224
+- fix: resolve missing include for std::vector
 
-### BetterAngle Pro v4.27.224
-- feat: Restore diveGlideMatch bindings and inject real-time GDI+ debug performance overlay
-- **Crosshair Sub-Pixel Thickness Fix**: Fixed crosshair thickness loading logic to properly support sub-pixel values down to 0.1px. Previously, extremely small values (<0.01) were reset to 1.0px; now they're clamped to the UI minimum of 0.1px, ensuring the crosshair can be made visibly thinner.
+Generating release notes from commit range: v4.27.221..HEAD ### BetterAngle Pro v4.27.223
+- fix: resolve missing include for std::vector
 
-### BetterAngle Pro v4.27.223
-- **Trigger Calibration Restore**: Fixed the 'NaN%' render issue on the Dive-to-Glide Match Limit slider in the frontend. The Qt binding has been fully restored and directly hooks into the master C++ detector logic arrays, bypassing hardcoded magic bounds.
-- **Advanced Diagnostic Sub-Overlay**: Introduced a new toggle in the DEBUG tab allowing users to project an analytics glass sub-panel beneath the master Win32 Angle HUD on-screen. This renders real-time engine tracking metrics including dynamic FPS, algorithmic core thread detection lag bounds, and precision hardware state synchronization (Fortnite context matching).
+Generating release notes from commit range: v4.27.220..HEAD ### BetterAngle Pro v4.27.222
+- fix: resolve missing include for std::vector
 
+Generating release notes from commit range: v4.27.219..HEAD ### BetterAngle Pro v4.27.221
+- fix: resolve missing include for std::vector
 
-### BetterAngle Pro v4.27.221
-- **Angle Wrap Formatting**: Fixed angle calculation UI logic so that the value dynamically formats and correctly resets precisely at the wrap point (359.9 to 0.0), ensuring the angle is faithfully bounded and doesn't display as 360.0.
-- **Debug Diagnostics Tab**: Added a new 'DEBUG' tab to the QML Dashboard providing real-time hardware and operating system hooks to monitor Fortnite process detection, window focus, and mouse hidden states. This operates entirely independent of the core angle calculation logic.
+Generating release notes from commit range: v4.27.218..HEAD ### BetterAngle Pro v4.27.220
+- fix: resolve missing include for std::vector
 
+Generating release notes from commit range: v4.27.217..HEAD ### BetterAngle Pro v4.27.219
+- fix: resolve missing include for std::vector
 
+Generating release notes from commit range: v4.27.216..HEAD ### BetterAngle Pro v4.27.218
+- fix: resolve missing include for std::vector
 
+Generating release notes from commit range: v4.27.215..HEAD ### BetterAngle Pro v4.27.217
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.214..HEAD ### BetterAngle Pro v4.27.216
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.213..HEAD ### BetterAngle Pro v4.27.215
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.212..HEAD ### BetterAngle Pro v4.27.214
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.211..HEAD ### BetterAngle Pro v4.27.213
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.210..HEAD ### BetterAngle Pro v4.27.212
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.209..HEAD ### BetterAngle Pro v4.27.211
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.208..HEAD ### BetterAngle Pro v4.27.210
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.207..HEAD ### BetterAngle Pro v4.27.209
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.206..HEAD ### BetterAngle Pro v4.27.208
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.205..HEAD ### BetterAngle Pro v4.27.207
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.204..HEAD ### BetterAngle Pro v4.27.206
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.203..HEAD ### BetterAngle Pro v4.27.205
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.202..HEAD ### BetterAngle Pro v4.27.204
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.201..HEAD ### BetterAngle Pro v4.27.203
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.200..HEAD ### BetterAngle Pro v4.27.202
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.199..HEAD ### BetterAngle Pro v4.27.201
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.198..HEAD ### BetterAngle Pro v4.27.200
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.197..HEAD ### BetterAngle Pro v4.27.199
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.196..HEAD ### BetterAngle Pro v4.27.198
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.195..HEAD ### BetterAngle Pro v4.27.197
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.194..HEAD ### BetterAngle Pro v4.27.196
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.193..HEAD ### BetterAngle Pro v4.27.195
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.192..HEAD ### BetterAngle Pro v4.27.194
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4.27.191..HEAD ### BetterAngle Pro v4.27.193
+- fix: resolve missing include for std::vector
+
+Generating release notes from commit range: v4

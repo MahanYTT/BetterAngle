@@ -958,6 +958,8 @@ bool BetterAngleBackend::isDiving() const { return g_isDiving; }
 
 void BetterAngleBackend::finishBooting() {
   if (g_hHUD) {
-    ShowWindow(g_hHUD, SW_SHOW);
+    SetWindowPos(g_hHUD, HWND_TOPMOST, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    UpdateWindow(g_hHUD);
   }
 }
