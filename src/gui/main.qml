@@ -205,7 +205,7 @@ Window {
 
         Image {
             id: splashImage
-            property int splashIndex: Math.floor(Math.random() * 2) + 1
+            property int splashIndex: Math.floor(Math.random() * 3) + 1
             source: "qrc:/assets/loading_" + splashIndex + ".png"
             anchors.fill: parent
             fillMode: Image.PreserveAspectCrop
