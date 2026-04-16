@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.281..HEAD ### BetterAngle Pro v4.27.282
+- feat: implement randomized loading screen rotation with 2 variants
+
 Generating release notes from commit range: v4.27.280..HEAD ### BetterAngle Pro v4.27.281
 - Add resize handles to frameless window
 
