@@ -1,3 +1,14 @@
+Generating release notes from commit range: v4.27.282..HEAD ### BetterAngle Pro v4.27.311
+- fix: resolve black loading screen by converting loading_3 to true PNG
+- fix: include loading_3.png asset and launch v4.27.301
+- fix: resolve black loading screen and launch v4.27.300
+- fix: resolve black loading screen by registering loading_3 in QRC
+- chore: launch v4.27.295 with full stabilization and 3-variant maps
+- chore: release v4.27.291 with 3-variant maps and HUD sync
+- chore: auto-increment version for v4.27.290 release
+- chore: auto-increment version for release
+- fix: stabilize original Release 282 (purge incompatible QML syntax)
+
 ### BetterAngle Pro v4.27.310
 - fix: resolved black loading screens by converting map assets to valid PNG format
 
