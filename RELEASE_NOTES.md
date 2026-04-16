@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.275..HEAD ### BetterAngle Pro v4.27.276
+- fix: resolve loading bar animation issue
+
 Generating release notes from commit range: v4.27.274..HEAD ### BetterAngle Pro v4.27.275
 - feat: finalize Splash V14, premium fire loading bar, and brand scrubbing
 
