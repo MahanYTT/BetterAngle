@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.363..HEAD ### BetterAngle Pro v4.27.364
+- fix: properly show HUD after loading screen
+
 Generating release notes from commit range: v4.27.361..HEAD ### BetterAngle Pro v4.27.363
 - fix: properly show HUD after loading screen using SetWindowPos instead of ShowWindow
 - fix: hide HUD during loading screen to prevent visual glitch
