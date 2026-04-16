@@ -6,6 +6,7 @@
 
 class BetterAngleBackend : public QObject {
   Q_OBJECT
+  Q_INVOKABLE void finishBooting();
   Q_PROPERTY(double sensX READ sensX WRITE setSensX NOTIFY profileChanged)
   Q_PROPERTY(double sensY READ sensY WRITE setSensY NOTIFY profileChanged)
   Q_PROPERTY(

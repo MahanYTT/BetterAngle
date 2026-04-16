@@ -18,6 +18,7 @@
 extern std::vector<Profile> g_allProfiles;
 extern int g_selectedProfileIdx;
 extern AngleLogic g_logic;
+extern HWND g_hHUD;
 
 static double g_pendingSetupSensX = 0.05;
 static double g_pendingSetupSensY = 0.05;
