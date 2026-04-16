@@ -1,3 +1,8 @@
+Generating release notes from commit range: v4.27.282..HEAD ### BetterAngle Pro v4.27.291
+- chore: auto-increment version for v4.27.290 release
+- chore: auto-increment version for release
+- fix: stabilize original Release 282 (purge incompatible QML syntax)
+
 ### BetterAngle Pro v4.27.290
 - fix: 100% stable restoration of core Release 282 features
 - fix: purged incompatible QML syntax to resolve dashboard opening errors
