@@ -1,3 +1,7 @@
+Generating release notes from commit range: v4.27.282..HEAD ### BetterAngle Pro v4.27.283
+- feat: finalize 3-image loading rotation and update UI tips
+- feat: expand loading rotation to 3 images with futuristic variant
+
 Generating release notes from commit range: v4.27.281..HEAD ### BetterAngle Pro v4.27.282
 - feat: implement randomized loading screen rotation with 2 variants
 
