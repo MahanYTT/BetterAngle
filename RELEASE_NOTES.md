@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.285..HEAD ### BetterAngle Pro v4.27.286
+- Automated build release.
+
 Generating release notes from commit range: v4.27.284..HEAD ### BetterAngle Pro v4.27.285
 - Delay overlay window display until after loading screen
 
