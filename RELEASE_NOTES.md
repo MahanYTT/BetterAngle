@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.257..HEAD ### BetterAngle Pro v4.27.258
+- Fix crosshair Y-axis movement inversion for intuitive UI
+
 Generating release notes from commit range: v4.27.256..HEAD ### BetterAngle Pro v4.27.257
 - feat: set default colour match tolerance to 2
 
