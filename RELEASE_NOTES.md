@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.283..HEAD ### BetterAngle Pro v4.27.284
+- feat: add window drag from anywhere, X close button, centered title, scrollbars for all tabs
+
 Generating release notes from commit range: v4.27.282..HEAD ### BetterAngle Pro v4.27.283
 - feat: finalize 3-image loading rotation and update UI tips
 - feat: expand loading rotation to 3 images with futuristic variant
