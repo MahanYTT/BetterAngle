@@ -1,3 +1,16 @@
+Generating release notes from commit range: v4.27.250..HEAD ### BetterAngle Pro v4.27.255
+- chore: update MahanYTT to v4.27.254 (Synced with byu163 New Tech)
+- chore: auto-increment version for release
+- Fix ghosting issue and improve input synchronization
+- drugs
+- v4.27.117: Build Recovery - Dual-Mode (ANSI/Wide) Logging Support
+- Angle possibly fixed
+- v4.27.116: Build Recovery - Restored Logging System
+- Angle possibly fixed
+- Fix Fortnite focus detection: wrong strncmp length and anti-cheat fallback
+- v4.27.115: Cartesian Coordinate Migration & UI Enhancements
+- Angle possibly fixed
+
 Generating release notes from commit range: v4.27.253..HEAD ### BetterAngle Pro v4.27.254
 - chore: auto-increment version for release
 - New Technology Update: Synced with core upstream (byu163)
