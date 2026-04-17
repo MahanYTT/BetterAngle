@@ -1,6 +1,8 @@
-Generating release notes from commit range: v4.27.376..HEAD ### BetterAngle Pro v5.0.0
-- Major version bump to 5.0.0
-- No code changes, version update only
+### BetterAngle Pro v5.0.0
+- Official Major Version 5 Release
+- Consolidated all recent UI performance optimizations
+- Finalized org-wide repository synchronization
+- Stabilized crosshair positioning and HUD synchronization
 
 Generating release notes from commit range: v4.27.375..HEAD ### BetterAngle Pro v4.27.376
 - Update LICENSE
