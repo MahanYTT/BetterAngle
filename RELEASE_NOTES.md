@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.372..HEAD ### BetterAngle Pro v4.27.373
+- build: bump version to 4.27.372 and trigger release
+
 ### BetterAngle Pro v4.27.372
 - fix(updater): keep user configs intact by preventing deletion of AppData directory during update.
 - feat(ui): improve initial boot by shortening splash screen to 2.5s and hiding HUD until fully loaded.
