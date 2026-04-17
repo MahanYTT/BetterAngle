@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.368..HEAD ### BetterAngle Pro v4.27.369
+- feat: add left-side scroll bars to GENERAL, CROSSHAIR, and DEBUG tabs
+
 Generating release notes from commit range: v4.27.367..HEAD ### BetterAngle Pro v4.27.368
 - feat: safe switch for ROI selection - prompts show during selection regardless of Fortnite focus
 
