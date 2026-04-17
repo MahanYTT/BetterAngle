@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.0..HEAD ### BetterAngle Pro v5.0.1
+- Automated build release.
+
 ### BetterAngle Pro v5.0.0
 - Official Major Version 5 Release
 - Consolidated all recent UI performance optimizations
