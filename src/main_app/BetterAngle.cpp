@@ -546,6 +546,10 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       return 0;
     }
     if (wParam == 1) { // 60fps HUD / Input processing timer
+      // Skip drawing and processing for the first 2.5s while the splash screen is active
+      static ULONGLONG s_bootTime = GetTickCount64();
+      if (GetTickCount64() - s_bootTime < 2500) return 0;
+
       if (g_currentSelection == NONE) {
         bool lDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
         POINT pt;

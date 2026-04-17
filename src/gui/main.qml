@@ -20,7 +20,7 @@ Window {
     
     Timer {
         id: bootTimer
-        interval: 5000
+        interval: 2500
         running: true
         repeat: false
         onTriggered: {
@@ -258,7 +258,7 @@ Window {
                     id: progressAnim
                     from: 0
                     to: 520
-                    duration: 5000
+                    duration: 2500
                     running: mainWindow.isBooting
                 }
             }
