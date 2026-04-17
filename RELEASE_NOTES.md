@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.370..HEAD ### BetterAngle Pro v4.27.371
+- fix(updater): prevent deletion of AppData during update
+
 Generating release notes from commit range: v4.27.369..HEAD ### BetterAngle Pro v4.27.370
 - revert: scroll bar changes due to QML root error
 
