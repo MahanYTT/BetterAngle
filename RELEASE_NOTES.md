@@ -1,5 +1,7 @@
-Generating release notes from commit range: v4.27.371..HEAD ### BetterAngle Pro v4.27.372
-- feat(ui): shorten splash screen and hide HUD during boot
+### BetterAngle Pro v4.27.372
+- fix(updater): keep user configs intact by preventing deletion of AppData directory during update.
+- feat(ui): improve initial boot by shortening splash screen to 2.5s and hiding HUD until fully loaded.
+- Automated build release via GitHub Actions.
 
 Generating release notes from commit range: v4.27.370..HEAD ### BetterAngle Pro v4.27.371
 - fix(updater): prevent deletion of AppData during update
