@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.251..HEAD ### BetterAngle Pro v4.27.252
+- Reduce Fortnite Running check delay from 2s to 500ms; fix ghosting by removing Sleep(5) before BlockInput and reducing post-block delay to 10ms
+
 Generating release notes from commit range: v0.0.0..HEAD ### BetterAngle Pro v4.27.251
 - Automated build release.
 
