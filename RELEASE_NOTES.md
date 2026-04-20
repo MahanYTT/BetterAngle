@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.252..HEAD ### BetterAngle Pro v4.27.253
+- Prevent BlockInput when Fortnite is not focused to avoid locking input while not playing
+
 Generating release notes from commit range: v4.27.251..HEAD ### BetterAngle Pro v4.27.252
 - Reduce Fortnite Running check delay from 2s to 500ms; fix ghosting by removing Sleep(5) before BlockInput and reducing post-block delay to 10ms
 
