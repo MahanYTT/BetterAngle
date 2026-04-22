@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.257..HEAD ### BetterAngle Pro v4.27.258
+- Fix ghosting, alt-tab delay, and space double-press issues
+
 Generating release notes from commit range: v4.27.256..HEAD ### BetterAngle Pro v4.27.257
 - Improve display dropdown selection and reduce Fortnite focus detection delay
 
