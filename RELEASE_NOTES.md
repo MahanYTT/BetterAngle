@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.264..HEAD ### BetterAngle Pro v4.27.265
+- fix: clip crosshair to selected monitor bounds; fix config window drag with globalX/Y
+
 Generating release notes from commit range: v4.27.263..HEAD ### BetterAngle Pro v4.27.264
 - fix: use mapToGlobal for config window drag so it works across all screens
 
