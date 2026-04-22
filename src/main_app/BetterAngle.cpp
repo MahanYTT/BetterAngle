@@ -320,17 +320,15 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
     if (isFortniteForeground && !s_lastFortniteForeground) {
       // Fortnite just became foreground
       s_fortniteBecameForegroundTime = GetTickCount64();
+      
+      // Suspend angle tracking for 0.5s after alt-tabbing to prevent
+      // tracking mouse movements that the game ignores during the transition.
+      g_mouseSuspendedUntil = GetTickCount64() + 500;
     }
     s_lastFortniteForeground = isFortniteForeground;
     
-    // Note: Delay changed to 500ms to allow angle to update immediately upon alt-tabbing back,
-    // even if the OS takes a moment to fully hide the cursor.
-    const ULONGLONG gracePeriod = 500; // ms
-    const bool inGracePeriod = isFortniteForeground &&
-                               (GetTickCount64() - s_fortniteBecameForegroundTime < gracePeriod);
-    
     const bool allowAngleUpdate = (isFortniteForeground &&
-                                  (!g_isCursorVisible || inGracePeriod) &&
+                                  !g_isCursorVisible &&
                                   !mouseSuspended);
 
     static bool lastAllowAngleUpdate = true;

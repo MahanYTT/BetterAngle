@@ -234,8 +234,6 @@ void ApplyUpdateAndRestart() {
       L"$p = Start-Process -FilePath $installer -ArgumentList $args -Verb "
       L"RunAs -PassThru -Wait; "
       L"if ($p.ExitCode -eq 0 -and (Test-Path -LiteralPath $app)) { "
-      L"$ad = Join-Path $env:LOCALAPPDATA 'BetterAngle'; "
-      L"if (Test-Path $ad) { Remove-Item -Path $ad -Recurse -Force -ErrorAction SilentlyContinue }; "
       L"Start-Sleep -Seconds 2; Start-Process -FilePath $app -WorkingDirectory "
       L"(Split-Path -Parent $app) | Out-Null; "
       L"} elseif (Test-Path -LiteralPath $app) { "
