@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.6..HEAD ### BetterAngle Pro v5.0.7
+- Fix updater wiping settings and lock input for 0.5s after alt-tabbing to prevent desync
+
 Generating release notes from commit range: v5.0.5..HEAD ### BetterAngle Pro v5.0.6
 - Fix alt-tab responsiveness: Add ultra-fast HWND caching and restore 500ms grace period for angle updates
 
