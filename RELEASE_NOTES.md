@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.258..HEAD ### BetterAngle Pro v4.27.259
+- Fix display switch clickability and window dragging issues
+
 Generating release notes from commit range: v4.27.257..HEAD ### BetterAngle Pro v4.27.258
 - Fix ghosting, alt-tab delay, and space double-press issues
 
