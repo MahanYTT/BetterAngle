@@ -30,6 +30,44 @@ static std::wstring FmtFloat(double v, int decimals = 2) {
   return ss.str();
 }
 
+// Helper: get monitor rectangle by index (0 = primary, 1 = secondary, etc.)
+// Returns true if monitor found, false otherwise (falls back to primary)
+static bool GetMonitorRectByIndex(int index, RECT& outRect) {
+  if (index < 0) return false;
+  
+  struct MonitorEnumData {
+    int targetIndex;
+    int currentIndex;
+    RECT foundRect;
+    bool found;
+  } data = {index, 0, {0,0,0,0}, false};
+  
+  auto MonitorEnumProc = [](HMONITOR hMonitor, HDC, LPRECT lpRect, LPARAM lParam) -> BOOL {
+    MonitorEnumData* pData = reinterpret_cast<MonitorEnumData*>(lParam);
+    if (pData->currentIndex == pData->targetIndex) {
+      pData->foundRect = *lpRect;
+      pData->found = true;
+      return FALSE; // Stop enumeration
+    }
+    pData->currentIndex++;
+    return TRUE; // Continue enumeration
+  };
+  
+  EnumDisplayMonitors(NULL, NULL, MonitorEnumProc, reinterpret_cast<LPARAM>(&data));
+  
+  if (data.found) {
+    outRect = data.foundRect;
+    return true;
+  }
+  
+  // Fallback to primary monitor
+  outRect.left = 0;
+  outRect.top = 0;
+  outRect.right = GetSystemMetrics(SM_CXSCREEN);
+  outRect.bottom = GetSystemMetrics(SM_CYSCREEN);
+  return false;
+}
+
 // Static FPS tracking
 static ULONGLONG s_lastFrameTime = 0;
 static float s_fps = 0.0f;
@@ -259,10 +297,29 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
 
     // Crosshair
     if (showCrosshair) {
-      float cx = sw * 0.5f + g_crossOffsetX;
-      float cy = sh * 0.5f + g_crossOffsetY;
+      // Get the selected monitor rectangle
+      RECT monitorRect;
+      GetMonitorRectByIndex(g_screenIndex, monitorRect);
+      
+      // Calculate monitor center relative to window coordinates
+      // The window covers the entire virtual screen, so we need to convert
+      // monitor coordinates (which are in virtual screen space) to window client coordinates
+      int screenX = GetSystemMetrics(SM_XVIRTUALSCREEN);
+      int screenY = GetSystemMetrics(SM_YVIRTUALSCREEN);
+      
+      // Monitor center in virtual screen coordinates
+      float monitorCenterX = (monitorRect.left + monitorRect.right) * 0.5f;
+      float monitorCenterY = (monitorRect.top + monitorRect.bottom) * 0.5f;
+      
+      // Convert to window client coordinates (window is at (screenX, screenY))
+      float cx = (monitorCenterX - screenX) + g_crossOffsetX;
+      float cy = (monitorCenterY - screenY) + g_crossOffsetY;
+      
       // Make crosshair massive like the Java reference
-      float hw = (sw > sh ? sw : sh) * 3.0f;
+      // Use monitor dimensions for crosshair size scaling
+      float monitorWidth = (monitorRect.right - monitorRect.left);
+      float monitorHeight = (monitorRect.bottom - monitorRect.top);
+      float hw = (monitorWidth > monitorHeight ? monitorWidth : monitorHeight) * 3.0f;
       float hh = hw;
 
       float pulse = 1.0f;

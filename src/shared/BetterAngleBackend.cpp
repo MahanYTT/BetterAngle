@@ -241,6 +241,26 @@ void BetterAngleBackend::setCrossColor(const QColor &c) {
   emit crosshairChanged();
 }
 
+int BetterAngleBackend::screenIndex() const {
+  if (g_allProfiles.empty())
+    return g_screenIndex;
+  return g_allProfiles[g_selectedProfileIdx].screenIndex;
+}
+
+void BetterAngleBackend::setScreenIndex(int v) {
+  // Clamp to valid screen indices (0 to max screens - 1)
+  // For now, we'll just set it and validate later when drawing
+  g_screenIndex = v;
+  g_forceRedraw = true;
+  if (!g_allProfiles.empty()) {
+    Profile &p = g_allProfiles[g_selectedProfileIdx];
+    p.screenIndex = v;
+    p.Save(GetProfilesPath() + p.name + L".json");
+  }
+  SaveSettings();
+  emit crosshairChanged();
+}
+
 QString BetterAngleBackend::versionStr() const {
   return QString::fromLatin1(VERSION_STR);
 }

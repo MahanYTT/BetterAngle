@@ -52,6 +52,9 @@ struct Profile {
   float crossAngle = 0.0f;
   bool crossPulse = false;
 
+  // Screen selection for crosshair (0 = primary, 1 = secondary, etc.)
+  int screenIndex = 0;
+
   Keybinds keybinds;
   std::vector<CrosshairPreset> crosshairPresets;
 

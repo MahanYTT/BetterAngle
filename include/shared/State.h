@@ -67,6 +67,7 @@ extern float g_crossOffsetX;
 extern float g_crossOffsetY;
 extern float g_crossAngle;
 extern bool g_crossPulse;
+extern int g_screenIndex; // Current screen index for crosshair (0 = primary)
 
 extern COLORREF g_targetColor;
 extern COLORREF g_pickedColor;

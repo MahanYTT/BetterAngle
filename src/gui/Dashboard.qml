@@ -425,6 +425,66 @@ Item {
                         }
                     }
 
+                    // Screen selection for crosshair
+                    Column {
+                        spacing: 4
+                        width: parent.width
+                        Text { text: "Crosshair Screen"; color: "#aaa"; font.pixelSize: 12 }
+                        ComboBox {
+                            id: screenComboBox
+                            width: parent.width
+                            model: ["Primary Display", "Secondary Display", "Third Display", "Fourth Display"]
+                            currentIndex: backend.screenIndex
+                            onCurrentIndexChanged: {
+                                if (currentIndex !== backend.screenIndex) {
+                                    backend.screenIndex = currentIndex
+                                }
+                            }
+                            background: Rectangle { color: "#1c1c2e"; radius: 4; border.color: "#333"; border.width: 1 }
+                            contentItem: Text {
+                                text: parent.displayText
+                                color: "white"
+                                verticalAlignment: Text.AlignVCenter
+                                leftPadding: 8
+                            }
+                            popup: Popup {
+                                y: parent.height
+                                width: parent.width
+                                implicitHeight: contentItem.implicitHeight
+                                padding: 1
+                                contentItem: ListView {
+                                    clip: true
+                                    implicitHeight: contentHeight
+                                    model: parent.parent.model
+                                    delegate: ItemDelegate {
+                                        width: parent.width
+                                        text: modelData
+                                        highlighted: parent.parent.parent.currentIndex === index
+                                        background: Rectangle {
+                                            color: highlighted ? "#00cca3" : "transparent"
+                                        }
+                                        contentItem: Text {
+                                            text: modelData
+                                            color: highlighted ? "white" : "#ddd"
+                                            verticalAlignment: Text.AlignVCenter
+                                            leftPadding: 8
+                                        }
+                                    }
+                                }
+                                background: Rectangle {
+                                    color: "#1c1c2e"
+                                    border.color: "#333"
+                                }
+                            }
+                        }
+                        Text {
+                            text: "Select which monitor to display the crosshair on"
+                            color: "#666"
+                            font.pixelSize: 10
+                            wrapMode: Text.WordWrap
+                            width: parent.width
+                        }
+                    }
 
                     Button {
                         text: "QUIT APP"

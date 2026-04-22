@@ -110,6 +110,7 @@ void LoadSettings() {
     g_crossPulse = eFloat("crossPulse", 0.0f) > 0.5f;
     g_showCrosshair = eFloat("showCrosshair", 1.0f) > 0.5f;
     g_selectedProfileIdx = eInt("selectedProfileIdx", 0);
+    g_screenIndex = eInt("screenIndex", 0);
 
     size_t vp = content.find("\"lastVersionRun\":\"");
     if (vp != std::string::npos) {
@@ -158,6 +159,7 @@ void SaveSettings() {
   oss << "  \"hudY\": " << g_hudY << ",\n";
   oss << "  \"showCrosshair\": " << (g_showCrosshair ? 1 : 0) << ",\n";
   oss << "  \"selectedProfileIdx\": " << g_selectedProfileIdx << ",\n";
+  oss << "  \"screenIndex\": " << g_screenIndex << ",\n";
 
   oss << "  \"lastVersionRun\":\"" << VERSION_STR << "\",\n";
 
@@ -185,6 +187,7 @@ float g_crossOffsetX = 0.0f;
 float g_crossOffsetY = 0.0f;
 float g_crossAngle = 0.0f;
 bool g_crossPulse = false;
+int g_screenIndex = 0; // Current screen index for crosshair
 
 COLORREF g_targetColor = RGB(255, 255, 255);
 COLORREF g_pickedColor = RGB(255, 255, 255);
