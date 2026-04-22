@@ -1,3 +1,40 @@
+Generating release notes from commit range: v5.0.1..HEAD ### BetterAngle Pro v5.0.2
+- Fix crosshair rendering off-center on monitors with different DPI scales by enabling Per-Monitor V2 DPI awareness
+- chore: auto-increment version for release
+- Fix teleporting configuration window and crosshair gaps on secondary monitors
+- chore: auto-increment version for release
+- fix: remove GDI+ clip region (caused top-left shift), use explicit endpoints; drop WindowStaysOnTopHint to allow cross-screen window drag
+- chore: auto-increment version for release
+- fix: proper crosshair coordinate system with clip region; native startSystemMove for config window
+- chore: auto-increment version for release
+- fix: clip crosshair to selected monitor bounds; fix config window drag with globalX/Y
+- chore: auto-increment version for release
+- fix: use mapToGlobal for config window drag so it works across all screens
+- chore: auto-increment version for release
+- fix: constrain crosshair scale to individual monitors and enable configurations window drag over mismatched DPI bounds
+- chore: auto-increment version for release
+- fix: revert DPI awareness mode and fix screen selection UI
+- chore: auto-increment version for release
+- feat: enhance multi-screen compatibility and zero-delay alt-tabbing
+- chore: auto-increment version for release
+- Revert custom dragging and Flickable interactive changes
+- chore: auto-increment version for release
+- Fix display switch clickability and window dragging issues
+- chore: auto-increment version for release
+- Fix ghosting, alt-tab delay, and space double-press issues
+- chore: auto-increment version for release
+- Improve display dropdown selection and reduce Fortnite focus detection delay
+- chore: auto-increment version for release
+- Make crosshair screen selection dynamic based on monitor count
+- chore: auto-increment version for release
+- Update shared components and GUI after merge
+- chore: auto-increment version for release
+- swdklfrj:
+- chore: auto-increment version for release
+- Prevent BlockInput when Fortnite is not focused to avoid locking input while not playing
+- chore: auto-increment version for release
+- Reduce Fortnite Running check delay from 2s to 500ms; fix ghosting by removing Sleep(5) before BlockInput and reducing post-block delay to 10ms
+
 Generating release notes from commit range: v5.0.1..HEAD ### BetterAngle Pro v5.0.2 (In Progress)
 - Fix teleporting configuration window and crosshair gaps on secondary monitors (v4.27.268 merged)
 
