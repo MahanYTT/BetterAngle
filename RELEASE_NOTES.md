@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.9..HEAD ### BetterAngle Pro v5.0.10
+- Increase alt-tab physical mouse lock duration to 1.5s
+
 Generating release notes from commit range: v5.0.8..HEAD ### BetterAngle Pro v5.0.9
 - Increase alt-tab physical mouse lock duration to 1.0s
 
