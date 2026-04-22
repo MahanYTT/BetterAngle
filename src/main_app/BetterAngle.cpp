@@ -313,7 +313,25 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
     // Check if mouse input is suspended (during FOV transition)
     const bool mouseSuspended = (g_mouseSuspendedUntil > 0 && GetTickCount64() < g_mouseSuspendedUntil);
 
-    const bool allowAngleUpdate = (isFortniteForeground && !g_isCursorVisible && !mouseSuspended);
+    // Track when Fortnite becomes foreground to allow grace period for cursor hiding
+    static ULONGLONG s_fortniteBecameForegroundTime = 0;
+    static bool s_lastFortniteForeground = false;
+    
+    if (isFortniteForeground && !s_lastFortniteForeground) {
+      // Fortnite just became foreground
+      s_fortniteBecameForegroundTime = GetTickCount64();
+    }
+    s_lastFortniteForeground = isFortniteForeground;
+    
+    // Allow angle updates for 100ms after Fortnite becomes foreground, even if cursor is visible
+    // This fixes the alt-tab delay issue where cursor takes a moment to hide
+    const ULONGLONG gracePeriod = 100; // ms
+    const bool inGracePeriod = isFortniteForeground &&
+                               (GetTickCount64() - s_fortniteBecameForegroundTime < gracePeriod);
+    
+    const bool allowAngleUpdate = (isFortniteForeground &&
+                                  (!g_isCursorVisible || inGracePeriod) &&
+                                  !mouseSuspended);
 
     static bool lastAllowAngleUpdate = true;
     static bool lastIsFortniteForeground = false;

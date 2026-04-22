@@ -210,7 +210,7 @@ void SyncKeyStates(const std::vector<int>& preBlockKeys) {
         else if (vk == VK_XBUTTON2) { in.mi.dwFlags = MOUSEEVENTF_XUP; in.mi.mouseData = XBUTTON2; }
       } else {
         in.type = INPUT_KEYBOARD;
-        in.ki.wVk = vk;
+        in.ki.wVk = 0; // Must be 0 when using KEYEVENTF_SCANCODE
         in.ki.wScan = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
         in.ki.dwFlags = KEYEVENTF_KEYUP | KEYEVENTF_SCANCODE;
         // Extend arrows etc.
@@ -238,7 +238,7 @@ void SyncKeyStates(const std::vector<int>& preBlockKeys) {
         else if (vk == VK_XBUTTON2) { in.mi.dwFlags = MOUSEEVENTF_XDOWN; in.mi.mouseData = XBUTTON2; }
       } else {
         in.type = INPUT_KEYBOARD;
-        in.ki.wVk = vk;
+        in.ki.wVk = 0; // Must be 0 when using KEYEVENTF_SCANCODE
         in.ki.wScan = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
         in.ki.dwFlags = KEYEVENTF_SCANCODE; // KEYDOWN, not KEYUP
         // Extend arrows etc.
