@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.8..HEAD ### BetterAngle Pro v5.0.9
+- Increase alt-tab physical mouse lock duration to 1.0s
+
 Generating release notes from commit range: v5.0.7..HEAD ### BetterAngle Pro v5.0.8
 - Fix alt-tab desync: Actually lock physical mouse input for 0.5s instead of artificially suspending the angle tracker
 
