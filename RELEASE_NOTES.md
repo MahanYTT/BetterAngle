@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.255..HEAD ### BetterAngle Pro v4.27.256
+- Make crosshair screen selection dynamic based on monitor count
+
 Generating release notes from commit range: v4.27.254..HEAD ### BetterAngle Pro v4.27.255
 - Update shared components and GUI after merge
 
