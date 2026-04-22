@@ -6,8 +6,7 @@ Window {
     id: mainWindow
     width: 650
     height: 480
-    x: Screen.width / 2 - width / 2
-    y: Screen.height / 2 - height / 2
+    // Initial position will be set in Component.onCompleted to avoid teleporting when dragging across monitors
     visible: false
     title: qsTr("BetterAngle Pro Angle HUD")
     color: "#0a0a0f"
@@ -17,6 +16,11 @@ Window {
 
     onVisibleChanged: {
         // No longer forcing crosshair state here to allow user preference to persist
+    }
+
+    Component.onCompleted: {
+        x = Screen.width / 2 - width / 2
+        y = Screen.height / 2 - height / 2
     }
 
     Connections {

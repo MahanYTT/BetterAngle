@@ -548,6 +548,19 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
   case WM_TIMER: {
     if (wParam == 1) { // 60fps HUD / Input processing timer
       if (g_currentSelection == NONE) {
+        // Dynamically track virtual screen changes (e.g. resolution change or monitor plug/unplug)
+        int currentW = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+        int currentH = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+        int currentX = GetSystemMetrics(SM_XVIRTUALSCREEN);
+        int currentY = GetSystemMetrics(SM_YVIRTUALSCREEN);
+        
+        RECT wRect;
+        GetWindowRect(hWnd, &wRect);
+        if (wRect.right - wRect.left != currentW || wRect.bottom - wRect.top != currentH || 
+            wRect.left != currentX || wRect.top != currentY) {
+            SetWindowPos(hWnd, NULL, currentX, currentY, currentW, currentH, SWP_NOZORDER | SWP_NOACTIVATE);
+        }
+
         bool lDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
         POINT pt;
         GetCursorPos(&pt);
