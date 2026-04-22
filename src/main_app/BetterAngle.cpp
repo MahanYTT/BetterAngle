@@ -18,6 +18,7 @@
 #include "shared/Logic.h"
 #include "shared/Overlay.h"
 #include "shared/Profile.h"
+#include "shared/State.h"
 #include "shared/Tray.h"
 #include "shared/Updater.h"
 #include <QCoreApplication>
@@ -58,14 +59,20 @@ void DetectorThread() {
       Profile &p = g_allProfiles[g_selectedProfileIdx];
       g_logic.LoadProfile(p.sensitivityX);
 
-      RoiConfig cfg = {p.roi_x, p.roi_y,        p.roi_w,
-                       p.roi_h, p.target_color, p.tolerance};
-      LOG_INFO("DetectorThread: Calling g_detector.Scan");
-      ULONGLONG startMs = GetTickCount64();
-      g_detectionRatio = g_detector.Scan(cfg);
-      ULONGLONG endMs = GetTickCount64();
-      g_detectionDelayMs = endMs - startMs;
-      LOG_INFO("DetectorThread: Scan complete");
+      // Only scan ROI when Fortnite is the foreground window
+      if (IsFortniteForeground()) {
+        RoiConfig cfg = {p.roi_x, p.roi_y,        p.roi_w,
+                         p.roi_h, p.target_color, p.tolerance};
+        // g_detectionRatio = g_detector.Scan(cfg);
+        ULONGLONG startMs = GetTickCount64();
+        g_detectionRatio = g_detector.Scan(cfg);
+        ULONGLONG endMs = GetTickCount64();
+        g_detectionDelayMs = endMs - startMs;
+      } else {
+        // Fortnite not focused, reset detection ratio to 0
+        g_detectionRatio = 0.0f;
+        g_detectionDelayMs = 0;
+      }
 
       float threshold = p.diveGlideMatch / 100.0f;
       bool nowDiving = (g_detectionRatio >= threshold);
@@ -78,6 +85,9 @@ void DetectorThread() {
             // First flush any pending input messages to ensure clean state
             FlushPendingInputMessages();
             
+            // Small delay to allow flush to take effect
+            Sleep(5);
+
             // Record keys pressed before blocking (after flush)
             std::vector<int> preKeys;
             for (int i = 1; i < 255; i++) {
@@ -113,6 +123,9 @@ void DetectorThread() {
             // First flush any pending input messages to ensure clean state
             FlushPendingInputMessages();
             
+            // Small delay to allow flush to take effect
+            Sleep(5);
+
             // Record keys pressed before blocking (after flush)
             std::vector<int> preKeys;
             for (int i = 1; i < 255; i++) {
@@ -222,6 +235,8 @@ bool RefreshHotkeys(HWND hWnd) {
                           p.keybinds.toggleKey != lastKeybinds.toggleKey) ||
                          (p.keybinds.roiMod != lastKeybinds.roiMod ||
                           p.keybinds.roiKey != lastKeybinds.roiKey) ||
+                         (p.keybinds.crossMod != lastKeybinds.crossMod ||
+                          p.keybinds.crossKey != lastKeybinds.crossKey) ||
                          (p.keybinds.zeroMod != lastKeybinds.zeroMod ||
                           p.keybinds.zeroKey != lastKeybinds.zeroKey);
 
@@ -253,7 +268,7 @@ bool RefreshHotkeys(HWND hWnd) {
     }
 
     // Apply MOD_NOREPEAT flag
-    UINT flags = mod | 0x4000;
+    UINT flags = mod; // Removed MOD_NOREPEAT for compat
 
     if (!RegisterHotKey(hWnd, id, flags, vk)) {
       DWORD err = GetLastError();
@@ -282,22 +297,9 @@ bool RefreshHotkeys(HWND hWnd) {
     }
   }
 
-  // Update cache if registration was successful
-  if (ok) {
-    lastKeybinds = p.keybinds;
-    lastProfileIdx = g_selectedProfileIdx;
-  } else {
-    // If registration failed, clear cache to force retry next time
-    lastProfileIdx = -1;
-
-    // Try to register at least some hotkeys (fallback to defaults for failed
-    // ones) This ensures the app remains somewhat functional even if some
-    // hotkeys conflict
-    for (int i = 1; i <= 4; i++) {
-      RegisterHotKey(hWnd, i, MOD_CONTROL | 0x4000,
-                     'A' + i - 1); // Ctrl+A, Ctrl+B, etc. as fallback
-    }
-  }
+  // Update cache
+  lastKeybinds = p.keybinds;
+  lastProfileIdx = g_selectedProfileIdx;
 
   return ok;
 }
@@ -307,11 +309,9 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
                             LPARAM lParam) {
   if (message == WM_INPUT) {
     int dx = GetRawInputDeltaX(lParam);
-    g_isCursorVisible = IsCursorCurrentlyVisible();
-    const bool isFortniteForeground = IsFortniteForeground();
-    
-    // Check if mouse input is suspended (during FOV transition)
-    const bool mouseSuspended = (g_mouseSuspendedUntil > 0 && GetTickCount64() < g_mouseSuspendedUntil);
+
+    bool isFortniteForeground = IsFortniteForeground();
+    bool mouseSuspended = (g_mouseSuspendedUntil > 0 && GetTickCount64() < g_mouseSuspendedUntil);
 
     // Track when Fortnite becomes foreground to allow grace period for cursor hiding
     static ULONGLONG s_fortniteBecameForegroundTime = 0;
@@ -333,22 +333,10 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
                                   !mouseSuspended);
 
     static bool lastAllowAngleUpdate = true;
-    static bool lastIsFortniteForeground = false;
-    static bool lastCursorVisible = false;
-    static bool lastMouseSuspended = false;
-
-    if (allowAngleUpdate != lastAllowAngleUpdate ||
-        isFortniteForeground != lastIsFortniteForeground ||
-        g_isCursorVisible != lastCursorVisible ||
-        mouseSuspended != lastMouseSuspended) {
-      LOG_INFO("Input gate changed: fortnite=%d cursorVisible=%d "
-               "mouseSuspended=%d allow=%d dx=%d",
-               isFortniteForeground ? 1 : 0, g_isCursorVisible ? 1 : 0,
-               mouseSuspended ? 1 : 0, allowAngleUpdate ? 1 : 0, dx);
+    if (allowAngleUpdate != lastAllowAngleUpdate) {
+      LOG_INFO("Input gate changed: allow=%d dx=%d", allowAngleUpdate ? 1 : 0,
+               dx);
       lastAllowAngleUpdate = allowAngleUpdate;
-      lastIsFortniteForeground = isFortniteForeground;
-      lastCursorVisible = g_isCursorVisible;
-      lastMouseSuspended = mouseSuspended;
     }
 
     if (allowAngleUpdate) {
@@ -369,12 +357,21 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
     return 0;
 
   case WM_HOTKEY:
+    // Ignore hotkey actions when user is assigning a keybind in settings
+    if (g_keybindAssignmentActive) {
+      return 0;
+    }
     switch (wParam) {
     case 1: // Toggle Panel
       ShowControlPanel();
       break;
     case 2: // ROI Select Toggle
       if (g_currentSelection == NONE) {
+        // Only allow ROI selection when Fortnite is focused
+        if (!IsFortniteForeground()) {
+          LOG_INFO("ROI selection blocked: Fortnite not focused");
+          break;
+        }
         CaptureDesktop(); // Capture before dimming
         g_currentSelection = SELECTING_ROI;
         g_isSelectionActive = true;
@@ -540,13 +537,27 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
   case WM_LBUTTONUP:
     if (g_currentSelection == SELECTING_ROI) {
+      // Allow transition to color selection even when Fortnite not focused
+      // (safe switch for selection process)
       g_currentSelection = SELECTING_COLOR;
       InvalidateRect(hWnd, NULL, FALSE);
     }
     return 0;
 
   case WM_TIMER: {
+    if (wParam == 3) {
+      KillTimer(hWnd, 3);
+      ShowWindow(hWnd, SW_SHOW);
+      SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0,
+                   SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+      UpdateWindow(hWnd);
+      return 0;
+    }
     if (wParam == 1) { // 60fps HUD / Input processing timer
+      // Skip drawing and processing for the first 2.5s while the splash screen is active
+      static ULONGLONG s_bootTime = GetTickCount64();
+      if (GetTickCount64() - s_bootTime < 2500) return 0;
+
       if (g_currentSelection == NONE) {
         // Dynamically track virtual screen changes (e.g. resolution change or monitor plug/unplug)
         int currentW = GetSystemMetrics(SM_CXVIRTUALSCREEN);
@@ -683,7 +694,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   if (g_allProfiles.empty()) {
     Profile p;
     p.name = L"Default";
-    p.tolerance = 1;
+    p.tolerance = 2;
     p.sensitivityX = 0.1;
     p.sensitivityY = 0.1;
     // roi_x/y/w/h left at 0: user must run the ROI selector before
@@ -784,7 +795,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   LOG_INFO("HUD created: hwnd=0x%p", g_hHUD);
   LogWindowInfo(L"HUD handle", g_hHUD);
   ShowControlPanel(); // Force Dashboard to show on startup
-  ShowWindow(g_hHUD, SW_SHOW);
   SetWindowPos(g_hHUD, HWND_TOPMOST, 0, 0, 0, 0,
                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
   UpdateWindow(g_hHUD);

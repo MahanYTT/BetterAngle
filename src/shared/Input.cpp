@@ -137,11 +137,13 @@ bool IsFortniteForeground() {
 
   if (!fg)
     return false;
+  }
 
   DWORD pid = 0;
   GetWindowThreadProcessId(fg, &pid);
-  if (pid == 0)
+  if (pid == 0) {
     return false;
+  }
 
   s_lastPid = pid;
 
@@ -172,6 +174,7 @@ bool IsFortniteForeground() {
     CloseHandle(snap);
   }
 
+  s_lastResult = false;
   return false;
 }
 

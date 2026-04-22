@@ -313,6 +313,13 @@ Item {
                                 Keys.onPressed: function(event) {
                                     hotkeyColumn.captureHotkey(event, function(bind) { backend.keyToggle = bind })
                                 }
+                                onActiveFocusChanged: {
+                                    if (activeFocus) {
+                                        backend.startKeybindAssignment()
+                                    } else {
+                                        backend.endKeybindAssignment()
+                                    }
+                                }
                             }
                         }
                         RowLayout {
@@ -345,6 +352,13 @@ Item {
                                 Keys.priority: Keys.BeforeItem
                                 Keys.onPressed: function(event) {
                                     hotkeyColumn.captureHotkey(event, function(bind) { backend.keyRoi = bind })
+                                }
+                                onActiveFocusChanged: {
+                                    if (activeFocus) {
+                                        backend.startKeybindAssignment()
+                                    } else {
+                                        backend.endKeybindAssignment()
+                                    }
                                 }
                             }
                         }
@@ -379,6 +393,13 @@ Item {
                                 Keys.onPressed: function(event) {
                                     hotkeyColumn.captureHotkey(event, function(bind) { backend.keyCross = bind })
                                 }
+                                onActiveFocusChanged: {
+                                    if (activeFocus) {
+                                        backend.startKeybindAssignment()
+                                    } else {
+                                        backend.endKeybindAssignment()
+                                    }
+                                }
                             }
                         }
                         RowLayout {
@@ -411,6 +432,13 @@ Item {
                                 Keys.priority: Keys.BeforeItem
                                 Keys.onPressed: function(event) {
                                     hotkeyColumn.captureHotkey(event, function(bind) { backend.keyZero = bind })
+                                }
+                                onActiveFocusChanged: {
+                                    if (activeFocus) {
+                                        backend.startKeybindAssignment()
+                                    } else {
+                                        backend.endKeybindAssignment()
+                                    }
                                 }
                             }
                         }
@@ -542,12 +570,12 @@ Item {
 
                     // Thickness
                     Column { spacing: 4; width: parent.width
-                        Text { text: "Line Thickness: " + backend.crossThickness.toFixed(1) + " px"; color: "white"; font.pixelSize: 12 }
+                        Text { text: "Line Thickness: " + Math.round(backend.crossThickness) + " px"; color: "white"; font.pixelSize: 12 }
                         Slider {
                             width: parent.width
-                            from: 0.1; to: 10.0; stepSize: 0.1
+                            from: 1; to: 10; stepSize: 1
                             value: backend.crossThickness
-                            onMoved: backend.crossThickness = value
+                            onMoved: backend.crossThickness = Math.round(value)
                         }
                     }
 
@@ -666,8 +694,8 @@ Item {
                                     colorPicker.val = Math.max(0, Math.min(1, 1 - my / svCanvas.height))
                                     colorPicker.applyColor()
                                 }
-                                onPressed: (mouse) => pick(mouse.x, mouse.y)
-                                onPositionChanged: (mouse) => { if (pressed) pick(mouse.x, mouse.y) }
+                                onPressed: { pick(mouse.x, mouse.y) }
+                                onPositionChanged: { if (pressed) pick(mouse.x, mouse.y) }
                             }
                         }
 
@@ -705,8 +733,8 @@ Item {
                                     colorPicker.hue = Math.max(0, Math.min(1, mx / hueStrip.width))
                                     colorPicker.applyColor()
                                 }
-                                onPressed: (mouse) => pick(mouse.x)
-                                onPositionChanged: (mouse) => { if (pressed) pick(mouse.x) }
+                                onPressed: { pick(mouse.x) }
+                                onPositionChanged: { if (pressed) pick(mouse.x) }
                             }
                         }
 
@@ -775,11 +803,11 @@ Item {
                     Row {
                         spacing: 6; width: parent.width
                         Text { text: "Y: " + backend.crossOffsetY.toFixed(1); color: "white"; verticalAlignment: Text.AlignVCenter; width: 80 }
-                        Button { text: "↓ Y −0.5"; width: 70; height: 30
+                        Button { text: "↑ Y −0.5"; width: 70; height: 30
                             contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                             background: Rectangle { color: parent.hovered ? "#555" : "#333"; radius: 4 }
                             onClicked: backend.crossOffsetY = backend.crossOffsetY - 0.5 }
-                        Button { text: "↑ Y +0.5"; width: 70; height: 30
+                        Button { text: "↓ Y +0.5"; width: 70; height: 30
                             contentItem: Text { text: parent.text; color: "white"; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                             background: Rectangle { color: parent.hovered ? "#555" : "#333"; radius: 4 }
                             onClicked: backend.crossOffsetY = backend.crossOffsetY + 0.5 }
@@ -1005,6 +1033,17 @@ Item {
                     width: parent.width
                 }
 
+                Item { height: 20 }
+
+                Text {
+                    text: "\"The best wins begin with the best drops\""
+                    color: "#00ffa3"
+                    font.pixelSize: 13
+                    font.italic: true
+                    horizontalAlignment: Text.AlignHCenter
+                    width: parent.width
+                }
+
             }
         }
 
@@ -1078,6 +1117,15 @@ Item {
                 Text {
                     text: "Angle updates only when Fortnite is focused AND mouse is hidden. Input locking pauses camera during FOV transitions."
                     color: "#555"; font.pixelSize: 11; width: parent.width; wrapMode: Text.WordWrap
+                }
+
+                Item { height: 10 }
+
+                Text { text: "PRO TIPS & SHORTCUTS"; color: "#666"; font.pixelSize: 11; font.bold: true }
+
+                Text {
+                    text: "ROI Cancel: Press ROI key or Esc when in selection stages."
+                    color: "#aaa"; font.pixelSize: 11; width: parent.width; wrapMode: Text.WordWrap
                 }
             }
         }

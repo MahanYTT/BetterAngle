@@ -169,8 +169,10 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
     return;
   }
 
-  // Pre-fill selection background if needed
-  if (g_screenSnapshot && g_currentSelection != NONE) {
+  // Pre-fill selection background if needed - when Fortnite is focused OR
+  // selection is active
+  if (g_screenSnapshot && g_currentSelection != NONE &&
+      (IsFortniteForeground() || g_currentSelection != NONE)) {
     HDC hdcSnap = CreateCompatibleDC(hdcMem);
     HGDIOBJ hOldSnap = SelectObject(hdcSnap, g_screenSnapshot);
     BitBlt(hdcMem, 0, 0, sw, sh, hdcSnap, 0, 0, SRCCOPY);
@@ -192,14 +194,17 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
   graphics.SetSmoothingMode(SmoothingModeHighQuality);
   graphics.SetInterpolationMode(InterpolationModeHighQuality);
   // Use PixelOffsetModeHalf for precise sub-pixel centering of lines.
-  // This is often more reliable than PixelOffsetModeHighQuality for very thin lines.
+  // This is often more reliable than PixelOffsetModeHighQuality for very thin
+  // lines.
   graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
   graphics.SetCompositingQuality(CompositingQualityHighQuality);
   graphics.SetCompositingMode(CompositingModeSourceOver);
   graphics.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
 
-  // Two-stage selection overlay
-  if (g_currentSelection != NONE) {
+  // Two-stage selection overlay - show when Fortnite is focused OR selection is
+  // active
+  if (g_currentSelection != NONE &&
+      (IsFortniteForeground() || g_currentSelection != NONE)) {
     SolidBrush dimBrush(Color(120, 0, 0, 0));
     graphics.FillRectangle(&dimBrush, 0, 0, sw, sh);
 
@@ -387,8 +392,9 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
         drawThickness = 1.0f;
       }
 
-      Pen cPen(Color((BYTE)finalAlpha, GetRValue(cc), GetGValue(cc), GetBValue(cc)),
-               drawThickness);
+      Pen cPen(
+          Color((BYTE)finalAlpha, GetRValue(cc), GetGValue(cc), GetBValue(cc)),
+          drawThickness);
       cPen.SetAlignment(PenAlignmentCenter);
       // Set line join and cap for better thin line rendering
       cPen.SetLineJoin(LineJoinRound);
@@ -397,10 +403,9 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
       Matrix rot;
       rot.RotateAt(g_crossAngle, PointF(cx, cy));
       graphics.SetTransform(&rot);
-      
+
       // Use AntiAlias specifically for the crosshair
       graphics.SetSmoothingMode(SmoothingModeAntiAlias);
-      
       // Use a GraphicsPath for sub-pixel line precision.
       // Lines go from exact monitor edge to exact monitor edge, crossing at (cx, cy).
       GraphicsPath crossPath;

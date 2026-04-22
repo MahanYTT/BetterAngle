@@ -19,6 +19,7 @@
 extern std::vector<Profile> g_allProfiles;
 extern int g_selectedProfileIdx;
 extern AngleLogic g_logic;
+extern HWND g_hHUD;
 
 static double g_pendingSetupSensX = 0.05;
 static double g_pendingSetupSensY = 0.05;
@@ -169,11 +170,11 @@ void BetterAngleBackend::setCrosshairOn(bool v) {
 
 float BetterAngleBackend::crossThickness() const { return g_crossThickness; }
 void BetterAngleBackend::setCrossThickness(float v) {
-  // Enforce 0.1px increments to prevent drift (e.g. 0.92px)
-  v = std::round(v * 10.0f) / 10.0f;
+  // Enforce integer values 1-10 (no decimals)
+  v = std::round(v);
 
-  // Clamp to valid range (0.1 to 10.0) to match UI slider
-  const float minThickness = 0.1f;
+  // Clamp to valid range (1 to 10) to match UI slider
+  const float minThickness = 1.0f;
   const float maxThickness = 10.0f;
 
   if (v < minThickness)
@@ -431,7 +432,7 @@ void BetterAngleBackend::deleteCrosshairPreset(int index) {
 void BetterAngleBackend::resetCrosshairToDefaults() {
   // Reset global state to defaults
   g_showCrosshair = false;
-  g_crossThickness = 1.0f; // Reset to standard 1.0px default
+  g_crossThickness = 1.0f;       // Reset to standard 1.0px default
   g_crossColor = RGB(255, 0, 0); // Red
   g_crossOffsetX = 0.0f;
   g_crossOffsetY = 0.0f;
@@ -809,8 +810,20 @@ QString BetterAngleBackend::keyToggle() const {
 }
 void BetterAngleBackend::setKeyToggle(const QString &s) {
   if (!g_allProfiles.empty()) {
-    parseFullKey(s, g_allProfiles[g_selectedProfileIdx].keybinds.toggleMod,
-                 g_allProfiles[g_selectedProfileIdx].keybinds.toggleKey);
+    UINT mod, vk;
+    parseFullKey(s, mod, vk);
+
+    // Check for duplicates
+    const auto &k = g_allProfiles[g_selectedProfileIdx].keybinds;
+    if ((mod == k.roiMod && vk == k.roiKey) ||
+        (mod == k.crossMod && vk == k.crossKey) ||
+        (mod == k.zeroMod && vk == k.zeroKey)) {
+      emit hotkeysChanged(); // Force UI refresh to revert text
+      return;
+    }
+
+    g_allProfiles[g_selectedProfileIdx].keybinds.toggleMod = mod;
+    g_allProfiles[g_selectedProfileIdx].keybinds.toggleKey = vk;
     saveKeybinds();
     SaveSettings();
     emit hotkeysChanged();
@@ -825,8 +838,20 @@ QString BetterAngleBackend::keyRoi() const {
 }
 void BetterAngleBackend::setKeyRoi(const QString &s) {
   if (!g_allProfiles.empty()) {
-    parseFullKey(s, g_allProfiles[g_selectedProfileIdx].keybinds.roiMod,
-                 g_allProfiles[g_selectedProfileIdx].keybinds.roiKey);
+    UINT mod, vk;
+    parseFullKey(s, mod, vk);
+
+    // Check for duplicates
+    const auto &k = g_allProfiles[g_selectedProfileIdx].keybinds;
+    if ((mod == k.toggleMod && vk == k.toggleKey) ||
+        (mod == k.crossMod && vk == k.crossKey) ||
+        (mod == k.zeroMod && vk == k.zeroKey)) {
+      emit hotkeysChanged();
+      return;
+    }
+
+    g_allProfiles[g_selectedProfileIdx].keybinds.roiMod = mod;
+    g_allProfiles[g_selectedProfileIdx].keybinds.roiKey = vk;
     saveKeybinds();
     SaveSettings();
     emit hotkeysChanged();
@@ -841,8 +866,20 @@ QString BetterAngleBackend::keyCross() const {
 }
 void BetterAngleBackend::setKeyCross(const QString &s) {
   if (!g_allProfiles.empty()) {
-    parseFullKey(s, g_allProfiles[g_selectedProfileIdx].keybinds.crossMod,
-                 g_allProfiles[g_selectedProfileIdx].keybinds.crossKey);
+    UINT mod, vk;
+    parseFullKey(s, mod, vk);
+
+    // Check for duplicates
+    const auto &k = g_allProfiles[g_selectedProfileIdx].keybinds;
+    if ((mod == k.toggleMod && vk == k.toggleKey) ||
+        (mod == k.roiMod && vk == k.roiKey) ||
+        (mod == k.zeroMod && vk == k.zeroKey)) {
+      emit hotkeysChanged();
+      return;
+    }
+
+    g_allProfiles[g_selectedProfileIdx].keybinds.crossMod = mod;
+    g_allProfiles[g_selectedProfileIdx].keybinds.crossKey = vk;
     saveKeybinds();
     SaveSettings();
     emit hotkeysChanged();
@@ -857,8 +894,20 @@ QString BetterAngleBackend::keyZero() const {
 }
 void BetterAngleBackend::setKeyZero(const QString &s) {
   if (!g_allProfiles.empty()) {
-    parseFullKey(s, g_allProfiles[g_selectedProfileIdx].keybinds.zeroMod,
-                 g_allProfiles[g_selectedProfileIdx].keybinds.zeroKey);
+    UINT mod, vk;
+    parseFullKey(s, mod, vk);
+
+    // Check for duplicates
+    const auto &k = g_allProfiles[g_selectedProfileIdx].keybinds;
+    if ((mod == k.toggleMod && vk == k.toggleKey) ||
+        (mod == k.roiMod && vk == k.roiKey) ||
+        (mod == k.crossMod && vk == k.crossKey)) {
+      emit hotkeysChanged();
+      return;
+    }
+
+    g_allProfiles[g_selectedProfileIdx].keybinds.zeroMod = mod;
+    g_allProfiles[g_selectedProfileIdx].keybinds.zeroKey = vk;
     saveKeybinds();
     SaveSettings();
     emit hotkeysChanged();
@@ -871,6 +920,14 @@ void BetterAngleBackend::saveKeybinds() {
   Profile &p = g_allProfiles[g_selectedProfileIdx];
   p.Save(GetProfilesPath() + p.name + L".json");
   RefreshHotkeys(g_hHUD);
+}
+
+void BetterAngleBackend::startKeybindAssignment() {
+  g_keybindAssignmentActive = true;
+}
+
+void BetterAngleBackend::endKeybindAssignment() {
+  g_keybindAssignmentActive = false;
 }
 
 void NotifyBackendUpdateStatusChanged() {
@@ -932,3 +989,9 @@ bool BetterAngleBackend::inputLocked() const {
   return g_mouseSuspendedUntil > 0 && GetTickCount64() < g_mouseSuspendedUntil;
 }
 bool BetterAngleBackend::isDiving() const { return g_isDiving; }
+
+void BetterAngleBackend::finishBooting() {
+  if (g_hHUD) {
+    ShowWindow(g_hHUD, SW_SHOW);
+  }
+}

@@ -31,3 +31,12 @@ Thumbs.db
 legacy_python/
 betterangle_old_python_version/
 GEMINI.md
+
+# Cleanup
+debug.log
+/scratch/
+/.idea/
+fix_*.patch
+BetterAngle_114.cpp
+Overlay_114.cpp
+NEW_RELEASE_NOTES.md

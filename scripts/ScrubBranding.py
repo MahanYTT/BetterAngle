@@ -31,17 +31,17 @@ def scrub_and_export(source_path, png_path, ico_path):
     res_img.save(png_path, "PNG", optimize=True)
     print(f"Saved FINAL PNG: {png_path}")
     
-    # New Cache-Busting name for v161
+    # New Cache-Busting name for v162
     sizes = [(16, 16), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)]
     res_img.save(ico_path, format='ICO', sizes=sizes)
     print(f"Saved FINAL cache-busting ICO: {ico_path}")
 
 if __name__ == "__main__":
-    # Source with the '>' symbol
-    src = "/Users/kierenpatel/.gemini/antigravity/brain/f53cffab-f06d-4312-bc77-9f7aa62de87e/betterangle_master_logo_with_symbol_resubmit_1776148290360.png"
-    assets_dir = "/Users/kierenpatel/.gemini/antigravity/scratch/BetterAngle/assets"
+    # Use the refined logo from assets
+    assets_dir = os.path.join(os.path.dirname(__file__), "..", "assets")
+    src = os.path.join(assets_dir, "betterangle_refined_logo.png")
     
     png_out = os.path.join(assets_dir, "logo.png")
-    ico_out = os.path.join(assets_dir, "BetterAngle_v161.ico")
+    ico_out = os.path.join(assets_dir, "BetterAngle_v162.ico")
     
     scrub_and_export(src, png_out, ico_out)

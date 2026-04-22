@@ -70,6 +70,8 @@ bool Profile::Load(const std::wstring &path) {
   roi_h = (int)extractDouble("roi_h");
   target_color = (COLORREF)extractDouble("target_color");
   tolerance = (int)extractDouble("tolerance");
+  if (tolerance <= 0)
+    tolerance = 2;
 
   if (content.find("\"diveGlideMatch\"") != std::string::npos) {
     diveGlideMatch = (float)extractDouble("diveGlideMatch");
@@ -107,8 +109,8 @@ bool Profile::Load(const std::wstring &path) {
 
   // Load Crosshair (with defaults for legacy files)
   crossThickness = (float)extractDouble("crossThickness");
-  if (crossThickness < 0.1f)
-    crossThickness = 0.1f;
+  if (crossThickness < 1.0f)
+    crossThickness = 1.0f;
 
   crossColor = (COLORREF)extractDouble("crossColor");
   if (crossColor == 0)
@@ -157,8 +159,8 @@ bool Profile::Load(const std::wstring &path) {
       cp.offsetY = exD("y");
       cp.angle = exD("a");
       cp.thickness = exD("t");
-      if (cp.thickness < 0.1f)
-        cp.thickness = 0.1f;
+      if (cp.thickness < 1.0f)
+        cp.thickness = 1.0f;
       cp.color = (COLORREF)exD("c");
       if (cp.color == 0)
         cp.color = RGB(255, 0, 0);
@@ -170,7 +172,7 @@ bool Profile::Load(const std::wstring &path) {
 
   // Ensure default if empty
   if (crosshairPresets.empty()) {
-    CrosshairPreset def = {L"🎯 Screen Center", 0.0f, 0.0f, 0.0f, 0.1f,
+    CrosshairPreset def = {L"🎯 Screen Center", 0.0f, 0.0f, 0.0f, 1.0f,
                            RGB(255, 0, 0),      false};
     crosshairPresets.push_back(def);
   }

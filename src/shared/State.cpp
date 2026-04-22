@@ -18,6 +18,7 @@ std::string g_updateHistory = "";
 std::atomic<bool> g_fortniteFocusedCache(false);
 std::string g_lastVersionRun = "";
 std::atomic<bool> g_forceRedraw(true);
+std::atomic<bool> g_keybindAssignmentActive(false);
 std::atomic<long long> g_detectionDelayMs(0);
 std::atomic<bool> g_showDebugOverlay(false);
 std::atomic<ULONGLONG> g_mouseSuspendedUntil(0);

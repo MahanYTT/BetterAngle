@@ -1,14 +1,13 @@
-# BetterAngle - Experimental C++ Version (Not working yet)
+# BetterAngle Pro
 
 A high-performance, low-latency angle tracker and FOV detection overlay for Windows.
 ## 🔧 How to use
 - **Step 1:** Input your sensitivity from Fortnite
-- **Step 2:** Hop into a Fortnite match and hit the Select ROI key. Select the area of the screen with the text (Make sure to add some extra room). Select the color you want to track (white)
+- **Step 2:** Hop into a Fortnite match and hit the Select ROI key. Select the area of the screen with the text (Make sure to add some extra room). Select the color you want to track (white in the text)
 - **Step 3:** Change the Percent to Match how much of the area.
 
-## 🚀 Transition to C++
-We are currently porting the project from Python to **Pure C++** to achieve:
-- **Low-End Hardware Support**: Minimal RAM (<5MB) and CPU usage (~0.1%).
+
+- **Low-End Hardware Support**: Minimal RAM (<60MB) and CPU usage (~0.5%).
 - **Connected Updates**: Automated builds and releases via GitHub Actions.
 - **Zero Latency**: Direct Win32 Raw Input and GDI+ rendering.
 
@@ -27,10 +26,10 @@ We are currently porting the project from Python to **Pure C++** to achieve:
 - **we are not responsible for any bans or consequences**
 
 ## 📦 Download
-Check the **[Releases](https://github.com/MahanYTT/BetterAngle/releases)** page for the latest `BetterAngle.exe`.
+Check the **[Releases](https://github.com/wavedropmaps-org/BetterAngle/releases)** page for the latest `BetterAngle.exe`.
 
 ## ⚙️ Development
-1. Clone the repository: `git clone https://github.com/MahanYTT/BetterAngle.git`
+1. Clone the repository: `git clone https://github.com/wavedropmaps-org/BetterAngle.git`
 2. Open with Visual Studio or compile using `msbuild`.
 
 ---

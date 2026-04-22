@@ -25,13 +25,13 @@ extern std::string g_lastVersionRun;
 
 // Version numbers — updated by scripts/bump_version.ps1
 #ifndef V_MAJ
-#define V_MAJ 4
-#define V_MIN 27
-#define V_PAT 268
+#define V_MAJ 5
+#define V_MIN 0
+#define V_PAT 1
 #endif
 
 #define VERSION_STR APP_STR_Y(V_MAJ) "." APP_STR_Y(V_MIN) "." APP_STR_Y(V_PAT)
-#define VERSION_WSTR \
+#define VERSION_WSTR                                                           \
   APP_WSTR_Y(V_MAJ) L"." APP_WSTR_Y(V_MIN) L"." APP_WSTR_Y(V_PAT)
 
 // Global Profile Management
@@ -90,6 +90,7 @@ extern HWND g_hPanel;
 
 bool RefreshHotkeys(HWND hWnd);
 extern std::atomic<bool> g_forceRedraw;
+extern std::atomic<bool> g_keybindAssignmentActive;
 void NotifyBackendCrosshairChanged();
 void NotifyBackendUpdateStatusChanged();
 

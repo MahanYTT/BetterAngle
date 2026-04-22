@@ -12,8 +12,8 @@
 // Placeholders for actual URLs — user should replace these in GitHub Actions or
 // similar if needed GitHub API for latest release info
 const wchar_t *VERSION_URL =
-    L"https://api.github.com/repos/MahanYTT/BetterAngle/releases/latest";
-const wchar_t *DOWNLOAD_URL = L"https://github.com/MahanYTT/BetterAngle/"
+    L"https://api.github.com/repos/wavedropmaps-org/BetterAngle/releases/latest";
+const wchar_t *DOWNLOAD_URL = L"https://github.com/wavedropmaps-org/BetterAngle/"
                               L"releases/latest/download/BetterAngle_Setup.exe";
 
 bool DownloadFile(const std::wstring &url, const std::wstring &dest) {
@@ -193,7 +193,7 @@ void ApplyUpdateAndRestart() {
 
   auto openReleasePage = []() {
     ShellExecuteW(NULL, L"open",
-                  L"https://github.com/MahanYTT/BetterAngle/releases", NULL,
+                  L"https://github.com/wavedropmaps-org/BetterAngle/releases", NULL,
                   NULL, SW_SHOWNORMAL);
   };
 
@@ -234,8 +234,6 @@ void ApplyUpdateAndRestart() {
       L"$p = Start-Process -FilePath $installer -ArgumentList $args -Verb "
       L"RunAs -PassThru -Wait; "
       L"if ($p.ExitCode -eq 0 -and (Test-Path -LiteralPath $app)) { "
-      L"$ad = Join-Path $env:LOCALAPPDATA 'BetterAngle'; "
-      L"if (Test-Path $ad) { Remove-Item -Path $ad -Recurse -Force -ErrorAction SilentlyContinue }; "
       L"Start-Sleep -Seconds 2; Start-Process -FilePath $app -WorkingDirectory "
       L"(Split-Path -Parent $app) | Out-Null; "
       L"} elseif (Test-Path -LiteralPath $app) { "
