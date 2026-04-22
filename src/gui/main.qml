@@ -13,7 +13,7 @@ Window {
     color: "#0a0a0f"
 
     // Frameless window style for a custom sleek look
-    flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+    flags: Qt.Window | Qt.FramelessWindowHint
 
     onVisibleChanged: {
         // No longer forcing crosshair state here to allow user preference to persist

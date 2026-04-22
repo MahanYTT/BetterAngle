@@ -322,35 +322,29 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
       RECT monitorRect;
       GetMonitorRectByIndex(g_screenIndex, monitorRect);
 
-      // The HUD window starts at the virtual screen origin (SM_XVIRTUALSCREEN, SM_YVIRTUALSCREEN).
-      // Monitor coords from GetMonitorInfo are in the same virtual screen coordinate space.
-      // Subtract the HUD window's top-left to get bitmap (client) coordinates.
-      int screenX = GetSystemMetrics(SM_XVIRTUALSCREEN);
-      int screenY = GetSystemMetrics(SM_YVIRTUALSCREEN);
+      // The HUD bitmap starts at (SM_XVIRTUALSCREEN, SM_YVIRTUALSCREEN).
+      // Convert monitor virtual-screen coords to bitmap coords by subtracting the origin.
+      int vsX = GetSystemMetrics(SM_XVIRTUALSCREEN);
+      int vsY = GetSystemMetrics(SM_YVIRTUALSCREEN);
 
-      // Monitor dimensions in pixels
-      float monitorWidth  = float(monitorRect.right  - monitorRect.left);
-      float monitorHeight = float(monitorRect.bottom - monitorRect.top);
+      // Monitor bounds in bitmap (pixel) coordinates
+      float mLeft   = float(monitorRect.left   - vsX);
+      float mTop    = float(monitorRect.top    - vsY);
+      float mRight  = float(monitorRect.right  - vsX);
+      float mBottom = float(monitorRect.bottom - vsY);
+      float mW      = mRight  - mLeft;
+      float mH      = mBottom - mTop;
 
-      // Center of the selected monitor, expressed in bitmap coords
-      float monitorLeft   = float(monitorRect.left   - screenX);
-      float monitorTop    = float(monitorRect.top    - screenY);
-      float monitorRight  = float(monitorRect.right  - screenX);
-      float monitorBottom = float(monitorRect.bottom - screenY);
+      // Crosshair center = monitor center + user offset
+      float cx = mLeft + mW * 0.5f + g_crossOffsetX;
+      float cy = mTop  + mH * 0.5f + g_crossOffsetY;
 
-      // Crosshair center = monitor center + user offset (in pixels)
-      float cx = monitorLeft + monitorWidth  * 0.5f + g_crossOffsetX;
-      float cy = monitorTop  + monitorHeight * 0.5f + g_crossOffsetY;
-
-      // Arms reach exactly to each monitor edge from the center
-      float hw = monitorWidth  * 0.5f;
-      float hh = monitorHeight * 0.5f;
-
-      // Clip GDI+ drawing to exactly this monitor's bitmap rect.
-      // This makes it IMPOSSIBLE for any pixel to land on another screen,
-      // regardless of rotation, offset, or anti-aliasing.
-      Region clipRegion(RectF(monitorLeft, monitorTop, monitorWidth, monitorHeight));
-      graphics.SetClip(&clipRegion);
+      // Arm endpoints — clamped explicitly to this monitor's bitmap bounds.
+      // No GDI+ clip region needed; the math alone ensures containment.
+      float lineX0 = mLeft;    // horizontal start
+      float lineX1 = mRight;   // horizontal end
+      float lineY0 = mTop;     // vertical start
+      float lineY1 = mBottom;  // vertical end
 
       float pulse = 1.0f;
       if (g_crossPulse) {
@@ -407,16 +401,15 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
       // Use AntiAlias specifically for the crosshair
       graphics.SetSmoothingMode(SmoothingModeAntiAlias);
       
-      // Use a GraphicsPath for drawing the crosshair lines.
-      // This can provide better sub-pixel precision in GDI+ than DrawLine.
+      // Use a GraphicsPath for sub-pixel line precision.
+      // Lines go from exact monitor edge to exact monitor edge, crossing at (cx, cy).
       GraphicsPath crossPath;
-      crossPath.AddLine(cx - hw, cy, cx + hw, cy);
-      crossPath.StartFigure(); // New segment
-      crossPath.AddLine(cx, cy - hh, cx, cy + hh);
-      
+      crossPath.AddLine(lineX0, cy, lineX1, cy);   // horizontal: full monitor width
+      crossPath.StartFigure();
+      crossPath.AddLine(cx, lineY0, cx, lineY1);   // vertical: full monitor height
+
       graphics.DrawPath(&cPen, &crossPath);
       graphics.ResetTransform();
-      graphics.ResetClip(); // Restore full drawing area for HUD box below
     }
 
     // HUD box
