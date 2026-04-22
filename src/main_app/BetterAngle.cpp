@@ -323,8 +323,9 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
     }
     s_lastFortniteForeground = isFortniteForeground;
     
-    // Note: Delay changed to 0 to prevent any angle inaccuracy as the cursor may be moving
-    const ULONGLONG gracePeriod = 0; // ms
+    // Note: Delay changed to 500ms to allow angle to update immediately upon alt-tabbing back,
+    // even if the OS takes a moment to fully hide the cursor.
+    const ULONGLONG gracePeriod = 500; // ms
     const bool inGracePeriod = isFortniteForeground &&
                                (GetTickCount64() - s_fortniteBecameForegroundTime < gracePeriod);
     

@@ -124,13 +124,17 @@ bool IsFortniteForeground() {
   static bool   s_lastResult  = false;
   static DWORD  s_lastPid     = 0;
 
+  // Ultra-fast cache for alt-tabbing back into Fortnite
+  static HWND   s_knownFortniteHwnd = nullptr;
+  static DWORD  s_knownFortnitePid  = 0;
+
   HWND fg = GetForegroundWindow();
 
-  // Fast path: same window as last check, return cached answer immediately.
+  // Fast path 1: same window as last check, return cached answer immediately.
   if (fg == s_lastFgHwnd)
     return s_lastResult;
 
-  // Foreground window changed — invalidate and recompute.
+  // Foreground window changed — invalidate last check cache.
   s_lastFgHwnd = fg;
   s_lastResult  = false;
   s_lastPid     = 0;
@@ -143,12 +147,21 @@ bool IsFortniteForeground() {
   if (pid == 0)
     return false;
 
+  // Fast path 2: Known Fortnite window from a previous check.
+  if (fg == s_knownFortniteHwnd && pid == s_knownFortnitePid) {
+    s_lastPid = pid;
+    s_lastResult = true;
+    return true;
+  }
+
   s_lastPid = pid;
 
   // Method 1: Try OpenProcess + QueryFullProcessImageNameW (fast, ~0ms).
   wchar_t processPath[MAX_PATH] = {};
   const wchar_t *processName = GetProcessBaseName(fg, processPath, MAX_PATH);
   if (processName && processName[0] && IsFortniteProcessName(processName)) {
+    s_knownFortniteHwnd = fg;
+    s_knownFortnitePid = pid;
     s_lastResult = true;
     return true;
   }
@@ -165,6 +178,10 @@ bool IsFortniteForeground() {
         if (pe.th32ProcessID == pid) {
           CloseHandle(snap);
           s_lastResult = IsFortniteProcessName(pe.szExeFile);
+          if (s_lastResult) {
+            s_knownFortniteHwnd = fg;
+            s_knownFortnitePid = pid;
+          }
           return s_lastResult;
         }
       } while (Process32NextW(snap, &pe));
