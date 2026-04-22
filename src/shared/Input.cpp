@@ -137,7 +137,6 @@ bool IsFortniteForeground() {
 
   if (!fg)
     return false;
-  }
 
   DWORD pid = 0;
   GetWindowThreadProcessId(fg, &pid);
