@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.261..HEAD ### BetterAngle Pro v4.27.262
+- fix: revert DPI awareness mode and fix screen selection UI
+
 Generating release notes from commit range: v4.27.260..HEAD ### BetterAngle Pro v4.27.261
 - feat: enhance multi-screen compatibility and zero-delay alt-tabbing
 
