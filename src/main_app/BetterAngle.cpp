@@ -321,7 +321,7 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
       // Fortnite just became foreground
       s_fortniteBecameForegroundTime = GetTickCount64();
       
-      // Physically lock the system input for 1.0s so mouse movements during
+      // Physically lock the system input for 1.5s so mouse movements during
       // the alt-tab release don't mess up the game or the angle tracking.
       std::thread([]() {
         FlushPendingInputMessages();
@@ -332,7 +332,7 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
             preKeys.push_back(i);
         }
         BlockInput(TRUE);
-        Sleep(1000);
+        Sleep(1500);
         BlockInput(FALSE);
         Sleep(10);
         SyncKeyStates(preKeys);
