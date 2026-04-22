@@ -116,7 +116,25 @@ int GetRawInputDeltaX(LPARAM lparam) {
 }
 
 bool IsFortniteForeground() {
+  // Cache the result: recompute only when the foreground window actually
+  // changes. This avoids calling CreateToolhelp32Snapshot() on every WM_INPUT
+  // message (hundreds of times/sec), which caused severe lag after alt-tab
+  // when EAC/BattlEye blocks the fast OpenProcess path.
+  static HWND   s_lastFgHwnd = nullptr;
+  static bool   s_lastResult  = false;
+  static DWORD  s_lastPid     = 0;
+
   HWND fg = GetForegroundWindow();
+
+  // Fast path: same window as last check, return cached answer immediately.
+  if (fg == s_lastFgHwnd)
+    return s_lastResult;
+
+  // Foreground window changed — invalidate and recompute.
+  s_lastFgHwnd = fg;
+  s_lastResult  = false;
+  s_lastPid     = 0;
+
   if (!fg)
     return false;
 
@@ -125,14 +143,19 @@ bool IsFortniteForeground() {
   if (pid == 0)
     return false;
 
-  // Method 1: Try OpenProcess + QueryFullProcessImageNameW
+  s_lastPid = pid;
+
+  // Method 1: Try OpenProcess + QueryFullProcessImageNameW (fast, ~0ms).
   wchar_t processPath[MAX_PATH] = {};
   const wchar_t *processName = GetProcessBaseName(fg, processPath, MAX_PATH);
-  if (processName && processName[0] && IsFortniteProcessName(processName))
+  if (processName && processName[0] && IsFortniteProcessName(processName)) {
+    s_lastResult = true;
     return true;
+  }
 
   // Method 2: Fallback using CreateToolhelp32Snapshot.
-  // This works even when OpenProcess is blocked by anti-cheat (EAC/BattlEye).
+  // Only reached once per foreground-window change, not on every mouse event.
+  // Works even when OpenProcess is blocked by anti-cheat (EAC/BattlEye).
   HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
   if (snap != INVALID_HANDLE_VALUE) {
     PROCESSENTRY32W pe = {};
@@ -141,7 +164,8 @@ bool IsFortniteForeground() {
       do {
         if (pe.th32ProcessID == pid) {
           CloseHandle(snap);
-          return IsFortniteProcessName(pe.szExeFile);
+          s_lastResult = IsFortniteProcessName(pe.szExeFile);
+          return s_lastResult;
         }
       } while (Process32NextW(snap, &pe));
     }
