@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.260..HEAD ### BetterAngle Pro v4.27.261
+- feat: enhance multi-screen compatibility and zero-delay alt-tabbing
+
 Generating release notes from commit range: v4.27.259..HEAD ### BetterAngle Pro v4.27.260
 - Revert custom dragging and Flickable interactive changes
 
