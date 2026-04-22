@@ -62,16 +62,16 @@ Window {
 
         MouseArea {
             anchors.fill: parent
-            property real startX: 0
-            property real startY: 0
+            property point dragStart: Qt.point(0, 0)
             onPressed: {
-                startX = mouse.x
-                startY = mouse.y
+                dragStart = mapToGlobal(mouse.x, mouse.y)
             }
             onPositionChanged: {
                 if (pressed) {
-                    mainWindow.x += (mouse.x - startX)
-                    mainWindow.y += (mouse.y - startY)
+                    var current = mapToGlobal(mouse.x, mouse.y)
+                    mainWindow.x += current.x - dragStart.x
+                    mainWindow.y += current.y - dragStart.y
+                    dragStart = current
                 }
             }
         }
