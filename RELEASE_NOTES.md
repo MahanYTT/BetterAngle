@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.266..HEAD ### BetterAngle Pro v4.27.267
+- fix: remove GDI+ clip region (caused top-left shift), use explicit endpoints; drop WindowStaysOnTopHint to allow cross-screen window drag
+
 Generating release notes from commit range: v4.27.265..HEAD ### BetterAngle Pro v4.27.266
 - fix: proper crosshair coordinate system with clip region; native startSystemMove for config window
 
