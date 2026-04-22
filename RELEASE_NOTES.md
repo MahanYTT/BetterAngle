@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.5..HEAD ### BetterAngle Pro v5.0.6
+- Fix alt-tab responsiveness: Add ultra-fast HWND caching and restore 500ms grace period for angle updates
+
 Generating release notes from commit range: v4.27.250..HEAD ### BetterAngle Pro v5.0.5
 - Fix project: Sync with byu163/main and update version to 5.0.4
 - chore: auto-increment version for release
