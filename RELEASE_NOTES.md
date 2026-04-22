@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.268..HEAD ### BetterAngle Pro v4.27.269
+- Fix crosshair rendering off-center on monitors with different DPI scales by enabling Per-Monitor V2 DPI awareness
+
 Generating release notes from commit range: v4.27.267..HEAD ### BetterAngle Pro v4.27.268
 - Fix teleporting configuration window and crosshair gaps on secondary monitors
 
