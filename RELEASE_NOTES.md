@@ -1,3 +1,6 @@
+Generating release notes from commit range: v4.27.256..HEAD ### BetterAngle Pro v4.27.257
+- Improve display dropdown selection and reduce Fortnite focus detection delay
+
 Generating release notes from commit range: v4.27.255..HEAD ### BetterAngle Pro v4.27.256
 - Make crosshair screen selection dynamic based on monitor count
 
