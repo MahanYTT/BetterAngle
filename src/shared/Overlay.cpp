@@ -336,12 +336,13 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
       float cx = (monitorCenterX - screenX) + g_crossOffsetX;
       float cy = (monitorCenterY - screenY) + g_crossOffsetY;
       
-      // Make crosshair massive like the Java reference
-      // Use monitor dimensions for crosshair size scaling
-      float monitorWidth = (monitorRect.right - monitorRect.left);
-      float monitorHeight = (monitorRect.bottom - monitorRect.top);
-      float hw = (monitorWidth > monitorHeight ? monitorWidth : monitorHeight) * 3.0f;
-      float hh = hw;
+      // Make crosshair arms reach exactly to each edge of the selected monitor.
+      // hw = distance from center to left/right edge, hh = center to top/bottom edge.
+      // This guarantees the crosshair is 100% contained within the selected screen.
+      float monitorWidth  = float(monitorRect.right  - monitorRect.left);
+      float monitorHeight = float(monitorRect.bottom - monitorRect.top);
+      float hw = monitorWidth  * 0.5f;
+      float hh = monitorHeight * 0.5f;
 
       float pulse = 1.0f;
       if (g_crossPulse) {
