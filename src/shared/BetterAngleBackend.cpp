@@ -250,12 +250,14 @@ int BetterAngleBackend::screenIndex() const {
 
 void BetterAngleBackend::setScreenIndex(int v) {
   // Clamp to valid screen indices (0 to max screens - 1)
-  // For now, we'll just set it and validate later when drawing
-  g_screenIndex = v;
+  int maxIndex = screenCount() - 1;
+  if (maxIndex < 0) maxIndex = 0;
+  int clamped = (v < 0) ? 0 : (v > maxIndex) ? maxIndex : v;
+  g_screenIndex = clamped;
   g_forceRedraw = true;
   if (!g_allProfiles.empty()) {
     Profile &p = g_allProfiles[g_selectedProfileIdx];
-    p.screenIndex = v;
+    p.screenIndex = clamped;
     p.Save(GetProfilesPath() + p.name + L".json");
   }
   SaveSettings();

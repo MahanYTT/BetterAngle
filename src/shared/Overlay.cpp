@@ -104,7 +104,7 @@ static bool CheckFortniteProcessFast() {
   static bool lastRunning = false;
   static ULONGLONG lastCheck = 0;
   ULONGLONG now = GetTickCount64();
-  if (now - lastCheck < 500)
+  if (now - lastCheck < 100)
     return lastRunning;
   lastCheck = now;
   HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
