@@ -20,6 +20,7 @@ std::wstring GetProfilesPath();
 extern std::atomic<long long> g_detectionDelayMs;
 extern std::atomic<bool> g_showDebugOverlay;
 extern std::atomic<ULONGLONG> g_mouseSuspendedUntil;
+extern std::atomic<bool> g_fortniteFocusedCache;
 
 extern std::string g_lastVersionRun;
 
@@ -27,7 +28,7 @@ extern std::string g_lastVersionRun;
 #ifndef V_MAJ
 #define V_MAJ 5
 #define V_MIN 0
-#define V_PAT 14
+#define V_PAT 15
 #endif
 
 #define VERSION_STR APP_STR_Y(V_MAJ) "." APP_STR_Y(V_MIN) "." APP_STR_Y(V_PAT)
@@ -77,7 +78,7 @@ extern RECT g_selectionRect;
 extern POINT g_startPoint;
 extern std::string g_latestVersionOnline;
 extern float g_currentAngle;
-extern bool g_isCursorVisible;
+extern std::atomic<bool> g_isCursorVisible;
 extern AngleLogic g_logic;
 extern int g_hudX;
 extern int g_hudY;

@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.0.15
+- perf: lightning-fast focus detection (10ms) to ensure angle updates stop instantly when tabbing out
+
 ### BetterAngle Pro v5.0.14
 - fix: freeze inputs for 1.65s on alt-tab into Fortnite to prevent angle inaccuracies
 

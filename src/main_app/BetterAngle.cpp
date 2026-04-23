@@ -61,6 +61,8 @@ void DetectorThread() {
       g_logic.LoadProfile(p.sensitivityX);
 
       bool currentFortniteFocused = IsFortniteForeground();
+      g_fortniteFocusedCache = currentFortniteFocused;
+      g_isCursorVisible = IsCursorCurrentlyVisible();
 
       // Detect Alt-Tab back into Fortnite
       if (!lastFortniteFocused && currentFortniteFocused) {
@@ -342,24 +344,13 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
   if (message == WM_INPUT) {
     int dx = GetRawInputDeltaX(lParam);
 
-    // Performance Optimization: Cache process checks
-    static ULONGLONG lastStatusUpdate = 0;
-    static bool cachedIsFortnite = false;
-    static bool cachedIsCursorVisible = false;
-
     ULONGLONG now = GetTickCount64();
-    if (now - lastStatusUpdate >=
-        250) { // Update every 250ms instead of every delta
-      lastStatusUpdate = now;
-      cachedIsFortnite = IsFortniteForeground();
-      cachedIsCursorVisible = IsCursorCurrentlyVisible();
-      g_isCursorVisible = cachedIsCursorVisible; // Sync global state
-    }
-
     bool isMouseSuspended = (g_mouseSuspendedUntil > 0 && now < g_mouseSuspendedUntil);
 
+    // Use high-frequency caches updated in DetectorThread (10ms polling)
+    // instead of local 250ms caching.
     const bool allowAngleUpdate =
-        (cachedIsFortnite && !cachedIsCursorVisible && !isMouseSuspended);
+        (g_fortniteFocusedCache && !g_isCursorVisible && !isMouseSuspended);
 
     static bool lastAllowAngleUpdate = true;
     if (allowAngleUpdate != lastAllowAngleUpdate) {
