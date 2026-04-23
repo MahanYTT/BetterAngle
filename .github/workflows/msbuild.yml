@@ -19,28 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history for version bumping
-
-      - name: Auto-increment version on main branch
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        shell: pwsh
-        run: |
-          # Calculate commit range for release notes
-          $lastTag = git describe --tags --abbrev=0 2>$null || "v0.0.0"
-          $commitRange = "$lastTag..HEAD"
-          
-          # Run version bump script
-          ./scripts/bump_version.ps1 -CommitRange $commitRange
-          
-          # Configure git for committing changes
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Commit version changes
-          git add VERSION CMakeLists.txt include/shared/State.h RELEASE_NOTES.md
-          git commit -m "chore: auto-increment version for release"
-          git pull --rebase origin main
-          git push
+          fetch-depth: 0
 
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1

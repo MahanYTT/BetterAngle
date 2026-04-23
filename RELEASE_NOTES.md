@@ -1,10 +1,10 @@
-Generating release notes from commit range: v5.0.69..HEAD ### BetterAngle Pro v5.0.70
-- Automated build release.
+### BetterAngle Pro v5.0.70
+- fix: disabled unstable automated version bumping in GitHub Actions to prevent pipeline conflicts. Final production release of the Ghost-Buster movement sync.
 
 ### BetterAngle Pro v5.0.69
 - chore: final production release with Ghost-Buster movement sync and optimized scanner. Resolved pipeline sync issues.
 
-### BetterAngle Pro v5.0.68
+### BetterAngle Pro v5.0.69
 - fix: resolved GDI handle corruption in high-speed overlay. Fixed issue where debug info and crosshair could disappear after the first frame.
 
 ### BetterAngle Pro v5.0.66
