@@ -54,6 +54,7 @@ static void FlushPendingInputMessages() {
 void DetectorThread() {
   bool lastDiving = false;
   bool lastFortniteFocused = false;
+  ULONGLONG peakMatchTimestamp = 0;
 
   while (g_running) {
     if (!g_allProfiles.empty() && g_currentSelection == NONE) {
@@ -67,6 +68,7 @@ void DetectorThread() {
       // Detect Alt-Tab back into Fortnite
       if (!lastFortniteFocused && currentFortniteFocused) {
         g_mouseSuspendedUntil = GetTickCount64() + 1650;
+        g_lockTriggerReason = 3; // Alt-Tab Return
         std::thread([]() {
           // First flush any pending input messages to ensure clean state
           FlushPendingInputMessages();
@@ -103,15 +105,30 @@ void DetectorThread() {
       if (currentFortniteFocused) {
         RoiConfig cfg = {p.roi_x, p.roi_y,        p.roi_w,
                          p.roi_h, p.target_color, p.tolerance};
-        // g_detectionRatio = g_detector.Scan(cfg);
         ULONGLONG startMs = GetTickCount64();
         g_detectionRatio = g_detector.Scan(cfg);
         ULONGLONG endMs = GetTickCount64();
-        g_detectionDelayMs = endMs - startMs;
+        ULONGLONG scanMs = endMs - startMs;
+        g_detectionDelayMs = scanMs;
+
+        // Scanner CPU %: time spent scanning vs total loop period
+        int cpuPct = (scanMs > 0) ? (int)((scanMs * 100) / (scanMs + 10)) : 0;
+        g_scannerCpuPct = cpuPct;
+
+        // Peak match tracking (2s decay window)
+        float currentRatio = g_detectionRatio.load();
+        ULONGLONG now = GetTickCount64();
+        if (now - peakMatchTimestamp > 2000) {
+          g_peakMatchRatio = currentRatio;
+          peakMatchTimestamp = now;
+        } else if (currentRatio > g_peakMatchRatio.load()) {
+          g_peakMatchRatio = currentRatio;
+        }
       } else {
         // Fortnite not focused, reset detection ratio to 0
         g_detectionRatio = 0.0f;
         g_detectionDelayMs = 0;
+        g_scannerCpuPct = 0;
       }
 
       float threshold = p.diveGlideMatch / 100.0f;
@@ -152,6 +169,7 @@ void DetectorThread() {
           }).detach();
           LOG_INFO("Transition: glide->dive, BlockInput for 1000ms with input "
                    "flushing");
+          g_lockTriggerReason = 1; // Glide → Dive
         }
         // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)
         else if (!nowDiving && lastDiving) {
@@ -187,6 +205,7 @@ void DetectorThread() {
           }).detach();
           LOG_INFO("Transition: dive->glide, BlockInput for 1000ms with input "
                    "flushing");
+          g_lockTriggerReason = 2; // Dive → Glide
         }
       }
 

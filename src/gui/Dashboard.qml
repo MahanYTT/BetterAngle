@@ -1017,12 +1017,20 @@ Item {
                                 Text { text: backend.detectionRatioPct + "%"; color: "#00ccff"; font.bold: true; font.pixelSize: 13 }
                             }
                             RowLayout { width: parent.width
+                                Text { text: "Peak Match (2s):"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
+                                Text { text: backend.peakMatchPct + "%"; color: backend.peakMatchPct > 0 ? "#ffaa00" : "#555"; font.bold: true; font.pixelSize: 13 }
+                            }
+                            RowLayout { width: parent.width
                                 Text { text: "Dive State:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
                                 Text { text: backend.isDiving ? "DIVING" : "GLIDING"; color: backend.isDiving ? "#ff5050" : "#50ff80"; font.bold: true; font.pixelSize: 13 }
                             }
                             RowLayout { width: parent.width
                                 Text { text: "Input Locked:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
                                 Text { text: backend.inputLocked ? "YES" : "NO"; color: backend.inputLocked ? "#cc88ff" : "#555"; font.bold: true; font.pixelSize: 13 }
+                            }
+                            RowLayout { width: parent.width
+                                Text { text: "Lock Reason:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
+                                Text { text: backend.lockTriggerReason; color: backend.lockTriggerReason !== "None" ? "#ffaa00" : "#555"; font.bold: true; font.pixelSize: 13 }
                             }
 
                             Rectangle { width: parent.width; height: 1; color: "#222"; }
@@ -1039,6 +1047,22 @@ Item {
                             RowLayout { width: parent.width
                                 Text { text: "Mouse in Fortnite Focus:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
                                 Text { text: backend.fnMouseHidden ? "YES" : "NO"; color: backend.fnMouseHidden ? "#00ffcc" : "#ff4c4c"; font.bold: true; font.pixelSize: 13 }
+                            }
+
+                            Rectangle { width: parent.width; height: 1; color: "#222"; }
+
+                            // System info
+                            RowLayout { width: parent.width
+                                Text { text: "ROI:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
+                                Text { text: backend.roiDimensions; color: "#88aacc"; font.bold: true; font.pixelSize: 13 }
+                            }
+                            RowLayout { width: parent.width
+                                Text { text: "Scanner CPU:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
+                                Text { text: backend.scannerCpuPct + "%"; color: backend.scannerCpuPct < 50 ? "#00ffaa" : "#ff6644"; font.bold: true; font.pixelSize: 13 }
+                            }
+                            RowLayout { width: parent.width
+                                Text { text: "Version:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
+                                Text { text: "v" + backend.versionStr; color: "#666"; font.bold: true; font.pixelSize: 13 }
                             }
                             Item { height: 5 }
                         }

@@ -956,6 +956,39 @@ bool BetterAngleBackend::inputLocked() const {
 }
 bool BetterAngleBackend::isDiving() const { return g_isDiving; }
 
+QString BetterAngleBackend::lockTriggerReason() const {
+  int r = g_lockTriggerReason.load();
+  switch (r) {
+  case 1:
+    return QString::fromUtf8("Glide \xe2\x86\x92 Dive");
+  case 2:
+    return QString::fromUtf8("Dive \xe2\x86\x92 Glide");
+  case 3:
+    return "Alt-Tab Return";
+  default:
+    return "None";
+  }
+}
+
+int BetterAngleBackend::peakMatchPct() const {
+  return (int)(g_peakMatchRatio.load() * 100.0f);
+}
+
+QString BetterAngleBackend::roiDimensions() const {
+  if (g_allProfiles.empty())
+    return "N/A";
+  auto &p = g_allProfiles[g_selectedProfileIdx];
+  return QString("%1,%2 %3x%4")
+      .arg(p.roi_x)
+      .arg(p.roi_y)
+      .arg(p.roi_w)
+      .arg(p.roi_h);
+}
+
+int BetterAngleBackend::scannerCpuPct() const {
+  return g_scannerCpuPct.load();
+}
+
 void BetterAngleBackend::finishBooting() {
   if (g_hHUD) {
     ShowWindow(g_hHUD, SW_SHOW);

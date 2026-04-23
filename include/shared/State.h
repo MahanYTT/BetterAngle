@@ -20,6 +20,9 @@ std::wstring GetProfilesPath();
 extern std::atomic<long long> g_detectionDelayMs;
 extern std::atomic<bool> g_showDebugOverlay;
 extern std::atomic<ULONGLONG> g_mouseSuspendedUntil;
+extern std::atomic<int> g_lockTriggerReason;   // 0=None,1=Glide→Dive,2=Dive→Glide,3=Alt-Tab
+extern std::atomic<float> g_peakMatchRatio;
+extern std::atomic<int> g_scannerCpuPct;
 extern std::atomic<bool> g_fortniteFocusedCache;
 
 extern std::string g_lastVersionRun;
@@ -28,7 +31,7 @@ extern std::string g_lastVersionRun;
 #ifndef V_MAJ
 #define V_MAJ 5
 #define V_MIN 0
-#define V_PAT 39
+#define V_PAT 40
 #endif
 
 #define VERSION_STR APP_STR_Y(V_MAJ) "." APP_STR_Y(V_MIN) "." APP_STR_Y(V_PAT)

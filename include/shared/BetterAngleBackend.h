@@ -55,6 +55,10 @@ class BetterAngleBackend : public QObject {
       int detectionRatioPct READ detectionRatioPct NOTIFY debugDataChanged)
   Q_PROPERTY(bool inputLocked READ inputLocked NOTIFY debugDataChanged)
   Q_PROPERTY(bool isDiving READ isDiving NOTIFY debugDataChanged)
+  Q_PROPERTY(QString lockTriggerReason READ lockTriggerReason NOTIFY debugDataChanged)
+  Q_PROPERTY(int peakMatchPct READ peakMatchPct NOTIFY debugDataChanged)
+  Q_PROPERTY(QString roiDimensions READ roiDimensions NOTIFY debugDataChanged)
+  Q_PROPERTY(int scannerCpuPct READ scannerCpuPct NOTIFY debugDataChanged)
 
   // Custom Keybinds
   Q_PROPERTY(
@@ -118,6 +122,10 @@ public:
   int detectionRatioPct() const;
   bool inputLocked() const;
   bool isDiving() const;
+  QString lockTriggerReason() const;
+  int peakMatchPct() const;
+  QString roiDimensions() const;
+  int scannerCpuPct() const;
   Q_INVOKABLE void refreshDebugData();
 
   Q_INVOKABLE void terminateApp();

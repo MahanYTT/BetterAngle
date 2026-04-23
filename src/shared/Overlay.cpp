@@ -436,7 +436,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
       int dx = rx;
       int dy = ry + rh + 8;
       int dw = rw;
-      int dh = 162; // 9 rows * 16px + padding
+      int dh = 244; // 14 rows * 16px + padding
 
       LinearGradientBrush dbgBrush(Point(dx, dy), Point(dx, dy + dh),
                                    Color(175, 8, 10, 14), Color(175, 3, 5, 8));
@@ -479,13 +479,37 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
               g_detectionDelayMs < 15);
       DrawRow(2, L"Match Ratio:",
               std::to_wstring((int)(detectionRatio * 100)) + L"%");
-      DrawRow(3, L"Threshold:",
+      DrawRow(3, L"Peak Match (2s):",
+              std::to_wstring((int)(g_peakMatchRatio.load() * 100)) + L"%",
+              g_peakMatchRatio.load() < (dbgP.diveGlideMatch / 100.0f));
+      DrawRow(4, L"Threshold:",
               std::to_wstring((int)dbgP.diveGlideMatch) + L"%");
-      DrawRow(4, L"State:", g_isDiving ? L"DIVING" : L"GLIDING", !g_isDiving);
-      DrawRow(5, L"Input Locked:", suspended ? suspStr : L"NO", !suspended);
-      DrawRow(6, L"Fortnite Running:", fnRun ? L"YES" : L"NO", fnRun);
-      DrawRow(7, L"Fortnite Focused:", fnFoc ? L"YES" : L"NO", fnFoc);
-      DrawRow(8, L"Mouse in Fortnite Focus:", msHdd ? L"YES" : L"NO", msHdd);
+      DrawRow(5, L"State:", g_isDiving ? L"DIVING" : L"GLIDING", !g_isDiving);
+      DrawRow(6, L"Input Locked:", suspended ? suspStr : L"NO", !suspended);
+
+      // Lock trigger reason
+      std::wstring reasonStr = L"None";
+      int reason = g_lockTriggerReason.load();
+      if (reason == 1) reasonStr = L"Glide>Dive";
+      else if (reason == 2) reasonStr = L"Dive>Glide";
+      else if (reason == 3) reasonStr = L"Alt-Tab";
+      DrawRow(7, L"Lock Reason:", reasonStr, reason == 0);
+
+      DrawRow(8, L"Fortnite Running:", fnRun ? L"YES" : L"NO", fnRun);
+      DrawRow(9, L"Fortnite Focused:", fnFoc ? L"YES" : L"NO", fnFoc);
+      DrawRow(10, L"Mouse Focus:", msHdd ? L"YES" : L"NO", msHdd);
+
+      // ROI dimensions
+      std::wstring roiStr = std::to_wstring(dbgP.roi_x) + L"," +
+                            std::to_wstring(dbgP.roi_y) + L" " +
+                            std::to_wstring(dbgP.roi_w) + L"x" +
+                            std::to_wstring(dbgP.roi_h);
+      DrawRow(11, L"ROI:", roiStr);
+
+      DrawRow(12, L"Scanner CPU:",
+              std::to_wstring(g_scannerCpuPct.load()) + L"%",
+              g_scannerCpuPct.load() < 50);
+      DrawRow(13, L"Version:", L"v" VERSION_WSTR);
     }
   }
 

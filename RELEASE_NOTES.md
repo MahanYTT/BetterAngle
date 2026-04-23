@@ -1,4 +1,7 @@
-Generating release notes from commit range: v5.0.38..HEAD ### BetterAngle Pro v5.0.39
+### BetterAngle Pro v5.0.40
+- feat: added Lock Trigger Reason, Peak Match (2s), ROI Dimensions, Scanner CPU%, and Version to Debug Dashboard and Overlay
+
+### BetterAngle Pro v5.0.39
 - Automated build release.
 
 ### BetterAngle Pro v5.0.38
