@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.0.33
+- feat: increased Dashboard Debug and HUD refresh rate to 100fps (10ms) for real-time flicker detection
+
 ### BetterAngle Pro v5.0.32
 - fix: implemented exact state debouncing to fix transition flapping and severe input ghosting during Gliding -> Skydiving
 

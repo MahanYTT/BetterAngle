@@ -7,7 +7,7 @@ HBITMAP g_screenSnapshot = NULL;
 bool g_isDiving = false;
 bool g_showROIBox = true;
 int g_currentTab = 0;
-float g_detectionRatio = 0.0f;
+std::atomic<float> g_detectionRatio{0.0f};
 bool g_isCheckingForUpdates = false;
 bool g_hasCheckedForUpdates = false;
 float g_updateSpinAngle = 0.0f;

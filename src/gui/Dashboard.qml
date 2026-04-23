@@ -6,7 +6,7 @@ Item {
     id: root
 
     Timer {
-        interval: 100
+        interval: 10
         running: bar.currentIndex === 3 // Debug tab index
         repeat: true
         onTriggered: backend.refreshDebugData()

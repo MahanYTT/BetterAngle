@@ -794,7 +794,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   SetWindowPos(g_hHUD, HWND_TOPMOST, 0, 0, 0, 0,
                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
   UpdateWindow(g_hHUD);
-  SetTimer(g_hHUD, 1, 16, NULL);    // 60fps (~16ms) Repaint Timer
+  SetTimer(g_hHUD, 1, 10, NULL);    // 100fps (~10ms) Repaint Timer
   SetTimer(g_hHUD, 2, 30000, NULL); // 30s Auto-Save Timer
 
   std::thread detThread(DetectorThread);
