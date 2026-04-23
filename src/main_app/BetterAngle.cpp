@@ -69,6 +69,7 @@ void FocusMonitorThread() {
         BlockInput(TRUE);
         Sleep(1650);
         BlockInput(FALSE);
+        SyncMovementKeys();
       }).detach();
       LOG_INFO("High-Speed Detection: Alt-tab back to Fortnite detected. Input blocked.");
     }
@@ -134,6 +135,7 @@ void DetectorThread() {
             BlockInput(TRUE);
             Sleep(1000);
             BlockInput(FALSE);
+            SyncMovementKeys();
           }).detach();
           LOG_INFO("Transition: glide->dive, Input blocked for 1000ms");
           g_lockTriggerReason = 1; // Glide → Dive
@@ -147,6 +149,7 @@ void DetectorThread() {
             BlockInput(TRUE);
             Sleep(1000);
             BlockInput(FALSE);
+            SyncMovementKeys();
           }).detach();
           LOG_INFO("Transition: dive->glide, Input blocked for 1000ms");
           g_lockTriggerReason = 2; // Dive → Glide

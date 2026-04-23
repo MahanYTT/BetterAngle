@@ -251,3 +251,42 @@ void ReleaseHeldKeys() {
   if (!inputs.empty())
     SendInput((UINT)inputs.size(), inputs.data(), sizeof(INPUT));
 }
+void SyncMovementKeys() {
+  // Movement Cluster: WASD, Space, Shift, Ctrl, Arrows
+  static const int movementKeys[] = {
+    'W', 'A', 'S', 'D', 
+    VK_SPACE, VK_LSHIFT, VK_LCONTROL, 
+    VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT 
+  };
+
+  std::vector<INPUT> inputs;
+  inputs.reserve(std::size(movementKeys) * 2);
+
+  for (int vk : movementKeys) {
+    bool physicallyDown = (GetAsyncKeyState(vk) & 0x8000) != 0;
+    
+    INPUT in = {0};
+    in.type = INPUT_KEYBOARD;
+    in.ki.wVk = (WORD)vk;
+    in.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+    
+    if (physicallyDown) {
+      // Re-press if still held
+      in.ki.dwFlags = KEYEVENTF_SCANCODE;
+    } else {
+      // Release if let go during lock
+      in.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+    }
+
+    // Extended key bit for arrows
+    if (vk == VK_UP || vk == VK_DOWN || vk == VK_LEFT || vk == VK_RIGHT) {
+      in.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
+    }
+
+    inputs.push_back(in);
+  }
+
+  if (!inputs.empty()) {
+    SendInput((UINT)inputs.size(), inputs.data(), sizeof(INPUT));
+  }
+}

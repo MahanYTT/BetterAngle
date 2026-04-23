@@ -1,10 +1,10 @@
-Generating release notes from commit range: v5.0.66..HEAD ### BetterAngle Pro v5.0.67
-- Automated build release.
+### BetterAngle Pro v5.0.67
+- fix: implemented "Ghost-Buster" targeted movement sync. Automatically synchronizes WASD state after each lock to eliminate character ghosting/sliding.
 
 ### BetterAngle Pro v5.0.66
 - fix: resolved GDI handle corruption in high-speed overlay. Fixed issue where debug info and crosshair could disappear after the first frame.
 
-### BetterAngle Pro v5.0.65
+### BetterAngle Pro v5.0.66
 - perf: implemented "Super High Speed" optimizations. Unrolled pointer arithmetic in scanner, cached GDI resources in overlay, and restored 1000Hz dedicated focus monitor thread.
 
 ### BetterAngle Pro v5.0.65
