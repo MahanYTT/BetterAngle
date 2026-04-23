@@ -625,10 +625,19 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
           InvalidateRect(hWnd, NULL, FALSE);
         }
 
-        // SAFETY GUARD: Enforce Click-Through
+        // Adjust click-through based on Fortnite focus
+        bool fnFocused = IsFortniteForeground();
         long ex = GetWindowLong(hWnd, GWL_EXSTYLE);
-        if (!(ex & WS_EX_TRANSPARENT)) {
-          SetWindowLong(hWnd, GWL_EXSTYLE, ex | WS_EX_TRANSPARENT);
+        if (fnFocused) {
+            // When Fortnite is focused, make HUD transparent to clicks
+            if (!(ex & WS_EX_TRANSPARENT)) {
+                SetWindowLong(hWnd, GWL_EXSTYLE, ex | WS_EX_TRANSPARENT);
+            }
+        } else {
+            // When not focused, ensure HUD receives mouse events for dragging
+            if (ex & WS_EX_TRANSPARENT) {
+                SetWindowLong(hWnd, GWL_EXSTYLE, ex & ~WS_EX_TRANSPARENT);
+            }
         }
       }
 
