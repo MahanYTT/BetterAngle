@@ -1037,7 +1037,7 @@ Item {
                                 Text { text: backend.fnFocused ? "YES" : "NO"; color: backend.fnFocused ? "#00ffcc" : "#ff4c4c"; font.bold: true; font.pixelSize: 13 }
                             }
                             RowLayout { width: parent.width
-                                Text { text: "Mouse Hidden:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
+                                Text { text: "Mouse in Fortnite Focus:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
                                 Text { text: backend.fnMouseHidden ? "YES" : "NO"; color: backend.fnMouseHidden ? "#00ffcc" : "#ff4c4c"; font.bold: true; font.pixelSize: 13 }
                             }
                             Item { height: 5 }

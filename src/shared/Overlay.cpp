@@ -488,7 +488,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
       DrawRow(5, L"Input Locked:", suspended ? suspStr : L"NO", !suspended);
       DrawRow(6, L"Fortnite Running:", fnRun ? L"YES" : L"NO", fnRun);
       DrawRow(7, L"Fortnite Focused:", fnFoc ? L"YES" : L"NO", fnFoc);
-      DrawRow(8, L"Mouse Attached:", msHdd ? L"YES" : L"NO", msHdd);
+      DrawRow(8, L"Mouse in Fortnite Focus:", msHdd ? L"YES" : L"NO", msHdd);
       DrawRow(9, L"Profile:", profDisplay);
     }
   }

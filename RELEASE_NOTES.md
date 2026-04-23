@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.0.35
+- fix: updated Debug Dashboard wording from "Mouse Hidden" to "Mouse in Fortnite Focus" for better clarity
+
 ### BetterAngle Pro v5.0.34
 - feat: increased Dashboard Debug and HUD refresh rate to 100fps (10ms) for real-time flicker detection
 
