@@ -50,7 +50,7 @@ static bool CheckFortniteProcessFast() {
   static bool lastRunning = false;
   static ULONGLONG lastCheck = 0;
   ULONGLONG now = GetTickCount64();
-  if (now - lastCheck < 2000)
+  if (now - lastCheck < 500)
     return lastRunning;
   lastCheck = now;
   HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -462,8 +462,8 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
       };
 
       bool fnRun = CheckFortniteProcessFast();
-      bool fnFoc = IsFortniteForeground();
-      bool msHdd = !IsCursorCurrentlyVisible();
+      bool fnFoc = g_fortniteFocusedCache.load();
+      bool msHdd = !g_isCursorVisible.load();
 
       // Compute remaining suspension ms
       std::wstring suspStr = L"NO";
