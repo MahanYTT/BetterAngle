@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.0.22
+- perf: reduced Alt-Tab detection latency from 1000ms to 50ms for near-instant input locking when returning to the game window
+
 ### BetterAngle Pro v5.0.21
 - revert: emergency rollback to stable BlockInput system (V5.0.18 baseline) due to hook detection issues.
 

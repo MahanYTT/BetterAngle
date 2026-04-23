@@ -120,8 +120,8 @@ bool IsFortniteForeground() {
   static bool lastResult = false;
   ULONGLONG now = GetTickCount64();
 
-  // Cache result for 1 second to avoid spamming snapshots
-  if (now - lastCheck < 1000)
+  // Cache result for 50ms to avoid spamming snapshots
+  if (now - lastCheck < 50)
     return lastResult;
 
   lastCheck = now;

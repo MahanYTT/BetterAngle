@@ -71,8 +71,8 @@ void DetectorThread() {
           // First flush any pending input messages to ensure clean state
           FlushPendingInputMessages();
 
-          // Small delay to allow flush to take effect
-          Sleep(5);
+          // Minimal sleep to allow flush to reach queue
+          Sleep(1);
 
           // Record keys pressed before blocking (after flush)
           std::vector<int> preKeys;
