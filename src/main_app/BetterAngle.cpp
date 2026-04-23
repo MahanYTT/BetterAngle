@@ -117,75 +117,77 @@ void DetectorThread() {
       float threshold = p.diveGlideMatch / 100.0f;
       bool nowDiving = (g_detectionRatio >= threshold);
 
-      // Edge: Gliding -> Diving  (FOV zoom-in anim ~1.0s)
-      if (nowDiving && !lastDiving) {
-        g_mouseSuspendedUntil = GetTickCount64() + 1000;
-        std::thread([]() {
-          // First flush any pending input messages to ensure clean state
-          FlushPendingInputMessages();
+      if (GetTickCount64() >= g_mouseSuspendedUntil) {
+        // Edge: Gliding -> Diving  (FOV zoom-in anim ~1.0s)
+        if (nowDiving && !lastDiving) {
+          g_mouseSuspendedUntil = GetTickCount64() + 1000;
+          std::thread([]() {
+            // First flush any pending input messages to ensure clean state
+            FlushPendingInputMessages();
 
-          // Minimal sleep to allow flush to reach queue
-          Sleep(1);
+            // Minimal sleep to allow flush to reach queue
+            Sleep(1);
 
-          // Record keys pressed before blocking (after flush)
-          std::vector<int> preKeys;
-          for (int i = 1; i < 255; i++) {
-            if (GetAsyncKeyState(i) & 0x8000)
-              preKeys.push_back(i);
-          }
+            // Record keys pressed before blocking (after flush)
+            std::vector<int> preKeys;
+            for (int i = 1; i < 255; i++) {
+              if (GetAsyncKeyState(i) & 0x8000)
+                preKeys.push_back(i);
+            }
 
-          // Block all input (keyboard and mouse) immediately after recording
-          BlockInput(TRUE);
-          Sleep(1000);
-          BlockInput(FALSE);
+            // Block all input (keyboard and mouse) immediately after recording
+            BlockInput(TRUE);
+            Sleep(1000);
+            BlockInput(FALSE);
 
-          // Small delay to allow system to process block release
-          Sleep(20);
+            // Small delay to allow system to process block release
+            Sleep(20);
 
-          // Sync key states to prevent ghosting (handles both KEYUP and
-          // KEYDOWN)
-          SyncKeyStates(preKeys);
+            // Sync key states to prevent ghosting (handles both KEYUP and
+            // KEYDOWN)
+            SyncKeyStates(preKeys);
 
-          // Additional flush after syncing to ensure clean state
-          FlushPendingInputMessages();
-        }).detach();
-        LOG_INFO("Transition: glide->dive, BlockInput for 1000ms with input "
-                 "flushing");
-      }
-      // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)
-      else if (!nowDiving && lastDiving) {
-        g_mouseSuspendedUntil = GetTickCount64() + 1000;
-        std::thread([]() {
-          // First flush any pending input messages to ensure clean state
-          FlushPendingInputMessages();
+            // Additional flush after syncing to ensure clean state
+            FlushPendingInputMessages();
+          }).detach();
+          LOG_INFO("Transition: glide->dive, BlockInput for 1000ms with input "
+                   "flushing");
+        }
+        // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)
+        else if (!nowDiving && lastDiving) {
+          g_mouseSuspendedUntil = GetTickCount64() + 1000;
+          std::thread([]() {
+            // First flush any pending input messages to ensure clean state
+            FlushPendingInputMessages();
 
-          // Minimal sleep to allow flush to reach queue
-          Sleep(1);
+            // Minimal sleep to allow flush to reach queue
+            Sleep(1);
 
-          // Record keys pressed before blocking (after flush)
-          std::vector<int> preKeys;
-          for (int i = 1; i < 255; i++) {
-            if (GetAsyncKeyState(i) & 0x8000)
-              preKeys.push_back(i);
-          }
+            // Record keys pressed before blocking (after flush)
+            std::vector<int> preKeys;
+            for (int i = 1; i < 255; i++) {
+              if (GetAsyncKeyState(i) & 0x8000)
+                preKeys.push_back(i);
+            }
 
-          // Block all input (keyboard and mouse) immediately after recording
-          BlockInput(TRUE);
-          Sleep(1000);
-          BlockInput(FALSE);
+            // Block all input (keyboard and mouse) immediately after recording
+            BlockInput(TRUE);
+            Sleep(1000);
+            BlockInput(FALSE);
 
-          // Small delay to allow system to process block release
-          Sleep(20);
+            // Small delay to allow system to process block release
+            Sleep(20);
 
-          // Sync key states to prevent ghosting (handles both KEYUP and
-          // KEYDOWN)
-          SyncKeyStates(preKeys);
+            // Sync key states to prevent ghosting (handles both KEYUP and
+            // KEYDOWN)
+            SyncKeyStates(preKeys);
 
-          // Additional flush after syncing to ensure clean state
-          FlushPendingInputMessages();
-        }).detach();
-        LOG_INFO("Transition: dive->glide, BlockInput for 1000ms with input "
-                 "flushing");
+            // Additional flush after syncing to ensure clean state
+            FlushPendingInputMessages();
+          }).detach();
+          LOG_INFO("Transition: dive->glide, BlockInput for 1000ms with input "
+                   "flushing");
+        }
       }
 
       // Reset UI tracker once timer expires

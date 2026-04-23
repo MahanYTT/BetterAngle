@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.0.31
+- fix: implemented exact state debouncing to fix transition flapping and severe input ghosting during Gliding -> Skydiving
+
 ### BetterAngle Pro v5.0.30
 - feat: made the Debug tab in the Dashboard scrollable for better accessibility on smaller screens
 
