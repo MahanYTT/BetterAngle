@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.30..HEAD ### BetterAngle Pro v5.0.31
+- Automated build release.
+
 ### BetterAngle Pro v5.0.30
 - feat: made the Debug tab in the Dashboard scrollable for better accessibility on smaller screens
 
