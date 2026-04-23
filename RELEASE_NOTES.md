@@ -1,10 +1,11 @@
-Generating release notes from commit range: v5.0.60..HEAD ### BetterAngle Pro v5.0.61
-- Automated build release.
+### BetterAngle Pro v5.0.62
+- fix: implemented physical key state resumption in SyncKeyStates. Now automatically "re-presses" any keys you are still holding when the input unblocks, ensuring seamless movement.
+
+### BetterAngle Pro v5.0.61
+- fix: upgraded application to Per-Monitor DPI Awareness V2. Ensures physical pixel alignment of the crosshair across multiple monitors with different resolutions and scales.
 
 ### BetterAngle Pro v5.0.60
 - fix: added ReleaseHeldKeys() call before every BlockInput(TRUE) to synthesize KEYUP events for all physically-held keys, eliminating character ghosting/sliding during lock windows.
-
-### BetterAngle Pro v5.0.59
 - perf: implemented zero-latency synchronous input locking across all triggers (Alt-Tab, Dive/Glide transitions), bypassing Windows scheduler delays.
 - perf: optimized pixel traversal in the color matching loop using direct pointer arithmetic for maximum speed.
 
