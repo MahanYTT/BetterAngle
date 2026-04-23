@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.11..HEAD ### BetterAngle Pro v5.0.2
+- Restore version to 5.0.1 for brand new release
+
 Generating release notes from commit range: v5.0.10..HEAD ### BetterAngle Pro v5.0.11
 - Increase alt-tab physical mouse lock duration to 1.6s
 
