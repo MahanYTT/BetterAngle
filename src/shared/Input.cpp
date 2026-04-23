@@ -2,6 +2,7 @@
 #include <cwchar>
 #include <tlhelp32.h>
 #include <windows.h>
+#include "shared/State.h"
 
 namespace {
 bool IsFortniteProcessName(const wchar_t *processName) {
@@ -174,75 +175,56 @@ bool IsCursorCurrentlyVisible() {
   return (cursorInfo.flags & CURSOR_SHOWING) != 0;
 }
 
-void SyncKeyStates(const std::vector<int>& preBlockKeys) {
-  // Sync physical hardware state with logical state after a BlockInput window.
-  // Re-evaluates all 255 virtual keys.
-  for (int vk = 1; vk < 255; vk++) {
-    bool downBefore = false;
-    for (int pre_vk : preBlockKeys) {
-      if (pre_vk == vk) {
-        downBefore = true;
-        break;
-      }
-    }
+HHOOK g_hKeyboardHook = NULL;
+HHOOK g_hMouseHook = NULL;
 
-    bool downAfter = (GetAsyncKeyState(vk) & 0x8000) != 0;
+LRESULT CALLBACK KeyboardHookProc(int nCode, WPARAM wParam, LPARAM lParam) {
+  if (nCode == HC_ACTION) {
+    ULONGLONG lockUntil = g_hardwareLockUntil.load();
+    if (lockUntil > 0 && GetTickCount64() < lockUntil) {
+      // Hardware is locked. Allow KEYUP to prevent ghosting.
+      if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
+        return CallNextHookEx(NULL, nCode, wParam, lParam);
+      }
+      // Block KEYDOWN, SYSKEYDOWN
+      return 1; 
+    }
+  }
+  return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
 
-    if (downBefore && !downAfter) {
-      // Key was physically released while blocked. The system ate the KEYUP.
-      // We must synthesize it to prevent game character ghosting.
-      INPUT in = {0};
-      
-      if (vk == VK_LBUTTON || vk == VK_RBUTTON || vk == VK_MBUTTON || vk == VK_XBUTTON1 || vk == VK_XBUTTON2) {
-        in.type = INPUT_MOUSE;
-        if (vk == VK_LBUTTON) in.mi.dwFlags = MOUSEEVENTF_LEFTUP;
-        else if (vk == VK_RBUTTON) in.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
-        else if (vk == VK_MBUTTON) in.mi.dwFlags = MOUSEEVENTF_MIDDLEUP;
-        else if (vk == VK_XBUTTON1) { in.mi.dwFlags = MOUSEEVENTF_XUP; in.mi.mouseData = XBUTTON1; }
-        else if (vk == VK_XBUTTON2) { in.mi.dwFlags = MOUSEEVENTF_XUP; in.mi.mouseData = XBUTTON2; }
-      } else {
-        in.type = INPUT_KEYBOARD;
-        in.ki.wVk = vk;
-        in.ki.wScan = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-        in.ki.dwFlags = KEYEVENTF_KEYUP | KEYEVENTF_SCANCODE;
-        // Extend arrows etc.
-        switch(vk) {
-            case VK_UP: case VK_DOWN: case VK_LEFT: case VK_RIGHT:
-            case VK_INSERT: case VK_DELETE: case VK_HOME: case VK_END:
-            case VK_PRIOR: case VK_NEXT: case VK_RCONTROL: case VK_RMENU:
-                in.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
-                break;
-        }
+LRESULT CALLBACK MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam) {
+  if (nCode == HC_ACTION) {
+    ULONGLONG lockUntil = g_hardwareLockUntil.load();
+    if (lockUntil > 0 && GetTickCount64() < lockUntil) {
+      // Hardware is locked. Allow MOUSEUP to prevent stuck buttons.
+      if (wParam == WM_LBUTTONUP || wParam == WM_RBUTTONUP || 
+          wParam == WM_MBUTTONUP || wParam == WM_XBUTTONUP) {
+        return CallNextHookEx(NULL, nCode, wParam, lParam);
       }
-      SendInput(1, &in, sizeof(INPUT));
+      // Block MOUSEMOVE, MOUSEDOWN, MOUSEWHEEL
+      return 1;
     }
-    else if (!downBefore && downAfter) {
-      // Key was physically pressed while blocked. The system ate the KEYDOWN.
-      // We must synthesize it to prevent keys appearing stuck.
-      INPUT in = {0};
-      
-      if (vk == VK_LBUTTON || vk == VK_RBUTTON || vk == VK_MBUTTON || vk == VK_XBUTTON1 || vk == VK_XBUTTON2) {
-        in.type = INPUT_MOUSE;
-        if (vk == VK_LBUTTON) in.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
-        else if (vk == VK_RBUTTON) in.mi.dwFlags = MOUSEEVENTF_RIGHTDOWN;
-        else if (vk == VK_MBUTTON) in.mi.dwFlags = MOUSEEVENTF_MIDDLEDOWN;
-        else if (vk == VK_XBUTTON1) { in.mi.dwFlags = MOUSEEVENTF_XDOWN; in.mi.mouseData = XBUTTON1; }
-        else if (vk == VK_XBUTTON2) { in.mi.dwFlags = MOUSEEVENTF_XDOWN; in.mi.mouseData = XBUTTON2; }
-      } else {
-        in.type = INPUT_KEYBOARD;
-        in.ki.wVk = vk;
-        in.ki.wScan = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-        in.ki.dwFlags = KEYEVENTF_SCANCODE; // KEYDOWN, not KEYUP
-        // Extend arrows etc.
-        switch(vk) {
-            case VK_UP: case VK_DOWN: case VK_LEFT: case VK_RIGHT:
-            case VK_INSERT: case VK_DELETE: case VK_HOME: case VK_END:
-            case VK_PRIOR: case VK_NEXT: case VK_RCONTROL: case VK_RMENU:
-                in.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
-                break;
-        }
-      }
-      SendInput(1, &in, sizeof(INPUT));
-    }
+  }
+  return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
+
+void InstallHardwareHooks() {
+  if (!g_hKeyboardHook) {
+    g_hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardHookProc, GetModuleHandle(NULL), 0);
+  }
+  if (!g_hMouseHook) {
+    g_hMouseHook = SetWindowsHookEx(WH_MOUSE_LL, MouseHookProc, GetModuleHandle(NULL), 0);
+  }
+}
+
+void UninstallHardwareHooks() {
+  if (g_hKeyboardHook) {
+    UnhookWindowsHookEx(g_hKeyboardHook);
+    g_hKeyboardHook = NULL;
+  }
+  if (g_hMouseHook) {
+    UnhookWindowsHookEx(g_hMouseHook);
+    g_hMouseHook = NULL;
   }
 }
