@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.26..HEAD ### BetterAngle Pro v5.0.27
+- Automated build release.
+
 Generating release notes from commit range: v5.0.21..HEAD ### BetterAngle Pro v5.0.25
 - fix: increase glide to dive lock duration (v5.0.24)
 - chore: auto-increment version for release
