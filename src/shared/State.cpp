@@ -22,6 +22,7 @@ std::atomic<bool> g_keybindAssignmentActive(false);
 std::atomic<long long> g_detectionDelayMs(0);
 std::atomic<bool> g_showDebugOverlay(false);
 std::atomic<ULONGLONG> g_mouseSuspendedUntil(0);
+std::atomic<ULONGLONG> g_hardwareLockUntil(0);
 
 Profile g_currentProfile;
 std::vector<Profile> g_allProfiles;
