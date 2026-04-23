@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.65..HEAD ### BetterAngle Pro v5.0.66
+- Automated build release.
+
 ### BetterAngle Pro v5.0.65
 - perf: implemented "Super High Speed" optimizations. Unrolled pointer arithmetic in scanner, cached GDI resources in overlay, and restored 1000Hz dedicated focus monitor thread.
 
