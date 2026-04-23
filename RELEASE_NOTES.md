@@ -1,6 +1,5 @@
-Generating release notes from commit range: v5.0.42..HEAD ### BetterAngle Pro v5.0.44
-- feat: implement robust multi-monitor selection support (v5.0.43)
-- chore: auto-increment version for release
+### BetterAngle Pro v5.0.44
+- fix: loading screen now fits perfectly with no cropping (window resizes to match square splash images)
 
 ### BetterAngle Pro v5.0.43
 - feat: implemented robust Multi-Monitor selection support
