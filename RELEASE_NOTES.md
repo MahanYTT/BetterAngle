@@ -1,10 +1,13 @@
-Generating release notes from commit range: v5.0.54..HEAD ### BetterAngle Pro v5.0.55
+### BetterAngle Pro v5.0.56
+- feat: implemented a high-frequency (1000Hz) dedicated focus monitoring thread for lightning-fast Fortnite detection and near-instant input locking on Alt-Tab return.
+
+### BetterAngle Pro v5.0.55
 - Automated build release.
 
 ### BetterAngle Pro v5.0.54
 - HOTFIX: Re-architected crosshair drawing logic to calculate exact center bounds for the explicitly chosen monitor from the Settings Drop-down (g_screenIndex) rather than defaulting to the center of the total virtual desktop space.
 
-### BetterAngle Pro v5.0.53
+### BetterAngle Pro v5.0.54
 - Automated build release.
 
 ### BetterAngle Pro v5.0.52
