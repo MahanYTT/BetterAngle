@@ -53,14 +53,52 @@ static void FlushPendingInputMessages() {
 // FOV Detector Thread
 void DetectorThread() {
   bool lastDiving = false;
+  bool lastFortniteFocused = false;
 
   while (g_running) {
     if (!g_allProfiles.empty() && g_currentSelection == NONE) {
       Profile &p = g_allProfiles[g_selectedProfileIdx];
       g_logic.LoadProfile(p.sensitivityX);
 
+      bool currentFortniteFocused = IsFortniteForeground();
+
+      // Detect Alt-Tab back into Fortnite
+      if (!lastFortniteFocused && currentFortniteFocused) {
+        g_mouseSuspendedUntil = GetTickCount64() + 1650;
+        std::thread([]() {
+          // First flush any pending input messages to ensure clean state
+          FlushPendingInputMessages();
+
+          // Small delay to allow flush to take effect
+          Sleep(5);
+
+          // Record keys pressed before blocking (after flush)
+          std::vector<int> preKeys;
+          for (int i = 1; i < 255; i++) {
+            if (GetAsyncKeyState(i) & 0x8000)
+              preKeys.push_back(i);
+          }
+
+          // Block all input (keyboard and mouse) immediately after recording
+          BlockInput(TRUE);
+          Sleep(1650);
+          BlockInput(FALSE);
+
+          // Small delay to allow system to process block release
+          Sleep(20);
+
+          // Sync key states to prevent ghosting (handles both KEYUP and KEYDOWN)
+          SyncKeyStates(preKeys);
+
+          // Additional flush after syncing to ensure clean state
+          FlushPendingInputMessages();
+        }).detach();
+        LOG_INFO("Transition: alt-tab back to Fortnite, BlockInput for 1650ms with input flushing");
+      }
+      lastFortniteFocused = currentFortniteFocused;
+
       // Only scan ROI when Fortnite is the foreground window
-      if (IsFortniteForeground()) {
+      if (currentFortniteFocused) {
         RoiConfig cfg = {p.roi_x, p.roi_y,        p.roi_w,
                          p.roi_h, p.target_color, p.tolerance};
         // g_detectionRatio = g_detector.Scan(cfg);
@@ -308,7 +346,6 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
     static ULONGLONG lastStatusUpdate = 0;
     static bool cachedIsFortnite = false;
     static bool cachedIsCursorVisible = false;
-    static bool cachedMouseSuspended = false;
 
     ULONGLONG now = GetTickCount64();
     if (now - lastStatusUpdate >=
@@ -316,13 +353,13 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
       lastStatusUpdate = now;
       cachedIsFortnite = IsFortniteForeground();
       cachedIsCursorVisible = IsCursorCurrentlyVisible();
-      cachedMouseSuspended =
-          (g_mouseSuspendedUntil > 0 && now < g_mouseSuspendedUntil);
       g_isCursorVisible = cachedIsCursorVisible; // Sync global state
     }
 
+    bool isMouseSuspended = (g_mouseSuspendedUntil > 0 && now < g_mouseSuspendedUntil);
+
     const bool allowAngleUpdate =
-        (cachedIsFortnite && !cachedIsCursorVisible && !cachedMouseSuspended);
+        (cachedIsFortnite && !cachedIsCursorVisible && !isMouseSuspended);
 
     static bool lastAllowAngleUpdate = true;
     if (allowAngleUpdate != lastAllowAngleUpdate) {
