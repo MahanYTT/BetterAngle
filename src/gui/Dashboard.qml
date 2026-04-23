@@ -116,7 +116,10 @@ Item {
                             model: backend.availableScreens
                             currentIndex: backend.screenIndex
                             onActivated: backend.screenIndex = index
-                            
+                            Connections {
+                                target: backend
+                                onProfileChanged: monitorCombo.currentIndex = backend.screenIndex
+                            }
                             contentItem: Text {
                                 text: monitorCombo.displayText
                                 color: "white"

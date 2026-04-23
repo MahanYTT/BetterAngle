@@ -226,8 +226,6 @@ void DetectorThread() {
 
 
 // Screen Snapshot for Flicker-Free Selection (v4.9.15)
-
-// Screen Snapshot for Flicker-Free Selection (v4.9.15)
 void CaptureDesktop() {
   int sw = GetSystemMetrics(SM_CXVIRTUALSCREEN);
   int sh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
@@ -772,6 +770,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   g_crossAngle = g_currentProfile.crossAngle;
   g_crossPulse = g_currentProfile.crossPulse;
   g_showCrosshair = g_currentProfile.showCrosshair;
+
+  // Sync monitor index from profile BEFORE using it to offset ROI coords
+  g_screenIndex = g_currentProfile.screenIndex;
 
   // Sync Trigger Calibration from Profile to Global State
   RECT mRect = GetMonitorRectByIndex(g_screenIndex);
