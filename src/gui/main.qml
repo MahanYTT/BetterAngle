@@ -17,9 +17,6 @@ Window {
     color: "#0a0a0f"
     
     property bool isBooting: true
-    // perfectly (no cropping). On boot complete, change back to dashboard size.
-    height: isBooting ? 650 : 480
-    minimumHeight: isBooting ? 650 : 350
 
     Timer {
         id: bootTimer

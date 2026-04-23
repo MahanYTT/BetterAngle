@@ -1,8 +1,10 @@
-Generating release notes from commit range: v5.0.48..HEAD ### BetterAngle Pro v5.0.49
+### BetterAngle Pro v5.0.50
+- HOTFIX: Resolved critical QML syntax error (duplicate properties) that caused the dashboard to fail on boot.
+
+### BetterAngle Pro v5.0.49
 - Automated build release.
 
 ### BetterAngle Pro v5.0.48
-- fix: perfectly scaled the splash screen images so they fit the standard window bounds without distortion, black bars, or cropping.
 
 ### BetterAngle Pro v5.0.47
 - Automated build release.
