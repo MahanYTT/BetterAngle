@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.60..HEAD ### BetterAngle Pro v5.0.61
+- Automated build release.
+
 ### BetterAngle Pro v5.0.60
 - fix: added ReleaseHeldKeys() call before every BlockInput(TRUE) to synthesize KEYUP events for all physically-held keys, eliminating character ghosting/sliding during lock windows.
 
