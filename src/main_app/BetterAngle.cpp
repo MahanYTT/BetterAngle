@@ -37,6 +37,18 @@ ULONG_PTR g_gdiplusToken;
 std::atomic<bool> g_running(true);
 FovDetector g_detector;
 
+// Helper function to flush pending input messages before blocking
+static void FlushPendingInputMessages() {
+  MSG msg;
+  // Remove all pending keyboard and mouse messages from the queue
+  while (PeekMessageW(&msg, NULL, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE)) {
+  }
+  while (PeekMessageW(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE)) {
+  }
+  // Also flush any other input messages
+  while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
+  }
+}
 
 // FOV Detector Thread
 void DetectorThread() {
@@ -55,8 +67,35 @@ void DetectorThread() {
       // Detect Alt-Tab back into Fortnite
       if (!lastFortniteFocused && currentFortniteFocused) {
         g_mouseSuspendedUntil = GetTickCount64() + 1650;
-        g_hardwareLockUntil = GetTickCount64() + 1650;
-        LOG_INFO("Transition: alt-tab back to Fortnite, hardware lock for 1650ms");
+        std::thread([]() {
+          // First flush any pending input messages to ensure clean state
+          FlushPendingInputMessages();
+
+          // Small delay to allow flush to take effect
+          Sleep(5);
+
+          // Record keys pressed before blocking (after flush)
+          std::vector<int> preKeys;
+          for (int i = 1; i < 255; i++) {
+            if (GetAsyncKeyState(i) & 0x8000)
+              preKeys.push_back(i);
+          }
+
+          // Block all input (keyboard and mouse) immediately after recording
+          BlockInput(TRUE);
+          Sleep(1650);
+          BlockInput(FALSE);
+
+          // Small delay to allow system to process block release
+          Sleep(20);
+
+          // Sync key states to prevent ghosting (handles both KEYUP and KEYDOWN)
+          SyncKeyStates(preKeys);
+
+          // Additional flush after syncing to ensure clean state
+          FlushPendingInputMessages();
+        }).detach();
+        LOG_INFO("Transition: alt-tab back to Fortnite, BlockInput for 1650ms with input flushing");
       }
       lastFortniteFocused = currentFortniteFocused;
 
@@ -81,14 +120,72 @@ void DetectorThread() {
       // Edge: Gliding -> Diving  (FOV zoom-in anim ~0.25s)
       if (nowDiving && !lastDiving) {
         g_mouseSuspendedUntil = GetTickCount64() + 250;
-        g_hardwareLockUntil = GetTickCount64() + 250;
-        LOG_INFO("Transition: glide->dive, hardware lock for 250ms");
+        std::thread([]() {
+          // First flush any pending input messages to ensure clean state
+          FlushPendingInputMessages();
+
+          // Small delay to allow flush to take effect
+          Sleep(5);
+
+          // Record keys pressed before blocking (after flush)
+          std::vector<int> preKeys;
+          for (int i = 1; i < 255; i++) {
+            if (GetAsyncKeyState(i) & 0x8000)
+              preKeys.push_back(i);
+          }
+
+          // Block all input (keyboard and mouse) immediately after recording
+          BlockInput(TRUE);
+          Sleep(250);
+          BlockInput(FALSE);
+
+          // Small delay to allow system to process block release
+          Sleep(20);
+
+          // Sync key states to prevent ghosting (handles both KEYUP and
+          // KEYDOWN)
+          SyncKeyStates(preKeys);
+
+          // Additional flush after syncing to ensure clean state
+          FlushPendingInputMessages();
+        }).detach();
+        LOG_INFO("Transition: glide->dive, BlockInput for 250ms with input "
+                 "flushing");
       }
       // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)
       else if (!nowDiving && lastDiving) {
         g_mouseSuspendedUntil = GetTickCount64() + 1000;
-        g_hardwareLockUntil = GetTickCount64() + 1000;
-        LOG_INFO("Transition: dive->glide, hardware lock for 1000ms");
+        std::thread([]() {
+          // First flush any pending input messages to ensure clean state
+          FlushPendingInputMessages();
+
+          // Small delay to allow flush to take effect
+          Sleep(5);
+
+          // Record keys pressed before blocking (after flush)
+          std::vector<int> preKeys;
+          for (int i = 1; i < 255; i++) {
+            if (GetAsyncKeyState(i) & 0x8000)
+              preKeys.push_back(i);
+          }
+
+          // Block all input (keyboard and mouse) immediately after recording
+          BlockInput(TRUE);
+          Sleep(1000);
+          BlockInput(FALSE);
+
+          // Small delay to allow system to process block release
+          Sleep(20);
+
+          // Sync key states to prevent ghosting (handles both KEYUP and
+          // KEYDOWN)
+          SyncKeyStates(preKeys);
+
+          // Additional flush after syncing to ensure clean state
+          FlushPendingInputMessages();
+        }).detach();
+        LOG_INFO("Transition: dive->glide, BlockInput for 1000ms with input "
+                 "flushing");
       }
 
       // Reset UI tracker once timer expires
@@ -700,8 +797,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
   std::thread detThread(DetectorThread);
 
-  InstallHardwareHooks();
-
   // Run Qt Event Loop
   int exitCode = app.exec();
   LOG_INFO("Qt event loop exited with code=%d", exitCode);
@@ -719,7 +814,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
   SaveSettings();
 
-  UninstallHardwareHooks();
   RemoveSystrayIcon(g_hHUD);
   GdiplusShutdown(g_gdiplusToken);
   ShutdownEnhancedLogging();
