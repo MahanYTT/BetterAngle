@@ -1,5 +1,7 @@
+### BetterAngle Pro v5.0.47
+- fix: perfectly scaled the splash screen images so they fit the standard window bounds without distortion, black bars, or cropping.
+
 ### BetterAngle Pro v5.0.46
-- fix: loading screen now fits perfectly with no cropping (window resizes to match square splash images)
 
 ### BetterAngle Pro v5.0.45
 - fix: bulletproof multi-monitor - sync screenIndex from profile on load, fix ComboBox binding
