@@ -1,13 +1,8 @@
-Generating release notes from commit range: v5.0.26..HEAD ### BetterAngle Pro v5.0.27
-- Automated build release.
+### BetterAngle Pro v5.0.28
+- fix: disabled HUD dragging whenever Fortnite is in focus to prevent accidental UI movement during gameplay (maps/menus)
 
-Generating release notes from commit range: v5.0.21..HEAD ### BetterAngle Pro v5.0.25
-- fix: increase glide to dive lock duration (v5.0.24)
-- chore: auto-increment version for release
-- perf: absolute zero-latency focus detection (v5.0.23)
-- chore: auto-increment version for release
-- perf: reduce alt-tab detection latency (v5.0.22)
-- chore: auto-increment version for release
+### BetterAngle Pro v5.0.27
+- Automated build release.
 
 ### BetterAngle Pro v5.0.26
 - perf: optimized dive -> glide transition latency (reduced from 5ms to 1ms) for instant input locking
