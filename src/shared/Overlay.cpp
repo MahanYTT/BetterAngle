@@ -268,9 +268,18 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
       int sx = GetSystemMetrics(SM_XVIRTUALSCREEN);
       int sy = GetSystemMetrics(SM_YVIRTUALSCREEN);
 
+      // Clip graphics rendering strictly to the selected monitor's boundaries
+      // so the massive crosshair lines don't bleed onto other screens
+      int clientMonX = mRect.left - sx;
+      int clientMonY = mRect.top - sy;
+      int monW = mRect.right - mRect.left;
+      int monH = mRect.bottom - mRect.top;
+      
+      graphics.SetClip(Rect(clientMonX, clientMonY, monW, monH));
+
       // Map the monitor's center to the HUD's client coordinate space
-      float cx = (mRect.left - sx) + (mRect.right - mRect.left) * 0.5f + g_crossOffsetX;
-      float cy = (mRect.top - sy) + (mRect.bottom - mRect.top) * 0.5f + g_crossOffsetY;
+      float cx = clientMonX + monW * 0.5f + g_crossOffsetX;
+      float cy = clientMonY + monH * 0.5f + g_crossOffsetY;
       // Make crosshair massive like the Java reference
       float hw = (sw > sh ? sw : sh) * 3.0f;
       float hh = hw;
@@ -340,6 +349,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
 
       graphics.DrawPath(&cPen, &crossPath);
       graphics.ResetTransform();
+      graphics.ResetClip();
     }
 
     // HUD box

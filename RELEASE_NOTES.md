@@ -1,5 +1,7 @@
+### BetterAngle Pro v5.0.57
+- fix: implemented exact client clipping boundaries for the crosshair graphics context to prevent line bleeding across multi-monitor setups. 
+
 ### BetterAngle Pro v5.0.56
-- feat: implemented a high-frequency (1000Hz) dedicated focus monitoring thread for lightning-fast Fortnite detection and near-instant input locking on Alt-Tab return.
 
 ### BetterAngle Pro v5.0.55
 - Automated build release.
