@@ -50,45 +50,7 @@ static void FlushPendingInputMessages() {
   }
 }
 
-// FOV Detector Thread
-// High-frequency thread to detect Fortnite focus changes instantly (Alt-Tab detection)
-void FocusMonitorThread() {
-  bool lastFortniteFocused = false;
-  while (g_running) {
-    bool currentFortniteFocused = IsFortniteForeground();
-    g_fortniteFocusedCache = currentFortniteFocused;
 
-    // Detect Alt-Tab back into Fortnite with ultra-low latency (1ms polling)
-    if (!lastFortniteFocused && currentFortniteFocused) {
-      g_mouseSuspendedUntil = GetTickCount64() + 1650;
-      g_lockTriggerReason = 3; // Alt-Tab Return
-
-      // Record keys synchronously BEFORE locking
-      std::vector<int> preKeys;
-      for (int i = 1; i < 255; i++) {
-        if (GetAsyncKeyState(i) & 0x8000)
-          preKeys.push_back(i);
-      }
-
-      // Release all held keys BEFORE blocking so the game receives the KEYUP events
-      // and immediately stops character movement (eliminates ghosting/sliding).
-      ReleaseHeldKeys();
-      // INSTANT LOCK: Execute synchronously, skipping thread spawn latency and scheduler delays
-      BlockInput(TRUE);
-
-      std::thread([preKeys]() {
-        Sleep(1650);
-        BlockInput(FALSE);
-        Sleep(20);
-        SyncKeyStates(preKeys);
-        FlushPendingInputMessages();
-      }).detach();
-      LOG_INFO("High-Speed Detection: Alt-tab back to Fortnite detected. Input instantly blocked.");
-    }
-    lastFortniteFocused = currentFortniteFocused;
-    Sleep(1); // 1000Hz polling for lightning fast focus detection
-  }
-}
 
 // FOV Detector Thread - Now focused solely on ROI scanning
 void DetectorThread() {
@@ -100,9 +62,22 @@ void DetectorThread() {
       Profile &p = g_allProfiles[g_selectedProfileIdx];
       g_logic.LoadProfile(p.sensitivityX);
 
-      // Use the high-frequency cache from FocusMonitorThread
-      bool currentFortniteFocused = g_fortniteFocusedCache.load();
+      bool currentFortniteFocused = IsFortniteForeground();
       g_isCursorVisible = IsCursorCurrentlyVisible();
+
+      // Detect Alt-Tab back into Fortnite
+      static bool lastFortniteFocused = false;
+      if (!lastFortniteFocused && currentFortniteFocused) {
+        g_mouseSuspendedUntil = GetTickCount64() + 1650;
+        g_lockTriggerReason = 3; // Alt-Tab Return
+        std::thread([]() {
+          BlockInput(TRUE);
+          Sleep(1650);
+          BlockInput(FALSE);
+        }).detach();
+        LOG_INFO("Alt-tab back to Fortnite detected. Input blocked for 1650ms.");
+      }
+      lastFortniteFocused = currentFortniteFocused;
 
       // Only scan ROI when Fortnite is the foreground window
       if (currentFortniteFocused) {
@@ -143,54 +118,26 @@ void DetectorThread() {
         if (nowDiving && !lastDiving) {
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
           
-          // Record keys synchronously BEFORE locking
-          std::vector<int> preKeys;
-          for (int i = 1; i < 255; i++) {
-            if (GetAsyncKeyState(i) & 0x8000)
-              preKeys.push_back(i);
-          }
-
-          // Release all held keys BEFORE blocking so the game receives the KEYUP events
-          // and immediately stops character movement (eliminates ghosting/sliding).
-          ReleaseHeldKeys();
-          // INSTANT LOCK: Execute synchronously, skipping thread spawn latency and scheduler delays
-          BlockInput(TRUE);
-
-          std::thread([preKeys]() {
+          // Async Lock
+          std::thread([]() {
+            BlockInput(TRUE);
             Sleep(1000);
             BlockInput(FALSE);
-            Sleep(20);
-            SyncKeyStates(preKeys);
-            FlushPendingInputMessages();
           }).detach();
-          LOG_INFO("Transition: glide->dive, Input instantly blocked for 1000ms");
+          LOG_INFO("Transition: glide->dive, Input blocked for 1000ms");
           g_lockTriggerReason = 1; // Glide → Dive
         }
         // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)
         else if (!nowDiving && lastDiving) {
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
           
-          // Record keys synchronously BEFORE locking
-          std::vector<int> preKeys;
-          for (int i = 1; i < 255; i++) {
-            if (GetAsyncKeyState(i) & 0x8000)
-              preKeys.push_back(i);
-          }
-
-          // Release all held keys BEFORE blocking so the game receives the KEYUP events
-          // and immediately stops character movement (eliminates ghosting/sliding).
-          ReleaseHeldKeys();
-          // INSTANT LOCK: Execute synchronously, skipping thread spawn latency and scheduler delays
-          BlockInput(TRUE);
-
-          std::thread([preKeys]() {
+          // Async Lock
+          std::thread([]() {
+            BlockInput(TRUE);
             Sleep(1000);
             BlockInput(FALSE);
-            Sleep(20);
-            SyncKeyStates(preKeys);
-            FlushPendingInputMessages();
           }).detach();
-          LOG_INFO("Transition: dive->glide, Input instantly blocked for 1000ms");
+          LOG_INFO("Transition: dive->glide, Input blocked for 1000ms");
           g_lockTriggerReason = 2; // Dive → Glide
         }
       }
@@ -836,8 +783,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   SetTimer(g_hHUD, 2, 30000, NULL); // 30s Auto-Save Timer
 
   std::thread detThread(DetectorThread);
-  std::thread focusThread(FocusMonitorThread);
-
+  
   // Run Qt Event Loop
   int exitCode = app.exec();
   LOG_INFO("Qt event loop exited with code=%d", exitCode);

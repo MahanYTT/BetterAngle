@@ -1,10 +1,10 @@
-Generating release notes from commit range: v5.0.62..HEAD ### BetterAngle Pro v5.0.63
-- Automated build release.
+### BetterAngle Pro v5.0.63
+- chore: reverted experimental zero-latency synchronous locking and anti-ghosting logic to restore system stability. Returned to stable asynchronous input blocking.
 
 ### BetterAngle Pro v5.0.62
-- fix: implemented physical key state resumption in SyncKeyStates. Now automatically "re-presses" any keys you are still holding when the input unblocks, ensuring seamless movement.
+- fix: upgraded application to Per-Monitor DPI Awareness V2. Ensures physical pixel alignment of the crosshair across multiple monitors with different resolutions and scales.
 
-### BetterAngle Pro v5.0.61
+### BetterAngle Pro v5.0.62
 - fix: upgraded application to Per-Monitor DPI Awareness V2. Ensures physical pixel alignment of the crosshair across multiple monitors with different resolutions and scales.
 
 ### BetterAngle Pro v5.0.60
