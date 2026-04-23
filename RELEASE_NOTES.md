@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.25..HEAD ### BetterAngle Pro v5.0.29
+- fix: disable HUD dragging when Fortnite is focused (v5.0.28)
+
 ### BetterAngle Pro v5.0.28
 - fix: disabled HUD dragging whenever Fortnite is in focus to prevent accidental UI movement during gameplay (maps/menus)
 
