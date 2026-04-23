@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.18..HEAD ### BetterAngle Pro v5.0.19
+- Automated build release.
+
 ### BetterAngle Pro v5.0.18
 - perf: optimized debug overlay with high-frequency focus/cursor caches for real-time responsiveness
 
