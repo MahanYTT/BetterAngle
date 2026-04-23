@@ -264,8 +264,13 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
 
     // Crosshair
     if (showCrosshair) {
-      float cx = sw * 0.5f + g_crossOffsetX;
-      float cy = sh * 0.5f + g_crossOffsetY;
+      RECT mRect = GetMonitorRectByIndex(g_screenIndex);
+      int sx = GetSystemMetrics(SM_XVIRTUALSCREEN);
+      int sy = GetSystemMetrics(SM_YVIRTUALSCREEN);
+
+      // Map the monitor's center to the HUD's client coordinate space
+      float cx = (mRect.left - sx) + (mRect.right - mRect.left) * 0.5f + g_crossOffsetX;
+      float cy = (mRect.top - sy) + (mRect.bottom - mRect.top) * 0.5f + g_crossOffsetY;
       // Make crosshair massive like the Java reference
       float hw = (sw > sh ? sw : sh) * 3.0f;
       float hh = hw;

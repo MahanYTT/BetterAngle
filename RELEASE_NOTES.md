@@ -1,5 +1,7 @@
+### BetterAngle Pro v5.0.53
+- HOTFIX: Re-architected crosshair drawing logic to calculate exact center bounds for the explicitly chosen monitor from the Settings Drop-down (g_screenIndex) rather than defaulting to the center of the total virtual desktop space.
+
 ### BetterAngle Pro v5.0.52
-- fix: resolved issue where moving the application to a secondary monitor caused it to teleport back due to reactive x/y bindings in QML.
 
 ### BetterAngle Pro v5.0.51
 - Automated build release.
