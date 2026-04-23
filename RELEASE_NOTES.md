@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.0.24
+- fix: increased Glide -> Skydiving lock duration from 250ms to 1000ms for a more reliable and solid feel during FOV transitions
+
 ### BetterAngle Pro v5.0.23
 - perf: achieved absolute zero-latency focus detection by removing all internal caching logic from the foreground window check
 
