@@ -10,8 +10,7 @@ Window {
     minimumHeight: 350
     maximumWidth: 1200
     maximumHeight: 800
-    x: Screen.width / 2 - width / 2
-    y: Screen.height / 2 - height / 2
+    // X and Y are set dynamically on completion to prevent monitor snapping bugs
     visible: false
     title: qsTr("BetterAngle Pro Angle HUD")
     color: "#0a0a0f"
@@ -33,6 +32,11 @@ Window {
 
     onVisibleChanged: {
         // No longer forcing crosshair state here to allow user preference to persist
+    }
+
+    Component.onCompleted: {
+        x = Screen.width / 2 - width / 2
+        y = Screen.height / 2 - height / 2
     }
 
     Connections {
