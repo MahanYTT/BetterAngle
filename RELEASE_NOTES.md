@@ -1,5 +1,8 @@
+### BetterAngle Pro v5.0.59
+- perf: implemented zero-latency synchronous input locking across all triggers (Alt-Tab, Dive/Glide transitions), bypassing Windows scheduler delays.
+- perf: optimized pixel traversal in the color matching loop using direct pointer arithmetic for maximum speed.
+
 ### BetterAngle Pro v5.0.58
-- fix: implemented exact client clipping boundaries for the crosshair graphics context to prevent line bleeding across multi-monitor setups. 
 
 ### BetterAngle Pro v5.0.57
 - Automated build release.
