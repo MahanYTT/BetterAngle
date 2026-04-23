@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.50..HEAD ### BetterAngle Pro v5.0.51
+- Automated build release.
+
 ### BetterAngle Pro v5.0.50
 - HOTFIX: Resolved critical QML syntax error (duplicate properties) that caused the dashboard to fail on boot.
 
