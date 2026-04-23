@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.16..HEAD ### BetterAngle Pro v5.0.17
+- Automated build release.
+
 ### BetterAngle Pro v5.0.16
 - perf: lightning-fast focus detection (10ms) to ensure angle updates stop instantly when tabbing out
 
