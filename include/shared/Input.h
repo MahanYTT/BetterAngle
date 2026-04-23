@@ -13,8 +13,7 @@ int GetRawInputDeltaX(LPARAM lparam);
 bool IsFortniteForeground();
 bool IsCursorCurrentlyVisible();
 
-// Low-Level Hardware Hooks for anti-ghosting input locking
-void InstallHardwareHooks();
-void UninstallHardwareHooks();
+// Anti-Ghosting Hardware Synchronizer
+void SyncKeyStates(const std::vector<int>& preBlockKeys);
 
 #endif // INPUT_H
