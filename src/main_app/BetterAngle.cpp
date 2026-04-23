@@ -583,7 +583,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         POINT pt;
         GetCursorPos(&pt);
 
-        bool canDrag = !(IsFortniteForeground() && !IsCursorCurrentlyVisible());
+        bool canDrag = !IsFortniteForeground();
 
         if (lDown && !g_isDraggingHUD && canDrag) {
           if (pt.x >= g_hudX && pt.x <= g_hudX + 260 && pt.y >= g_hudY &&
