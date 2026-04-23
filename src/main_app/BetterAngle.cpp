@@ -52,6 +52,31 @@ static void FlushPendingInputMessages() {
 
 
 
+// High-frequency thread to detect Fortnite focus changes instantly (Alt-Tab detection)
+void FocusMonitorThread() {
+  bool lastFortniteFocused = false;
+  while (g_running) {
+    bool currentFortniteFocused = IsFortniteForeground();
+    g_fortniteFocusedCache = currentFortniteFocused;
+
+    // Detect Alt-Tab back into Fortnite with ultra-low latency (1ms polling)
+    if (!lastFortniteFocused && currentFortniteFocused) {
+      g_mouseSuspendedUntil = GetTickCount64() + 1650;
+      g_lockTriggerReason = 3; // Alt-Tab Return
+
+      // SAFE ASYNC LOCK: Lightning detection, but safe background unblocking
+      std::thread([]() {
+        BlockInput(TRUE);
+        Sleep(1650);
+        BlockInput(FALSE);
+      }).detach();
+      LOG_INFO("High-Speed Detection: Alt-tab back to Fortnite detected. Input blocked.");
+    }
+    lastFortniteFocused = currentFortniteFocused;
+    Sleep(1); // 1000Hz polling for lightning fast focus detection
+  }
+}
+
 // FOV Detector Thread - Now focused solely on ROI scanning
 void DetectorThread() {
   bool lastDiving = false;
@@ -62,22 +87,8 @@ void DetectorThread() {
       Profile &p = g_allProfiles[g_selectedProfileIdx];
       g_logic.LoadProfile(p.sensitivityX);
 
-      bool currentFortniteFocused = IsFortniteForeground();
+      bool currentFortniteFocused = g_fortniteFocusedCache.load();
       g_isCursorVisible = IsCursorCurrentlyVisible();
-
-      // Detect Alt-Tab back into Fortnite
-      static bool lastFortniteFocused = false;
-      if (!lastFortniteFocused && currentFortniteFocused) {
-        g_mouseSuspendedUntil = GetTickCount64() + 1650;
-        g_lockTriggerReason = 3; // Alt-Tab Return
-        std::thread([]() {
-          BlockInput(TRUE);
-          Sleep(1650);
-          BlockInput(FALSE);
-        }).detach();
-        LOG_INFO("Alt-tab back to Fortnite detected. Input blocked for 1650ms.");
-      }
-      lastFortniteFocused = currentFortniteFocused;
 
       // Only scan ROI when Fortnite is the foreground window
       if (currentFortniteFocused) {
@@ -783,6 +794,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   SetTimer(g_hHUD, 2, 30000, NULL); // 30s Auto-Save Timer
 
   std::thread detThread(DetectorThread);
+  std::thread focusThread(FocusMonitorThread);
   
   // Run Qt Event Loop
   int exitCode = app.exec();
@@ -791,6 +803,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   g_running = false;
   if (detThread.joinable())
     detThread.join();
+  if (focusThread.joinable())
+    focusThread.join();
 
   // Final Save on Exit
   if (!g_allProfiles.empty()) {

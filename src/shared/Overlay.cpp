@@ -86,47 +86,46 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
   if (sw <= 0 || sh <= 0)
     return;
 
+  static HDC hdcMem = NULL;
+  static HBITMAP hbmMem = NULL;
+  static void* pBits = NULL;
+  static int cachedW = 0, cachedH = 0;
+
   HDC hdcScreen = GetDC(NULL);
-  HDC hdcMem = CreateCompatibleDC(hdcScreen);
+  if (!hdcMem) hdcMem = CreateCompatibleDC(hdcScreen);
 
-  BITMAPINFO bmi = {0};
-  bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-  bmi.bmiHeader.biWidth = sw;
-  bmi.bmiHeader.biHeight = -sh; // top-down
-  bmi.bmiHeader.biPlanes = 1;
-  bmi.bmiHeader.biBitCount = 32;
-  bmi.bmiHeader.biCompression = BI_RGB;
-
-  void *pBits = nullptr;
-  HBITMAP hbmMem =
-      CreateDIBSection(hdcScreen, &bmi, DIB_RGB_COLORS, &pBits, NULL, 0);
+  if (sw != cachedW || sh != cachedH) {
+    if (hbmMem) DeleteObject(hbmMem);
+    BITMAPINFO bmi = {0};
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = sw;
+    bmi.bmiHeader.biHeight = -sh;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    hbmMem = CreateDIBSection(hdcScreen, &bmi, DIB_RGB_COLORS, &pBits, NULL, 0);
+    cachedW = sw; cachedH = sh;
+  }
   HGDIOBJ hOld = SelectObject(hdcMem, hbmMem);
 
   if (!pBits) {
-    SelectObject(hdcMem, hOld);
-    DeleteObject(hbmMem);
-    DeleteDC(hdcMem);
     ReleaseDC(NULL, hdcScreen);
     return;
   }
 
-  // Pre-fill selection background if needed - when Fortnite is focused OR
-  // selection is active
-  if (g_screenSnapshot && g_currentSelection != NONE &&
-      (IsFortniteForeground() || g_currentSelection != NONE)) {
+  // Pre-fill selection background
+  if (g_screenSnapshot && g_currentSelection != NONE) {
     HDC hdcSnap = CreateCompatibleDC(hdcMem);
     HGDIOBJ hOldSnap = SelectObject(hdcSnap, g_screenSnapshot);
     BitBlt(hdcMem, 0, 0, sw, sh, hdcSnap, 0, 0, SRCCOPY);
     SelectObject(hdcSnap, hOldSnap);
     DeleteDC(hdcSnap);
 
-    // Force opaque alpha for the desktop snapshot so the window catches clicks
+    // Fast Alpha Fix
     DWORD *pixels = (DWORD *)pBits;
     int count = sw * sh;
-    for (int i = 0; i < count; ++i)
-      pixels[i] |= 0xFF000000;
+    for (int i = 0; i < count; ++i) pixels[i] |= 0xFF000000;
   } else {
-    // Clear to fully transparent
     memset(pBits, 0, sw * sh * 4);
   }
 
