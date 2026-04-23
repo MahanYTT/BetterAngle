@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.0.13
+- fix: freeze inputs for 1.65s on alt-tab into Fortnite to prevent angle inaccuracies
+
 ### BetterAngle Pro v5.0.12
 - Automated build release.
 
