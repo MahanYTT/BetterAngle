@@ -238,3 +238,45 @@ void SyncKeyStates(const std::vector<int>& preBlockKeys) {
     }
   }
 }
+
+void ReleaseHeldKeys() {
+  // Synthesize KEYUP / mouse-button-UP for every key that is physically held down
+  // RIGHT NOW. Must be called immediately before BlockInput(TRUE) so the game
+  // receives release events and stops the character from ghosting/sliding.
+  // All inputs are batched into a single SendInput call to minimise latency.
+  std::vector<INPUT> inputs;
+  inputs.reserve(32);
+
+  for (int vk = 1; vk < 255; vk++) {
+    if (!(GetAsyncKeyState(vk) & 0x8000))
+      continue; // Not held
+
+    INPUT in = {};
+
+    if (vk == VK_LBUTTON || vk == VK_RBUTTON ||
+        vk == VK_MBUTTON  || vk == VK_XBUTTON1 || vk == VK_XBUTTON2) {
+      in.type = INPUT_MOUSE;
+      if      (vk == VK_LBUTTON)  in.mi.dwFlags = MOUSEEVENTF_LEFTUP;
+      else if (vk == VK_RBUTTON)  in.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
+      else if (vk == VK_MBUTTON)  in.mi.dwFlags = MOUSEEVENTF_MIDDLEUP;
+      else if (vk == VK_XBUTTON1) { in.mi.dwFlags = MOUSEEVENTF_XUP; in.mi.mouseData = XBUTTON1; }
+      else if (vk == VK_XBUTTON2) { in.mi.dwFlags = MOUSEEVENTF_XUP; in.mi.mouseData = XBUTTON2; }
+    } else {
+      in.type       = INPUT_KEYBOARD;
+      in.ki.wVk     = (WORD)vk;
+      in.ki.wScan   = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+      in.ki.dwFlags = KEYEVENTF_KEYUP | KEYEVENTF_SCANCODE;
+      switch (vk) {
+        case VK_UP:    case VK_DOWN:  case VK_LEFT:  case VK_RIGHT:
+        case VK_INSERT: case VK_DELETE: case VK_HOME: case VK_END:
+        case VK_PRIOR: case VK_NEXT:  case VK_RCONTROL: case VK_RMENU:
+          in.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
+          break;
+      }
+    }
+    inputs.push_back(in);
+  }
+
+  if (!inputs.empty())
+    SendInput((UINT)inputs.size(), inputs.data(), sizeof(INPUT));
+}

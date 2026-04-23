@@ -55,16 +55,16 @@ float FovDetector::Scan(const RoiConfig& cfg) {
     BYTE tg = GetGValue(cfg.target);
     BYTE tb = GetBValue(cfg.target);
 
-    DWORD* pPixels = (DWORD*)m_pixels;
+    DWORD* p = (DWORD*)m_pixels;
     int totalPixels = cfg.w * cfg.h;
-    
     int tolSq = cfg.tolerance * cfg.tolerance;
     
-    for (int i = 0; i < totalPixels; i++) {
-        DWORD p = pPixels[i];
-        int r = p & 0xFF;
-        int g = (p >> 8) & 0xFF;
-        int b = (p >> 16) & 0xFF;
+    // Optimized memory traversal using direct pointer arithmetic
+    for (int i = 0; i < totalPixels; i++, p++) {
+        DWORD pixel = *p;
+        int r = pixel & 0xFF;
+        int g = (pixel >> 8) & 0xFF;
+        int b = (pixel >> 16) & 0xFF;
 
         int dr = r - (int)tr;
         int dg = g - (int)tg;

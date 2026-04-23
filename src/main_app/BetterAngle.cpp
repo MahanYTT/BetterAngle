@@ -62,24 +62,28 @@ void FocusMonitorThread() {
     if (!lastFortniteFocused && currentFortniteFocused) {
       g_mouseSuspendedUntil = GetTickCount64() + 1650;
       g_lockTriggerReason = 3; // Alt-Tab Return
-      std::thread([]() {
-        FlushPendingInputMessages();
-        Sleep(1);
 
-        std::vector<int> preKeys;
-        for (int i = 1; i < 255; i++) {
-          if (GetAsyncKeyState(i) & 0x8000)
-            preKeys.push_back(i);
-        }
+      // Record keys synchronously BEFORE locking
+      std::vector<int> preKeys;
+      for (int i = 1; i < 255; i++) {
+        if (GetAsyncKeyState(i) & 0x8000)
+          preKeys.push_back(i);
+      }
 
-        BlockInput(TRUE);
+      // Release all held keys BEFORE blocking so the game receives the KEYUP events
+      // and immediately stops character movement (eliminates ghosting/sliding).
+      ReleaseHeldKeys();
+      // INSTANT LOCK: Execute synchronously, skipping thread spawn latency and scheduler delays
+      BlockInput(TRUE);
+
+      std::thread([preKeys]() {
         Sleep(1650);
         BlockInput(FALSE);
         Sleep(20);
         SyncKeyStates(preKeys);
         FlushPendingInputMessages();
       }).detach();
-      LOG_INFO("High-Speed Detection: Alt-tab back to Fortnite detected. Blocking input.");
+      LOG_INFO("High-Speed Detection: Alt-tab back to Fortnite detected. Input instantly blocked.");
     }
     lastFortniteFocused = currentFortniteFocused;
     Sleep(1); // 1000Hz polling for lightning fast focus detection
@@ -138,47 +142,55 @@ void DetectorThread() {
         // Edge: Gliding -> Diving  (FOV zoom-in anim ~1.0s)
         if (nowDiving && !lastDiving) {
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
-          std::thread([]() {
-            FlushPendingInputMessages();
-            Sleep(1);
+          
+          // Record keys synchronously BEFORE locking
+          std::vector<int> preKeys;
+          for (int i = 1; i < 255; i++) {
+            if (GetAsyncKeyState(i) & 0x8000)
+              preKeys.push_back(i);
+          }
 
-            std::vector<int> preKeys;
-            for (int i = 1; i < 255; i++) {
-              if (GetAsyncKeyState(i) & 0x8000)
-                preKeys.push_back(i);
-            }
+          // Release all held keys BEFORE blocking so the game receives the KEYUP events
+          // and immediately stops character movement (eliminates ghosting/sliding).
+          ReleaseHeldKeys();
+          // INSTANT LOCK: Execute synchronously, skipping thread spawn latency and scheduler delays
+          BlockInput(TRUE);
 
-            BlockInput(TRUE);
+          std::thread([preKeys]() {
             Sleep(1000);
             BlockInput(FALSE);
             Sleep(20);
             SyncKeyStates(preKeys);
             FlushPendingInputMessages();
           }).detach();
-          LOG_INFO("Transition: glide->dive, BlockInput for 1000ms");
+          LOG_INFO("Transition: glide->dive, Input instantly blocked for 1000ms");
           g_lockTriggerReason = 1; // Glide → Dive
         }
         // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)
         else if (!nowDiving && lastDiving) {
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
-          std::thread([]() {
-            FlushPendingInputMessages();
-            Sleep(1);
+          
+          // Record keys synchronously BEFORE locking
+          std::vector<int> preKeys;
+          for (int i = 1; i < 255; i++) {
+            if (GetAsyncKeyState(i) & 0x8000)
+              preKeys.push_back(i);
+          }
 
-            std::vector<int> preKeys;
-            for (int i = 1; i < 255; i++) {
-              if (GetAsyncKeyState(i) & 0x8000)
-                preKeys.push_back(i);
-            }
+          // Release all held keys BEFORE blocking so the game receives the KEYUP events
+          // and immediately stops character movement (eliminates ghosting/sliding).
+          ReleaseHeldKeys();
+          // INSTANT LOCK: Execute synchronously, skipping thread spawn latency and scheduler delays
+          BlockInput(TRUE);
 
-            BlockInput(TRUE);
+          std::thread([preKeys]() {
             Sleep(1000);
             BlockInput(FALSE);
             Sleep(20);
             SyncKeyStates(preKeys);
             FlushPendingInputMessages();
           }).detach();
-          LOG_INFO("Transition: dive->glide, BlockInput for 1000ms");
+          LOG_INFO("Transition: dive->glide, Input instantly blocked for 1000ms");
           g_lockTriggerReason = 2; // Dive → Glide
         }
       }
