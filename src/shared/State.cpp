@@ -196,7 +196,7 @@ POINT g_startPoint = {0};
 
 std::string g_latestVersionOnline = "v" VERSION_STR;
 float g_currentAngle = 0.0f;
-bool g_isCursorVisible = false;
+std::atomic<bool> g_isCursorVisible(false);
 AngleLogic g_logic(0.05);
 
 int g_hudX = 40;
