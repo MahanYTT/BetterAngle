@@ -1,8 +1,5 @@
-Generating release notes from commit range: v5.0.21..HEAD ### BetterAngle Pro v5.0.24
-- perf: absolute zero-latency focus detection (v5.0.23)
-- chore: auto-increment version for release
-- perf: reduce alt-tab detection latency (v5.0.22)
-- chore: auto-increment version for release
+### BetterAngle Pro v5.0.24
+- fix: increased Glide -> Skydiving lock duration from 250ms to 1000ms for a more reliable and solid feel during FOV transitions
 
 ### BetterAngle Pro v5.0.23
 - perf: achieved absolute zero-latency focus detection by removing all internal caching logic from the foreground window check

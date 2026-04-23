@@ -117,15 +117,15 @@ void DetectorThread() {
       float threshold = p.diveGlideMatch / 100.0f;
       bool nowDiving = (g_detectionRatio >= threshold);
 
-      // Edge: Gliding -> Diving  (FOV zoom-in anim ~0.25s)
+      // Edge: Gliding -> Diving  (FOV zoom-in anim ~1.0s)
       if (nowDiving && !lastDiving) {
-        g_mouseSuspendedUntil = GetTickCount64() + 250;
+        g_mouseSuspendedUntil = GetTickCount64() + 1000;
         std::thread([]() {
           // First flush any pending input messages to ensure clean state
           FlushPendingInputMessages();
 
-          // Small delay to allow flush to take effect
-          Sleep(5);
+          // Minimal sleep to allow flush to reach queue
+          Sleep(1);
 
           // Record keys pressed before blocking (after flush)
           std::vector<int> preKeys;
@@ -136,7 +136,7 @@ void DetectorThread() {
 
           // Block all input (keyboard and mouse) immediately after recording
           BlockInput(TRUE);
-          Sleep(250);
+          Sleep(1000);
           BlockInput(FALSE);
 
           // Small delay to allow system to process block release
@@ -149,7 +149,7 @@ void DetectorThread() {
           // Additional flush after syncing to ensure clean state
           FlushPendingInputMessages();
         }).detach();
-        LOG_INFO("Transition: glide->dive, BlockInput for 250ms with input "
+        LOG_INFO("Transition: glide->dive, BlockInput for 1000ms with input "
                  "flushing");
       }
       // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)
