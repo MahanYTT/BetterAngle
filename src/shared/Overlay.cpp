@@ -436,7 +436,7 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
       int dx = rx;
       int dy = ry + rh + 8;
       int dw = rw;
-      int dh = 178; // 10 rows * 16px + padding
+      int dh = 162; // 9 rows * 16px + padding
 
       LinearGradientBrush dbgBrush(Point(dx, dy), Point(dx, dy + dh),
                                    Color(175, 8, 10, 14), Color(175, 3, 5, 8));
@@ -473,9 +473,6 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
         suspStr = std::to_wstring(rem) + L" ms";
       }
 
-      // Convert profile name for display (first 12 chars)
-      std::wstring profDisplay = dbgP.name.substr(0, 12);
-
       DrawRow(0, L"Engine FPS:", std::to_wstring((int)std::round(s_fps)));
       DrawRow(1, L"Scanner Delay:",
               std::to_wstring((long long)g_detectionDelayMs) + L" ms",
@@ -489,7 +486,6 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
       DrawRow(6, L"Fortnite Running:", fnRun ? L"YES" : L"NO", fnRun);
       DrawRow(7, L"Fortnite Focused:", fnFoc ? L"YES" : L"NO", fnFoc);
       DrawRow(8, L"Mouse in Fortnite Focus:", msHdd ? L"YES" : L"NO", msHdd);
-      DrawRow(9, L"Profile:", profDisplay);
     }
   }
 
