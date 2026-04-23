@@ -17,10 +17,8 @@ Window {
     color: "#0a0a0f"
     
     property bool isBooting: true
-    // During boot, grow the window height to fit the square 1024x1024 splash images
-    // perfectly (no cropping). On boot complete, animate back to dashboard size.
+    // perfectly (no cropping). On boot complete, change back to dashboard size.
     height: isBooting ? 650 : 480
-    Behavior on height { NumberAnimation { duration: 400; easing.type: Easing.InOutQuad } }
     minimumHeight: isBooting ? 650 : 350
 
     Timer {
@@ -222,7 +220,7 @@ Window {
             property int splashIndex: Math.floor(Math.random() * 3) + 1
             source: "qrc:/assets/loading_" + splashIndex + ".png"
             anchors.fill: parent
-            fillMode: Image.PreserveAspectFit
+            fillMode: Image.PreserveAspectCrop
             smooth: true
             mipmap: true
             opacity: 0
