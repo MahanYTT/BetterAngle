@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.42..HEAD ### BetterAngle Pro v5.0.43
+- Automated build release.
+
 ### BetterAngle Pro v5.0.42
 - fix: decimal UI (HUD overlay) and debug overlay now draggable outside Fortnite focus
 
