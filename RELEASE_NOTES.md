@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.64..HEAD ### BetterAngle Pro v5.0.65
+- Automated build release.
+
 ### BetterAngle Pro v5.0.64
 - chore: restored stable baseline with DPI alignment and high-speed scanner. Fixed build error from focus monitor removal.
 
