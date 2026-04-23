@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.0.23
+- perf: achieved absolute zero-latency focus detection by removing all internal caching logic from the foreground window check
+
 ### BetterAngle Pro v5.0.22
 - perf: reduced Alt-Tab detection latency from 1000ms to 50ms for near-instant input locking when returning to the game window
 

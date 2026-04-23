@@ -116,15 +116,7 @@ int GetRawInputDeltaX(LPARAM lparam) {
 }
 
 bool IsFortniteForeground() {
-  static ULONGLONG lastCheck = 0;
-  static bool lastResult = false;
-  ULONGLONG now = GetTickCount64();
-
-  // Cache result for 50ms to avoid spamming snapshots
-  if (now - lastCheck < 50)
-    return lastResult;
-
-  lastCheck = now;
+  bool lastResult = false;
   HWND fg = GetForegroundWindow();
   if (!fg) {
     lastResult = false;

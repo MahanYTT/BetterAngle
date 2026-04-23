@@ -23,7 +23,7 @@ if /i "%choice%" neq "Y" (
     exit /b 0
 )
 
-echo Building BetterAngle v5.0.22 Pro Edition...
+echo Building BetterAngle v5.0.23 Pro Edition...
 
 :: Check for MSVC
 where cl >nul 2>nul
@@ -49,7 +49,7 @@ echo Building BetterAngleConfig.exe (Wizard)...
 cl.exe %FLAGS% src/config_tool/BetterAngleConfig.cpp src/shared/*.cpp /Fe:bin/BetterAngleConfig.exe /link %LIBS%
 
 if %errorlevel% equ 0 (
-    echo [SUCCESS] BetterAngle v5.0.22 Pro binaries created in bin/
+    echo [SUCCESS] BetterAngle v5.0.23 Pro binaries created in bin/
     echo NOTE: This is a development build only. For production releases, use GitHub Actions.
 ) else (
     echo [ERROR] Build failed.
