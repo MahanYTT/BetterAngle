@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.0.29
+- feat: made the Debug tab in the Dashboard scrollable for better accessibility on smaller screens
+
 ### BetterAngle Pro v5.0.28
 - fix: disabled HUD dragging whenever Fortnite is in focus to prevent accidental UI movement during gameplay (maps/menus)
 

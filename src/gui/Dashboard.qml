@@ -976,82 +976,87 @@ Item {
         // ─── DEBUG ────────────────────────────────────────────────
         Rectangle {
             color: "#0d0d12"
-            Column {
+            Flickable {
                 anchors.fill: parent
-                anchors.margins: 20
-                spacing: 15
+                contentHeight: debugRootCol.implicitHeight + 40
+                clip: true
+                Column {
+                    id: debugRootCol
+                    anchors { left: parent.left; right: parent.right; top: parent.top; margins: 20 }
+                    spacing: 15
 
-                Text { text: "DEBUG DIAGNOSTICS"; color: "#666"; font.pixelSize: 11; font.bold: true }
+                    Text { text: "DEBUG DIAGNOSTICS"; color: "#666"; font.pixelSize: 11; font.bold: true }
 
-                RowLayout {
-                    Switch {
-                        checked: backend.showDebugOverlay
-                        onCheckedChanged: backend.showDebugOverlay = checked
+                    RowLayout {
+                        Switch {
+                            checked: backend.showDebugOverlay
+                            onCheckedChanged: backend.showDebugOverlay = checked
+                        }
+                        Text { text: "Show Debug Overlay on Screen"; color: "white"; font.pixelSize: 13 }
                     }
-                    Text { text: "Show Debug Overlay on Screen"; color: "white"; font.pixelSize: 13 }
-                }
 
-                Rectangle {
-                    width: parent.width; radius: 6; color: "#0e0e1a"; border.color: "#333"; border.width: 1
-                    height: debugCol.implicitHeight + 30
-                    Column {
-                        id: debugCol
-                        anchors { left: parent.left; right: parent.right; top: parent.top }
-                        anchors.margins: 15
-                        spacing: 9
+                    Rectangle {
+                        width: parent.width; radius: 6; color: "#0e0e1a"; border.color: "#333"; border.width: 1
+                        height: debugCol.implicitHeight + 30
+                        Column {
+                            id: debugCol
+                            anchors { left: parent.left; right: parent.right; top: parent.top }
+                            anchors.margins: 15
+                            spacing: 9
 
-                        // Header
-                        Text { text: "LIVE DIAGNOSTICS"; color: "#444"; font.pixelSize: 10; font.bold: true; topPadding: 5 }
+                            // Header
+                            Text { text: "LIVE DIAGNOSTICS"; color: "#444"; font.pixelSize: 10; font.bold: true; topPadding: 5 }
 
-                        // Detection metrics
-                        RowLayout { width: parent.width
-                            Text { text: "Scanner Delay:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
-                            Text { text: backend.detectionDelayMs + " ms"; color: backend.detectionDelayMs < 15 ? "#00ffaa" : "#ff6644"; font.bold: true; font.pixelSize: 13 }
-                        }
-                        RowLayout { width: parent.width
-                            Text { text: "Match Ratio:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
-                            Text { text: backend.detectionRatioPct + "%"; color: "#00ccff"; font.bold: true; font.pixelSize: 13 }
-                        }
-                        RowLayout { width: parent.width
-                            Text { text: "Dive State:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
-                            Text { text: backend.isDiving ? "DIVING" : "GLIDING"; color: backend.isDiving ? "#ff5050" : "#50ff80"; font.bold: true; font.pixelSize: 13 }
-                        }
-                        RowLayout { width: parent.width
-                            Text { text: "Input Locked:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
-                            Text { text: backend.inputLocked ? "YES" : "NO"; color: backend.inputLocked ? "#cc88ff" : "#555"; font.bold: true; font.pixelSize: 13 }
-                        }
+                            // Detection metrics
+                            RowLayout { width: parent.width
+                                Text { text: "Scanner Delay:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
+                                Text { text: backend.detectionDelayMs + " ms"; color: backend.detectionDelayMs < 15 ? "#00ffaa" : "#ff6644"; font.bold: true; font.pixelSize: 13 }
+                            }
+                            RowLayout { width: parent.width
+                                Text { text: "Match Ratio:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
+                                Text { text: backend.detectionRatioPct + "%"; color: "#00ccff"; font.bold: true; font.pixelSize: 13 }
+                            }
+                            RowLayout { width: parent.width
+                                Text { text: "Dive State:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
+                                Text { text: backend.isDiving ? "DIVING" : "GLIDING"; color: backend.isDiving ? "#ff5050" : "#50ff80"; font.bold: true; font.pixelSize: 13 }
+                            }
+                            RowLayout { width: parent.width
+                                Text { text: "Input Locked:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
+                                Text { text: backend.inputLocked ? "YES" : "NO"; color: backend.inputLocked ? "#cc88ff" : "#555"; font.bold: true; font.pixelSize: 13 }
+                            }
 
-                        Rectangle { width: parent.width; height: 1; color: "#222"; }
+                            Rectangle { width: parent.width; height: 1; color: "#222"; }
 
-                        // Game gate status
-                        RowLayout { width: parent.width
-                            Text { text: "Fortnite Running:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
-                            Text { text: backend.fnRunning ? "YES" : "NO"; color: backend.fnRunning ? "#00ffcc" : "#ff4c4c"; font.bold: true; font.pixelSize: 13 }
+                            // Game gate status
+                            RowLayout { width: parent.width
+                                Text { text: "Fortnite Running:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
+                                Text { text: backend.fnRunning ? "YES" : "NO"; color: backend.fnRunning ? "#00ffcc" : "#ff4c4c"; font.bold: true; font.pixelSize: 13 }
+                            }
+                            RowLayout { width: parent.width
+                                Text { text: "Fortnite Focused:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
+                                Text { text: backend.fnFocused ? "YES" : "NO"; color: backend.fnFocused ? "#00ffcc" : "#ff4c4c"; font.bold: true; font.pixelSize: 13 }
+                            }
+                            RowLayout { width: parent.width
+                                Text { text: "Mouse Hidden:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
+                                Text { text: backend.fnMouseHidden ? "YES" : "NO"; color: backend.fnMouseHidden ? "#00ffcc" : "#ff4c4c"; font.bold: true; font.pixelSize: 13 }
+                            }
+                            Item { height: 5 }
                         }
-                        RowLayout { width: parent.width
-                            Text { text: "Fortnite Focused:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
-                            Text { text: backend.fnFocused ? "YES" : "NO"; color: backend.fnFocused ? "#00ffcc" : "#ff4c4c"; font.bold: true; font.pixelSize: 13 }
-                        }
-                        RowLayout { width: parent.width
-                            Text { text: "Mouse Hidden:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
-                            Text { text: backend.fnMouseHidden ? "YES" : "NO"; color: backend.fnMouseHidden ? "#00ffcc" : "#ff4c4c"; font.bold: true; font.pixelSize: 13 }
-                        }
-                        Item { height: 5 }
                     }
-                }
 
-                Text {
-                    text: "Angle updates only when Fortnite is focused AND mouse is hidden. Input locking pauses camera during FOV transitions."
-                    color: "#555"; font.pixelSize: 11; width: parent.width; wrapMode: Text.WordWrap
-                }
+                    Text {
+                        text: "Angle updates only when Fortnite is focused AND mouse is hidden. Input locking pauses camera during FOV transitions."
+                        color: "#555"; font.pixelSize: 11; width: parent.width; wrapMode: Text.WordWrap
+                    }
 
-                Item { height: 10 }
+                    Item { height: 10 }
 
-                Text { text: "PRO TIPS & SHORTCUTS"; color: "#666"; font.pixelSize: 11; font.bold: true }
+                    Text { text: "PRO TIPS & SHORTCUTS"; color: "#666"; font.pixelSize: 11; font.bold: true }
 
-                Text {
-                    text: "ROI Cancel: Press ROI key or Esc when in selection stages."
-                    color: "#aaa"; font.pixelSize: 11; width: parent.width; wrapMode: Text.WordWrap
+                    Text {
+                        text: "ROI Cancel: Press ROI key or Esc when in selection stages."
+                        color: "#aaa"; font.pixelSize: 11; width: parent.width; wrapMode: Text.WordWrap
+                    }
                 }
             }
         }
