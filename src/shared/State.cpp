@@ -25,6 +25,7 @@ std::atomic<ULONGLONG> g_mouseSuspendedUntil(0);
 std::atomic<int> g_lockTriggerReason(0);
 std::atomic<float> g_peakMatchRatio{0.0f};
 std::atomic<int> g_scannerCpuPct(0);
+int g_screenIndex = 0;
 
 Profile g_currentProfile;
 std::vector<Profile> g_allProfiles;
@@ -114,6 +115,7 @@ void LoadSettings() {
     g_crossPulse = eFloat("crossPulse", 0.0f) > 0.5f;
     g_showCrosshair = eFloat("showCrosshair", 1.0f) > 0.5f;
     g_selectedProfileIdx = eInt("selectedProfileIdx", 0);
+    g_screenIndex = eInt("screenIndex", 0);
 
     size_t vp = content.find("\"lastVersionRun\":\"");
     if (vp != std::string::npos) {
@@ -162,6 +164,7 @@ void SaveSettings() {
   oss << "  \"hudY\": " << g_hudY << ",\n";
   oss << "  \"showCrosshair\": " << (g_showCrosshair ? 1 : 0) << ",\n";
   oss << "  \"selectedProfileIdx\": " << g_selectedProfileIdx << ",\n";
+  oss << "  \"screenIndex\": " << g_screenIndex << ",\n";
 
   oss << "  \"lastVersionRun\":\"" << VERSION_STR << "\",\n";
 
@@ -209,3 +212,27 @@ POINT g_dragStartHUD = {0, 0};
 POINT g_dragStartMouse = {0, 0};
 HWND g_hHUD = NULL;
 HWND g_hPanel = NULL;
+
+RECT GetMonitorRectByIndex(int index) {
+  struct RectData {
+    int targetIndex;
+    int currentIndex;
+    RECT rect;
+  } data = {index, 0, {0, 0, 0, 0}};
+
+  EnumDisplayMonitors(
+      NULL, NULL,
+      [](HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor,
+         LPARAM dwData) -> BOOL {
+        auto d = reinterpret_cast<RectData *>(dwData);
+        if (d->currentIndex == d->targetIndex) {
+          d->rect = *lprcMonitor;
+          return FALSE; // Found it
+        }
+        d->currentIndex++;
+        return TRUE;
+      },
+      reinterpret_cast<LPARAM>(&data));
+
+  return data.rect;
+}

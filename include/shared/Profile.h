@@ -42,6 +42,7 @@ struct Profile {
   COLORREF target_color = 0;
   int tolerance = 5;
   float diveGlideMatch = 9.0f;
+  int screenIndex = 0;
 
   // Crosshair Settings
   bool showCrosshair = false;

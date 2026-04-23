@@ -1,3 +1,8 @@
+### BetterAngle Pro v5.0.43
+- feat: implemented robust Multi-Monitor selection support
+- feat: added "Active Game Monitor" dropdown to Dashboard settings
+- fix: ROI coordinates are now correctly remapped to the selected monitor
+
 ### BetterAngle Pro v5.0.42
 - fix: decimal UI (HUD overlay) and debug overlay now draggable outside Fortnite focus
 

@@ -13,6 +13,8 @@ class BetterAngleBackend : public QObject {
       int tolerance READ tolerance WRITE setTolerance NOTIFY profileChanged)
   Q_PROPERTY(double diveGlideMatch READ diveGlideMatch WRITE setDiveGlideMatch
                  NOTIFY profileChanged)
+  Q_PROPERTY(int screenIndex READ screenIndex WRITE setScreenIndex NOTIFY profileChanged)
+  Q_PROPERTY(QStringList availableScreens READ availableScreens CONSTANT)
 
   Q_PROPERTY(bool crosshairOn READ crosshairOn WRITE setCrosshairOn NOTIFY
                  crosshairChanged)
@@ -83,6 +85,10 @@ public:
 
   double diveGlideMatch() const;
   void setDiveGlideMatch(double v);
+
+  int screenIndex() const;
+  void setScreenIndex(int v);
+  QStringList availableScreens() const;
 
   bool crosshairOn() const;
   void setCrosshairOn(bool v);

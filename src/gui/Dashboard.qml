@@ -105,7 +105,63 @@ Item {
                         }
                     }
 
-
+                    Text { text: "DISPLAY & MONITOR"; color: "#666"; font.pixelSize: 11; font.bold: true; topPadding: 10 }
+                    Column {
+                        spacing: 4
+                        width: parent.width
+                        Text { text: "Active Game Monitor"; color: "#aaa"; font.pixelSize: 12 }
+                        ComboBox {
+                            id: monitorCombo
+                            width: parent.width
+                            model: backend.availableScreens
+                            currentIndex: backend.screenIndex
+                            onActivated: backend.screenIndex = index
+                            
+                            contentItem: Text {
+                                text: monitorCombo.displayText
+                                color: "white"
+                                verticalAlignment: Text.AlignVCenter
+                                leftPadding: 10
+                            }
+                            background: Rectangle {
+                                color: "#1c1c2e"
+                                radius: 4
+                                border.color: "#333"
+                                border.width: 1
+                            }
+                            delegate: ItemDelegate {
+                                width: monitorCombo.width
+                                contentItem: Text {
+                                    text: modelData
+                                    color: "white"
+                                    font.pixelSize: 13
+                                    elide: Text.ElideRight
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+                                background: Rectangle {
+                                    color: highlighted ? "#33334d" : "#1c1c2e"
+                                }
+                            }
+                            popup: Popup {
+                                y: parent.height
+                                width: parent.width
+                                implicitHeight: Math.min(contentItem.implicitHeight, 200)
+                                padding: 1
+                                contentItem: ListView {
+                                    clip: true
+                                    implicitHeight: contentHeight
+                                    model: monitorCombo.delegateModel
+                                    currentIndex: monitorCombo.highlightedIndex
+                                    ScrollIndicator.vertical: ScrollIndicator { }
+                                }
+                                background: Rectangle {
+                                    color: "#1c1c2e"
+                                    radius: 4
+                                    border.color: "#333"
+                                }
+                            }
+                        }
+                    }
 
                     Text { text: "TRIGGER CALIBRATION (%)"; color: "#666"; font.pixelSize: 12; topPadding: 10 }
                     RowLayout {

@@ -103,7 +103,8 @@ void DetectorThread() {
 
       // Only scan ROI when Fortnite is the foreground window
       if (currentFortniteFocused) {
-        RoiConfig cfg = {p.roi_x, p.roi_y,        p.roi_w,
+        RECT mRect = GetMonitorRectByIndex(g_screenIndex);
+        RoiConfig cfg = {p.roi_x + mRect.left, p.roi_y + mRect.top, p.roi_w,
                          p.roi_h, p.target_color, p.tolerance};
         ULONGLONG startMs = GetTickCount64();
         g_detectionRatio = g_detector.Scan(cfg);
@@ -222,6 +223,9 @@ void DetectorThread() {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 }
+
+
+// Screen Snapshot for Flicker-Free Selection (v4.9.15)
 
 // Screen Snapshot for Flicker-Free Selection (v4.9.15)
 void CaptureDesktop() {
@@ -426,8 +430,9 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
             g_selectionRect.right > g_selectionRect.left &&
             g_selectionRect.bottom > g_selectionRect.top) {
           Profile &p = g_allProfiles[g_selectedProfileIdx];
-          p.roi_x = g_selectionRect.left;
-          p.roi_y = g_selectionRect.top;
+          RECT mRect = GetMonitorRectByIndex(g_screenIndex);
+          p.roi_x = g_selectionRect.left - mRect.left;
+          p.roi_y = g_selectionRect.top - mRect.top;
           p.roi_w = g_selectionRect.right - g_selectionRect.left;
           p.roi_h = g_selectionRect.bottom - g_selectionRect.top;
           // Keep existing target_color unchanged
@@ -543,9 +548,10 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
       if (!g_allProfiles.empty()) {
         Profile &p = g_allProfiles[g_selectedProfileIdx];
+        RECT mRect = GetMonitorRectByIndex(g_screenIndex);
         p.target_color = g_pickedColor;
-        p.roi_x = g_selectionRect.left;
-        p.roi_y = g_selectionRect.top;
+        p.roi_x = g_selectionRect.left - mRect.left;
+        p.roi_y = g_selectionRect.top - mRect.top;
         p.roi_w = g_selectionRect.right - g_selectionRect.left;
         p.roi_h = g_selectionRect.bottom - g_selectionRect.top;
 
@@ -768,10 +774,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   g_showCrosshair = g_currentProfile.showCrosshair;
 
   // Sync Trigger Calibration from Profile to Global State
-  g_selectionRect.left = g_currentProfile.roi_x;
-  g_selectionRect.top = g_currentProfile.roi_y;
-  g_selectionRect.right = g_currentProfile.roi_x + g_currentProfile.roi_w;
-  g_selectionRect.bottom = g_currentProfile.roi_y + g_currentProfile.roi_h;
+  RECT mRect = GetMonitorRectByIndex(g_screenIndex);
+  g_selectionRect.left = g_currentProfile.roi_x + mRect.left;
+  g_selectionRect.top = g_currentProfile.roi_y + mRect.top;
+  g_selectionRect.right = g_currentProfile.roi_x + g_currentProfile.roi_w + mRect.left;
+  g_selectionRect.bottom = g_currentProfile.roi_y + g_currentProfile.roi_h + mRect.top;
   g_targetColor = g_currentProfile.target_color;
 
   g_logic.LoadProfile(g_currentProfile.sensitivityX);

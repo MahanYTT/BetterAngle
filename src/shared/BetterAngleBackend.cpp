@@ -23,6 +23,25 @@ extern HWND g_hHUD;
 static double g_pendingSetupSensX = 0.05;
 static double g_pendingSetupSensY = 0.05;
 
+struct MonitorData {
+    QStringList names;
+    int count = 0;
+};
+
+BOOL CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
+    MonitorData* data = reinterpret_cast<MonitorData*>(dwData);
+    MONITORINFOEXA mi;
+    mi.cbSize = sizeof(MONITORINFOEXA);
+    if (GetMonitorInfoA(hMonitor, &mi)) {
+        int width = lprcMonitor->right - lprcMonitor->left;
+        int height = lprcMonitor->bottom - lprcMonitor->top;
+        QString name = QString("Monitor %1 (%2x%3)").arg(data->count + 1).arg(width).arg(height);
+        data->names << name;
+        data->count++;
+    }
+    return TRUE;
+}
+
 static BetterAngleBackend *s_backendInstance = nullptr;
 
 void NotifyBackendCrosshairChanged() {
@@ -145,6 +164,32 @@ void BetterAngleBackend::setDiveGlideMatch(double v) {
   p.Save(GetProfilesPath() + p.name + L".json");
   SaveSettings();
   emit profileChanged();
+}
+
+int BetterAngleBackend::screenIndex() const {
+  if (g_allProfiles.empty())
+    return g_screenIndex;
+  return g_allProfiles[g_selectedProfileIdx].screenIndex;
+}
+
+void BetterAngleBackend::setScreenIndex(int v) {
+  if (v < 0)
+    v = 0;
+  g_screenIndex = v;
+  if (!g_allProfiles.empty()) {
+    Profile &p = g_allProfiles[g_selectedProfileIdx];
+    p.screenIndex = v;
+    p.Save(GetProfilesPath() + p.name + L".json");
+  }
+  SaveSettings();
+  emit profileChanged();
+}
+
+QStringList BetterAngleBackend::availableScreens() const {
+  MonitorData data;
+  EnumDisplayMonitors(NULL, NULL, MonitorEnumProc,
+                      reinterpret_cast<LPARAM>(&data));
+  return data.names;
 }
 
 bool BetterAngleBackend::crosshairOn() const { return g_showCrosshair; }

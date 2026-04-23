@@ -79,6 +79,12 @@ bool Profile::Load(const std::wstring &path) {
     diveGlideMatch = 9.0f;
   }
 
+  if (content.find("\"screenIndex\"") != std::string::npos) {
+    screenIndex = (int)extractDouble("screenIndex");
+  } else {
+    screenIndex = 0;
+  }
+
   // Load Keybinds
   keybinds.toggleMod = (UINT)extractDouble("kb_toggleMod");
   keybinds.toggleKey = (UINT)extractDouble("kb_toggleKey");
@@ -210,6 +216,7 @@ bool Profile::Save(const std::wstring &path) {
   oss << L"  \"target_color\": " << (unsigned long)target_color << L",\n";
   oss << L"  \"tolerance\": " << tolerance << L",\n";
   oss << L"  \"diveGlideMatch\": " << diveGlideMatch << L",\n";
+  oss << L"  \"screenIndex\": " << screenIndex << L",\n";
   oss << L"  \"kb_toggleMod\": " << keybinds.toggleMod << L",\n";
   oss << L"  \"kb_toggleKey\": " << keybinds.toggleKey << L",\n";
   oss << L"  \"kb_roiMod\": " << keybinds.roiMod << L",\n";

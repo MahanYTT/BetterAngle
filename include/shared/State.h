@@ -23,6 +23,7 @@ extern std::atomic<ULONGLONG> g_mouseSuspendedUntil;
 extern std::atomic<int> g_lockTriggerReason;   // 0=None,1=Glide→Dive,2=Dive→Glide,3=Alt-Tab
 extern std::atomic<float> g_peakMatchRatio;
 extern std::atomic<int> g_scannerCpuPct;
+extern int g_screenIndex;
 extern std::atomic<bool> g_fortniteFocusedCache;
 
 extern std::string g_lastVersionRun;
@@ -31,7 +32,7 @@ extern std::string g_lastVersionRun;
 #ifndef V_MAJ
 #define V_MAJ 5
 #define V_MIN 0
-#define V_PAT 42
+#define V_PAT 43
 #endif
 
 #define VERSION_STR APP_STR_Y(V_MAJ) "." APP_STR_Y(V_MIN) "." APP_STR_Y(V_PAT)
@@ -96,5 +97,7 @@ extern std::atomic<bool> g_forceRedraw;
 extern std::atomic<bool> g_keybindAssignmentActive;
 void NotifyBackendCrosshairChanged();
 void NotifyBackendUpdateStatusChanged();
+
+RECT GetMonitorRectByIndex(int index);
 
 #endif // STATE_H
