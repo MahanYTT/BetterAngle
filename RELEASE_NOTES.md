@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.66..HEAD ### BetterAngle Pro v5.0.67
+- Automated build release.
+
 ### BetterAngle Pro v5.0.66
 - fix: resolved GDI handle corruption in high-speed overlay. Fixed issue where debug info and crosshair could disappear after the first frame.
 
