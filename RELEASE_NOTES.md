@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.36..HEAD ### BetterAngle Pro v5.0.37
+- Automated build release.
+
 ### BetterAngle Pro v5.0.36
 - fix: updated Debug Dashboard wording from "Mouse Hidden" to "Mouse in Fortnite Focus" for better clarity
 
