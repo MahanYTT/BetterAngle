@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.7
+- fix: hardened bump script against concurrency collisions [v5.5.8] - chore: auto-increment version for release 5.5.6 [skip ci] - fix: remove redundant skip-ci from bump logic [v5.5.7] - fix: implemented granular ghost forensics debug rows [v5.5.6] 
+
 ### BetterAngle Pro v5.5.6
 - fix: implemented granular ghost forensics debug rows [v5.5.6]
 
