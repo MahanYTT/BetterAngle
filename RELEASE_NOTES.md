@@ -1,10 +1,10 @@
-Generating release notes from commit range: v5.0.76..HEAD ### BetterAngle Pro v5.0.77
-- Automated build release.
+### BetterAngle Pro v5.0.79
+- release: restored stable performance baseline. This version maintains the zero-latency input locking while ensuring maximum system stability across all PC configurations.
 
 ### BetterAngle Pro v5.0.76
 - fix: eliminated input-locking latency by triggering BlockInput(TRUE) immediately in the detector thread. This prevents mouse drift caused by OS thread-scheduling delays during rapid state transitions.
 
-### BetterAngle Pro v5.0.75
+### BetterAngle Pro v5.0.76
 - perf: completely eliminated floating-point operations from the hot loop. Implemented pre-calculated logic scales, absolute integer matching thresholds, and an optimized SIMD pixel scanning pipeline for maximum detection speed without accuracy loss.
 
 ### BetterAngle Pro v5.0.75
