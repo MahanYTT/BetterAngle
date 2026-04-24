@@ -490,15 +490,22 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
         suspStr = std::to_wstring(rem) + L" ms";
       }
 
+      int matchCount = g_matchCount.load();
+      int area = (g_allProfiles.empty()) ? 10000 : (dbgP.roi_w * dbgP.roi_h);
+      if (area <= 0) area = 1;
+      float detectionRatio = (float)matchCount / area;
+
       DrawRow(0, L"Engine FPS:", std::to_wstring((int)std::round(s_fps)));
       DrawRow(1, L"Scanner Delay:",
               std::to_wstring((long long)g_detectionDelayMs) + L" ms",
               g_detectionDelayMs < 15);
       DrawRow(2, L"Match Ratio:",
               std::to_wstring((int)(detectionRatio * 100)) + L"%");
+      int peakCount = g_peakMatchCount.load();
+      float peakRatio = (float)peakCount / area;
       DrawRow(3, L"Peak Match (2s):",
-              std::to_wstring((int)(g_peakMatchRatio.load() * 100)) + L"%",
-              g_peakMatchRatio.load() < (dbgP.diveGlideMatch / 100.0f));
+              std::to_wstring((int)(peakRatio * 100)) + L"%",
+              peakRatio < (dbgP.diveGlideMatch / 100.0f));
       DrawRow(4, L"Threshold:",
               std::to_wstring((int)dbgP.diveGlideMatch) + L"%");
       DrawRow(5, L"State:", g_isDiving ? L"DIVING" : L"GLIDING", !g_isDiving);
