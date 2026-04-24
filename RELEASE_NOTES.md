@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.5
+- Automated build release.
+
 ### BetterAngle Pro v5.5.3
 - fix: resolve C2065 undeclared identifier 'modStr' in Overlay.cpp [v5.5.3] - fix: self-contained version bump and tagging logic [skip ci] 
 
