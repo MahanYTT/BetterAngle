@@ -1,17 +1,9 @@
-Generating release notes from commit range: v5.1.23..HEAD ### BetterAngle Pro v5.1.24
-- Automated build release.
+### BetterAngle Pro v5.1.24
+- **IRON-TIGHT Diagnostics:** Implemented full forensic suite including Lock Count, Thread Tracking, and Multi-Stage W-State Probing.
+- **THE IRON FLUSH:** Resolved permanent ghosting issue by forcing Windows to rebuild the Async Key State table immediately after input unlocking.
+- **Zero-Latency Sync:** Optimized input restoration with high-precision hardware flushes (2ms) instead of legacy software delays.
+- **Unified UI:** Synchronized diagnostics across the On-Screen Overlay and Dashboard for consistent hardware monitoring.
 
-Generating release notes from commit range: v5.1.22..HEAD ### BetterAngle Pro v5.1.23
-- Automated build release.
-
-Generating release notes from commit range: v5.1.21..HEAD ### BetterAngle Pro v5.1.22
-- Automated build release.
-
-Generating release notes from commit range: v5.1.20..HEAD ### BetterAngle Pro v5.1.21
-- Automated build release.
-
-Generating release notes from commit range: v5.1.18..HEAD ### BetterAngle Pro v5.1.19
-- Automated build release.
 
 Generating release notes from commit range: v5.1.16..HEAD ### BetterAngle Pro v5.1.18
 - feat: implemented Absolute Truth diagnostics (v5.1.17)
