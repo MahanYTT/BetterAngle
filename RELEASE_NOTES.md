@@ -1,4 +1,7 @@
 ### BetterAngle Pro v5.4.4
+- chore: triggering first Golden Path release (v5.4.4) - chore: auto-increment version for release [skip ci] 
+
+### BetterAngle Pro v5.4.4
 - Update msbuild.yml
 
 ### BetterAngle Pro v5.4.3
