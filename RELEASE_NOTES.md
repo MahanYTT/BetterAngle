@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.10
+- fix: neutralize duplicate workflow logic [v5.5.13]
+
 ### BetterAngle Pro v5.5.9
 - fix: implemented background release striker [v5.5.12] - chore: auto-increment version to 5.5.8 - chore: auto-increment version to 5.5.8 - fix: decouple release finalizer to prevent build deadlock [v5.5.11] - fix: integrated automated release trigger into CMake [v5.5.10] 
 
