@@ -69,7 +69,7 @@ void FocusMonitorThread() {
         BlockInput(TRUE);
         Sleep(400);
         BlockInput(FALSE);
-        SyncMovementKeys();
+        SyncGamingKeys();
       }).detach();
       LOG_INFO("High-Speed Detection: Alt-tab back to Fortnite detected. Input blocked.");
     }
