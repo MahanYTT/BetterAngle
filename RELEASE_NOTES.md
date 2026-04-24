@@ -1,4 +1,7 @@
 Generating release notes from commit range: v5.1.8..HEAD ### BetterAngle Pro v5.1.9
+- Automated build release.
+
+Generating release notes from commit range: v5.1.8..HEAD ### BetterAngle Pro v5.1.9
 - docs: added technical summary of nitro sync logic
 
 Generating release notes from commit range: v5.1.7..HEAD ### BetterAngle Pro v5.1.8
