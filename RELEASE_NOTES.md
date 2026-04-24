@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.82..HEAD ### BetterAngle Pro v5.0.83
+- Automated build release.
+
 ### BetterAngle Pro v5.0.82
 - fix: improved updater reliability with a more robust JSON parser and standard User-Agent to ensure smooth updates from GitHub.
 
