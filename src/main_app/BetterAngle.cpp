@@ -649,8 +649,12 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
 // WinMain...
 
+#pragma comment(lib, "winmm.lib")
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                    LPSTR lpCmdLine, int nCmdShow) {
+  // Phase -1: Ultra-Fast Timer Precision (v5.1.19)
+  timeBeginPeriod(1);
   // Phase -1: DPI Awareness (CRITICAL for multi-monitor alignment)
   // We need Per-Monitor Awareness V2 to ensure that GetSystemMetrics and
   // EnumDisplayMonitors return physical pixels, matching the game's coordinate

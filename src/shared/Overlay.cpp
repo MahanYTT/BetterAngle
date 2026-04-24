@@ -452,7 +452,7 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       int dx = rx;
       int dy = ry + rh + 8;
       int dw = rw;
-      int dh = 300; // Expanded for X-RAY Monitor (v5.1.15)
+      int dh = 340; // Iron-Tight Height (v5.1.19)
 
       LinearGradientBrush dbgBrush(Point(dx, dy), Point(dx, dy + dh),
                                    Color(175, 8, 10, 14), Color(175, 3, 5, 8));
@@ -474,9 +474,8 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
         SolidBrush valBrush(isGood ? Color(255, 0, 220, 170)
                                    : Color(255, 255, 80, 80));
         
-        // Dynamic alignment for wider values
         float xVal = float(dx + dw - 74);
-        if (val.length() > 10) xVal = float(dx + dw - 110);
+        if (val.length() > 10) xVal = float(dx + dw - 130); // Extra room for long rows
         
         graphics.DrawString(val.c_str(), -1, &dbgFont,
                             PointF(xVal, yPos), &valBrush);
@@ -486,7 +485,6 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       bool fnFoc = g_fortniteFocusedCache.load();
       bool msHdd = !g_isCursorVisible.load();
 
-      // Compute remaining suspension ms
       std::wstring suspStr = L"NO";
       if (suspended) {
         long long rem =
@@ -515,7 +513,6 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       DrawRow(5, L"State:", g_isDiving ? L"DIVING" : L"GLIDING", !g_isDiving);
       DrawRow(6, L"Input Locked:", suspended ? suspStr : L"NO", !suspended);
 
-      // Lock trigger reason
       std::wstring reasonStr = L"None";
       int reason = g_lockTriggerReason.load();
       if (reason == 1) reasonStr = L"Glide>Dive";
@@ -527,7 +524,6 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       DrawRow(9, L"Fortnite Focused:", fnFoc ? L"YES" : L"NO", fnFoc);
       DrawRow(10, L"Mouse Focus:", msHdd ? L"YES" : L"NO", msHdd);
 
-      // ROI dimensions
       std::wstring roiStr = std::to_wstring(dbgP.roi_x) + L"," +
                             std::to_wstring(dbgP.roi_y) + L" " +
                             std::to_wstring(dbgP.roi_w) + L"x" +
@@ -538,35 +534,38 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
               std::to_wstring(g_scannerCpuPct.load()) + L"%",
               g_scannerCpuPct.load() < 50);
 
-      // NITRO X-RAY MONITOR (v5.1.17 - Absolute Truth)
-      static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE, VK_SHIFT};
-      static const wchar_t* names[] = {L"W", L"A", L"S", L"D", L"SPC", L"SHFT"};
-      std::wstring wasdStr, otherStr;
+      // IRON-TIGHT DIAGNOSTICS (v5.1.19)
+      static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE, VK_LSHIFT, VK_RSHIFT, VK_LCONTROL};
+      static const wchar_t* names[] = {L"W", L"A", L"S", L"D", L"SPC", L"LSH", L"RSH", L"LCT"};
+      std::wstring wasdStr, modStr;
       bool mismatch = false;
 
       for (int i = 0; i < 4; ++i) {
-        // Use the ATOMIC table from the 1ms thread for Absolute Truth
         bool p = g_physicalKeys[keys[i]].load(std::memory_order_relaxed);
         bool t = (GetKeyState(keys[i]) & 0x8000) != 0;
         if (p != t) mismatch = true;
-        
-        // Format: W[57]:1/1
-        std::wstring vkStr = std::to_wstring(keys[i]);
-        wasdStr += std::wstring(names[i]) + L"[" + vkStr + L"]:" + (p?L"1":L"0") + L"/" + (t?L"1":L"0") + L" ";
+        wasdStr += std::wstring(names[i]) + L":" + (p?L"1":L"0") + L"/" + (t?L"1":L"0") + L" ";
       }
-      for (int i = 4; i < 6; ++i) {
+      for (int i = 4; i < 8; ++i) {
         bool p = g_physicalKeys[keys[i]].load(std::memory_order_relaxed);
         bool t = (GetKeyState(keys[i]) & 0x8000) != 0;
         if (p != t) mismatch = true;
-        
-        std::wstring vkStr = std::to_wstring(keys[i]);
-        otherStr += std::wstring(names[i]) + L"[" + vkStr + L"]:" + (p?L"1":L"0") + L"/" + (t?L"1":L"0") + L" ";
+        modStr += std::wstring(names[i]) + L":" + (p?L"1":L"0") + L"/" + (t?L"1":L"0") + L" ";
       }
 
-      DrawRow(13, L"Phys Truth (WASD):", wasdStr, true);
-      DrawRow(14, L"Phys Truth (Misc):", otherStr, true);
-      DrawRow(15, L"Ghost Detect:", mismatch ? L"MISMATCH!" : L"OK", !mismatch);
-      DrawRow(16, L"Version:", L"v" + std::wstring(VERSION_WSTR), true);
+      DrawRow(13, L"WASD Truth:", wasdStr, true);
+      DrawRow(14, L"Mods Truth:", modStr, true);
+      
+      // RAW PROBE (LIVE)
+      bool rawW = (GetAsyncKeyState('W') & 0x8000) != 0;
+      DrawRow(15, L"RAW Hardware W:", rawW ? L"PRESSED" : L"RELEASED", true);
+      
+      // LOCK SENTINEL
+      bool isLocked = suspended;
+      DrawRow(16, L"Input Lock:", isLocked ? L"ACTIVE" : L"IDLE", !isLocked);
+
+      DrawRow(17, L"Ghost Detect:", mismatch ? L"MISMATCH!" : L"OK", !mismatch);
+      DrawRow(18, L"Version:", L"v" + std::wstring(VERSION_WSTR), true);
     }
   }
 

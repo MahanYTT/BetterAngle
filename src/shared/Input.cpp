@@ -137,8 +137,11 @@ bool IsCursorCurrentlyVisible() {
 bool g_physicalKeys[256] = {false};
 static bool g_pollingRunning = false;
 
-// The "Essential 6" - Zero-Ghosting Movement Cluster
-static const int g_gamingKeys[] = {'W', 'A', 'S', 'D', VK_SPACE, VK_SHIFT};
+// The "Iron-Tight 8" - Absolute Movement Cluster (v5.1.19)
+static const int g_gamingKeys[] = {
+    'W', 'A', 'S', 'D', 
+    VK_SPACE, VK_LSHIFT, VK_RSHIFT, VK_LCONTROL
+};
 
 // Physical Truth Table (v5.1.16)
 // Using std::atomic<bool> g_physicalKeys[256] from State.h
