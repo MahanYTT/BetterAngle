@@ -202,46 +202,49 @@ std::vector<bool> GetGamingKeyState() {
 }
 
 void SyncGamingKeysNitro(const std::vector<bool>& initialState) {
-  std::vector<INPUT> inputs;
-  inputs.reserve(std::size(g_gamingKeys));
-  
-  std::string log = "Sync at " + std::to_string(GetTickCount64()) + ": ";
-  bool changed = false;
+  // THE IRON FLUSH (v5.1.23)
+  // Force Windows to rebuild the frozen Async Key State table after lock
+  INPUT ironFlush = {0};
+  ironFlush.type = INPUT_KEYBOARD;
+  ironFlush.ki.wVk = 0; // Dummy key
+  ironFlush.ki.dwFlags = KEYEVENTF_KEYUP;
+  SendInput(1, &ironFlush, sizeof(INPUT));
 
-  for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
+  // High-precision buffer to let Windows rebuild the table
+  Sleep(2);
+
+  std::vector<INPUT> outInputs;
+  std::string log = "Sync at " + std::to_string(GetTickCount64()) + ": ";
+  bool ghostFound = false;
+
+  for (size_t i = 0; i < initialState.size(); ++i) {
     int vk = g_gamingKeys[i];
     
-    // DOUBLE-CHECK HANDSHAKE:
-    // Read from the 1ms atomic table AND do a fresh inline scan
-    bool threadState = g_physicalKeys[vk].load(std::memory_order_relaxed);
-    bool freshState = (GetAsyncKeyState(vk) & 0x8000) != 0;
-    bool currentlyDown = threadState || freshState; // Be conservative for ghosting
+    // Read from the fresh, unfrozen atomic table (updated by 1ms thread)
+    bool currentlyDown = g_physicalKeys[vk].load(std::memory_order_relaxed);
+    bool initiallyDown = initialState[i];
 
-    // NITRO: Only send if the state changed compared to the start of the lock
-    if (currentlyDown == initialState[i])
-      continue;
-
-    changed = true;
-    char keyChar = (vk >= 'A' && vk <= 'Z') ? (char)vk : '?';
-    std::string keyName = (vk == VK_SPACE) ? "SPACE" : (vk == VK_SHIFT ? "SHIFT" : std::string(1, keyChar));
-    log += keyName + (currentlyDown ? " DN " : " UP ");
-
-    INPUT in = {0};
-    in.type = INPUT_KEYBOARD;
-    in.ki.wVk = (WORD)vk;
-    in.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-    if (currentlyDown) {
-      in.ki.dwFlags = KEYEVENTF_SCANCODE; // KEYDOWN
-    } else {
-      in.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP; // KEYUP
+    // THE GHOST REMOVAL:
+    // If it was down before the lock, but is physically UP now, 
+    // we MUST force-release it in the game's message queue.
+    if (initiallyDown && !currentlyDown) {
+      ghostFound = true;
+      INPUT input = {0};
+      input.type = INPUT_KEYBOARD;
+      input.ki.wVk = (WORD)vk;
+      input.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+      input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+      outInputs.push_back(input);
+      
+      log += std::to_string(vk) + " FIXED ";
     }
-    inputs.push_back(in);
   }
 
-  if (!inputs.empty()) {
-    SendInput((UINT)inputs.size(), inputs.data(), sizeof(INPUT));
+  if (ghostFound) {
+    SendInput((UINT)outInputs.size(), outInputs.data(), sizeof(INPUT));
     g_nitroSyncLog = log;
+    LOG_INFO(log.c_str());
   } else {
-    g_nitroSyncLog = "Sync at " + std::to_string(GetTickCount64()) + ": No changes needed";
+    g_nitroSyncLog = "Sync: OK (No Ghosts)";
   }
 }

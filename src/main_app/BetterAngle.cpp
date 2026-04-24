@@ -70,9 +70,7 @@ void FocusMonitorThread() {
         BlockInput(TRUE);
         Sleep(400);
         BlockInput(FALSE);
-        
-        Sleep(10); // Windows "Catch-up" buffer
-        SyncGamingKeysNitro(initialState); // Delta-only Nitro sync
+        SyncGamingKeysNitro(initialState); // Iron Flush + Delta sync
       }).detach();
       LOG_INFO("High-Speed Detection: Alt-tab back to Fortnite detected. Input "
                "blocked.");
@@ -143,9 +141,7 @@ void DetectorThread() {
             BlockInput(TRUE);
             Sleep(700);
             BlockInput(FALSE);
-            
-            Sleep(10); // Windows "Catch-up" buffer
-            SyncGamingKeysNitro(initialState); // Delta-only Nitro sync
+            SyncGamingKeysNitro(initialState); // Iron Flush + Delta sync
           }).detach();
 
           LOG_INFO("Transition: glide->dive, Nitro Delta sync (700ms)");
@@ -162,9 +158,7 @@ void DetectorThread() {
             BlockInput(TRUE);
             Sleep(1000);
             BlockInput(FALSE);
-            
-            Sleep(10); // Windows "Catch-up" buffer
-            SyncGamingKeysNitro(initialState); // Delta-only Nitro sync
+            SyncGamingKeysNitro(initialState); // Iron Flush + Delta sync
           }).detach();
 
           LOG_INFO("Transition: dive->glide, Nitro Delta sync (1000ms)");
