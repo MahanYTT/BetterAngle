@@ -534,13 +534,13 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
               std::to_wstring(g_scannerCpuPct.load()) + L"%",
               g_scannerCpuPct.load() < 50);
 
-      // IRON-TIGHT DIAGNOSTICS (v5.1.24)
-      static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE, VK_LSHIFT, VK_RSHIFT, VK_LCONTROL};
-      static const wchar_t* names[] = {L"W", L"A", L"S", L"D", L"SPC", L"LSH", L"RSH", L"LCT"};
-      std::wstring wasdStr, modStr;
+      // NITRO 5 DIAGNOSTICS (v5.5.0)
+      static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE};
+      static const wchar_t* names[] = {L"W", L"A", L"S", L"D", L"SPC"};
+      std::wstring wasdStr;
       bool mismatch = false;
 
-      for (int i = 0; i < 4; ++i) {
+      for (int i = 0; i < 5; ++i) {
         bool p = g_physicalKeys[keys[i]].load(std::memory_order_relaxed);
         bool t = (GetKeyState(keys[i]) & 0x8000) != 0;
         if (p != t) mismatch = true;
@@ -553,8 +553,7 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
         modStr += std::wstring(names[i]) + L":" + (p?L"1":L"0") + L"/" + (t?L"1":L"0") + L" ";
       }
 
-      DrawRow(13, L"WASD Truth:", wasdStr, true);
-      DrawRow(14, L"Mods Truth:", modStr, true);
+      DrawRow(13, L"Nitro 5 Truth:", wasdStr, true);
       
       bool rawW = (GetAsyncKeyState('W') & 0x8000) != 0;
       DrawRow(15, L"RAW Hardware W:", rawW ? L"PRESSED" : L"RELEASED", true);

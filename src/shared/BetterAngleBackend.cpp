@@ -1043,10 +1043,10 @@ int BetterAngleBackend::scannerCpuPct() const {
 }
 QString BetterAngleBackend::physicalKeyStates() const {
   QString states;
-  static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE, VK_LSHIFT, VK_RSHIFT, VK_LCONTROL};
-  static const char* names[] = {"W", "A", "S", "D", "SPC", "LSH", "RSH", "LCT"};
+  static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE};
+  static const char* names[] = {"W", "A", "S", "D", "SPC"};
   
-  for (int i = 0; i < 8; ++i) {
+  for (int i = 0; i < 5; ++i) {
     bool phys = g_physicalKeys[keys[i]].load(std::memory_order_relaxed);
     bool tracked = (GetKeyState(keys[i]) & 0x8000) != 0;
     
@@ -1057,7 +1057,7 @@ QString BetterAngleBackend::physicalKeyStates() const {
 }
 
 bool BetterAngleBackend::ghostMismatch() const {
-  static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE, VK_LSHIFT, VK_RSHIFT, VK_LCONTROL};
+  static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE};
   for (int vk : keys) {
     bool phys = g_physicalKeys[vk].load(std::memory_order_relaxed);
     bool tracked = (GetKeyState(vk) & 0x8000) != 0;

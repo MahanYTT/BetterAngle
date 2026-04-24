@@ -222,6 +222,7 @@ POINT g_dragStartHUD = {0, 0};
 POINT g_dragStartMouse = {0, 0};
 HWND g_hHUD = NULL;
 HWND g_hPanel = NULL;
+HWND g_hMsgWnd = NULL;
 
 RECT GetMonitorRectByIndex(int index) {
   struct RectData {

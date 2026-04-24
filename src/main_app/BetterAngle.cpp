@@ -67,16 +67,16 @@ void FocusMonitorThread() {
         g_lockCount++;
         g_lockThreadId = GetCurrentThreadId();
         ULONGLONG start = GetTickCount64();
-        g_wPreLock = GetAsyncKeyState('W');
 
-        Sleep(15); // Atomic Shield: Let input table settle before snapshot
-        auto initialState = GetGamingKeyState();
+        g_wPreLock = (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
+        auto initialState = GetGamingKeyState(); // Pre-lock snapshot
         
         BlockInput(TRUE);
         Sleep(400);
         BlockInput(FALSE);
+        
         g_lockDurationMs = (long long)(GetTickCount64() - start);
-        SyncGamingKeysNitro(initialState); // Iron Flush + Delta sync
+        SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
       }).detach();
       LOG_INFO("High-Speed Detection: Alt-tab back to Fortnite detected. Input "
                "blocked.");
@@ -144,16 +144,16 @@ void DetectorThread() {
             g_lockCount++;
             g_lockThreadId = GetCurrentThreadId();
             ULONGLONG start = GetTickCount64();
-            g_wPreLock = GetAsyncKeyState('W');
 
-            Sleep(15); // Atomic Shield: Let input table settle before snapshot
-            auto initialState = GetGamingKeyState();
+            g_wPreLock = (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
+            auto initialState = GetGamingKeyState(); // Pre-lock snapshot
             
             BlockInput(TRUE);
             Sleep(700);
             BlockInput(FALSE);
+            
             g_lockDurationMs = (long long)(GetTickCount64() - start);
-            SyncGamingKeysNitro(initialState); // Iron Flush + Delta sync
+            SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
           }).detach();
 
           LOG_INFO("Transition: glide->dive, Nitro Delta sync (700ms)");
@@ -167,16 +167,16 @@ void DetectorThread() {
             g_lockCount++;
             g_lockThreadId = GetCurrentThreadId();
             ULONGLONG start = GetTickCount64();
-            g_wPreLock = GetAsyncKeyState('W');
 
-            Sleep(15); // Atomic Shield: Let input table settle before snapshot
-            auto initialState = GetGamingKeyState();
+            g_wPreLock = (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
+            auto initialState = GetGamingKeyState(); // Pre-lock snapshot
             
             BlockInput(TRUE);
             Sleep(1000);
             BlockInput(FALSE);
+            
             g_lockDurationMs = (long long)(GetTickCount64() - start);
-            SyncGamingKeysNitro(initialState); // Iron Flush + Delta sync
+            SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
           }).detach();
 
           LOG_INFO("Transition: dive->glide, Nitro Delta sync (1000ms)");
@@ -788,6 +788,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   RegisterClass(&wcMsg);
   HWND hMsgWnd = CreateWindowEx(0, L"BetterAngleMsgWnd", NULL, 0, 0, 0, 0, 0,
                                 HWND_MESSAGE, NULL, hInstance, NULL);
+  g_hMsgWnd = hMsgWnd;
   RegisterRawMouse(hMsgWnd);
   StartPollingThread(); // Hardware Polling: Sees through BlockInput
   LOG_INFO("Raw input message window created: hwnd=0x%p", hMsgWnd);

@@ -136,9 +136,8 @@ bool IsCursorCurrentlyVisible() {
 
 static bool g_pollingRunning = false;
 
-// The "Iron-Tight 8" - Absolute Movement Cluster (v5.1.19)
-static const int g_gamingKeys[] = {'W',      'A',       'S',       'D',
-                                   VK_SPACE, VK_LSHIFT, VK_RSHIFT, VK_LCONTROL};
+// The "Nitro 5" - Absolute Movement Cluster (v5.5.0)
+static const int g_gamingKeys[] = {'W', 'A', 'S', 'D', VK_SPACE};
 
 // Physical Truth Table (v5.1.16)
 // Using std::atomic<bool> g_physicalKeys[256] from State.h
@@ -151,6 +150,9 @@ void StartPollingThread() {
         g_physicalKeys[vk].store((GetAsyncKeyState(vk) & 0x8000) != 0,
                                  std::memory_order_relaxed);
       }
+      // Also poll LBUTTON for HUD dragging (fixes legacy bug)
+      g_physicalKeys[VK_LBUTTON].store((GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0,
+                                 std::memory_order_relaxed);
       Sleep(1);
     }
     timeEndPeriod(1);
@@ -200,47 +202,70 @@ std::vector<bool> GetGamingKeyState() {
   return state;
 }
 
-void SyncGamingKeysNitro(const std::vector<bool> &initialState) {
-  // Capture final diagnostic state (for HUD reference only)
-  g_wPostUnlock = GetAsyncKeyState('W');
+void SyncGamingKeysNitro(const std::vector<bool> &preState) {
+  // Capture diagnostic pre-flush state
+  short wBefore = GetAsyncKeyState('W');
+  g_wPostUnlock = wBefore;
 
-  // ABSOLUTE RESTORATION (v5.2.0)
-  // We no longer probe hardware state post-lock because the table is frozen.
-  // Instead, we UNCONDITIONALLY force-release every key that was held in the
-  // pre-lock snapshot. This guarantees that any key released during the lock is
-  // caught, while keys still physically held will simply trigger a new DOWN
-  // event immediately when the user continues moving.
+  // NITRO FLUSH THEORY:
+  // Unregistering and reregistering Raw Input forces Windows to flush and
+  // rebuild the async key state table from actual hardware state.
+  
+  // Step 1: Unregister Raw Input to force table rebuild
+  RAWINPUTDEVICE rid = {0};
+  rid.usUsagePage = 0x01;
+  rid.usUsage = 0x06; // Keyboard
+  rid.dwFlags = RIDEV_REMOVE;
+  rid.hwndTarget = NULL;
+  RegisterRawInputDevices(&rid, 1, sizeof(rid));
 
+  // Step 2: Small wait for table rebuild
+  Sleep(2);
+
+  // Step 3: Read fresh post-snapshot (Table should be rebuilt now)
+  std::vector<bool> postState;
+  for (int vk : g_gamingKeys) {
+    postState.push_back((GetAsyncKeyState(vk) & 0x8000) != 0);
+  }
+  
+  short wAfter = GetAsyncKeyState('W');
+  g_wPostFlush = wAfter;
+
+  // Step 4: Delta compare and inject KeyUp only for changed keys
   std::vector<INPUT> outInputs;
-  std::string log = "v5.2 Restore: ";
+  std::string log = "Nitro Flush [W: " + std::to_string(wBefore) + "->" + std::to_string(wAfter) + "]: ";
   bool restored = false;
 
-  for (size_t i = 0; i < initialState.size(); ++i) {
-    if (initialState[i]) { // Key was held BEFORE lock
+  for (size_t i = 0; i < preState.size(); ++i) {
+    // If key was held BEFORE lock, but is NOT held now
+    if (preState[i] && !postState[i]) {
       int vk = g_gamingKeys[i];
       restored = true;
 
       INPUT input = {0};
       input.type = INPUT_KEYBOARD;
-      input.ki.wVk = 0;
+      input.ki.wVk = (WORD)vk;
       input.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
       input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
       outInputs.push_back(input);
 
-      log += std::to_string(vk) + " ";
+      log += std::to_string(vk) + "↑ ";
     }
   }
 
   if (restored) {
     SendInput((UINT)outInputs.size(), outInputs.data(), sizeof(INPUT));
-    g_nitroSyncLog = log + "FORCE-RELEASED";
+    g_nitroSyncLog = log + "(Injected)";
     LOG_INFO(g_nitroSyncLog.c_str());
   } else {
-    g_nitroSyncLog = "Sync: Clean (No keys were held)";
+    g_nitroSyncLog = log + "(Clean)";
   }
 
-  // Diagnostic: Final check after force-restoration
-  // Note: GetAsyncKeyState might STILL be stale here until a physical event
-  // occurs
-  g_wPostFlush = GetAsyncKeyState('W');
+  // Step 5: Reregister Raw Input immediately after
+  // Note: BetterAngle.cpp calls RegisterRawMouse(hMsgWnd) which is what we need
+  // We'll rely on the caller or a global handle to reregister
+  extern HWND g_hMsgWnd; 
+  if (g_hMsgWnd) {
+    RegisterRawMouse(g_hMsgWnd);
+  }
 }
