@@ -599,7 +599,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
       // Unconditionally draw overlay at 60FPS to keep Debug stats (FPS/Delay)
       // synced live
-      DrawOverlay(hWnd, ang, g_detectionRatio, g_showCrosshair);
+      DrawOverlay(hWnd, ang, g_showCrosshair);
     } else if (wParam == 2) { // 30s Auto-Save Periodic Timer
       SaveSettings();
       if (!g_allProfiles.empty() &&

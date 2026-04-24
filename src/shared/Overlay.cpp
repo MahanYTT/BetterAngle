@@ -75,8 +75,7 @@ static bool CheckFortniteProcessFast() {
   return found;
 }
 
-void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
-                 bool showCrosshair) {
+void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
   TickFPS();
 
   RECT rect;
@@ -398,6 +397,10 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
 
     // Match % label
     Font subFont(&ff, 12, FontStyleBold, UnitPixel);
+    int matchCount = g_matchCount.load();
+    int area = (g_allProfiles.empty()) ? 10000 : (g_allProfiles[g_selectedProfileIdx].roi_w * g_allProfiles[g_selectedProfileIdx].roi_h);
+    if (area <= 0) area = 1;
+    float detectionRatio = (float)matchCount / area;
     int matchPct = int(detectionRatio * 100.0f);
     std::wstring matchStr = L"Match  " + std::to_wstring(matchPct) + L"%";
     Color matchLabelCol(200, 160, 170, 185);

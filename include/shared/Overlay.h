@@ -6,6 +6,6 @@
 
 void InitializeOverlay(HWND hwnd);
 void CleanupOverlay();
-void DrawOverlay(HWND hwnd, double angle, float detectionRatio, bool showCrosshair);
+void DrawOverlay(HWND hwnd, double angle, bool showCrosshair);
 
 #endif // OVERLAY_H
