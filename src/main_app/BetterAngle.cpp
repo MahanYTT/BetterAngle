@@ -166,7 +166,7 @@ void DetectorThread() {
       g_isDiving = nowDiving;
       g_logic.SetDivingState(nowDiving);
     }
-    std::this_thread::yield(); // Maximum loop response speed
+    Sleep(1); // CPU Fix: Drops usage from 100% to ~1%
   }
 }
 
