@@ -61,6 +61,8 @@ class BetterAngleBackend : public QObject {
   Q_PROPERTY(int peakMatchPct READ peakMatchPct NOTIFY debugDataChanged)
   Q_PROPERTY(QString roiDimensions READ roiDimensions NOTIFY debugDataChanged)
   Q_PROPERTY(int scannerCpuPct READ scannerCpuPct NOTIFY debugDataChanged)
+  Q_PROPERTY(QString physicalKeyStates READ physicalKeyStates NOTIFY debugDataChanged)
+  Q_PROPERTY(QString nitroSyncLog READ nitroSyncLog NOTIFY debugDataChanged)
 
   // Custom Keybinds
   Q_PROPERTY(
@@ -132,6 +134,8 @@ public:
   int peakMatchPct() const;
   QString roiDimensions() const;
   int scannerCpuPct() const;
+  QString physicalKeyStates() const;
+  QString nitroSyncLog() const;
   Q_INVOKABLE void refreshDebugData();
 
   Q_INVOKABLE void terminateApp();

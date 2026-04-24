@@ -1123,6 +1123,26 @@ Item {
                                 Text { text: "Version:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
                                 Text { text: "v" + backend.versionStr; color: "#666"; font.bold: true; font.pixelSize: 13 }
                             }
+
+                            Rectangle { width: parent.width; height: 1; color: "#444"; }
+
+                            // X-RAY MONITOR (v5.1.11)
+                            Text { text: "NITRO X-RAY MONITOR (1ms)"; color: "#00ffa3"; font.pixelSize: 10; font.bold: true; topPadding: 5 }
+
+                            RowLayout { width: parent.width
+                                Text { text: "Physical Keys:"; color: "#aaa"; font.pixelSize: 12; Layout.fillWidth: true }
+                                Text { text: backend.physicalKeyStates; color: "#00ffa3"; font.bold: true; font.pixelSize: 11; font.family: "Consolas" }
+                            }
+
+                            Text { text: "Last Sync Event:"; color: "#aaa"; font.pixelSize: 12 }
+                            Rectangle {
+                                width: parent.width; height: 40; radius: 4; color: "#1c1c2e"; border.color: "#333"; border.width: 1
+                                Text { 
+                                    anchors.centerIn: parent; width: parent.width - 10
+                                    text: backend.nitroSyncLog; color: "#cc88ff"; font.pixelSize: 11; font.family: "Consolas"; wrapMode: Text.WordWrap; horizontalAlignment: Text.AlignHCenter
+                                }
+                            }
+
                             Item { height: 5 }
                         }
                     }

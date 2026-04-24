@@ -1041,6 +1041,19 @@ QString BetterAngleBackend::roiDimensions() const {
 int BetterAngleBackend::scannerCpuPct() const {
   return g_scannerCpuPct.load();
 }
+QString BetterAngleBackend::physicalKeyStates() const {
+  QString states;
+  static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE, VK_SHIFT};
+  static const char* names[] = {"W", "A", "S", "D", "SPACE", "SHIFT"};
+  for (int i = 0; i < 6; ++i) {
+    bool down = (GetAsyncKeyState(keys[i]) & 0x8000) != 0;
+    states += QString("%1:%2 ").arg(names[i]).arg(down ? "DN" : "UP");
+  }
+  return states;
+}
+QString BetterAngleBackend::nitroSyncLog() const {
+  return QString::fromStdString(g_nitroSyncLog);
+}
 
 void BetterAngleBackend::finishBooting() {
   if (g_hHUD) {

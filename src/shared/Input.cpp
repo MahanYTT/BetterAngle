@@ -198,6 +198,9 @@ std::vector<bool> GetGamingKeyState() {
 void SyncGamingKeysNitro(const std::vector<bool>& initialState) {
   std::vector<INPUT> inputs;
   inputs.reserve(std::size(g_gamingKeys));
+  
+  std::string log = "Sync at " + std::to_string(GetTickCount64()) + ": ";
+  bool changed = false;
 
   for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
     int vk = g_gamingKeys[i];
@@ -211,6 +214,11 @@ void SyncGamingKeysNitro(const std::vector<bool>& initialState) {
     // NITRO: Only send if the state changed compared to the start of the lock
     if (currentlyDown == initialState[i])
       continue;
+
+    changed = true;
+    char keyChar = (vk >= 'A' && vk <= 'Z') ? (char)vk : '?';
+    std::string keyName = (vk == VK_SPACE) ? "SPACE" : (vk == VK_SHIFT ? "SHIFT" : std::string(1, keyChar));
+    log += keyName + (currentlyDown ? " DN " : " UP ");
 
     INPUT in = {0};
     in.type = INPUT_KEYBOARD;
@@ -226,5 +234,8 @@ void SyncGamingKeysNitro(const std::vector<bool>& initialState) {
 
   if (!inputs.empty()) {
     SendInput((UINT)inputs.size(), inputs.data(), sizeof(INPUT));
+    g_nitroSyncLog = log;
+  } else {
+    g_nitroSyncLog = "Sync at " + std::to_string(GetTickCount64()) + ": No changes needed";
   }
 }
