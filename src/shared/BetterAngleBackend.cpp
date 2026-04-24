@@ -1044,13 +1044,28 @@ int BetterAngleBackend::scannerCpuPct() const {
 QString BetterAngleBackend::physicalKeyStates() const {
   QString states;
   static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE, VK_SHIFT};
-  static const char* names[] = {"W", "A", "S", "D", "SPACE", "SHIFT"};
+  static const char* names[] = {"W", "A", "S", "D", "SPC", "SHFT"};
+  
   for (int i = 0; i < 6; ++i) {
-    bool down = (GetAsyncKeyState(keys[i]) & 0x8000) != 0;
-    states += QString("%1:%2 ").arg(names[i]).arg(down ? "DN" : "UP");
+    bool phys = (GetAsyncKeyState(keys[i]) & 0x8000) != 0;
+    bool tracked = (GetKeyState(keys[i]) & 0x8000) != 0;
+    
+    // Format: W:P1/T1 (1=Down, 0=Up)
+    states += QString("%1:%2/%3 ").arg(names[i]).arg(phys?1:0).arg(tracked?1:0);
   }
   return states;
 }
+
+bool BetterAngleBackend::ghostMismatch() const {
+  static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE, VK_SHIFT};
+  for (int vk : keys) {
+    bool phys = (GetAsyncKeyState(vk) & 0x8000) != 0;
+    bool tracked = (GetKeyState(vk) & 0x8000) != 0;
+    if (phys != tracked) return true; // THE GHOST IS PRESENT
+  }
+  return false;
+}
+
 QString BetterAngleBackend::nitroSyncLog() const {
   return QString::fromStdString(g_nitroSyncLog);
 }

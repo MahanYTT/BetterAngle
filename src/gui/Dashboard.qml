@@ -1130,8 +1130,13 @@ Item {
                             Text { text: "NITRO X-RAY MONITOR (1ms)"; color: "#00ffa3"; font.pixelSize: 10; font.bold: true; topPadding: 5 }
 
                             RowLayout { width: parent.width
-                                Text { text: "Physical Keys:"; color: "#aaa"; font.pixelSize: 12; Layout.fillWidth: true }
+                                Text { text: "Physical Truth (P/T):"; color: "#aaa"; font.pixelSize: 12; Layout.fillWidth: true }
                                 Text { text: backend.physicalKeyStates; color: "#00ffa3"; font.bold: true; font.pixelSize: 11; font.family: "Consolas" }
+                            }
+
+                            RowLayout { width: parent.width
+                                Text { text: "Ghost Detector:"; color: "#aaa"; font.pixelSize: 12; Layout.fillWidth: true }
+                                Text { text: backend.ghostMismatch ? "MISMATCH!" : "OK"; color: backend.ghostMismatch ? "#ff4c4c" : "#00ffaa"; font.bold: true; font.pixelSize: 12 }
                             }
 
                             Text { text: "Last Sync Event:"; color: "#aaa"; font.pixelSize: 12 }
