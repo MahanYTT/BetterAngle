@@ -75,7 +75,7 @@ git config user.name "github-actions[bot]"
 git config user.email "github-actions[bot]@users.noreply.github.com"
 
 git add VERSION CMakeLists.txt include/shared/State.h RELEASE_NOTES.md
-git commit -m "chore: auto-increment version for release $newVersion [skip ci]"
+git commit -m "chore: auto-increment version to $newVersion"
 
 $tag = "v$newVersion"
 git tag -f $tag
