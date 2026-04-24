@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.11
+- fix: git hijack to neutralize duplicate logic [v5.5.14]
+
 ### BetterAngle Pro v5.5.10
 - fix: neutralize duplicate workflow logic [v5.5.13]
 
