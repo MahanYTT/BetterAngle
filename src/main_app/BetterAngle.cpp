@@ -60,11 +60,11 @@ void FocusMonitorThread() {
     // Detect Alt-Tab back into Fortnite with ultra-low latency (1ms polling)
     if (!lastFortniteFocused && currentFortniteFocused) {
       // ALT-TAB COOLDOWN: Windows handles key state restoration automatically
-      // No BlockInput needed for focus changes - just suspend mouse for 200ms
-      g_mouseSuspendedUntil = GetTickCount64() + 200;
+      // No BlockInput needed for focus changes - just suspend mouse for 400ms
+      g_mouseSuspendedUntil = GetTickCount64() + 400;
       g_lockTriggerReason = 3; // Alt-Tab Return
       g_lockCount++;
-      LOG_INFO("Alt-tab cooldown active (200ms) - skipping BlockInput");
+      LOG_INFO("Alt-tab cooldown active (400ms) - skipping BlockInput");
     }
     lastFortniteFocused = currentFortniteFocused;
     Sleep(0); // Max CPU performance for lightning fast focus detection
