@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.2
+- fix: Nitro Flush keyboard ghosting resolution [v5.5.2]
+
 ### BetterAngle Pro v5.5.1
 - Automated build release.
 
