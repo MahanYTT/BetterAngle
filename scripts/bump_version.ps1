@@ -1,1 +1,73 @@
-exit 0
+param (
+    [string]$CommitRange = ""
+)
+
+# 1. Read Current Version
+$versionFile = "VERSION"
+if (-Not (Test-Path $versionFile)) {
+    Write-Error "VERSION file not found!"
+    exit 1
+}
+$currentVersion = (Get-Content $versionFile).Trim()
+Write-Host "Current version: $currentVersion"
+
+# 2. Parse and Increment
+$parts = $currentVersion.Split('.')
+if ($parts.Length -ne 3) {
+    Write-Error "Invalid version format in VERSION file!"
+    exit 1
+}
+
+$major = [int]$parts[0]
+$minor = [int]$parts[1]
+$patch = [int]$parts[2]
+$patch++
+$newVersion = "$major.$minor.$patch"
+Write-Host "New version: $newVersion"
+
+# 3. Update VERSION file
+$newVersion | Out-File -FilePath $versionFile -Encoding ascii -NoNewline
+
+# 4. Update CMakeLists.txt
+$cmakeFile = "CMakeLists.txt"
+if (Test-Path $cmakeFile) {
+    $cmakeContent = Get-Content $cmakeFile
+    $cmakeContent = $cmakeContent -replace "project\(BetterAngle VERSION \d+\.\d+\.\d+", "project(BetterAngle VERSION $newVersion"
+    $cmakeContent | Out-File -FilePath $cmakeFile -Encoding ascii
+    Write-Host "Updated CMakeLists.txt"
+}
+
+# 5. Update State.h
+$stateFile = "include/shared/State.h"
+if (Test-Path $stateFile) {
+    $stateContent = Get-Content $stateFile
+    $stateContent = $stateContent -replace "#define V_MAJ \d+", "#define V_MAJ $major"
+    $stateContent = $stateContent -replace "#define V_MIN \d+", "#define V_MIN $minor"
+    $stateContent = $stateContent -replace "#define V_PAT \d+", "#define V_PAT $patch"
+    $stateContent | Out-File -FilePath $stateFile -Encoding ascii
+    Write-Host "Updated State.h"
+}
+
+# 6. Update RELEASE_NOTES.md
+$releaseNotesFile = "RELEASE_NOTES.md"
+if (Test-Path $releaseNotesFile) {
+    $oldNotes = Get-Content $releaseNotesFile
+    $newEntry = "### BetterAngle Pro v$newVersion`n"
+    
+    if ($CommitRange) {
+        $logs = git log $CommitRange --oneline --pretty=format:"- %s"
+        if ($logs) {
+            $newEntry += $logs + "`n"
+        } else {
+            $newEntry += "- Automated build release.`n"
+        }
+    } else {
+        $newEntry += "- Automated build release.`n"
+    }
+    
+    $newContent = $newEntry + "`n" + ($oldNotes -join "`n")
+    $newContent | Out-File -FilePath $releaseNotesFile -Encoding ascii
+    Write-Host "Updated RELEASE_NOTES.md"
+}
+
+Write-Host "Version bump to $newVersion complete."
