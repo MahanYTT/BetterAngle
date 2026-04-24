@@ -1,7 +1,14 @@
 #include "shared/Input.h"
+#include "shared/State.h"
+#include "shared/EnhancedLogging.h"
 #include <cwchar>
 #include <tlhelp32.h>
 #include <windows.h>
+#include <string>
+#include <vector>
+#include <thread>
+
+extern std::string g_nitroSyncLog;
 
 namespace {
 bool IsFortniteProcessName(const wchar_t *processName) {
