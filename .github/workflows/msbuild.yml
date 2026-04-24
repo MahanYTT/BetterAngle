@@ -5,8 +5,6 @@ on:
     branches: [ "main" ]
     tags:
       - 'v*'
-  pull_request:
-    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -21,7 +19,6 @@ jobs:
           fetch-depth: 0
 
       - name: Auto-increment version on main branch
-        # Use author detection instead of [skip ci] to prevent loops
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.head_commit.author.name != 'github-actions[bot]'
         shell: pwsh
         run: |
@@ -35,6 +32,10 @@ jobs:
           git commit -m "chore: auto-increment version to $newVersion"
           git tag "v$newVersion"
           git push origin main --tags
+          
+          # Force this run to treat itself as a release run
+          echo "VERSION_BUMPED=true" >> $env:GITHUB_ENV
+          echo "RELEASE_TAG=v$newVersion" >> $env:GITHUB_ENV
 
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
@@ -88,13 +89,14 @@ jobs:
           $outLines | Out-File CURRENT_RELEASE_NOTES.md -Encoding utf8
 
       - name: Set release metadata
-        # Allow metadata to be set on tag push OR bot-triggered main push
-        if: startsWith(github.ref, 'refs/tags/v') || (github.ref == 'refs/heads/main' && github.event.head_commit.author.name == 'github-actions[bot]')
+        if: startsWith(github.ref, 'refs/tags/v') || env.VERSION_BUMPED == 'true'
         shell: pwsh
         run: |
-          $ver = (Get-Content VERSION).Trim()
-          echo "RELEASE_TAG=v$ver" >> $env:GITHUB_ENV
-          echo "RELEASE_NAME=BetterAngle Pro v$ver" >> $env:GITHUB_ENV
+          if ($env:VERSION_BUMPED -ne "true") {
+            $ver = (Get-Content VERSION).Trim()
+            echo "RELEASE_TAG=v$ver" >> $env:GITHUB_ENV
+          }
+          echo "RELEASE_NAME=BetterAngle Pro $env:RELEASE_TAG" >> $env:GITHUB_ENV
 
       - name: Create GitHub Release
         if: env.RELEASE_TAG != ''
