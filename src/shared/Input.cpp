@@ -202,7 +202,10 @@ std::vector<bool> GetGamingKeyState() {
 }
 
 void SyncGamingKeysNitro(const std::vector<bool>& initialState) {
-  // THE IRON FLUSH (v5.1.23)
+  // Capture STALE state immediately after unlock but before flush
+  g_wPostUnlock = GetAsyncKeyState('W');
+
+  // THE IRON FLUSH (v5.1.23/24)
   // Force Windows to rebuild the frozen Async Key State table after lock
   INPUT ironFlush = {0};
   ironFlush.type = INPUT_KEYBOARD;
@@ -212,6 +215,9 @@ void SyncGamingKeysNitro(const std::vector<bool>& initialState) {
 
   // High-precision buffer to let Windows rebuild the table
   Sleep(2);
+
+  // Capture FRESH state after flush
+  g_wPostFlush = GetAsyncKeyState('W');
 
   std::vector<INPUT> outInputs;
   std::string log = "Sync at " + std::to_string(GetTickCount64()) + ": ";

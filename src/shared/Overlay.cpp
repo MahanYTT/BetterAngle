@@ -452,7 +452,7 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       int dx = rx;
       int dy = ry + rh + 8;
       int dw = rw;
-      int dh = 340; // Iron-Tight Height (v5.1.19)
+      int dh = 440; // Deep-Freeze Height (v5.1.24)
 
       LinearGradientBrush dbgBrush(Point(dx, dy), Point(dx, dy + dh),
                                    Color(175, 8, 10, 14), Color(175, 3, 5, 8));
@@ -475,7 +475,7 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
                                    : Color(255, 255, 80, 80));
         
         float xVal = float(dx + dw - 74);
-        if (val.length() > 10) xVal = float(dx + dw - 130); // Extra room for long rows
+        if (val.length() > 10) xVal = float(dx + dw - 140); // Extra room for long forensic rows
         
         graphics.DrawString(val.c_str(), -1, &dbgFont,
                             PointF(xVal, yPos), &valBrush);
@@ -534,7 +534,7 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
               std::to_wstring(g_scannerCpuPct.load()) + L"%",
               g_scannerCpuPct.load() < 50);
 
-      // IRON-TIGHT DIAGNOSTICS (v5.1.19)
+      // IRON-TIGHT DIAGNOSTICS (v5.1.24)
       static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE, VK_LSHIFT, VK_RSHIFT, VK_LCONTROL};
       static const wchar_t* names[] = {L"W", L"A", L"S", L"D", L"SPC", L"LSH", L"RSH", L"LCT"};
       std::wstring wasdStr, modStr;
@@ -556,16 +556,23 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       DrawRow(13, L"WASD Truth:", wasdStr, true);
       DrawRow(14, L"Mods Truth:", modStr, true);
       
-      // RAW PROBE (LIVE)
       bool rawW = (GetAsyncKeyState('W') & 0x8000) != 0;
       DrawRow(15, L"RAW Hardware W:", rawW ? L"PRESSED" : L"RELEASED", true);
       
-      // LOCK SENTINEL
       bool isLocked = suspended;
       DrawRow(16, L"Input Lock:", isLocked ? L"ACTIVE" : L"IDLE", !isLocked);
 
-      DrawRow(17, L"Ghost Detect:", mismatch ? L"MISMATCH!" : L"OK", !mismatch);
-      DrawRow(18, L"Version:", L"v" + std::wstring(VERSION_WSTR), true);
+      // DEEP-FREEZE FORENSICS (v5.1.24)
+      DrawRow(17, L"Lock Count:", std::to_wstring(g_lockCount.load()));
+      DrawRow(18, L"Lock Duration:", std::to_wstring(g_lockDurationMs.load()) + L" ms");
+      DrawRow(19, L"Lock Thread ID:", std::to_wstring(g_lockThreadId.load()));
+      
+      DrawRow(20, L"W State (PRE):", std::to_wstring(g_wPreLock.load()));
+      DrawRow(21, L"W State (POST):", std::to_wstring(g_wPostUnlock.load()));
+      DrawRow(22, L"W State (FLUSH):", std::to_wstring(g_wPostFlush.load()));
+
+      DrawRow(23, L"Ghost Detect:", mismatch ? L"MISMATCH!" : L"OK", !mismatch);
+      DrawRow(24, L"Version:", L"v" + std::wstring(VERSION_WSTR), true);
     }
   }
 

@@ -64,12 +64,18 @@ void FocusMonitorThread() {
 
       // NITRO ASYNC LOCK: Time-critical resync
       std::thread([]() {
+        g_lockCount++;
+        g_lockThreadId = GetCurrentThreadId();
+        ULONGLONG start = GetTickCount64();
+        g_wPreLock = GetAsyncKeyState('W');
+
         SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
         auto initialState = GetGamingKeyState();
         
         BlockInput(TRUE);
         Sleep(400);
         BlockInput(FALSE);
+        g_lockDurationMs = (long long)(GetTickCount64() - start);
         SyncGamingKeysNitro(initialState); // Iron Flush + Delta sync
       }).detach();
       LOG_INFO("High-Speed Detection: Alt-tab back to Fortnite detected. Input "
@@ -135,12 +141,18 @@ void DetectorThread() {
           g_mouseSuspendedUntil = GetTickCount64() + 700;
           
           std::thread([]() {
+            g_lockCount++;
+            g_lockThreadId = GetCurrentThreadId();
+            ULONGLONG start = GetTickCount64();
+            g_wPreLock = GetAsyncKeyState('W');
+
             SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
             auto initialState = GetGamingKeyState();
             
             BlockInput(TRUE);
             Sleep(700);
             BlockInput(FALSE);
+            g_lockDurationMs = (long long)(GetTickCount64() - start);
             SyncGamingKeysNitro(initialState); // Iron Flush + Delta sync
           }).detach();
 
@@ -152,12 +164,18 @@ void DetectorThread() {
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
           
           std::thread([]() {
+            g_lockCount++;
+            g_lockThreadId = GetCurrentThreadId();
+            ULONGLONG start = GetTickCount64();
+            g_wPreLock = GetAsyncKeyState('W');
+
             SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
             auto initialState = GetGamingKeyState();
             
             BlockInput(TRUE);
             Sleep(1000);
             BlockInput(FALSE);
+            g_lockDurationMs = (long long)(GetTickCount64() - start);
             SyncGamingKeysNitro(initialState); // Iron Flush + Delta sync
           }).detach();
 

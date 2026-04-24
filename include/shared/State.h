@@ -27,6 +27,12 @@ extern std::atomic<bool> g_running;
 extern std::string g_nitroSyncLog;
 extern int g_screenIndex;
 extern std::atomic<bool> g_fortniteFocusedCache;
+extern std::atomic<int> g_lockCount;
+extern std::atomic<DWORD> g_lockThreadId;
+extern std::atomic<long long> g_lockDurationMs;
+extern std::atomic<short> g_wPreLock;
+extern std::atomic<short> g_wPostUnlock;
+extern std::atomic<short> g_wPostFlush;
 
 extern std::string g_lastVersionRun;
 
