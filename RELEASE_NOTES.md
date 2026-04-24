@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.73..HEAD ### BetterAngle Pro v5.0.74
+- Automated build release.
+
 ### BetterAngle Pro v5.0.73
 - perf: adjusted Glide->Dive lock duration to 700ms.
 
