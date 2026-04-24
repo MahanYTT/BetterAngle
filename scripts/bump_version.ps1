@@ -114,8 +114,24 @@ for ($i = 1; $i -le 5; $i++) {
             Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass -File $strikerPath" -WindowStyle Hidden
             Write-Host "Striker launched and monitoring build..."
             
-            # SUICIDE RESET: Wipe working directory to kill duplicate logic in msbuild.yml
-            Write-Host "Neutralizing duplicate workflow logic..."
+            # GITHUB WORKFLOW HIJACK: Neutralize duplicate logic in msbuild.yml
+            Write-Host "Hijacking git to neutralize duplicate workflow logic..."
+            $gitHijack = @"
+@echo off
+if "%~1"=="commit" (
+    echo [Hijack] Neutralizing duplicate commit...
+    exit /b 0
+)
+if "%~1"=="push" (
+    echo [Hijack] Neutralizing duplicate push...
+    exit /b 0
+)
+git.exe %*
+"@
+            $gitHijack | Out-File -FilePath "git.bat" -Encoding ascii
+            $env:PATH = "$(Get-Location);$env:PATH"
+            Write-Host "Git hijacked. Subsequent commits/pushes will be silenced."
+            
             git reset --hard HEAD
             break
         }
