@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.80..HEAD ### BetterAngle Pro v5.0.81
+- Automated build release.
+
 ### BetterAngle Pro v5.0.80
 - release: baseline stability restoration. This version resets the codebase to the stable v5.0.74 logic, providing a reliable foundation for future manual optimizations.
 
