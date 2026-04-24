@@ -269,9 +269,6 @@ bool RefreshHotkeys(HWND hWnd) {
     UnregisterHotKey(hWnd, i);
   }
 
-  if (hWndMsg) {
-    RegisterRawInput(hWndMsg);
-  }
 
   // Small delay to allow system to process unregistration (optional but can
   // help)
@@ -780,7 +777,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   RegisterClass(&wcMsg);
   HWND hMsgWnd = CreateWindowEx(0, L"BetterAngleMsgWnd", NULL, 0, 0, 0, 0, 0,
                                 HWND_MESSAGE, NULL, hInstance, NULL);
-  RegisterRawMouse(hMsgWnd);
+  RegisterRawInput(hMsgWnd);
   LOG_INFO("Raw input message window created: hwnd=0x%p", hMsgWnd);
 
   // Phase 2: Create Control Panel (Interactive) via Qt
