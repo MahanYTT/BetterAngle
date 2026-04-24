@@ -173,102 +173,37 @@ bool IsCursorCurrentlyVisible() {
   return (cursorInfo.flags & CURSOR_SHOWING) != 0;
 }
 
-void ReleaseGamingKeys() {
-  static const int gamingKeys[] = {'W',         'A',         'S',
-                                   'D',         VK_SPACE,    VK_LSHIFT,
-                                   VK_LCONTROL, VK_LBUTTON,  VK_RBUTTON,
-                                   VK_MBUTTON,  VK_XBUTTON1, VK_XBUTTON2};
+static const int g_gamingKeys[] = {'W', 'A', 'S', 'D', VK_SPACE};
 
+std::vector<bool> GetGamingKeyState() {
+  std::vector<bool> state;
+  state.reserve(std::size(g_gamingKeys));
+  for (int vk : g_gamingKeys) {
+    state.push_back((GetAsyncKeyState(vk) & 0x8000) != 0);
+  }
+  return state;
+}
+
+void SyncGamingKeysNitro(const std::vector<bool>& initialState) {
   std::vector<INPUT> inputs;
-  inputs.reserve(std::size(gamingKeys));
+  inputs.reserve(std::size(g_gamingKeys));
 
-  for (int vk : gamingKeys) {
-    if (!(GetAsyncKeyState(vk) & 0x8000))
+  for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
+    int vk = g_gamingKeys[i];
+    bool currentlyDown = (GetAsyncKeyState(vk) & 0x8000) != 0;
+
+    // NITRO: Only send if the state changed compared to the start of the lock
+    if (currentlyDown == initialState[i])
       continue;
 
     INPUT in = {0};
-    if (vk >= VK_LBUTTON && vk <= VK_XBUTTON2) {
-      in.type = INPUT_MOUSE;
-      if (vk == VK_LBUTTON)
-        in.mi.dwFlags = MOUSEEVENTF_LEFTUP;
-      else if (vk == VK_RBUTTON)
-        in.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
-      else if (vk == VK_MBUTTON)
-        in.mi.dwFlags = MOUSEEVENTF_MIDDLEUP;
-      else if (vk == VK_XBUTTON1) {
-        in.mi.dwFlags = MOUSEEVENTF_XUP;
-        in.mi.mouseData = XBUTTON1;
-      } else if (vk == VK_XBUTTON2) {
-        in.mi.dwFlags = MOUSEEVENTF_XUP;
-        in.mi.mouseData = XBUTTON2;
-      }
+    in.type = INPUT_KEYBOARD;
+    in.ki.wVk = (WORD)vk;
+    in.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+    if (currentlyDown) {
+      in.ki.dwFlags = KEYEVENTF_SCANCODE; // KEYDOWN
     } else {
-      in.type = INPUT_KEYBOARD;
-      in.ki.wVk = (WORD)vk;
-      in.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-      in.ki.dwFlags = KEYEVENTF_KEYUP | KEYEVENTF_SCANCODE;
-    }
-    inputs.push_back(in);
-  }
-
-  if (!inputs.empty()) {
-    SendInput((UINT)inputs.size(), inputs.data(), sizeof(INPUT));
-  }
-}
-
-void SyncGamingKeys() {
-  static const int gamingKeys[] = {'W',         'A',         'S',
-                                   'D',         VK_SPACE,    VK_LSHIFT,
-                                   VK_LCONTROL, VK_LBUTTON,  VK_RBUTTON,
-                                   VK_MBUTTON,  VK_XBUTTON1, VK_XBUTTON2};
-
-  std::vector<INPUT> inputs;
-  inputs.reserve(std::size(gamingKeys));
-
-  for (int vk : gamingKeys) {
-    bool physicallyDown = (GetAsyncKeyState(vk) & 0x8000) != 0;
-
-    INPUT in = {0};
-    if (vk >= VK_LBUTTON && vk <= VK_XBUTTON2) {
-      in.type = INPUT_MOUSE;
-      if (physicallyDown) {
-        if (vk == VK_LBUTTON)
-          in.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
-        else if (vk == VK_RBUTTON)
-          in.mi.dwFlags = MOUSEEVENTF_RIGHTDOWN;
-        else if (vk == VK_MBUTTON)
-          in.mi.dwFlags = MOUSEEVENTF_MIDDLEDOWN;
-        else if (vk == VK_XBUTTON1) {
-          in.mi.dwFlags = MOUSEEVENTF_XDOWN;
-          in.mi.mouseData = XBUTTON1;
-        } else if (vk == VK_XBUTTON2) {
-          in.mi.dwFlags = MOUSEEVENTF_XDOWN;
-          in.mi.mouseData = XBUTTON2;
-        }
-      } else {
-        if (vk == VK_LBUTTON)
-          in.mi.dwFlags = MOUSEEVENTF_LEFTUP;
-        else if (vk == VK_RBUTTON)
-          in.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
-        else if (vk == VK_MBUTTON)
-          in.mi.dwFlags = MOUSEEVENTF_MIDDLEUP;
-        else if (vk == VK_XBUTTON1) {
-          in.mi.dwFlags = MOUSEEVENTF_XUP;
-          in.mi.mouseData = XBUTTON1;
-        } else if (vk == VK_XBUTTON2) {
-          in.mi.dwFlags = MOUSEEVENTF_XUP;
-          in.mi.mouseData = XBUTTON2;
-        }
-      }
-    } else {
-      in.type = INPUT_KEYBOARD;
-      in.ki.wVk = (WORD)vk;
-      in.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-      if (physicallyDown) {
-        in.ki.dwFlags = KEYEVENTF_SCANCODE; // KEYDOWN
-      } else {
-        in.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP; // KEYUP
-      }
+      in.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP; // KEYUP
     }
     inputs.push_back(in);
   }

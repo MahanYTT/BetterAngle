@@ -63,12 +63,16 @@ void FocusMonitorThread() {
       g_mouseSuspendedUntil = GetTickCount64() + 400;
       g_lockTriggerReason = 3; // Alt-Tab Return
 
-      // SAFE ASYNC LOCK: Lightning detection, but safe background unblocking
+      // NITRO ASYNC LOCK: Time-critical resync
       std::thread([]() {
+        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+        auto initialState = GetGamingKeyState();
+        
         BlockInput(TRUE);
         Sleep(400);
         BlockInput(FALSE);
-        SyncGamingKeys();
+        
+        SyncGamingKeysNitro(initialState); // Delta-only Nitro sync (WASD + Space)
       }).detach();
       LOG_INFO("High-Speed Detection: Alt-tab back to Fortnite detected. Input "
                "blocked.");
@@ -128,42 +132,40 @@ void DetectorThread() {
       bool nowDiving = (g_matchCount.load() >= g_requiredMatchCount.load());
 
       if (GetTickCount64() >= g_mouseSuspendedUntil) {
-        // Edge: Gliding -> Diving  (FOV zoom-in anim ~1.0s)
+        // Edge: Gliding -> Diving (Nitro)
         if (nowDiving && !lastDiving) {
           g_mouseSuspendedUntil = GetTickCount64() + 700;
-
-          // Async 'Live Snapshot' Anti-Ghosting
+          
           std::thread([]() {
-            ReleaseGamingKeys(); // Flush stale state
-            BlockInput(TRUE);    // Lock door
-
-            Sleep(700); // Waiting while 'watching' fingers (GetAsyncKeyState is
-                        // live)
-
-            BlockInput(FALSE); // Open door
-            SyncGamingKeys();  // Sync with the final hardware snapshot
+            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+            auto initialState = GetGamingKeyState();
+            
+            BlockInput(TRUE);
+            Sleep(700);
+            BlockInput(FALSE);
+            
+            SyncGamingKeysNitro(initialState); // Delta-only Nitro sync
           }).detach();
 
-          LOG_INFO("Transition: glide->dive, Live Snapshot sync (700ms)");
+          LOG_INFO("Transition: glide->dive, Nitro Delta sync (700ms)");
           g_lockTriggerReason = 1; // Glide → Dive
         }
-        // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)
+        // Edge: Diving -> Gliding (Nitro)
         else if (!nowDiving && lastDiving) {
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
-
-          // Async 'Live Snapshot' Anti-Ghosting
+          
           std::thread([]() {
-            ReleaseGamingKeys(); // Flush stale state
-            BlockInput(TRUE);    // Lock door
-
-            Sleep(1000); // Waiting while 'watching' fingers (GetAsyncKeyState
-                         // is live)
-
-            BlockInput(FALSE); // Open door
-            SyncGamingKeys();  // Sync with the final hardware snapshot
+            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+            auto initialState = GetGamingKeyState();
+            
+            BlockInput(TRUE);
+            Sleep(1000);
+            BlockInput(FALSE);
+            
+            SyncGamingKeysNitro(initialState); // Delta-only Nitro sync
           }).detach();
 
-          LOG_INFO("Transition: dive->glide, Live Snapshot sync (1000ms)");
+          LOG_INFO("Transition: dive->glide, Nitro Delta sync (1000ms)");
           g_lockTriggerReason = 2; // Dive → Glide
         }
       }
