@@ -7,6 +7,7 @@
 #include <tlhelp32.h>
 #include <vector>
 #include <windows.h>
+#include <iterator>
 
 
 extern std::string g_nitroSyncLog;
@@ -227,7 +228,7 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   // Step 2: Read fresh post-snapshot
   std::vector<bool> postState;
   bool refreshed = false;
-  for (size_t i = 0; i < g_gamingKeys.size(); ++i) {
+  for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
     bool current = (GetAsyncKeyState(g_gamingKeys[i]) & 0x8000) != 0;
     postState.push_back(current);
     if (preState[i] != current) refreshed = true;
