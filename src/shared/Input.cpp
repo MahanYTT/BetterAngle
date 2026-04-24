@@ -244,23 +244,25 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     g_activeFallback = 1;
 
   // FALLBACK 2: Unconditional KeyUp + Repress (The "Hammer")
-  // Exclude VK_SPACE from repress to prevent FOV transition feedback loops
+  // SKIP this for Alt-Tab (Reason 3) to prevent focus-gain conflicts
   bool refreshed2 = false;
-  for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
-    int vk = g_gamingKeys[i];
-    if (preState[i] && vk != VK_SPACE) {
-      INPUT seq[2] = {0};
-      seq[0].type = INPUT_KEYBOARD;
-      seq[0].ki.wVk = (WORD)vk;
-      seq[0].ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-      seq[0].ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP; // Force Up
-      seq[1] = seq[0];
-      seq[1].ki.dwFlags = KEYEVENTF_SCANCODE; // Immediate Down
-      SendInput(2, seq, sizeof(INPUT));
-      Sleep(1);
+  if (g_lockTriggerReason != 3) {
+    for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
+      int vk = g_gamingKeys[i];
+      if (preState[i] && vk != VK_SPACE) {
+        INPUT seq[2] = {0};
+        seq[0].type = INPUT_KEYBOARD;
+        seq[0].ki.wVk = (WORD)vk;
+        seq[0].ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+        seq[0].ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP; // Force Up
+        seq[1] = seq[0];
+        seq[1].ki.dwFlags = KEYEVENTF_SCANCODE; // Immediate Down
+        SendInput(2, seq, sizeof(INPUT));
+        Sleep(1);
+      }
     }
+    Sleep(5);
   }
-  Sleep(5);
 
   // Read Final State after FB2
   std::vector<bool> finalState;
@@ -283,8 +285,8 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
 
   // FINAL DELTA INJECT
   std::vector<INPUT> outInputs;
-  std::string log = "[FB" + std::to_string(g_activeFallback.load()) + "] " +
-                    (g_tableRefreshed ? "REFRESHED" : "FROZEN") + " | ";
+  std::string log = "[GhostFix] FB=" + std::to_string(g_activeFallback.load()) +
+                    " " + (g_tableRefreshed ? "REFRESHED" : "FROZEN") + " | ";
 
   for (size_t i = 0; i < preState.size(); ++i) {
     int vk = g_gamingKeys[i];
