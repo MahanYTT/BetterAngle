@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.12
+- Automated build release.
+
 ### BetterAngle Pro v5.5.11
 - fix: git hijack to neutralize duplicate logic [v5.5.14]
 
