@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.85..HEAD ### BetterAngle Pro v5.0.86
+- Automated build release.
+
 ### BetterAngle Pro v5.0.85
 - perf: implemented Mathematical Optimizations including SIMD pixel scanning, Sensitivity Baking, and Integer Comparison Theory for ultra-smooth performance.
 - fix: synchronized GitHub Actions and Releases version numbering.
