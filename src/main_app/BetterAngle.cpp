@@ -130,28 +130,36 @@ void DetectorThread() {
         if (nowDiving && !lastDiving) {
           g_mouseSuspendedUntil = GetTickCount64() + 700;
           
-          // Async Lock
+          // Async 'Live Snapshot' Anti-Ghosting
           std::thread([]() {
-            BlockInput(TRUE);
-            Sleep(700);
-            BlockInput(FALSE);
-            SyncMovementKeys();
+            ReleaseGamingKeys(); // Flush stale state
+            BlockInput(TRUE);    // Lock door
+            
+            Sleep(700);          // Waiting while 'watching' fingers (GetAsyncKeyState is live)
+            
+            BlockInput(FALSE);   // Open door
+            SyncGamingKeys();    // Sync with the final hardware snapshot
           }).detach();
-          LOG_INFO("Transition: glide->dive, Input blocked for 700ms");
+
+          LOG_INFO("Transition: glide->dive, Live Snapshot sync (700ms)");
           g_lockTriggerReason = 1; // Glide → Dive
         }
         // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)
         else if (!nowDiving && lastDiving) {
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
           
-          // Async Lock
+          // Async 'Live Snapshot' Anti-Ghosting
           std::thread([]() {
-            BlockInput(TRUE);
-            Sleep(1000);
-            BlockInput(FALSE);
-            SyncMovementKeys();
+            ReleaseGamingKeys(); // Flush stale state
+            BlockInput(TRUE);    // Lock door
+            
+            Sleep(1000);         // Waiting while 'watching' fingers (GetAsyncKeyState is live)
+            
+            BlockInput(FALSE);   // Open door
+            SyncGamingKeys();    // Sync with the final hardware snapshot
           }).detach();
-          LOG_INFO("Transition: dive->glide, Input blocked for 1000ms");
+
+          LOG_INFO("Transition: dive->glide, Live Snapshot sync (1000ms)");
           g_lockTriggerReason = 2; // Dive → Glide
         }
       }

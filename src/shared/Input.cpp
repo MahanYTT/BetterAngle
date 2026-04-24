@@ -173,66 +173,20 @@ bool IsCursorCurrentlyVisible() {
   return (cursorInfo.flags & CURSOR_SHOWING) != 0;
 }
 
-void SyncKeyStates(const std::vector<int>& preBlockKeys) {
-  // Sync physical hardware state with logical state after a BlockInput window.
-  // Since we called ReleaseHeldKeys() before the block, we MUST re-synthesize
-  // KEYDOWN for everything that the user is still physically holding down.
-  
+void ReleaseGamingKeys() {
+  static const int gamingKeys[] = {
+    'W', 'A', 'S', 'D', VK_SPACE, VK_LSHIFT, VK_LCONTROL,
+    VK_LBUTTON, VK_RBUTTON, VK_MBUTTON, VK_XBUTTON1, VK_XBUTTON2
+  };
+
   std::vector<INPUT> inputs;
-  inputs.reserve(32);
+  inputs.reserve(std::size(gamingKeys));
 
-  for (int vk = 1; vk < 255; vk++) {
-    bool downAfter = (GetAsyncKeyState(vk) & 0x8000) != 0;
+  for (int vk : gamingKeys) {
+    if (!(GetAsyncKeyState(vk) & 0x8000)) continue;
 
-    if (downAfter) {
-      // Key is physically held. Re-synthesize the press.
-      INPUT in = {0};
-      
-      if (vk == VK_LBUTTON || vk == VK_RBUTTON || vk == VK_MBUTTON || vk == VK_XBUTTON1 || vk == VK_XBUTTON2) {
-        in.type = INPUT_MOUSE;
-        if      (vk == VK_LBUTTON)  in.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
-        else if (vk == VK_RBUTTON)  in.mi.dwFlags = MOUSEEVENTF_RIGHTDOWN;
-        else if (vk == VK_MBUTTON)  in.mi.dwFlags = MOUSEEVENTF_MIDDLEDOWN;
-        else if (vk == VK_XBUTTON1) { in.mi.dwFlags = MOUSEEVENTF_XDOWN; in.mi.mouseData = XBUTTON1; }
-        else if (vk == VK_XBUTTON2) { in.mi.dwFlags = MOUSEEVENTF_XDOWN; in.mi.mouseData = XBUTTON2; }
-      } else {
-        in.type = INPUT_KEYBOARD;
-        in.ki.wVk = (WORD)vk;
-        in.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-        in.ki.dwFlags = KEYEVENTF_SCANCODE; // KEYDOWN
-        switch(vk) {
-            case VK_UP: case VK_DOWN: case VK_LEFT: case VK_RIGHT:
-            case VK_INSERT: case VK_DELETE: case VK_HOME: case VK_END:
-            case VK_PRIOR: case VK_NEXT: case VK_RCONTROL: case VK_RMENU:
-                in.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
-                break;
-        }
-      }
-      inputs.push_back(in);
-    }
-  }
-
-  if (!inputs.empty()) {
-    SendInput((UINT)inputs.size(), inputs.data(), sizeof(INPUT));
-  }
-}
-
-void ReleaseHeldKeys() {
-  // Synthesize KEYUP / mouse-button-UP for every key that is physically held down
-  // RIGHT NOW. Must be called immediately before BlockInput(TRUE) so the game
-  // receives release events and stops the character from ghosting/sliding.
-  // All inputs are batched into a single SendInput call to minimise latency.
-  std::vector<INPUT> inputs;
-  inputs.reserve(32);
-
-  for (int vk = 1; vk < 255; vk++) {
-    if (!(GetAsyncKeyState(vk) & 0x8000))
-      continue; // Not held
-
-    INPUT in = {};
-
-    if (vk == VK_LBUTTON || vk == VK_RBUTTON ||
-        vk == VK_MBUTTON  || vk == VK_XBUTTON1 || vk == VK_XBUTTON2) {
+    INPUT in = {0};
+    if (vk >= VK_LBUTTON && vk <= VK_XBUTTON2) {
       in.type = INPUT_MOUSE;
       if      (vk == VK_LBUTTON)  in.mi.dwFlags = MOUSEEVENTF_LEFTUP;
       else if (vk == VK_RBUTTON)  in.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
@@ -240,56 +194,46 @@ void ReleaseHeldKeys() {
       else if (vk == VK_XBUTTON1) { in.mi.dwFlags = MOUSEEVENTF_XUP; in.mi.mouseData = XBUTTON1; }
       else if (vk == VK_XBUTTON2) { in.mi.dwFlags = MOUSEEVENTF_XUP; in.mi.mouseData = XBUTTON2; }
     } else {
-      in.type       = INPUT_KEYBOARD;
-      in.ki.wVk     = (WORD)vk;
-      in.ki.wScan   = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+      in.type = INPUT_KEYBOARD;
+      in.ki.wVk = (WORD)vk;
+      in.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
       in.ki.dwFlags = KEYEVENTF_KEYUP | KEYEVENTF_SCANCODE;
-      switch (vk) {
-        case VK_UP:    case VK_DOWN:  case VK_LEFT:  case VK_RIGHT:
-        case VK_INSERT: case VK_DELETE: case VK_HOME: case VK_END:
-        case VK_PRIOR: case VK_NEXT:  case VK_RCONTROL: case VK_RMENU:
-          in.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
-          break;
-      }
     }
     inputs.push_back(in);
   }
 
-  if (!inputs.empty())
+  if (!inputs.empty()) {
     SendInput((UINT)inputs.size(), inputs.data(), sizeof(INPUT));
+  }
 }
-void SyncMovementKeys() {
-  // Movement Cluster: WASD, Space, Shift, Ctrl, Arrows
-  static const int movementKeys[] = {
-    'W', 'A', 'S', 'D', 
-    VK_SPACE, VK_LSHIFT, VK_LCONTROL, 
-    VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT 
+
+void SyncGamingKeys() {
+  static const int gamingKeys[] = {
+    'W', 'A', 'S', 'D', VK_SPACE, VK_LSHIFT, VK_LCONTROL,
+    VK_LBUTTON, VK_RBUTTON, VK_MBUTTON, VK_XBUTTON1, VK_XBUTTON2
   };
 
   std::vector<INPUT> inputs;
-  inputs.reserve(std::size(movementKeys) * 2);
+  inputs.reserve(std::size(gamingKeys));
 
-  for (int vk : movementKeys) {
+  for (int vk : gamingKeys) {
     bool physicallyDown = (GetAsyncKeyState(vk) & 0x8000) != 0;
-    
+    if (!physicallyDown) continue;
+
     INPUT in = {0};
-    in.type = INPUT_KEYBOARD;
-    in.ki.wVk = (WORD)vk;
-    in.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-    
-    if (physicallyDown) {
-      // Re-press if still held
-      in.ki.dwFlags = KEYEVENTF_SCANCODE;
+    if (vk >= VK_LBUTTON && vk <= VK_XBUTTON2) {
+      in.type = INPUT_MOUSE;
+      if      (vk == VK_LBUTTON)  in.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+      else if (vk == VK_RBUTTON)  in.mi.dwFlags = MOUSEEVENTF_RIGHTDOWN;
+      else if (vk == VK_MBUTTON)  in.mi.dwFlags = MOUSEEVENTF_MIDDLEDOWN;
+      else if (vk == VK_XBUTTON1) { in.mi.dwFlags = MOUSEEVENTF_XDOWN; in.mi.mouseData = XBUTTON1; }
+      else if (vk == VK_XBUTTON2) { in.mi.dwFlags = MOUSEEVENTF_XDOWN; in.mi.mouseData = XBUTTON2; }
     } else {
-      // Release if let go during lock
-      in.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+      in.type = INPUT_KEYBOARD;
+      in.ki.wVk = (WORD)vk;
+      in.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+      in.ki.dwFlags = KEYEVENTF_SCANCODE; // KEYDOWN
     }
-
-    // Extended key bit for arrows
-    if (vk == VK_UP || vk == VK_DOWN || vk == VK_LEFT || vk == VK_RIGHT) {
-      in.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
-    }
-
     inputs.push_back(in);
   }
 
