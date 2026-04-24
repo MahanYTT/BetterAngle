@@ -59,24 +59,12 @@ void FocusMonitorThread() {
 
     // Detect Alt-Tab back into Fortnite with ultra-low latency (1ms polling)
     if (!lastFortniteFocused && currentFortniteFocused) {
-      g_mouseSuspendedUntil = GetTickCount64() + 400;
+      // ALT-TAB COOLDOWN: Windows handles key state restoration automatically
+      // No BlockInput needed for focus changes - just suspend mouse for 200ms
+      g_mouseSuspendedUntil = GetTickCount64() + 200;
       g_lockTriggerReason = 3; // Alt-Tab Return
-
-      // SIMPLE LOCK: No ghost key fix for alt-tab focus gain
-      std::thread([]() {
-        g_lockCount++;
-        g_lockThreadId = GetCurrentThreadId();
-        {
-          std::lock_guard<std::mutex> lock(g_blockInputMutex);
-          g_blockInputActive = true;
-          BlockInput(TRUE);
-          Sleep(400);
-          BlockInput(FALSE);
-          g_blockInputActive = false;
-        }
-      }).detach();
-      LOG_INFO("High-Speed Detection: Alt-tab back to Fortnite detected. Input "
-               "blocked.");
+      g_lockCount++;
+      LOG_INFO("Alt-tab cooldown active (200ms) - skipping BlockInput");
     }
     lastFortniteFocused = currentFortniteFocused;
     Sleep(0); // Max CPU performance for lightning fast focus detection
@@ -134,7 +122,8 @@ void DetectorThread() {
 
       if (GetTickCount64() >= g_mouseSuspendedUntil) {
         // Edge: Gliding -> Diving (Nitro)
-        if (nowDiving && !lastDiving && (GetTickCount64() - g_lastLockTime > 500)) {
+        if (nowDiving && !lastDiving &&
+            (GetTickCount64() - g_lastLockTime > 500)) {
           g_lastLockTime = GetTickCount64();
           g_mouseSuspendedUntil = GetTickCount64() + 700;
 
@@ -143,7 +132,8 @@ void DetectorThread() {
             g_lockThreadId = GetCurrentThreadId();
             ULONGLONG start = GetTickCount64();
 
-            for(int i=0; i<256; i++) g_rawKeyUpDetected[i] = false;
+            for (int i = 0; i < 256; i++)
+              g_rawKeyUpDetected[i] = false;
             g_wPreLock =
                 (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
             auto initialState = GetGamingKeyState(); // Pre-lock snapshot
@@ -165,7 +155,8 @@ void DetectorThread() {
           g_lockTriggerReason = 1; // Glide → Dive
         }
         // Edge: Diving -> Gliding (Nitro)
-        else if (!nowDiving && lastDiving && (GetTickCount64() - g_lastLockTime > 500)) {
+        else if (!nowDiving && lastDiving &&
+                 (GetTickCount64() - g_lastLockTime > 500)) {
           g_lastLockTime = GetTickCount64();
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
 
@@ -174,7 +165,8 @@ void DetectorThread() {
             g_lockThreadId = GetCurrentThreadId();
             ULONGLONG start = GetTickCount64();
 
-            for(int i=0; i<256; i++) g_rawKeyUpDetected[i] = false;
+            for (int i = 0; i < 256; i++)
+              g_rawKeyUpDetected[i] = false;
             g_wPreLock =
                 (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
             auto initialState = GetGamingKeyState(); // Pre-lock snapshot
@@ -352,18 +344,20 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
                             LPARAM lParam) {
   if (message == WM_INPUT) {
     UINT dwSize;
-    GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
+    GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize,
+                    sizeof(RAWINPUTHEADER));
     if (dwSize > 0) {
-        std::vector<BYTE> lpb(dwSize);
-        if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, lpb.data(), &dwSize, sizeof(RAWINPUTHEADER)) == dwSize) {
-            RAWINPUT* raw = (RAWINPUT*)lpb.data();
-            if (raw->header.dwType == RIM_TYPEKEYBOARD) {
-                if (raw->data.keyboard.Flags & RI_KEY_BREAK) {
-                    // HARDWARE LEVEL RELEASE DETECTED
-                    g_rawKeyUpDetected[raw->data.keyboard.VKey] = true;
-                }
-            }
+      std::vector<BYTE> lpb(dwSize);
+      if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, lpb.data(), &dwSize,
+                          sizeof(RAWINPUTHEADER)) == dwSize) {
+        RAWINPUT *raw = (RAWINPUT *)lpb.data();
+        if (raw->header.dwType == RIM_TYPEKEYBOARD) {
+          if (raw->data.keyboard.Flags & RI_KEY_BREAK) {
+            // HARDWARE LEVEL RELEASE DETECTED
+            g_rawKeyUpDetected[raw->data.keyboard.VKey] = true;
+          }
         }
+      }
     }
 
     int dx = GetRawInputDeltaX(lParam);

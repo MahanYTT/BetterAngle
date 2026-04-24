@@ -215,6 +215,68 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   g_wPostUnlock = GetAsyncKeyState('W');
   g_activeFallback = 0;
 
+  // NEW APPROACH: Wait 50ms for natural table thaw after BlockInput
+  // Windows often recovers key state automatically after focus returns
+  Sleep(50);
+
+  // Read state after 50ms wait
+  std::vector<bool> stateAfterWait;
+  bool tableThawed = true;
+  for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
+    bool current = (GetAsyncKeyState(g_gamingKeys[i]) & 0x8000) != 0;
+    stateAfterWait.push_back(current);
+
+    // Check if this key's state matches what we expect
+    // If key was held before lock but is physically released now, it should
+    // show 0 If it still shows 1, the table might still be frozen
+    if (preState[i] && !current) {
+      // Good: table shows key as released (thawed)
+    } else if (preState[i] && current) {
+      // Key was held and still shows held - could be correct or frozen
+      // We'll check later with fallbacks
+    }
+  }
+
+  // If table appears thawed (no obvious frozen states), try simple injection
+  bool simpleInjectionNeeded = false;
+  std::vector<INPUT> simpleInputs;
+  for (size_t i = 0; i < preState.size(); ++i) {
+    if (preState[i] && !stateAfterWait[i]) {
+      // Key was held before lock but is now released - inject KeyUp
+      int vk = g_gamingKeys[i];
+      INPUT input = {0};
+      input.type = INPUT_KEYBOARD;
+      input.ki.wVk = (WORD)vk;
+      input.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+      input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+      simpleInputs.push_back(input);
+      simpleInjectionNeeded = true;
+    }
+  }
+
+  if (simpleInjectionNeeded && !simpleInputs.empty()) {
+    SendInput((UINT)simpleInputs.size(), simpleInputs.data(), sizeof(INPUT));
+    g_activeFallback = 4; // 50ms wait approach
+    g_tableRefreshed = true;
+
+    // Update finalState to reflect injection
+    for (size_t i = 0; i < preState.size(); ++i) {
+      if (preState[i] && !stateAfterWait[i]) {
+        stateAfterWait[i] = false; // Key is now released after injection
+      }
+    }
+
+    // Skip further fallbacks if successful
+    g_wPostFlush = GetAsyncKeyState('W');
+    for (int i = 0; i < 4; ++i) {
+      g_preState[i] = preState[i];
+      g_postState[i] = stateAfterWait[i];
+    }
+    LOG_INFO("[GhostFix] FB=4 50ms-wait | Table thawed naturally");
+    return;
+  }
+
+  // If 50ms wait didn't work, proceed with original fallbacks
   // FALLBACK 1: Scancode Flush (Shock) - Exclude VK_SPACE to prevent FOV
   // transition loops
   for (int vk : g_gamingKeys) {

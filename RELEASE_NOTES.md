@@ -1,5 +1,11 @@
 ### BetterAngle Pro v5.5.23
-- Automated build release.
+- **BlockInput Keyboard Ghosting Fixes**:
+  - Skip BlockInput for alt-tab transitions (200ms cooldown only)
+  - Added 50ms wait for natural async key state table thaw
+  - Exclude spacebar from fallbacks to prevent FOV transition loops
+  - Added keybd_event fallback for security software blocking SendInput
+  - Enhanced ghostkey_fail.log diagnostics
+  - Thread-safe BlockInput calls with mutex protection
 
 ### BetterAngle Pro v5.5.22
 - Automated build release.
