@@ -5,9 +5,9 @@
 
 #include <vector>
 
-// Unblockable Keyboard Shadow Hook (Sees through BlockInput)
+// High-Frequency Hardware Polling (Sees through BlockInput)
 extern bool g_physicalKeys[256];
-void SetKeyboardHook();
+void StartPollingThread();
 
 // Raw Input Mouse Tracking (Delta only)
 void RegisterRawMouse(HWND hwnd);

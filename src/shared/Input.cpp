@@ -125,32 +125,25 @@ bool IsCursorCurrentlyVisible() {
 }
 
 bool g_physicalKeys[256] = {false};
-HHOOK g_hHook = NULL;
+static bool g_pollingRunning = false;
 
-LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
-  if (nCode == HC_ACTION) {
-    KBDLLHOOKSTRUCT *pKeyBoard = (KBDLLHOOKSTRUCT *)lParam;
-    if (pKeyBoard->vkCode < 256) {
-      if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
-        g_physicalKeys[pKeyBoard->vkCode] = true;
-      } else if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
-        g_physicalKeys[pKeyBoard->vkCode] = false;
+static const int g_gamingKeys[] = {'W', 'A', 'S', 'D', VK_SPACE};
+
+void StartPollingThread() {
+  if (g_pollingRunning) return;
+  g_pollingRunning = true;
+
+  std::thread([]() {
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+    while (g_pollingRunning) {
+      for (int vk : g_gamingKeys) {
+        g_physicalKeys[vk] = (GetAsyncKeyState(vk) & 0x8000) != 0;
       }
+      Sleep(1); // 1ms high-frequency poll
     }
-  }
-  return CallNextHookEx(g_hHook, nCode, wParam, lParam);
-}
-
-void SetKeyboardHook() {
-  if (g_hHook == NULL) {
-    g_hHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc,
-                               GetModuleHandle(NULL), 0);
-    if (g_hHook == NULL) {
-      LOG_ERROR("Failed to install Shadow Hook (Ghosting prevention disabled)");
-    } else {
-      LOG_INFO("Shadow Hook installed: Bulletproof anti-ghosting ACTIVE");
-    }
-  }
+  }).detach();
+  
+  LOG_INFO("Physical Truth Polling Thread started (1ms Hardware Scan)");
 }
 
 void RegisterRawMouse(HWND hwnd) {
@@ -184,13 +177,11 @@ int GetRawInputDeltaX(LPARAM lparam) {
   return 0;
 }
 
-static const int g_gamingKeys[] = {'W', 'A', 'S', 'D', VK_SPACE};
-
 std::vector<bool> GetGamingKeyState() {
   std::vector<bool> state;
   state.reserve(std::size(g_gamingKeys));
   for (int vk : g_gamingKeys) {
-    // USE SHADOW HOOK TRUTH
+    // USE PHYSICAL TRUTH (GetAsyncKeyState bypasses BlockInput)
     state.push_back(g_physicalKeys[vk]);
   }
   return state;
@@ -202,7 +193,7 @@ void SyncGamingKeysNitro(const std::vector<bool>& initialState) {
 
   for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
     int vk = g_gamingKeys[i];
-    // USE SHADOW HOOK TRUTH
+    // Compare hardware state now vs before lock
     bool currentlyDown = g_physicalKeys[vk];
 
     // NITRO: Only send if the state changed compared to the start of the lock

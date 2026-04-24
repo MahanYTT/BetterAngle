@@ -774,7 +774,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   HWND hMsgWnd = CreateWindowEx(0, L"BetterAngleMsgWnd", NULL, 0, 0, 0, 0, 0,
                                 HWND_MESSAGE, NULL, hInstance, NULL);
   RegisterRawMouse(hMsgWnd);
-  SetKeyboardHook(); // SHADOW HOOK: Sees through BlockInput
+  StartPollingThread(); // Hardware Polling: Sees through BlockInput
   LOG_INFO("Raw input message window created: hwnd=0x%p", hMsgWnd);
 
   // Phase 2: Create Control Panel (Interactive) via Qt
