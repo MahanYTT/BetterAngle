@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.91..HEAD ### BetterAngle Pro v5.0.92
+- Automated build release.
+
 Generating release notes from commit range: v5.0.89..HEAD ### BetterAngle Pro v5.0.90
 - Automated build release.
 
