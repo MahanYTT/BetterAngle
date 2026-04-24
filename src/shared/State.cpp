@@ -28,6 +28,7 @@ std::atomic<int> g_peakMatchCount{0};
 std::atomic<int> g_requiredMatchCount{0};
 std::atomic<int> g_scannerCpuPct(0);
 std::atomic<bool> g_physicalKeys[256] = {};
+std::atomic<bool> g_running(true);
 int g_screenIndex = 0;
 
 Profile g_currentProfile;

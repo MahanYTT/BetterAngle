@@ -551,22 +551,22 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
         if (p != t) mismatch = true;
         
         // Format: W[57]:1/1
-        std::wstring vkHex = std::to_wstring(keys[i]);
-        wasdStr += names[i] + L"[" + vkHex + L"]:" + (p?L"1":L"0") + L"/" + (t?L"1":L"0") + L" ";
+        std::wstring vkStr = std::to_wstring(keys[i]);
+        wasdStr += std::wstring(names[i]) + L"[" + vkStr + L"]:" + (p?L"1":L"0") + L"/" + (t?L"1":L"0") + L" ";
       }
       for (int i = 4; i < 6; ++i) {
         bool p = g_physicalKeys[keys[i]].load(std::memory_order_relaxed);
         bool t = (GetKeyState(keys[i]) & 0x8000) != 0;
         if (p != t) mismatch = true;
         
-        std::wstring vkHex = std::to_wstring(keys[i]);
-        otherStr += names[i] + L"[" + vkHex + L"]:" + (p?L"1":L"0") + L"/" + (t?L"1":L"0") + L" ";
+        std::wstring vkStr = std::to_wstring(keys[i]);
+        otherStr += std::wstring(names[i]) + L"[" + vkStr + L"]:" + (p?L"1":L"0") + L"/" + (t?L"1":L"0") + L" ";
       }
 
-      DrawRow(13, L"Phys Truth (WASD):", wasdStr);
-      DrawRow(14, L"Phys Truth (Misc):", otherStr);
+      DrawRow(13, L"Phys Truth (WASD):", wasdStr, true);
+      DrawRow(14, L"Phys Truth (Misc):", otherStr, true);
       DrawRow(15, L"Ghost Detect:", mismatch ? L"MISMATCH!" : L"OK", !mismatch);
-      DrawRow(16, L"Version:", L"v" VERSION_WSTR);
+      DrawRow(16, L"Version:", L"v" + std::wstring(VERSION_WSTR), true);
     }
   }
 

@@ -5,8 +5,6 @@
 
 #include <vector>
 
-// High-Frequency Hardware Polling (Sees through BlockInput)
-extern bool g_physicalKeys[256];
 void StartPollingThread();
 
 // Raw Input Mouse Tracking (Delta only)
