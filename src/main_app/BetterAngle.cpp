@@ -34,7 +34,6 @@ using namespace Gdiplus;
 // Global State
 // Global handles defined in State.h/cpp
 ULONG_PTR g_gdiplusToken;
-std::atomic<bool> g_running(true);
 FovDetector g_detector;
 
 // Helper function to flush pending input messages before blocking
