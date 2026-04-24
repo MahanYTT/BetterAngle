@@ -538,23 +538,29 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
               std::to_wstring(g_scannerCpuPct.load()) + L"%",
               g_scannerCpuPct.load() < 50);
 
-      // NITRO X-RAY MONITOR (v5.1.15)
+      // NITRO X-RAY MONITOR (v5.1.17 - Absolute Truth)
       static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE, VK_SHIFT};
       static const wchar_t* names[] = {L"W", L"A", L"S", L"D", L"SPC", L"SHFT"};
       std::wstring wasdStr, otherStr;
       bool mismatch = false;
 
       for (int i = 0; i < 4; ++i) {
-        bool p = (GetAsyncKeyState(keys[i]) & 0x8000) != 0;
+        // Use the ATOMIC table from the 1ms thread for Absolute Truth
+        bool p = g_physicalKeys[keys[i]].load(std::memory_order_relaxed);
         bool t = (GetKeyState(keys[i]) & 0x8000) != 0;
         if (p != t) mismatch = true;
-        wasdStr += names[i] + std::wstring(L":") + (p?L"1":L"0") + L"/" + (t?L"1":L"0") + L" ";
+        
+        // Format: W[57]:1/1
+        std::wstring vkHex = std::to_wstring(keys[i]);
+        wasdStr += names[i] + L"[" + vkHex + L"]:" + (p?L"1":L"0") + L"/" + (t?L"1":L"0") + L" ";
       }
       for (int i = 4; i < 6; ++i) {
-        bool p = (GetAsyncKeyState(keys[i]) & 0x8000) != 0;
+        bool p = g_physicalKeys[keys[i]].load(std::memory_order_relaxed);
         bool t = (GetKeyState(keys[i]) & 0x8000) != 0;
         if (p != t) mismatch = true;
-        otherStr += names[i] + std::wstring(L":") + (p?L"1":L"0") + L"/" + (t?L"1":L"0") + L" ";
+        
+        std::wstring vkHex = std::to_wstring(keys[i]);
+        otherStr += names[i] + L"[" + vkHex + L"]:" + (p?L"1":L"0") + L"/" + (t?L"1":L"0") + L" ";
       }
 
       DrawRow(13, L"Phys Truth (WASD):", wasdStr);

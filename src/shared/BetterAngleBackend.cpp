@@ -1047,7 +1047,7 @@ QString BetterAngleBackend::physicalKeyStates() const {
   static const char* names[] = {"W", "A", "S", "D", "SPC", "SHFT"};
   
   for (int i = 0; i < 6; ++i) {
-    bool phys = (GetAsyncKeyState(keys[i]) & 0x8000) != 0;
+    bool phys = g_physicalKeys[keys[i]].load(std::memory_order_relaxed);
     bool tracked = (GetKeyState(keys[i]) & 0x8000) != 0;
     
     // Format: W:P1/T1 (1=Down, 0=Up)
@@ -1059,7 +1059,7 @@ QString BetterAngleBackend::physicalKeyStates() const {
 bool BetterAngleBackend::ghostMismatch() const {
   static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE, VK_SHIFT};
   for (int vk : keys) {
-    bool phys = (GetAsyncKeyState(vk) & 0x8000) != 0;
+    bool phys = g_physicalKeys[vk].load(std::memory_order_relaxed);
     bool tracked = (GetKeyState(vk) & 0x8000) != 0;
     if (phys != tracked) return true; // THE GHOST IS PRESENT
   }
