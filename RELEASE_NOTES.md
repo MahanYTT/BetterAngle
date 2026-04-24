@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.29
+- Automated build release.
+
 ### BetterAngle Pro v5.5.28
 - **Nitro Flush Hardening & Architectural Isolation**:
   - Decoupled Alt-Tab focus lock path from FOV transition logic.
