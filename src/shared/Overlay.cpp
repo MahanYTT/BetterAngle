@@ -535,12 +535,12 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
               g_scannerCpuPct.load() < 50);
 
       // Column 1: Nitro 5 & Forensics
-      static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE};
-      static const wchar_t* names[] = {L"W", L"A", L"S", L"D", L"SPC"};
+      static const int keys[] = {'W', 'A', 'S', 'D'};
+      static const wchar_t* names[] = {L"W", L"A", L"S", L"D"};
       std::wstring wasdStr;
       bool mismatch = false;
 
-      for (int i = 0; i < 5; ++i) {
+      for (int i = 0; i < 4; ++i) {
         bool p = g_physicalKeys[keys[i]].load(std::memory_order_relaxed);
         bool t = (GetKeyState(keys[i]) & 0x8000) != 0;
         if (p != t) mismatch = true;

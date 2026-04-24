@@ -225,7 +225,7 @@ float g_currentAngle = 0.0f;
 std::atomic<bool> g_isCursorVisible(false);
 AngleLogic g_logic(0.05);
 
-int g_hudX = 40;
+int g_hudX = -1;
 int g_hudY = 40;
 bool g_isDraggingHUD = false;
 POINT g_dragStartHUD = {0, 0};
