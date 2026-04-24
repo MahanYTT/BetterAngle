@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.76..HEAD ### BetterAngle Pro v5.0.77
+- Automated build release.
+
 ### BetterAngle Pro v5.0.76
 - fix: eliminated input-locking latency by triggering BlockInput(TRUE) immediately in the detector thread. This prevents mouse drift caused by OS thread-scheduling delays during rapid state transitions.
 
