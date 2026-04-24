@@ -129,7 +129,7 @@ void LoadSettings() {
       }
     };
 
-    g_hudX = eInt("hudX", 40);
+    g_hudX = eInt("hudX", -1);
     g_hudY = eInt("hudY", 40);
 
     g_crossPulse = eFloat("crossPulse", 0.0f) > 0.5f;

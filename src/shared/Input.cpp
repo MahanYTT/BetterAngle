@@ -307,10 +307,13 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
 
   // FALLBACK 2: Unconditional KeyUp + Repress (The "Hammer")
   // Only repress keys that are confirmed still HELD (state1[i] == true)
+  // Skip VK_SPACE to avoid triggering FOV transitions (same as FB1)
   bool refreshed2 = false;
   if (g_lockTriggerReason != 3) {
     for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
       int vk = g_gamingKeys[i];
+      if (vk == VK_SPACE)
+        continue; // Skip spacebar to avoid triggering FOV transitions
       if (preState[i] && state1[i]) {
         INPUT seq[2] = {0};
         seq[0].type = INPUT_KEYBOARD;
@@ -370,7 +373,7 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   // Enhanced diagnostic logging for ghost key failures
   // Only log failure if we're not using keybd_event fallback (FB=3)
   if (!g_tableRefreshed && !outInputs.empty() && g_activeFallback.load() != 3) {
-    g_activeFallback = 99;
+    // Don't set g_activeFallback to 99 yet - wait to see if SendInput fails
     std::ofstream failLog("ghostkey_fail.log", std::ios::app);
     failLog << GetTickCount64() << " - FAIL | FB=" << g_activeFallback.load()
             << " Table=" << (g_tableRefreshed ? "REFRESHED" : "FROZEN")
@@ -423,6 +426,17 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     if (anyStillHeld) {
       // SendInput failed, try keybd_event fallback
       g_activeFallback = 3; // Mark as using keybd_event fallback
+      // Log the fallback usage immediately
+      std::ofstream failLog("ghostkey_fail.log", std::ios::app);
+      failLog << GetTickCount64() << " - KEYBD_EVENT_FALLBACK | ";
+      for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
+        if (preState[i] && !finalState[i]) {
+          int vk = g_gamingKeys[i];
+          failLog << (char)(vk == VK_SPACE ? ' ' : vk) << " ";
+        }
+      }
+      failLog << std::endl;
+
       for (size_t i = 0; i < preState.size(); ++i) {
         if (preState[i] && !finalState[i]) {
           int vk = g_gamingKeys[i];
@@ -434,6 +448,12 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
       g_nitroSyncLog = log + "(Injected via keybd_event)";
     } else {
       g_nitroSyncLog = log + "(Injected via SendInput)";
+      // If we had a ghost key failure condition but SendInput succeeded,
+      // mark as failure (99) for diagnostics
+      if (!g_tableRefreshed && !outInputs.empty() &&
+          g_activeFallback.load() != 3) {
+        g_activeFallback = 99;
+      }
     }
 
     LOG_INFO(g_nitroSyncLog.c_str());

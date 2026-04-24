@@ -87,14 +87,16 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
 
   static HDC hdcMem = NULL;
   static HBITMAP hbmMem = NULL;
-  static void* pBits = NULL;
+  static void *pBits = NULL;
   static int cachedW = 0, cachedH = 0;
 
   HDC hdcScreen = GetDC(NULL);
-  if (!hdcMem) hdcMem = CreateCompatibleDC(hdcScreen);
+  if (!hdcMem)
+    hdcMem = CreateCompatibleDC(hdcScreen);
 
   if (sw != cachedW || sh != cachedH) {
-    if (hbmMem) DeleteObject(hbmMem);
+    if (hbmMem)
+      DeleteObject(hbmMem);
     BITMAPINFO bmi = {0};
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi.bmiHeader.biWidth = sw;
@@ -103,7 +105,8 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biCompression = BI_RGB;
     hbmMem = CreateDIBSection(hdcScreen, &bmi, DIB_RGB_COLORS, &pBits, NULL, 0);
-    cachedW = sw; cachedH = sh;
+    cachedW = sw;
+    cachedH = sh;
   }
   HGDIOBJ hOld = SelectObject(hdcMem, hbmMem);
 
@@ -123,7 +126,8 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
     // Fast Alpha Fix
     DWORD *pixels = (DWORD *)pBits;
     int count = sw * sh;
-    for (int i = 0; i < count; ++i) pixels[i] |= 0xFF000000;
+    for (int i = 0; i < count; ++i)
+      pixels[i] |= 0xFF000000;
   } else {
     memset(pBits, 0, sw * sh * 4);
   }
@@ -272,7 +276,7 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       int clientMonY = mRect.top - sy;
       int monW = mRect.right - mRect.left;
       int monH = mRect.bottom - mRect.top;
-      
+
       graphics.SetClip(Rect(clientMonX, clientMonY, monW, monH));
 
       // Map the monitor's center to the HUD's client coordinate space
@@ -352,7 +356,8 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
 
     // HUD box
     int rw = 260, rh = 150;
-    int rx = g_hudX, ry = g_hudY;
+    int rx = (g_hudX >= 0) ? g_hudX : 40;
+    int ry = (g_hudY >= 0) ? g_hudY : 40;
 
     // Background gradient (More transparent for sleekness)
     LinearGradientBrush bgBrush(Point(rx, ry), Point(rx, ry + rh),
@@ -398,8 +403,12 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
     // Match % label
     Font subFont(&ff, 12, FontStyleBold, UnitPixel);
     int matchCount = g_matchCount.load();
-    int area = (g_allProfiles.empty()) ? 10000 : (g_allProfiles[g_selectedProfileIdx].roi_w * g_allProfiles[g_selectedProfileIdx].roi_h);
-    if (area <= 0) area = 1;
+    int area = (g_allProfiles.empty())
+                   ? 10000
+                   : (g_allProfiles[g_selectedProfileIdx].roi_w *
+                      g_allProfiles[g_selectedProfileIdx].roi_h);
+    if (area <= 0)
+      area = 1;
     float detectionRatio = (float)matchCount / area;
     int matchPct = int(detectionRatio * 100.0f);
     std::wstring matchStr = L"Match  " + std::to_wstring(matchPct) + L"%";
@@ -452,7 +461,7 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       int dx = rx;
       int dy = ry + rh + 8;
       int dw = rw * 2; // Double width for columns (v5.5.17)
-      int dh = 280; // Optimized height for two-column layout
+      int dh = 280;    // Optimized height for two-column layout
 
       LinearGradientBrush dbgBrush(Point(dx, dy), Point(dx, dy + dh),
                                    Color(175, 8, 10, 14), Color(175, 3, 5, 8));
@@ -466,18 +475,17 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       Font dbgFont(&ff, 10, FontStyleRegular, UnitPixel);
       SolidBrush dbgTextL(Color(255, 160, 160, 160));
 
-      auto DrawRow = [&](int row, int col, const wchar_t *label, const std::wstring &val,
-                         bool isGood = true) {
+      auto DrawRow = [&](int row, int col, const wchar_t *label,
+                         const std::wstring &val, bool isGood = true) {
         float xOff = float(dx + 10 + (col * (dw / 2)));
         float yPos = float(dy + 8 + (row * 16));
-        graphics.DrawString(label, -1, &dbgFont, PointF(xOff, yPos),
-                            &dbgTextL);
+        graphics.DrawString(label, -1, &dbgFont, PointF(xOff, yPos), &dbgTextL);
         SolidBrush valBrush(isGood ? Color(255, 0, 220, 170)
                                    : Color(255, 255, 80, 80));
-        
+
         float xVal = xOff + (dw / 2) - 140;
-        graphics.DrawString(val.c_str(), -1, &dbgFont,
-                            PointF(xVal, yPos), &valBrush);
+        graphics.DrawString(val.c_str(), -1, &dbgFont, PointF(xVal, yPos),
+                            &valBrush);
       };
 
       bool fnRun = CheckFortniteProcessFast();
@@ -493,7 +501,8 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
 
       int matchCount = g_matchCount.load();
       int area = (g_allProfiles.empty()) ? 10000 : (dbgP.roi_w * dbgP.roi_h);
-      if (area <= 0) area = 1;
+      if (area <= 0)
+        area = 1;
       float detectionRatio = (float)matchCount / area;
 
       // Column 0: Engine & State
@@ -510,14 +519,18 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
               peakRatio < (dbgP.diveGlideMatch / 100.0f));
       DrawRow(4, 0, L"Threshold:",
               std::to_wstring((int)dbgP.diveGlideMatch) + L"%");
-      DrawRow(5, 0, L"State:", g_isDiving ? L"DIVING" : L"GLIDING", !g_isDiving);
+      DrawRow(5, 0, L"State:", g_isDiving ? L"DIVING" : L"GLIDING",
+              !g_isDiving);
       DrawRow(6, 0, L"Input Locked:", suspended ? suspStr : L"NO", !suspended);
 
       std::wstring reasonStr = L"None";
       int reason = g_lockTriggerReason.load();
-      if (reason == 1) reasonStr = L"Glide>Dive";
-      else if (reason == 2) reasonStr = L"Dive>Glide";
-      else if (reason == 3) reasonStr = L"Alt-Tab";
+      if (reason == 1)
+        reasonStr = L"Glide>Dive";
+      else if (reason == 2)
+        reasonStr = L"Dive>Glide";
+      else if (reason == 3)
+        reasonStr = L"Alt-Tab";
       DrawRow(7, 0, L"Lock Reason:", reasonStr, reason == 0);
 
       DrawRow(8, 0, L"Fortnite Running:", fnRun ? L"YES" : L"NO", fnRun);
@@ -536,34 +549,42 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
 
       // Column 1: Nitro 5 & Forensics
       static const int keys[] = {'W', 'A', 'S', 'D'};
-      static const wchar_t* names[] = {L"W", L"A", L"S", L"D"};
+      static const wchar_t *names[] = {L"W", L"A", L"S", L"D"};
       std::wstring wasdStr;
       bool mismatch = false;
 
       for (int i = 0; i < 4; ++i) {
         bool p = g_physicalKeys[keys[i]].load(std::memory_order_relaxed);
         bool t = (GetKeyState(keys[i]) & 0x8000) != 0;
-        if (p != t) mismatch = true;
-        wasdStr += std::wstring(names[i]) + L":" + (p?L"1":L"0") + L"/" + (t?L"1":L"0") + L" ";
+        if (p != t)
+          mismatch = true;
+        wasdStr += std::wstring(names[i]) + L":" + (p ? L"1" : L"0") + L"/" +
+                   (t ? L"1" : L"0") + L" ";
       }
 
       DrawRow(0, 1, L"Nitro 5 Truth:", wasdStr, true);
-      
+
       bool rawW = (GetAsyncKeyState('W') & 0x8000) != 0;
       DrawRow(1, 1, L"RAW Hardware W:", rawW ? L"PRESSED" : L"RELEASED", true);
-      
+
       bool isLocked = suspended;
       DrawRow(2, 1, L"Input Lock:", isLocked ? L"ACTIVE" : L"IDLE", !isLocked);
 
       DrawRow(3, 1, L"Lock Count:", std::to_wstring(g_lockCount.load()));
-      DrawRow(4, 1, L"Lock Duration:", std::to_wstring(g_lockDurationMs.load()) + L" ms");
+      DrawRow(4, 1, L"Lock Duration:",
+              std::to_wstring(g_lockDurationMs.load()) + L" ms");
       DrawRow(5, 1, L"Lock Thread ID:", std::to_wstring(g_lockThreadId.load()));
       if (g_hasSynced) {
         int fb = g_activeFallback.load();
-        std::wstring fbStr = (fb == 0) ? L"NONE" : (fb == 1 ? L"FB1 (Shock)" : (fb == 2 ? L"FB2 (Hammer)" : L"FAIL (99)"));
+        std::wstring fbStr =
+            (fb == 0) ? L"NONE"
+                      : (fb == 1 ? L"FB1 (Shock)"
+                                 : (fb == 2 ? L"FB2 (Hammer)" : L"FAIL (99)"));
         DrawRow(6, 1, L"Fallback:", fbStr, fb == 0);
-        DrawRow(7, 1, L"Table State:", g_tableRefreshed ? L"REFRESHED" : L"FROZEN", g_tableRefreshed);
-        DrawRow(8, 1, L"Ghost Detect:", mismatch ? L"MISMATCH!" : L"OK", !mismatch);
+        DrawRow(7, 1, L"Table State:",
+                g_tableRefreshed ? L"REFRESHED" : L"FROZEN", g_tableRefreshed);
+        DrawRow(8, 1, L"Ghost Detect:", mismatch ? L"MISMATCH!" : L"OK",
+                !mismatch);
 
         // DETAILED NITRO 5 FORENSICS
         for (int i = 0; i < 4; ++i) {
@@ -576,14 +597,16 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
                              L" post=" + std::wstring(post ? L"1" : L"0") +
                              L" phys=" + std::wstring(phys ? L"1" : L"0") +
                              L" d=" + std::wstring(delta ? L"SYNC" : L"SAME");
-          
+
           DrawRow(10 + i, 1, names[i], val, !delta);
         }
       } else {
         DrawRow(6, 1, L"Nitro Sync:", L"AWAITING FIRST LOCK", true);
       }
 
-      DrawRow(14, 1, L"Input State:", g_blockInputActive ? L"LOCKED" : L"UNLOCKED", !g_blockInputActive);
+      DrawRow(14, 1, L"Input State:",
+              g_blockInputActive ? L"LOCKED" : L"UNLOCKED",
+              !g_blockInputActive);
       DrawRow(15, 1, L"Version:", L"v" + std::wstring(VERSION_WSTR), true);
     }
   }

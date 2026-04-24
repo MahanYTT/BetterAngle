@@ -725,6 +725,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, NULL);
 
   LoadSettings();
+  // Initialize HUD position if not set (first run)
+  if (g_hudX < 0) {
+    int screenW = GetSystemMetrics(SM_CXSCREEN);
+    g_hudX = (screenW / 2) - 130; // Center horizontally (HUD width is 260)
+  }
   SetLogLevel(LogLevel::Info);
   LogStartup();
   CleanupUpdateJunk();

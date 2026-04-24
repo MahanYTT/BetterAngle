@@ -1,5 +1,13 @@
 ### BetterAngle Pro v5.5.28
-- Automated build release.
+- **Nitro Flush Hardening & Architectural Isolation**:
+  - Decoupled Alt-Tab focus lock path from FOV transition logic.
+  - Implemented 500ms transition cooldown to prevent feedback loops.
+  - Purged VK_SPACE from sync array to eliminate double-press issues.
+  - Hardened "Hammer" (Fallback 2) to only repress keys confirmed as held.
+  - Corrected out-of-bounds array access in diagnostic logging loops.
+  - Fixed HUD default position to center horizontally on first run.
+  - Consolidated overlay code and removed redundant source files.
+
 
 ### BetterAngle Pro v5.5.23
 - **BlockInput Keyboard Ghosting Fixes**:
