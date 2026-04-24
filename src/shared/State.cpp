@@ -23,6 +23,7 @@ std::atomic<long long> g_detectionDelayMs(0);
 std::atomic<bool> g_showDebugOverlay(false);
 std::atomic<ULONGLONG> g_mouseSuspendedUntil(0);
 std::atomic<int> g_lockTriggerReason(0);
+std::string g_nitroSyncLog = "No sync events yet";
 std::atomic<int> g_peakMatchCount{0};
 std::atomic<int> g_requiredMatchCount{0};
 std::atomic<int> g_scannerCpuPct(0);

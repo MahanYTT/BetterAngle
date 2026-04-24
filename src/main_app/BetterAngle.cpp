@@ -34,9 +34,6 @@ using namespace Gdiplus;
 // Global State
 // Global handles defined in State.h/cpp
 ULONG_PTR g_gdiplusToken;
-std::atomic<int> g_scannerCpuPct(0);
-std::string g_nitroSyncLog = "No sync events yet";
-std::atomic<int> g_lockTriggerReason(0);
 std::atomic<bool> g_running(true);
 FovDetector g_detector;
 
