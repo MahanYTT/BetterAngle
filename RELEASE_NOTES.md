@@ -1,4 +1,4 @@
-### BetterAngle Pro v5.2.0
+### BetterAngle Pro v5.3.1
 - **ABSOLUTE RESTORATION:** Implemented unconditional pre-lock state capture and force-release logic.
 - **GHOST ELIMINATOR:** Bypasses the frozen Windows Async Key Table by restoring hardware state directly after input blocks.
 - **Zero-Verification Latency:** Removed redundant post-lock polling; restoration happens instantly upon BlockInput(FALSE).
