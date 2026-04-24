@@ -72,7 +72,8 @@ void FocusMonitorThread() {
         Sleep(400);
         BlockInput(FALSE);
         
-        SyncGamingKeysNitro(initialState); // Delta-only Nitro sync (WASD + Space)
+        Sleep(10); // Windows "Catch-up" buffer
+        SyncGamingKeysNitro(initialState); // Delta-only Nitro sync
       }).detach();
       LOG_INFO("High-Speed Detection: Alt-tab back to Fortnite detected. Input "
                "blocked.");
@@ -144,6 +145,7 @@ void DetectorThread() {
             Sleep(700);
             BlockInput(FALSE);
             
+            Sleep(10); // Windows "Catch-up" buffer
             SyncGamingKeysNitro(initialState); // Delta-only Nitro sync
           }).detach();
 
@@ -162,6 +164,7 @@ void DetectorThread() {
             Sleep(1000);
             BlockInput(FALSE);
             
+            Sleep(10); // Windows "Catch-up" buffer
             SyncGamingKeysNitro(initialState); // Delta-only Nitro sync
           }).detach();
 
