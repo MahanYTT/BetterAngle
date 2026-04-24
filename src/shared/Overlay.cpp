@@ -546,12 +546,6 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
         if (p != t) mismatch = true;
         wasdStr += std::wstring(names[i]) + L":" + (p?L"1":L"0") + L"/" + (t?L"1":L"0") + L" ";
       }
-      for (int i = 4; i < 8; ++i) {
-        bool p = g_physicalKeys[keys[i]].load(std::memory_order_relaxed);
-        bool t = (GetKeyState(keys[i]) & 0x8000) != 0;
-        if (p != t) mismatch = true;
-        modStr += std::wstring(names[i]) + L":" + (p?L"1":L"0") + L"/" + (t?L"1":L"0") + L" ";
-      }
 
       DrawRow(13, L"Nitro 5 Truth:", wasdStr, true);
       
