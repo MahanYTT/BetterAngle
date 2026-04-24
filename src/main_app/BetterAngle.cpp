@@ -62,17 +62,10 @@ void FocusMonitorThread() {
       g_mouseSuspendedUntil = GetTickCount64() + 400;
       g_lockTriggerReason = 3; // Alt-Tab Return
 
-      // NITRO ASYNC LOCK: Time-critical resync
+      // SIMPLE LOCK: No ghost key fix for alt-tab focus gain
       std::thread([]() {
         g_lockCount++;
         g_lockThreadId = GetCurrentThreadId();
-        ULONGLONG start = GetTickCount64();
-
-        for(int i=0; i<256; i++) g_rawKeyUpDetected[i] = false;
-        g_wPreLock =
-            (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
-        auto initialState = GetGamingKeyState(); // Pre-lock snapshot
-
         {
           std::lock_guard<std::mutex> lock(g_blockInputMutex);
           g_blockInputActive = true;
@@ -81,9 +74,6 @@ void FocusMonitorThread() {
           BlockInput(FALSE);
           g_blockInputActive = false;
         }
-
-        g_lockDurationMs = (long long)(GetTickCount64() - start);
-        SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
       }).detach();
       LOG_INFO("High-Speed Detection: Alt-tab back to Fortnite detected. Input "
                "blocked.");
@@ -144,7 +134,8 @@ void DetectorThread() {
 
       if (GetTickCount64() >= g_mouseSuspendedUntil) {
         // Edge: Gliding -> Diving (Nitro)
-        if (nowDiving && !lastDiving) {
+        if (nowDiving && !lastDiving && (GetTickCount64() - g_lastLockTime > 500)) {
+          g_lastLockTime = GetTickCount64();
           g_mouseSuspendedUntil = GetTickCount64() + 700;
 
           std::thread([]() {
@@ -174,7 +165,8 @@ void DetectorThread() {
           g_lockTriggerReason = 1; // Glide → Dive
         }
         // Edge: Diving -> Gliding (Nitro)
-        else if (!nowDiving && lastDiving) {
+        else if (!nowDiving && lastDiving && (GetTickCount64() - g_lastLockTime > 500)) {
+          g_lastLockTime = GetTickCount64();
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
 
           std::thread([]() {

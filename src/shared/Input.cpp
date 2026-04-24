@@ -137,7 +137,7 @@ bool IsCursorCurrentlyVisible() {
 static bool g_pollingRunning = false;
 
 // The "Nitro 5" - Absolute Movement Cluster (v5.5.0)
-static const int g_gamingKeys[] = {'W', 'A', 'S', 'D', VK_SPACE};
+static const int g_gamingKeys[] = {'W', 'A', 'S', 'D'};
 
 // Physical Truth Table (v5.1.16)
 // Using std::atomic<bool> g_physicalKeys[256] from State.h
@@ -244,12 +244,12 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     g_activeFallback = 1;
 
   // FALLBACK 2: Unconditional KeyUp + Repress (The "Hammer")
-  // SKIP this for Alt-Tab (Reason 3) to prevent focus-gain conflicts
+  // Only repress keys that are confirmed still HELD (state1[i] == true)
   bool refreshed2 = false;
   if (g_lockTriggerReason != 3) {
     for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
       int vk = g_gamingKeys[i];
-      if (preState[i] && vk != VK_SPACE) {
+      if (preState[i] && state1[i]) {
         INPUT seq[2] = {0};
         seq[0].type = INPUT_KEYBOARD;
         seq[0].ki.wVk = (WORD)vk;
@@ -278,7 +278,7 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   g_tableRefreshed = refreshed1 || refreshed2;
   g_wPostFlush = GetAsyncKeyState('W');
 
-  for (int i = 0; i < 5; ++i) {
+  for (int i = 0; i < 4; ++i) {
     g_preState[i] = preState[i];
     g_postState[i] = finalState[i];
   }

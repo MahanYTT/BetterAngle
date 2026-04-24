@@ -566,7 +566,7 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
         DrawRow(8, 1, L"Ghost Detect:", mismatch ? L"MISMATCH!" : L"OK", !mismatch);
 
         // DETAILED NITRO 5 FORENSICS
-        for (int i = 0; i < 5; ++i) {
+        for (int i = 0; i < 4; ++i) {
           bool pre = g_preState[i].load();
           bool post = g_postState[i].load();
           bool phys = (GetAsyncKeyState(keys[i]) & 0x8000) != 0;
