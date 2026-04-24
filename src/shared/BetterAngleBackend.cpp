@@ -994,7 +994,10 @@ long long BetterAngleBackend::detectionDelayMs() const {
   return (long long)g_detectionDelayMs;
 }
 int BetterAngleBackend::detectionRatioPct() const {
-  return (int)(g_detectionRatio * 100.0f);
+  Profile &p = g_allProfiles[g_selectedProfileIdx];
+  int totalPixels = p.roi_w * p.roi_h;
+  if (totalPixels <= 0) return 0;
+  return (int)(((float)g_matchCount.load() / (float)totalPixels) * 100.0f);
 }
 bool BetterAngleBackend::inputLocked() const {
   return g_mouseSuspendedUntil > 0 && GetTickCount64() < g_mouseSuspendedUntil;
@@ -1016,7 +1019,10 @@ QString BetterAngleBackend::lockTriggerReason() const {
 }
 
 int BetterAngleBackend::peakMatchPct() const {
-  return (int)(g_peakMatchRatio.load() * 100.0f);
+  Profile &p = g_allProfiles[g_selectedProfileIdx];
+  int totalPixels = p.roi_w * p.roi_h;
+  if (totalPixels <= 0) return 0;
+  return (int)(((float)g_peakMatchCount.load() / (float)totalPixels) * 100.0f);
 }
 
 QString BetterAngleBackend::roiDimensions() const {

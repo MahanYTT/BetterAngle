@@ -46,8 +46,8 @@ void FovDetector::EnsureResources(int w, int h) {
 
 #include <emmintrin.h> // SSE2 support
 
-float FovDetector::Scan(const RoiConfig& cfg) {
-    if (cfg.w <= 0 || cfg.h <= 0) return 0.0f;
+int FovDetector::Scan(const RoiConfig& cfg) {
+    if (cfg.w <= 0 || cfg.h <= 0) return 0;
     
     EnsureResources(cfg.w, cfg.h);
     BitBlt(m_hdcMem, 0, 0, cfg.w, cfg.h, m_hdcScreen, cfg.x, cfg.y, SRCCOPY);
@@ -125,5 +125,5 @@ float FovDetector::Scan(const RoiConfig& cfg) {
         if ((dr*dr + dg*dg + db*db) <= tolSq) match++;
     }
 
-    return (float)match / (float)totalPixels;
+    return match;
 }

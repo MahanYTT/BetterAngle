@@ -7,7 +7,7 @@ HBITMAP g_screenSnapshot = NULL;
 bool g_isDiving = false;
 bool g_showROIBox = true;
 int g_currentTab = 0;
-std::atomic<float> g_detectionRatio{0.0f};
+std::atomic<int> g_matchCount{0};
 bool g_isCheckingForUpdates = false;
 bool g_hasCheckedForUpdates = false;
 float g_updateSpinAngle = 0.0f;
@@ -23,7 +23,7 @@ std::atomic<long long> g_detectionDelayMs(0);
 std::atomic<bool> g_showDebugOverlay(false);
 std::atomic<ULONGLONG> g_mouseSuspendedUntil(0);
 std::atomic<int> g_lockTriggerReason(0);
-std::atomic<float> g_peakMatchRatio{0.0f};
+std::atomic<int> g_peakMatchCount{0};
 std::atomic<int> g_scannerCpuPct(0);
 int g_screenIndex = 0;
 

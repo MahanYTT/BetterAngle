@@ -493,9 +493,12 @@ void DrawOverlay(HWND hwnd, double angle, float detectionRatio,
               g_detectionDelayMs < 15);
       DrawRow(2, L"Match Ratio:",
               std::to_wstring((int)(detectionRatio * 100)) + L"%");
+      float peakRatio = 0.0f;
+      int totalPixels = dbgP.roi_w * dbgP.roi_h;
+      if (totalPixels > 0) peakRatio = (float)g_peakMatchCount.load() / (float)totalPixels;
       DrawRow(3, L"Peak Match (2s):",
-              std::to_wstring((int)(g_peakMatchRatio.load() * 100)) + L"%",
-              g_peakMatchRatio.load() < (dbgP.diveGlideMatch / 100.0f));
+              std::to_wstring((int)(peakRatio * 100)) + L"%",
+              peakRatio < (dbgP.diveGlideMatch / 100.0f));
       DrawRow(4, L"Threshold:",
               std::to_wstring((int)dbgP.diveGlideMatch) + L"%");
       DrawRow(5, L"State:", g_isDiving ? L"DIVING" : L"GLIDING", !g_isDiving);

@@ -15,7 +15,7 @@ public:
     FovDetector();
     ~FovDetector();
 
-    float Scan(const RoiConfig& cfg);
+    int Scan(const RoiConfig& cfg);
 
 private:
     HDC m_hdcScreen;

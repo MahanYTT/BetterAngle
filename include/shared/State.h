@@ -21,7 +21,7 @@ extern std::atomic<long long> g_detectionDelayMs;
 extern std::atomic<bool> g_showDebugOverlay;
 extern std::atomic<ULONGLONG> g_mouseSuspendedUntil;
 extern std::atomic<int> g_lockTriggerReason;   // 0=None,1=Glide→Dive,2=Dive→Glide,3=Alt-Tab
-extern std::atomic<float> g_peakMatchRatio;
+extern std::atomic<int> g_peakMatchCount;
 extern std::atomic<int> g_scannerCpuPct;
 extern int g_screenIndex;
 extern std::atomic<bool> g_fortniteFocusedCache;
@@ -76,7 +76,7 @@ extern bool g_crossPulse;
 extern COLORREF g_targetColor;
 extern COLORREF g_pickedColor;
 extern float g_latestVersion;
-extern std::atomic<float> g_detectionRatio;
+extern std::atomic<int> g_matchCount;
 extern float g_updateSpinAngle;
 extern RECT g_selectionRect;
 extern POINT g_startPoint;

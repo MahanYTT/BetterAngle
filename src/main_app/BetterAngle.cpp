@@ -97,7 +97,7 @@ void DetectorThread() {
         RoiConfig cfg = {p.roi_x + mRect.left, p.roi_y + mRect.top, p.roi_w,
                          p.roi_h, p.target_color, p.tolerance};
         ULONGLONG startMs = GetTickCount64();
-        g_detectionRatio = g_detector.Scan(cfg);
+        g_matchCount = g_detector.Scan(cfg);
         ULONGLONG endMs = GetTickCount64();
         ULONGLONG scanMs = endMs - startMs;
         g_detectionDelayMs = scanMs;
@@ -107,23 +107,23 @@ void DetectorThread() {
         g_scannerCpuPct = cpuPct;
 
         // Peak match tracking (2s decay window)
-        float currentRatio = g_detectionRatio.load();
+        int currentCount = g_matchCount.load();
         ULONGLONG now = GetTickCount64();
         if (now - peakMatchTimestamp > 2000) {
-          g_peakMatchRatio = currentRatio;
+          g_peakMatchCount = currentCount;
           peakMatchTimestamp = now;
-        } else if (currentRatio > g_peakMatchRatio.load()) {
-          g_peakMatchRatio = currentRatio;
+        } else if (currentCount > g_peakMatchCount.load()) {
+          g_peakMatchCount = currentCount;
         }
       } else {
         // Fortnite not focused, reset detection ratio to 0
-        g_detectionRatio = 0.0f;
+        g_matchCount = 0;
         g_detectionDelayMs = 0;
         g_scannerCpuPct = 0;
       }
 
-      float threshold = p.diveGlideMatch / 100.0f;
-      bool nowDiving = (g_detectionRatio >= threshold);
+      int requiredMatchCount = (int)((p.diveGlideMatch / 100.0f) * (p.roi_w * p.roi_h));
+      bool nowDiving = (g_matchCount.load() >= requiredMatchCount);
 
       if (GetTickCount64() >= g_mouseSuspendedUntil) {
         // Edge: Gliding -> Diving  (FOV zoom-in anim ~1.0s)
@@ -599,7 +599,13 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
       // Unconditionally draw overlay at 60FPS to keep Debug stats (FPS/Delay)
       // synced live
-      DrawOverlay(hWnd, ang, g_detectionRatio, g_showCrosshair);
+      float currentRatio = 0.0f;
+      if (!g_allProfiles.empty() && g_selectedProfileIdx < (int)g_allProfiles.size()) {
+          Profile &p = g_allProfiles[g_selectedProfileIdx];
+          int total = p.roi_w * p.roi_h;
+          if (total > 0) currentRatio = (float)g_matchCount.load() / (float)total;
+      }
+      DrawOverlay(hWnd, ang, currentRatio, g_showCrosshair);
     } else if (wParam == 2) { // 30s Auto-Save Periodic Timer
       SaveSettings();
       if (!g_allProfiles.empty() &&

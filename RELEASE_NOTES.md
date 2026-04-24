@@ -1,10 +1,10 @@
-Generating release notes from commit range: v5.0.74..HEAD ### BetterAngle Pro v5.0.75
-- Automated build release.
+### BetterAngle Pro v5.0.75
+- perf: completely eliminated floating-point operations from the hot loop. Implemented pre-calculated logic scales, absolute integer matching thresholds, and an optimized SIMD pixel scanning pipeline for maximum detection speed without accuracy loss.
 
 ### BetterAngle Pro v5.0.74
 - perf: implemented ultra-fast focus and detector threads using yield/Sleep(0) and HWND caching for zero-delay input locking.
 
-### BetterAngle Pro v5.0.73
+### BetterAngle Pro v5.0.74
 - perf: adjusted Glide->Dive lock duration to 700ms.
 
 ### BetterAngle Pro v5.0.73
