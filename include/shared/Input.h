@@ -13,7 +13,10 @@ int GetRawInputDeltaX(LPARAM lparam);
 bool IsFortniteForeground();
 bool IsCursorCurrentlyVisible();
 
-// Anti-Ghosting Sync
+// Anti-Ghosting & High-Speed Locking
+void ReleaseHeldKeys();
+void SyncKeyStates();
 void SyncMovementKeys();
+void HighFreqWait(int ms);
 
 #endif // INPUT_H

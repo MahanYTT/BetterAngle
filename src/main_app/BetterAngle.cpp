@@ -128,30 +128,34 @@ void DetectorThread() {
       if (GetTickCount64() >= g_mouseSuspendedUntil) {
         // Edge: Gliding -> Diving  (FOV zoom-in anim ~1.0s)
         if (nowDiving && !lastDiving) {
+          // Zero-Latency Block & Anti-Ghosting
+          ReleaseHeldKeys();
+          BlockInput(TRUE);
           g_mouseSuspendedUntil = GetTickCount64() + 700;
           
-          // Async Lock
+          // Async Timer for Release
           std::thread([]() {
-            BlockInput(TRUE);
-            Sleep(700);
+            HighFreqWait(700); // High-frequency polling loop
             BlockInput(FALSE);
-            SyncMovementKeys();
+            SyncKeyStates();   // Hardware-level keyboard check & sync
           }).detach();
-          LOG_INFO("Transition: glide->dive, Input blocked for 700ms");
+          LOG_INFO("Transition: glide->dive, Instant input lock (700ms)");
           g_lockTriggerReason = 1; // Glide → Dive
         }
         // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)
         else if (!nowDiving && lastDiving) {
+          // Zero-Latency Block & Anti-Ghosting
+          ReleaseHeldKeys();
+          BlockInput(TRUE);
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
           
-          // Async Lock
+          // Async Timer for Release
           std::thread([]() {
-            BlockInput(TRUE);
-            Sleep(1000);
+            HighFreqWait(1000); // High-frequency polling loop
             BlockInput(FALSE);
-            SyncMovementKeys();
+            SyncKeyStates();    // Hardware-level keyboard check & sync
           }).detach();
-          LOG_INFO("Transition: dive->glide, Input blocked for 1000ms");
+          LOG_INFO("Transition: dive->glide, Instant input lock (1000ms)");
           g_lockTriggerReason = 2; // Dive → Glide
         }
       }

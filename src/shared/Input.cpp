@@ -173,7 +173,7 @@ bool IsCursorCurrentlyVisible() {
   return (cursorInfo.flags & CURSOR_SHOWING) != 0;
 }
 
-void SyncKeyStates(const std::vector<int>& preBlockKeys) {
+void SyncKeyStates() {
   // Sync physical hardware state with logical state after a BlockInput window.
   // Since we called ReleaseHeldKeys() before the block, we MUST re-synthesize
   // KEYDOWN for everything that the user is still physically holding down.
@@ -214,6 +214,14 @@ void SyncKeyStates(const std::vector<int>& preBlockKeys) {
 
   if (!inputs.empty()) {
     SendInput((UINT)inputs.size(), inputs.data(), sizeof(INPUT));
+  }
+}
+
+void HighFreqWait(int ms) {
+  ULONGLONG start = GetTickCount64();
+  while (GetTickCount64() - start < (ULONGLONG)ms) {
+    // Spin-wait to avoid context switch latency
+    YieldProcessor();
   }
 }
 
