@@ -64,9 +64,9 @@ void FocusMonitorThread() {
       g_mouseSuspendedUntil = GetTickCount64() + 400;
       g_lockTriggerReason = 3; // Alt-Tab Return
 
+      BlockInput(TRUE);
       // SAFE ASYNC LOCK: Lightning detection, but safe background unblocking
       std::thread([]() {
-        BlockInput(TRUE);
         Sleep(400);
         BlockInput(FALSE);
         SyncMovementKeys();
@@ -129,10 +129,9 @@ void DetectorThread() {
         // Edge: Gliding -> Diving  (FOV zoom-in anim ~1.0s)
         if (nowDiving && !lastDiving) {
           g_mouseSuspendedUntil = GetTickCount64() + 700;
-          
+          BlockInput(TRUE);
           // Async Lock
           std::thread([]() {
-            BlockInput(TRUE);
             Sleep(700);
             BlockInput(FALSE);
             SyncMovementKeys();
@@ -143,10 +142,9 @@ void DetectorThread() {
         // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)
         else if (!nowDiving && lastDiving) {
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
-          
+          BlockInput(TRUE);
           // Async Lock
           std::thread([]() {
-            BlockInput(TRUE);
             Sleep(1000);
             BlockInput(FALSE);
             SyncMovementKeys();
