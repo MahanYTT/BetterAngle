@@ -202,39 +202,24 @@ std::vector<bool> GetGamingKeyState() {
 }
 
 void SyncGamingKeysNitro(const std::vector<bool>& initialState) {
-  // Capture STALE state immediately after unlock but before flush
+  // Capture final diagnostic state (for HUD reference only)
   g_wPostUnlock = GetAsyncKeyState('W');
 
-  // THE IRON FLUSH (v5.1.23/24)
-  // Force Windows to rebuild the frozen Async Key State table after lock
-  INPUT ironFlush = {0};
-  ironFlush.type = INPUT_KEYBOARD;
-  ironFlush.ki.wVk = 0; // Dummy key
-  ironFlush.ki.dwFlags = KEYEVENTF_KEYUP;
-  SendInput(1, &ironFlush, sizeof(INPUT));
-
-  // High-precision buffer to let Windows rebuild the table
-  Sleep(2);
-
-  // Capture FRESH state after flush
-  g_wPostFlush = GetAsyncKeyState('W');
+  // ABSOLUTE RESTORATION (v5.2.0)
+  // We no longer probe hardware state post-lock because the table is frozen.
+  // Instead, we UNCONDITIONALLY force-release every key that was held in the pre-lock snapshot.
+  // This guarantees that any key released during the lock is caught, while keys still physically 
+  // held will simply trigger a new DOWN event immediately when the user continues moving.
 
   std::vector<INPUT> outInputs;
-  std::string log = "Sync at " + std::to_string(GetTickCount64()) + ": ";
-  bool ghostFound = false;
+  std::string log = "v5.2 Restore: ";
+  bool restored = false;
 
   for (size_t i = 0; i < initialState.size(); ++i) {
-    int vk = g_gamingKeys[i];
-    
-    // Read from the fresh, unfrozen atomic table (updated by 1ms thread)
-    bool currentlyDown = g_physicalKeys[vk].load(std::memory_order_relaxed);
-    bool initiallyDown = initialState[i];
+    if (initialState[i]) { // Key was held BEFORE lock
+      int vk = g_gamingKeys[i];
+      restored = true;
 
-    // THE GHOST REMOVAL:
-    // If it was down before the lock, but is physically UP now, 
-    // we MUST force-release it in the game's message queue.
-    if (initiallyDown && !currentlyDown) {
-      ghostFound = true;
       INPUT input = {0};
       input.type = INPUT_KEYBOARD;
       input.ki.wVk = (WORD)vk;
@@ -242,15 +227,19 @@ void SyncGamingKeysNitro(const std::vector<bool>& initialState) {
       input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
       outInputs.push_back(input);
       
-      log += std::to_string(vk) + " FIXED ";
+      log += std::to_string(vk) + " ";
     }
   }
 
-  if (ghostFound) {
+  if (restored) {
     SendInput((UINT)outInputs.size(), outInputs.data(), sizeof(INPUT));
-    g_nitroSyncLog = log;
-    LOG_INFO(log.c_str());
+    g_nitroSyncLog = log + "FORCE-RELEASED";
+    LOG_INFO(g_nitroSyncLog.c_str());
   } else {
-    g_nitroSyncLog = "Sync: OK (No Ghosts)";
+    g_nitroSyncLog = "Sync: Clean (No keys were held)";
   }
+
+  // Diagnostic: Final check after force-restoration
+  // Note: GetAsyncKeyState might STILL be stale here until a physical event occurs
+  g_wPostFlush = GetAsyncKeyState('W');
 }
