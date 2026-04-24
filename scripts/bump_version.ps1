@@ -70,10 +70,18 @@ if (Test-Path $releaseNotesFile) {
     Write-Host "Updated RELEASE_NOTES.md"
 }
 
-# 7. Create and Push Git Tag
+# 7. Commit and Tag (Self-Contained Golden Path)
+git config user.name "github-actions[bot]"
+git config user.email "github-actions[bot]@users.noreply.github.com"
+
+git add VERSION CMakeLists.txt include/shared/State.h RELEASE_NOTES.md
+git commit -m "chore: auto-increment version for release $newVersion [skip ci]"
+
 $tag = "v$newVersion"
-git tag $tag
-git push origin $tag
-Write-Host "Created and pushed tag: $tag"
+git tag -f $tag
+git push origin main
+git push origin -f $tag
+
+Write-Host "Version bump to $newVersion complete. Commit and tag pushed."
 
 Write-Host "Version bump to $newVersion complete."
