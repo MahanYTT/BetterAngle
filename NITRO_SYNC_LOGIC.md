@@ -1,4 +1,4 @@
-# Nitro Synchronization Logic (v5.1.7) - The "Door Opening" Fix
+# Nitro Synchronization Logic (v5.1.10) - The "Door Opening" Fix
 
 ## The Problem: "Input Blindness"
 When BetterAngle performs an FOV transition (Gliding/Diving) or an Alt-Tab event, it uses `BlockInput(TRUE)` to prevent mouse jitter. However, this creates a "blind spot" in Windows:
