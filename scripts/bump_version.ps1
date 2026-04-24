@@ -89,6 +89,30 @@ for ($i = 1; $i -le 5; $i++) {
         if ($LASTEXITCODE -eq 0) {
             git push origin -f $tag
             Write-Host "Push successful."
+            
+            # 8. DETACHED RELEASE STRIKER: Spawn a persistent background process
+            Write-Host "Launching Detached Release Striker for $tag..."
+            $strikerCode = @"
+            `$tag = '$tag'
+            `$newVersion = '$newVersion'
+            `$targetFile = 'bin/BetterAngle_Setup.exe'
+            `$maxWait = 600
+            `$waited = 0
+            while (!(Test-Path `$targetFile) -and `$waited -lt `$maxWait) {
+                Start-Sleep -Seconds 10
+                `$waited += 10
+            }
+            if (Test-Path `$targetFile) {
+                Start-Sleep -Seconds 30
+                gh release create `$tag `$targetFile --title "BetterAngle Pro `$newVersion" --notes "Automated Nitro Flush release `$newVersion"
+            }
+"@
+            $strikerPath = "scripts/striker.ps1"
+            $strikerCode | Out-File -FilePath $strikerPath -Encoding utf8
+            
+            # Start detached process that survives step transitions
+            Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass -File $strikerPath" -WindowStyle Hidden
+            Write-Host "Striker launched and monitoring build..."
             break
         }
     } else {
