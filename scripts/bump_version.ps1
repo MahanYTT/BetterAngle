@@ -79,8 +79,25 @@ git commit -m "chore: auto-increment version to $newVersion"
 
 $tag = "v$newVersion"
 git tag -f $tag
-git push origin main
-git push origin -f $tag
+
+# Robust Retry Loop for Concurrent Pushes
+for ($i = 1; $i -le 5; $i++) {
+    Write-Host "Attempting to push version $newVersion (Attempt $i)..."
+    git pull --rebase origin main -X theirs
+    if ($LASTEXITCODE -eq 0) {
+        git push origin main
+        if ($LASTEXITCODE -eq 0) {
+            git push origin -f $tag
+            Write-Host "Push successful."
+            break
+        }
+    } else {
+        git rebase --abort
+        git pull --rebase origin main
+    }
+    Write-Host "Concurrency collision detected, retrying in 2s..."
+    Sleep 2
+}
 
 Write-Host "Version bump to $newVersion complete. Commit and tag pushed."
 
