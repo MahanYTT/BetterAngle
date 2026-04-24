@@ -140,20 +140,17 @@ static bool g_pollingRunning = false;
 // The "Essential 6" - Zero-Ghosting Movement Cluster
 static const int g_gamingKeys[] = {'W', 'A', 'S', 'D', VK_SPACE, VK_SHIFT};
 
+// Physical Truth Table (v5.1.16)
+// Using std::atomic<bool> g_physicalKeys[256] from State.h
+
 void StartPollingThread() {
-  if (g_pollingRunning) return;
-  g_pollingRunning = true;
-
-  // Force Windows to use 1ms timer precision
-  timeBeginPeriod(1);
-
   std::thread([]() {
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-    while (g_pollingRunning) {
+    timeBeginPeriod(1); // Force 1ms Windows resolution
+    while (g_running) {
       for (int vk : g_gamingKeys) {
-        g_physicalKeys[vk] = (GetAsyncKeyState(vk) & 0x8000) != 0;
+        g_physicalKeys[vk].store((GetAsyncKeyState(vk) & 0x8000) != 0, std::memory_order_relaxed);
       }
-      Sleep(1); // Now a GUARANTEED 1ms high-frequency hardware scan
+      Sleep(1);
     }
     timeEndPeriod(1);
   }).detach();
@@ -213,8 +210,8 @@ void SyncGamingKeysNitro(const std::vector<bool>& initialState) {
     int vk = g_gamingKeys[i];
     
     // DOUBLE-CHECK HANDSHAKE:
-    // Read from the 1ms thread table AND do a fresh inline scan
-    bool threadState = g_physicalKeys[vk];
+    // Read from the 1ms atomic table AND do a fresh inline scan
+    bool threadState = g_physicalKeys[vk].load(std::memory_order_relaxed);
     bool freshState = (GetAsyncKeyState(vk) & 0x8000) != 0;
     bool currentlyDown = threadState || freshState; // Be conservative for ghosting
 

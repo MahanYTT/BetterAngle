@@ -22,7 +22,7 @@ extern std::atomic<bool> g_showDebugOverlay;
 extern std::atomic<ULONGLONG> g_mouseSuspendedUntil;
 extern std::atomic<int> g_lockTriggerReason;   // 0=None,1=Glide→Dive,2=Dive→Glide,3=Alt-Tab
 extern std::atomic<float> g_peakMatchRatio;
-extern std::atomic<int> g_scannerCpuPct;
+extern std::atomic<bool> g_physicalKeys[256];
 extern std::string g_nitroSyncLog;
 extern int g_screenIndex;
 extern std::atomic<bool> g_fortniteFocusedCache;
