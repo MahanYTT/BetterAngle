@@ -24,8 +24,10 @@ private:
     std::atomic<long long> m_accumDx;
     std::atomic<long long> m_baseDx;
     std::atomic<double>    m_baseAngle;
+    std::atomic<double>    m_currentScale;
     
     double Norm360(double a) const;
+    void BakeScale();
 };
 
 #endif // LOGIC_H

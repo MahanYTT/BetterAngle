@@ -87,6 +87,7 @@ void DetectorThread() {
     if (!g_allProfiles.empty() && g_currentSelection == NONE) {
       Profile &p = g_allProfiles[g_selectedProfileIdx];
       g_logic.LoadProfile(p.sensitivityX);
+      g_requiredMatchCount = (int)((p.diveGlideMatch / 100.0f) * (p.roi_w * p.roi_h));
 
       bool currentFortniteFocused = g_fortniteFocusedCache.load();
       g_isCursorVisible = IsCursorCurrentlyVisible();
@@ -97,7 +98,7 @@ void DetectorThread() {
         RoiConfig cfg = {p.roi_x + mRect.left, p.roi_y + mRect.top, p.roi_w,
                          p.roi_h, p.target_color, p.tolerance};
         ULONGLONG startMs = GetTickCount64();
-        g_detectionRatio = g_detector.Scan(cfg);
+        g_matchCount = g_detector.Scan(cfg);
         ULONGLONG endMs = GetTickCount64();
         ULONGLONG scanMs = endMs - startMs;
         g_detectionDelayMs = scanMs;
@@ -107,23 +108,22 @@ void DetectorThread() {
         g_scannerCpuPct = cpuPct;
 
         // Peak match tracking (2s decay window)
-        float currentRatio = g_detectionRatio.load();
+        int currentMatch = g_matchCount.load();
         ULONGLONG now = GetTickCount64();
         if (now - peakMatchTimestamp > 2000) {
-          g_peakMatchRatio = currentRatio;
+          g_peakMatchCount = currentMatch;
           peakMatchTimestamp = now;
-        } else if (currentRatio > g_peakMatchRatio.load()) {
-          g_peakMatchRatio = currentRatio;
+        } else if (currentMatch > g_peakMatchCount.load()) {
+          g_peakMatchCount = currentMatch;
         }
       } else {
-        // Fortnite not focused, reset detection ratio to 0
-        g_detectionRatio = 0.0f;
+        // Fortnite not focused, reset detection to 0
+        g_matchCount = 0;
         g_detectionDelayMs = 0;
         g_scannerCpuPct = 0;
       }
 
-      float threshold = p.diveGlideMatch / 100.0f;
-      bool nowDiving = (g_detectionRatio >= threshold);
+      bool nowDiving = (g_matchCount.load() >= g_requiredMatchCount.load());
 
       if (GetTickCount64() >= g_mouseSuspendedUntil) {
         // Edge: Gliding -> Diving  (FOV zoom-in anim ~1.0s)

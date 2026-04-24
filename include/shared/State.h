@@ -32,7 +32,7 @@ extern std::string g_lastVersionRun;
 #ifndef V_MAJ
 #define V_MAJ 5
 #define V_MIN 0
-#define V_PAT 83
+#define V_PAT 85
 #endif
 
 #define VERSION_STR APP_STR_Y(V_MAJ) "." APP_STR_Y(V_MIN) "." APP_STR_Y(V_PAT)
@@ -76,7 +76,9 @@ extern bool g_crossPulse;
 extern COLORREF g_targetColor;
 extern COLORREF g_pickedColor;
 extern float g_latestVersion;
-extern std::atomic<float> g_detectionRatio;
+extern std::atomic<int> g_matchCount;
+extern std::atomic<int> g_peakMatchCount;
+extern std::atomic<int> g_requiredMatchCount;
 extern float g_updateSpinAngle;
 extern RECT g_selectionRect;
 extern POINT g_startPoint;
