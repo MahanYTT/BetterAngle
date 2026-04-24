@@ -116,17 +116,25 @@ int GetRawInputDeltaX(LPARAM lparam) {
 }
 
 bool IsFortniteForeground() {
-  bool lastResult = false;
+  static HWND s_lastFg = NULL;
+  static bool s_lastResult = false;
+
   HWND fg = GetForegroundWindow();
   if (!fg) {
-    lastResult = false;
+    s_lastFg = NULL;
     return false;
   }
+
+  if (fg == s_lastFg) {
+    return s_lastResult;
+  }
+
+  s_lastFg = fg;
+  s_lastResult = false;
 
   DWORD pid = 0;
   GetWindowThreadProcessId(fg, &pid);
   if (pid == 0) {
-    lastResult = false;
     return false;
   }
 
@@ -134,7 +142,7 @@ bool IsFortniteForeground() {
   wchar_t processPath[MAX_PATH] = {};
   const wchar_t *processName = GetProcessBaseName(fg, processPath, MAX_PATH);
   if (processName && processName[0] && IsFortniteProcessName(processName)) {
-    lastResult = true;
+    s_lastResult = true;
     return true;
   }
 
@@ -147,15 +155,14 @@ bool IsFortniteForeground() {
       do {
         if (pe.th32ProcessID == pid) {
           CloseHandle(snap);
-          lastResult = IsFortniteProcessName(pe.szExeFile);
-          return lastResult;
+          s_lastResult = IsFortniteProcessName(pe.szExeFile);
+          return s_lastResult;
         }
       } while (Process32NextW(snap, &pe));
     }
     CloseHandle(snap);
   }
 
-  lastResult = false;
   return false;
 }
 

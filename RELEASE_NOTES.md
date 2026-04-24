@@ -1,10 +1,10 @@
-Generating release notes from commit range: v5.0.73..HEAD ### BetterAngle Pro v5.0.74
-- Automated build release.
+### BetterAngle Pro v5.0.74
+- perf: implemented ultra-fast focus and detector threads using yield/Sleep(0) and HWND caching for zero-delay input locking.
 
 ### BetterAngle Pro v5.0.73
 - perf: adjusted Glide->Dive lock duration to 700ms.
 
-### BetterAngle Pro v5.0.72
+### BetterAngle Pro v5.0.73
 - perf: fine-tuned Glide->Dive lock duration to 567ms.
 
 ### BetterAngle Pro v5.0.72

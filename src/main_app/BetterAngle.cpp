@@ -74,7 +74,7 @@ void FocusMonitorThread() {
       LOG_INFO("High-Speed Detection: Alt-tab back to Fortnite detected. Input blocked.");
     }
     lastFortniteFocused = currentFortniteFocused;
-    Sleep(1); // 1000Hz polling for lightning fast focus detection
+    Sleep(0); // Max CPU performance for lightning fast focus detection
   }
 }
 
@@ -166,7 +166,7 @@ void DetectorThread() {
       g_isDiving = nowDiving;
       g_logic.SetDivingState(nowDiving);
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Faster main loop response
+    std::this_thread::yield(); // Maximum loop response speed
   }
 }
 
