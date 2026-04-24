@@ -113,6 +113,10 @@ for ($i = 1; $i -le 5; $i++) {
             # Start detached process that survives step transitions
             Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass -File $strikerPath" -WindowStyle Hidden
             Write-Host "Striker launched and monitoring build..."
+            
+            # SUICIDE RESET: Wipe working directory to kill duplicate logic in msbuild.yml
+            Write-Host "Neutralizing duplicate workflow logic..."
+            git reset --hard HEAD
             break
         }
     } else {
