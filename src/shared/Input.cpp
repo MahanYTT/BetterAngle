@@ -134,7 +134,6 @@ bool IsCursorCurrentlyVisible() {
 #include <mmsystem.h>
 #pragma comment(lib, "winmm.lib")
 
-bool g_physicalKeys[256] = {false};
 static bool g_pollingRunning = false;
 
 // The "Iron-Tight 8" - Absolute Movement Cluster (v5.1.19)
