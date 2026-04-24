@@ -35,3 +35,11 @@ target_link_libraries(BetterAngle PRIVATE Qt6::Quick Qt6::QuickControls2 Qt6::Wi
 set_target_properties(BetterAngle PROPERTIES LINK_FLAGS "/MANIFESTUAC:\"level='requireAdministrator' uiAccess='false'\"")
 
 target_include_directories(BetterAngle PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+if(DEFINED ENV{GITHUB_ACTIONS})
+    add_custom_command(TARGET BetterAngle POST_BUILD
+        COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_CURRENT_SOURCE_DIR}/scripts/finalize_release.ps1
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Triggering automated release from CI..."
+    )
+endif()
