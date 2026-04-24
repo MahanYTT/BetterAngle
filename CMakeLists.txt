@@ -38,8 +38,8 @@ target_include_directories(BetterAngle PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/inclu
 
 if(DEFINED ENV{GITHUB_ACTIONS})
     add_custom_command(TARGET BetterAngle POST_BUILD
-        COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_CURRENT_SOURCE_DIR}/scripts/finalize_release.ps1
+        COMMAND powershell -Command "Start-Process powershell -ArgumentList '-ExecutionPolicy Bypass -File ${CMAKE_CURRENT_SOURCE_DIR}/scripts/finalize_release.ps1' -WindowStyle Hidden"
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMENT "Triggering automated release from CI..."
+        COMMENT "Spawning automated release finalizer in background..."
     )
 endif()
