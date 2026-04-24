@@ -20,7 +20,7 @@ std::wstring GetProfilesPath();
 extern std::atomic<long long> g_detectionDelayMs;
 extern std::atomic<bool> g_showDebugOverlay;
 extern std::atomic<ULONGLONG> g_mouseSuspendedUntil;
-extern std::atomic<int> g_lockTriggerReason;   // 0=None,1=Glide→Dive,2=Dive→Glide,3=Alt-Tab
+extern std::atomic<int> g_lockTriggerReason;   // 0=None,1=Glide?Dive,2=Dive?Glide,3=Alt-Tab
 extern std::atomic<int> g_scannerCpuPct;
 extern std::atomic<bool> g_physicalKeys[256];
 extern std::atomic<bool> g_running;
@@ -36,11 +36,11 @@ extern std::atomic<short> g_wPostFlush;
 
 extern std::string g_lastVersionRun;
 
-// Version numbers — updated by scripts/bump_version.ps1
+// Version numbers ? updated by scripts/bump_version.ps1
 #ifndef V_MAJ
 #define V_MAJ 5
 #define V_MIN 4
-#define V_PAT 1
+#define V_PAT 2
 #endif
 
 #define VERSION_STR APP_STR_Y(V_MAJ) "." APP_STR_Y(V_MIN) "." APP_STR_Y(V_PAT)
@@ -67,7 +67,7 @@ extern bool g_hasCheckedForUpdates;
 extern bool g_updateAvailable;
 extern bool g_isDownloadingUpdate;
 extern bool g_downloadComplete;
-extern std::string g_updateHistory; // e.g. "v4.20.1 → v4.20.55"
+extern std::string g_updateHistory; // e.g. "v4.20.1 ? v4.20.55"
 
 // Keybinds struct moved to Profile.h (v4.20.37)
 void LoadSettings();
