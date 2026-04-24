@@ -163,14 +163,22 @@ void StartPollingThread() {
 }
 
 void RegisterRawMouse(HWND hwnd) {
-  RAWINPUTDEVICE rid;
-  rid.usUsagePage = 0x01; // Generic Desktop
-  rid.usUsage = 0x02;     // Mouse
-  rid.dwFlags = RIDEV_INPUTSINK;
-  rid.hwndTarget = hwnd;
+  RAWINPUTDEVICE rid[2];
 
-  if (!RegisterRawInputDevices(&rid, 1, sizeof(rid))) {
-    LOG_ERROR("Failed to register raw mouse input device.");
+  // Mouse
+  rid[0].usUsagePage = 0x01;
+  rid[0].usUsage = 0x02;
+  rid[0].dwFlags = RIDEV_INPUTSINK;
+  rid[0].hwndTarget = hwnd;
+
+  // Keyboard
+  rid[1].usUsagePage = 0x01;
+  rid[1].usUsage = 0x06;
+  rid[1].dwFlags = RIDEV_INPUTSINK;
+  rid[1].hwndTarget = hwnd;
+
+  if (!RegisterRawInputDevices(rid, 2, sizeof(RAWINPUTDEVICE))) {
+    LOG_ERROR("Failed to register raw input devices (Mouse+Keyboard).");
   }
 }
 
@@ -205,20 +213,23 @@ std::vector<bool> GetGamingKeyState() {
 
 void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   g_wPostUnlock = GetAsyncKeyState('W');
-  g_activeFallback = 0; 
+  g_activeFallback = 0;
 
-  // FALLBACK 1: Scancode Flush (Shock)
+  // FALLBACK 1: Scancode Flush (Shock) - Exclude VK_SPACE to prevent FOV
+  // transition loops
   for (int vk : g_gamingKeys) {
+    if (vk == VK_SPACE)
+      continue; // Skip spacebar to avoid triggering FOV transitions
     INPUT flush[2] = {0};
     flush[0].type = INPUT_KEYBOARD;
     flush[0].ki.wVk = (WORD)vk;
     flush[0].ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-    flush[0].ki.dwFlags = KEYEVENTF_SCANCODE; 
+    flush[0].ki.dwFlags = KEYEVENTF_SCANCODE;
     flush[1] = flush[0];
     flush[1].ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
     SendInput(2, flush, sizeof(INPUT));
   }
-  Sleep(10); 
+  Sleep(10);
 
   // Read State after FB1
   std::vector<bool> state1;
@@ -226,15 +237,18 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
     bool current = (GetAsyncKeyState(g_gamingKeys[i]) & 0x8000) != 0;
     state1.push_back(current);
-    if (preState[i] != current) refreshed1 = true;
+    if (preState[i] != current)
+      refreshed1 = true;
   }
-  if (refreshed1) g_activeFallback = 1;
+  if (refreshed1)
+    g_activeFallback = 1;
 
   // FALLBACK 2: Unconditional KeyUp + Repress (The "Hammer")
+  // Exclude VK_SPACE from repress to prevent FOV transition feedback loops
   bool refreshed2 = false;
   for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
-    if (preState[i]) {
-      int vk = g_gamingKeys[i];
+    int vk = g_gamingKeys[i];
+    if (preState[i] && vk != VK_SPACE) {
       INPUT seq[2] = {0};
       seq[0].type = INPUT_KEYBOARD;
       seq[0].ki.wVk = (WORD)vk;
@@ -253,9 +267,11 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
     bool current = (GetAsyncKeyState(g_gamingKeys[i]) & 0x8000) != 0;
     finalState.push_back(current);
-    if (!refreshed1 && preState[i] != current) refreshed2 = true;
+    if (!refreshed1 && preState[i] != current)
+      refreshed2 = true;
   }
-  if (refreshed2) g_activeFallback = 2;
+  if (refreshed2)
+    g_activeFallback = 2;
 
   g_tableRefreshed = refreshed1 || refreshed2;
   g_wPostFlush = GetAsyncKeyState('W');
@@ -267,12 +283,16 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
 
   // FINAL DELTA INJECT
   std::vector<INPUT> outInputs;
-  std::string log = "[FB" + std::to_string(g_activeFallback.load()) + "] " + 
+  std::string log = "[FB" + std::to_string(g_activeFallback.load()) + "] " +
                     (g_tableRefreshed ? "REFRESHED" : "FROZEN") + " | ";
-  
+
   for (size_t i = 0; i < preState.size(); ++i) {
-    if (preState[i] && !finalState[i]) {
-      int vk = g_gamingKeys[i];
+    int vk = g_gamingKeys[i];
+    // HARDWARE TRUTH: Key is released if finalState says so OR if we captured a
+    // Raw KeyUp during the lock
+    bool isReleased = !finalState[i] || g_rawKeyUpDetected[vk];
+
+    if (preState[i] && isReleased) {
       INPUT input = {0};
       input.type = INPUT_KEYBOARD;
       input.ki.wVk = (WORD)vk;
@@ -288,13 +308,46 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     g_activeFallback = 99;
     std::ofstream failLog("ghostkey_fail.log", std::ios::app);
     failLog << GetTickCount64() << " - FAIL | ";
-    for(int i=0; i<5; i++) failLog << (preState[i]?"1":"0") << "->" << (finalState[i]?"1":"0") << " ";
+    for (int i = 0; i < 5; i++)
+      failLog << (preState[i] ? "1" : "0") << "->"
+              << (finalState[i] ? "1" : "0") << " ";
     failLog << std::endl;
   }
 
   if (!outInputs.empty()) {
+    // Try primary injection with SendInput
     SendInput((UINT)outInputs.size(), outInputs.data(), sizeof(INPUT));
-    g_nitroSyncLog = log + "(Injected)";
+
+    // Check if injection succeeded by verifying key states after a short delay
+    Sleep(5);
+    bool anyStillHeld = false;
+    for (size_t i = 0; i < preState.size(); ++i) {
+      if (preState[i] && !finalState[i]) {
+        // This key should have been released
+        bool current = (GetAsyncKeyState(g_gamingKeys[i]) & 0x8000) != 0;
+        if (current) {
+          anyStillHeld = true;
+          break;
+        }
+      }
+    }
+
+    if (anyStillHeld) {
+      // SendInput failed, try keybd_event fallback
+      g_activeFallback = 3; // Mark as using keybd_event fallback
+      for (size_t i = 0; i < preState.size(); ++i) {
+        if (preState[i] && !finalState[i]) {
+          int vk = g_gamingKeys[i];
+          // Use keybd_event as alternative to SendInput
+          keybd_event((BYTE)vk, 0, KEYEVENTF_KEYUP, 0);
+          Sleep(1);
+        }
+      }
+      g_nitroSyncLog = log + "(Injected via keybd_event)";
+    } else {
+      g_nitroSyncLog = log + "(Injected via SendInput)";
+    }
+
     LOG_INFO(g_nitroSyncLog.c_str());
   } else {
     g_nitroSyncLog = log + "(Clean)";

@@ -68,15 +68,20 @@ void FocusMonitorThread() {
         g_lockThreadId = GetCurrentThreadId();
         ULONGLONG start = GetTickCount64();
 
-        g_wPreLock = (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
+        for(int i=0; i<256; i++) g_rawKeyUpDetected[i] = false;
+        g_wPreLock =
+            (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
         auto initialState = GetGamingKeyState(); // Pre-lock snapshot
-        
-        g_blockInputActive = true;
-        BlockInput(TRUE);
-        Sleep(400);
-        BlockInput(FALSE);
-        g_blockInputActive = false;
-        
+
+        {
+          std::lock_guard<std::mutex> lock(g_blockInputMutex);
+          g_blockInputActive = true;
+          BlockInput(TRUE);
+          Sleep(400);
+          BlockInput(FALSE);
+          g_blockInputActive = false;
+        }
+
         g_lockDurationMs = (long long)(GetTickCount64() - start);
         SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
       }).detach();
@@ -141,21 +146,26 @@ void DetectorThread() {
         // Edge: Gliding -> Diving (Nitro)
         if (nowDiving && !lastDiving) {
           g_mouseSuspendedUntil = GetTickCount64() + 700;
-          
+
           std::thread([]() {
             g_lockCount++;
             g_lockThreadId = GetCurrentThreadId();
             ULONGLONG start = GetTickCount64();
 
-            g_wPreLock = (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
+            for(int i=0; i<256; i++) g_rawKeyUpDetected[i] = false;
+            g_wPreLock =
+                (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
             auto initialState = GetGamingKeyState(); // Pre-lock snapshot
-            
-            g_blockInputActive = true;
-            BlockInput(TRUE);
-            Sleep(700);
-            BlockInput(FALSE);
-            g_blockInputActive = false;
-            
+
+            {
+              std::lock_guard<std::mutex> lock(g_blockInputMutex);
+              g_blockInputActive = true;
+              BlockInput(TRUE);
+              Sleep(700);
+              BlockInput(FALSE);
+              g_blockInputActive = false;
+            }
+
             g_lockDurationMs = (long long)(GetTickCount64() - start);
             SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
           }).detach();
@@ -166,21 +176,26 @@ void DetectorThread() {
         // Edge: Diving -> Gliding (Nitro)
         else if (!nowDiving && lastDiving) {
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
-          
+
           std::thread([]() {
             g_lockCount++;
             g_lockThreadId = GetCurrentThreadId();
             ULONGLONG start = GetTickCount64();
 
-            g_wPreLock = (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
+            for(int i=0; i<256; i++) g_rawKeyUpDetected[i] = false;
+            g_wPreLock =
+                (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
             auto initialState = GetGamingKeyState(); // Pre-lock snapshot
-            
-            g_blockInputActive = true;
-            BlockInput(TRUE);
-            Sleep(1000);
-            BlockInput(FALSE);
-            g_blockInputActive = false;
-            
+
+            {
+              std::lock_guard<std::mutex> lock(g_blockInputMutex);
+              g_blockInputActive = true;
+              BlockInput(TRUE);
+              Sleep(1000);
+              BlockInput(FALSE);
+              g_blockInputActive = false;
+            }
+
             g_lockDurationMs = (long long)(GetTickCount64() - start);
             SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
           }).detach();
@@ -286,7 +301,6 @@ bool RefreshHotkeys(HWND hWnd) {
     UnregisterHotKey(hWnd, i);
   }
 
-
   // Small delay to allow system to process unregistration (optional but can
   // help)
   Sleep(10);
@@ -345,6 +359,21 @@ bool RefreshHotkeys(HWND hWnd) {
 LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
                             LPARAM lParam) {
   if (message == WM_INPUT) {
+    UINT dwSize;
+    GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
+    if (dwSize > 0) {
+        std::vector<BYTE> lpb(dwSize);
+        if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, lpb.data(), &dwSize, sizeof(RAWINPUTHEADER)) == dwSize) {
+            RAWINPUT* raw = (RAWINPUT*)lpb.data();
+            if (raw->header.dwType == RIM_TYPEKEYBOARD) {
+                if (raw->data.keyboard.Flags & RI_KEY_BREAK) {
+                    // HARDWARE LEVEL RELEASE DETECTED
+                    g_rawKeyUpDetected[raw->data.keyboard.VKey] = true;
+                }
+            }
+        }
+    }
+
     int dx = GetRawInputDeltaX(lParam);
 
     ULONGLONG now = GetTickCount64();

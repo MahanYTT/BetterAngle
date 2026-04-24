@@ -36,6 +36,8 @@ std::atomic<bool> g_tableRefreshed(false);
 std::atomic<bool> g_hasSynced(false);
 std::atomic<int> g_activeFallback(0);
 std::atomic<bool> g_fb1Active(false);
+std::atomic<bool> g_rawKeyUpDetected[256] = {};
+std::mutex g_blockInputMutex;
 std::string g_nitroSyncLog = "No sync events yet";
 std::atomic<int> g_peakMatchCount{0};
 std::atomic<int> g_requiredMatchCount{0};

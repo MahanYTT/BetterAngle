@@ -4,6 +4,7 @@
 #include "shared/Logic.h"
 #include "shared/Profile.h"
 #include <atomic>
+#include <mutex>
 #include <string>
 #include <vector>
 #include <windows.h>
@@ -20,7 +21,8 @@ std::wstring GetProfilesPath();
 extern std::atomic<long long> g_detectionDelayMs;
 extern std::atomic<bool> g_showDebugOverlay;
 extern std::atomic<ULONGLONG> g_mouseSuspendedUntil;
-extern std::atomic<int> g_lockTriggerReason;   // 0=None,1=Glide?Dive,2=Dive?Glide,3=Alt-Tab
+extern std::atomic<int>
+    g_lockTriggerReason; // 0=None,1=Glide?Dive,2=Dive?Glide,3=Alt-Tab
 extern std::atomic<int> g_scannerCpuPct;
 extern std::atomic<bool> g_physicalKeys[256];
 extern std::atomic<bool> g_running;
@@ -40,6 +42,8 @@ extern std::atomic<bool> g_tableRefreshed;
 extern std::atomic<bool> g_hasSynced;
 extern std::atomic<int> g_activeFallback;
 extern std::atomic<bool> g_fb1Active;
+extern std::atomic<bool> g_rawKeyUpDetected[256];
+extern std::mutex g_blockInputMutex;
 
 extern std::string g_lastVersionRun;
 
