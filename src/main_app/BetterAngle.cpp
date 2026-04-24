@@ -69,7 +69,7 @@ void FocusMonitorThread() {
         BlockInput(TRUE);
         Sleep(400);
         BlockInput(FALSE);
-        SyncGamingKeys();
+        SyncGamingKeys(); // Seamlessly restore state
       }).detach();
       LOG_INFO("High-Speed Detection: Alt-tab back to Fortnite detected. Input blocked.");
     }
@@ -130,36 +130,30 @@ void DetectorThread() {
         if (nowDiving && !lastDiving) {
           g_mouseSuspendedUntil = GetTickCount64() + 700;
           
-          // Async 'Live Snapshot' Anti-Ghosting
+          // Seamless Anti-Ghosting (No pause at start)
           std::thread([]() {
-            ReleaseGamingKeys(); // Flush stale state
             BlockInput(TRUE);    // Lock door
-            
-            Sleep(700);          // Waiting while 'watching' fingers (GetAsyncKeyState is live)
-            
+            Sleep(700);          
             BlockInput(FALSE);   // Open door
-            SyncGamingKeys();    // Sync with the final hardware snapshot
+            SyncGamingKeys();    // Sync all keys at once (No dead zone)
           }).detach();
 
-          LOG_INFO("Transition: glide->dive, Live Snapshot sync (700ms)");
+          LOG_INFO("Transition: glide->dive, Seamless sync (700ms)");
           g_lockTriggerReason = 1; // Glide → Dive
         }
         // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)
         else if (!nowDiving && lastDiving) {
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
           
-          // Async 'Live Snapshot' Anti-Ghosting
+          // Seamless Anti-Ghosting (No pause at start)
           std::thread([]() {
-            ReleaseGamingKeys(); // Flush stale state
             BlockInput(TRUE);    // Lock door
-            
-            Sleep(1000);         // Waiting while 'watching' fingers (GetAsyncKeyState is live)
-            
+            Sleep(1000);         
             BlockInput(FALSE);   // Open door
-            SyncGamingKeys();    // Sync with the final hardware snapshot
+            SyncGamingKeys();    // Sync all keys at once (No dead zone)
           }).detach();
 
-          LOG_INFO("Transition: dive->glide, Live Snapshot sync (1000ms)");
+          LOG_INFO("Transition: dive->glide, Seamless sync (1000ms)");
           g_lockTriggerReason = 2; // Dive → Glide
         }
       }
