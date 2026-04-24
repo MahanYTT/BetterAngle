@@ -44,6 +44,13 @@ HWND CreateControlPanel(HINSTANCE hInstance) {
              << g_qmlEngine->rootObjects().size();
   }
 
+  // Find the actual HWND of the Qt window to provide a valid handle for logging/management
+  // The title must match what is set in main.qml
+  HWND hPanel = FindWindowW(NULL, L"BetterAngle Pro Angle HUD");
+  if (hPanel) {
+    return hPanel;
+  }
+
   return (HWND)1;
 }
 

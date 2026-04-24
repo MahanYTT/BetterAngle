@@ -62,9 +62,8 @@ void FocusMonitorThread() {
       // ALT-TAB COOLDOWN: Windows handles key state restoration automatically
       // No BlockInput needed for focus changes - just suspend mouse for 400ms
       g_mouseSuspendedUntil = GetTickCount64() + 400;
-      g_lockTriggerReason = 3; // Alt-Tab Return
       g_lockCount++;
-      LOG_INFO("Alt-tab cooldown active (400ms) - skipping BlockInput");
+      LOG_INFO("[MASTER] Alt-tab return detected. Cooldown 400ms started (No BlockInput).");
     }
     lastFortniteFocused = currentFortniteFocused;
     Sleep(0); // Max CPU performance for lightning fast focus detection
@@ -112,7 +111,10 @@ void DetectorThread() {
           g_peakMatchCount = currentMatch;
         }
       } else {
-        // Fortnite not focused, reset detection to 0
+        if (g_matchCount > 0) {
+            LOG_DEBUG("[MASTER] ROI Match detected (%d/%d) but Fortnite not focused. Ignoring.", 
+                      g_matchCount.load(), g_requiredMatchCount.load());
+        }
         g_matchCount = 0;
         g_detectionDelayMs = 0;
         g_scannerCpuPct = 0;
@@ -122,10 +124,16 @@ void DetectorThread() {
 
       if (GetTickCount64() >= g_mouseSuspendedUntil) {
         // Edge: Gliding -> Diving (Nitro)
-        if (nowDiving && !lastDiving &&
-            (GetTickCount64() - g_lastLockTime > 500)) {
-          g_lastLockTime = GetTickCount64();
-          g_mouseSuspendedUntil = GetTickCount64() + 600;
+        if (nowDiving && !lastDiving) {
+            ULONGLONG cooldownLeft = 500 - (GetTickCount64() - g_lastLockTime);
+            if (cooldownLeft > 0 && cooldownLeft <= 500) {
+                LOG_INFO("[MASTER] Transition (glide->dive) blocked by cooldown. %llums remaining.", cooldownLeft);
+            } else {
+                g_lastLockTime = GetTickCount64();
+                g_mouseSuspendedUntil = GetTickCount64() + 600;
+                LOG_INFO("[MASTER] Triggering transition lock: glide->dive (600ms)");
+            }
+        }
 
           std::thread([]() {
             g_lockCount++;
@@ -141,9 +149,11 @@ void DetectorThread() {
             {
               std::lock_guard<std::mutex> lock(g_blockInputMutex);
               g_blockInputActive = true;
+              LOG_INFO("[MASTER] BlockInput(TRUE) engaged.");
               BlockInput(TRUE);
-              Sleep(600);
+              Sleep(600); // Note: The other branch uses 1000ms
               BlockInput(FALSE);
+              LOG_INFO("[MASTER] BlockInput(FALSE) released.");
               g_blockInputActive = false;
             }
 
@@ -155,10 +165,16 @@ void DetectorThread() {
           g_lockTriggerReason = 1; // Glide → Dive
         }
         // Edge: Diving -> Gliding (Nitro)
-        else if (!nowDiving && lastDiving &&
-                 (GetTickCount64() - g_lastLockTime > 500)) {
-          g_lastLockTime = GetTickCount64();
-          g_mouseSuspendedUntil = GetTickCount64() + 1000;
+        else if (!nowDiving && lastDiving) {
+            ULONGLONG cooldownLeft = 500 - (GetTickCount64() - g_lastLockTime);
+            if (cooldownLeft > 0 && cooldownLeft <= 500) {
+                LOG_INFO("[MASTER] Transition (dive->glide) blocked by cooldown. %llums remaining.", cooldownLeft);
+            } else {
+                g_lastLockTime = GetTickCount64();
+                g_mouseSuspendedUntil = GetTickCount64() + 1000;
+                LOG_INFO("[MASTER] Triggering transition lock: dive->glide (1000ms)");
+            }
+        }
 
           std::thread([]() {
             g_lockCount++;
@@ -199,7 +215,7 @@ void DetectorThread() {
       g_isDiving = nowDiving;
       g_logic.SetDivingState(nowDiving);
     }
-    Sleep(1); // CPU Fix: Drops usage from 100% to ~1%
+    Sleep(8); // Cap scan rate to ~120 FPS to save CPU and prevent false positives
   }
 }
 
