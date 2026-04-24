@@ -12,38 +12,29 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-
     permissions:
       contents: write
 
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history for version bumping
+          fetch-depth: 0
 
       - name: Auto-increment version on main branch
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, '[skip ci]')
+        # Use author detection instead of [skip ci] to prevent loops
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.head_commit.author.name != 'github-actions[bot]'
         shell: pwsh
         run: |
-          # Calculate commit range for release notes
-          $lastTag = git describe --tags --abbrev=0 2>$null || "v0.0.0"
-          $commitRange = "$lastTag..HEAD"
+          ./scripts/bump_version.ps1
           
-          # Run version bump script
-          ./scripts/bump_version.ps1 -CommitRange $commitRange
-          
-          # Configure git for committing changes
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Commit version changes with [skip ci] to prevent loops
+          $newVersion = (Get-Content VERSION).Trim()
           git add VERSION CMakeLists.txt include/shared/State.h RELEASE_NOTES.md
-          git commit -m "chore: auto-increment version for release [skip ci]"
-          git pull --rebase origin main
-          git push
-          
-          # The tag was already pushed by bump_version.ps1
-          # This will trigger the 'tags' part of the workflow
+          git commit -m "chore: auto-increment version to $newVersion"
+          git tag "v$newVersion"
+          git push origin main --tags
 
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
@@ -53,66 +44,37 @@ jobs:
         with:
           version: '6.5.3'
           arch: 'win64_msvc2019_64'
-          setup-python: 'false'
-
-      - name: Verify uninstaller source exists
-        shell: pwsh
-        run: |
-          if (-not (Test-Path "src/shared/uninstall.cpp")) {
-            Write-Error "src/shared/uninstall.cpp was not found."
-            exit 1
-          }
 
       - name: Configure CMake
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path build | Out-Null
-          Set-Location build
-          cmake .. -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -A x64
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -A x64
 
       - name: Build BetterAngle
         shell: pwsh
         run: |
-          Set-Location build
-          cmake --build . --config Release
+          cmake --build build --config Release
 
       - name: Build uninstaller.exe
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path build/Release | Out-Null
           cl /std:c++20 /EHsc /O2 /W4 /Fe:build/Release/uninstaller.exe src/shared/uninstall.cpp ole32.lib shell32.lib
 
       - name: Deploy Qt Dependencies
         shell: pwsh
         run: |
-          Set-Location build
-          windeployqt Release/BetterAngle.exe --qmldir ../src/gui --quick --no-translations
-
-      - name: Download VC++ Redistributable
-        shell: pwsh
-        run: |
-          Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile "build/Release/vc_redist.x64.exe"
+          windeployqt build/Release/BetterAngle.exe --qmldir src/gui --quick --no-translations
 
       - name: Archive Build
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path bin | Out-Null
           $ver = (Get-Content VERSION).Trim()
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /dAppVer=$ver installer.iss
-
-      - name: Upload CI artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: BetterAngle-build
-          path: |
-            bin/BetterAngle_Setup.exe
-            build/Release/uninstaller.exe
 
       - name: Prepare Release Notes
         if: github.event_name != 'pull_request'
         shell: pwsh
         run: |
-          # Extract the latest entry from RELEASE_NOTES.md
           $lines = Get-Content RELEASE_NOTES.md
           $outLines = @()
           $seenFirst = $false
@@ -123,29 +85,26 @@ jobs:
               }
               if ($seenFirst) { $outLines += $line }
           }
-          if ($outLines.Count -eq 0) {
-            $outLines = @("Automated build release.")
-          }
           $outLines | Out-File CURRENT_RELEASE_NOTES.md -Encoding utf8
 
       - name: Set release metadata
-        if: startsWith(github.ref, 'refs/tags/v')
+        # Allow metadata to be set on tag push OR bot-triggered main push
+        if: startsWith(github.ref, 'refs/tags/v') || (github.ref == 'refs/heads/main' && github.event.head_commit.author.name == 'github-actions[bot]')
         shell: pwsh
         run: |
-          echo "RELEASE_TAG=${{ github.ref_name }}" >> $env:GITHUB_ENV
-          echo "RELEASE_NAME=BetterAngle Pro ${{ github.ref_name }}" >> $env:GITHUB_ENV
-          echo "RELEASE_PRERELEASE=false" >> $env:GITHUB_ENV
+          $ver = (Get-Content VERSION).Trim()
+          echo "RELEASE_TAG=v$ver" >> $env:GITHUB_ENV
+          echo "RELEASE_NAME=BetterAngle Pro v$ver" >> $env:GITHUB_ENV
 
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: env.RELEASE_TAG != ''
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            bin/BetterAngle_Setup.exe
+          files: bin/BetterAngle_Setup.exe
           tag_name: ${{ env.RELEASE_TAG }}
           name: ${{ env.RELEASE_NAME }}
           body_path: CURRENT_RELEASE_NOTES.md
           draft: false
-          prerelease: ${{ env.RELEASE_PRERELEASE }}
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
