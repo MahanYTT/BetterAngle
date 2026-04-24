@@ -1,5 +1,5 @@
-Generating release notes from commit range: v5.0.74..HEAD ### BetterAngle Pro v5.0.75
-- Automated build release.
+### BetterAngle Pro v5.0.80
+- release: baseline stability restoration. This version resets the codebase to the stable v5.0.74 logic, providing a reliable foundation for future manual optimizations.
 
 ### BetterAngle Pro v5.0.74
 - perf: implemented ultra-fast focus and detector threads using yield/Sleep(0) and HWND caching for zero-delay input locking.
