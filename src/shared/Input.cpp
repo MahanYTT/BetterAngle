@@ -218,21 +218,32 @@ void SyncGamingKeys() {
 
   for (int vk : gamingKeys) {
     bool physicallyDown = (GetAsyncKeyState(vk) & 0x8000) != 0;
-    if (!physicallyDown) continue;
 
     INPUT in = {0};
     if (vk >= VK_LBUTTON && vk <= VK_XBUTTON2) {
       in.type = INPUT_MOUSE;
-      if      (vk == VK_LBUTTON)  in.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
-      else if (vk == VK_RBUTTON)  in.mi.dwFlags = MOUSEEVENTF_RIGHTDOWN;
-      else if (vk == VK_MBUTTON)  in.mi.dwFlags = MOUSEEVENTF_MIDDLEDOWN;
-      else if (vk == VK_XBUTTON1) { in.mi.dwFlags = MOUSEEVENTF_XDOWN; in.mi.mouseData = XBUTTON1; }
-      else if (vk == VK_XBUTTON2) { in.mi.dwFlags = MOUSEEVENTF_XDOWN; in.mi.mouseData = XBUTTON2; }
+      if (physicallyDown) {
+        if      (vk == VK_LBUTTON)  in.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+        else if (vk == VK_RBUTTON)  in.mi.dwFlags = MOUSEEVENTF_RIGHTDOWN;
+        else if (vk == VK_MBUTTON)  in.mi.dwFlags = MOUSEEVENTF_MIDDLEDOWN;
+        else if (vk == VK_XBUTTON1) { in.mi.dwFlags = MOUSEEVENTF_XDOWN; in.mi.mouseData = XBUTTON1; }
+        else if (vk == VK_XBUTTON2) { in.mi.dwFlags = MOUSEEVENTF_XDOWN; in.mi.mouseData = XBUTTON2; }
+      } else {
+        if      (vk == VK_LBUTTON)  in.mi.dwFlags = MOUSEEVENTF_LEFTUP;
+        else if (vk == VK_RBUTTON)  in.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
+        else if (vk == VK_MBUTTON)  in.mi.dwFlags = MOUSEEVENTF_MIDDLEUP;
+        else if (vk == VK_XBUTTON1) { in.mi.dwFlags = MOUSEEVENTF_XUP; in.mi.mouseData = XBUTTON1; }
+        else if (vk == VK_XBUTTON2) { in.mi.dwFlags = MOUSEEVENTF_XUP; in.mi.mouseData = XBUTTON2; }
+      }
     } else {
       in.type = INPUT_KEYBOARD;
       in.ki.wVk = (WORD)vk;
       in.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-      in.ki.dwFlags = KEYEVENTF_SCANCODE; // KEYDOWN
+      if (physicallyDown) {
+        in.ki.dwFlags = KEYEVENTF_SCANCODE; // KEYDOWN
+      } else {
+        in.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP; // KEYUP
+      }
     }
     inputs.push_back(in);
   }
