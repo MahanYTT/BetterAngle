@@ -69,7 +69,7 @@ void FocusMonitorThread() {
         ULONGLONG start = GetTickCount64();
         g_wPreLock = GetAsyncKeyState('W');
 
-        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+        Sleep(15); // Atomic Shield: Let input table settle before snapshot
         auto initialState = GetGamingKeyState();
         
         BlockInput(TRUE);
@@ -146,7 +146,7 @@ void DetectorThread() {
             ULONGLONG start = GetTickCount64();
             g_wPreLock = GetAsyncKeyState('W');
 
-            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+            Sleep(15); // Atomic Shield: Let input table settle before snapshot
             auto initialState = GetGamingKeyState();
             
             BlockInput(TRUE);
@@ -169,7 +169,7 @@ void DetectorThread() {
             ULONGLONG start = GetTickCount64();
             g_wPreLock = GetAsyncKeyState('W');
 
-            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+            Sleep(15); // Atomic Shield: Let input table settle before snapshot
             auto initialState = GetGamingKeyState();
             
             BlockInput(TRUE);
