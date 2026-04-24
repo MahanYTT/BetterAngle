@@ -70,4 +70,10 @@ if (Test-Path $releaseNotesFile) {
     Write-Host "Updated RELEASE_NOTES.md"
 }
 
+# 7. Create and Push Git Tag
+$tag = "v$newVersion"
+git tag $tag
+git push origin $tag
+Write-Host "Created and pushed tag: $tag"
+
 Write-Host "Version bump to $newVersion complete."

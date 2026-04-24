@@ -1,12 +1,13 @@
 #include "shared/Input.h"
-#include "shared/State.h"
 #include "shared/EnhancedLogging.h"
+#include "shared/State.h"
 #include <cwchar>
-#include <tlhelp32.h>
-#include <windows.h>
 #include <string>
-#include <vector>
 #include <thread>
+#include <tlhelp32.h>
+#include <vector>
+#include <windows.h>
+
 
 extern std::string g_nitroSyncLog;
 
@@ -72,7 +73,6 @@ const wchar_t *GetProcessBaseName(HWND hwnd, wchar_t *buffer,
 
 #include "shared/EnhancedLogging.h"
 
-
 bool IsFortniteForeground() {
   static HWND s_lastFg = NULL;
   static bool s_lastResult = false;
@@ -137,10 +137,8 @@ bool IsCursorCurrentlyVisible() {
 static bool g_pollingRunning = false;
 
 // The "Iron-Tight 8" - Absolute Movement Cluster (v5.1.19)
-static const int g_gamingKeys[] = {
-    'W', 'A', 'S', 'D', 
-    VK_SPACE, VK_LSHIFT, VK_RSHIFT, VK_LCONTROL
-};
+static const int g_gamingKeys[] = {'W',      'A',       'S',       'D',
+                                   VK_SPACE, VK_LSHIFT, VK_RSHIFT, VK_LCONTROL};
 
 // Physical Truth Table (v5.1.16)
 // Using std::atomic<bool> g_physicalKeys[256] from State.h
@@ -150,13 +148,14 @@ void StartPollingThread() {
     timeBeginPeriod(1); // Force 1ms Windows resolution
     while (g_running) {
       for (int vk : g_gamingKeys) {
-        g_physicalKeys[vk].store((GetAsyncKeyState(vk) & 0x8000) != 0, std::memory_order_relaxed);
+        g_physicalKeys[vk].store((GetAsyncKeyState(vk) & 0x8000) != 0,
+                                 std::memory_order_relaxed);
       }
       Sleep(1);
     }
     timeEndPeriod(1);
   }).detach();
-  
+
   LOG_INFO("High-Performance Polling Thread started (TRUE 1ms Hardware Scan)");
 }
 
@@ -201,15 +200,16 @@ std::vector<bool> GetGamingKeyState() {
   return state;
 }
 
-void SyncGamingKeysNitro(const std::vector<bool>& initialState) {
+void SyncGamingKeysNitro(const std::vector<bool> &initialState) {
   // Capture final diagnostic state (for HUD reference only)
   g_wPostUnlock = GetAsyncKeyState('W');
 
   // ABSOLUTE RESTORATION (v5.2.0)
   // We no longer probe hardware state post-lock because the table is frozen.
-  // Instead, we UNCONDITIONALLY force-release every key that was held in the pre-lock snapshot.
-  // This guarantees that any key released during the lock is caught, while keys still physically 
-  // held will simply trigger a new DOWN event immediately when the user continues moving.
+  // Instead, we UNCONDITIONALLY force-release every key that was held in the
+  // pre-lock snapshot. This guarantees that any key released during the lock is
+  // caught, while keys still physically held will simply trigger a new DOWN
+  // event immediately when the user continues moving.
 
   std::vector<INPUT> outInputs;
   std::string log = "v5.2 Restore: ";
@@ -222,11 +222,11 @@ void SyncGamingKeysNitro(const std::vector<bool>& initialState) {
 
       INPUT input = {0};
       input.type = INPUT_KEYBOARD;
-      input.ki.wVk = (WORD)vk;
+      input.ki.wVk = 0;
       input.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
       input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
       outInputs.push_back(input);
-      
+
       log += std::to_string(vk) + " ";
     }
   }
@@ -240,6 +240,7 @@ void SyncGamingKeysNitro(const std::vector<bool>& initialState) {
   }
 
   // Diagnostic: Final check after force-restoration
-  // Note: GetAsyncKeyState might STILL be stale here until a physical event occurs
+  // Note: GetAsyncKeyState might STILL be stale here until a physical event
+  // occurs
   g_wPostFlush = GetAsyncKeyState('W');
 }
