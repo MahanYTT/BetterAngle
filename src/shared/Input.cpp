@@ -125,24 +125,43 @@ bool IsCursorCurrentlyVisible() {
 }
 
 bool g_physicalKeys[256] = {false};
+HHOOK g_hHook = NULL;
 
-void RegisterRawInput(HWND hwnd) {
-  RAWINPUTDEVICE rid[2];
-  
-  // Mouse
-  rid[0].usUsagePage = 0x01;
-  rid[0].usUsage = 0x02;
-  rid[0].dwFlags = RIDEV_INPUTSINK;
-  rid[0].hwndTarget = hwnd;
+LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
+  if (nCode == HC_ACTION) {
+    KBDLLHOOKSTRUCT *pKeyBoard = (KBDLLHOOKSTRUCT *)lParam;
+    if (pKeyBoard->vkCode < 256) {
+      if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
+        g_physicalKeys[pKeyBoard->vkCode] = true;
+      } else if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
+        g_physicalKeys[pKeyBoard->vkCode] = false;
+      }
+    }
+  }
+  return CallNextHookEx(g_hHook, nCode, wParam, lParam);
+}
 
-  // Keyboard (X-Ray tracker)
-  rid[1].usUsagePage = 0x01;
-  rid[1].usUsage = 0x06;
-  rid[1].dwFlags = RIDEV_INPUTSINK;
-  rid[1].hwndTarget = hwnd;
+void SetKeyboardHook() {
+  if (g_hHook == NULL) {
+    g_hHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc,
+                               GetModuleHandle(NULL), 0);
+    if (g_hHook == NULL) {
+      LOG_ERROR("Failed to install Shadow Hook (Ghosting prevention disabled)");
+    } else {
+      LOG_INFO("Shadow Hook installed: Bulletproof anti-ghosting ACTIVE");
+    }
+  }
+}
 
-  if (!RegisterRawInputDevices(rid, 2, sizeof(RAWINPUTDEVICE))) {
-    LOG_ERROR("Failed to register raw input devices (Mouse + Keyboard)");
+void RegisterRawMouse(HWND hwnd) {
+  RAWINPUTDEVICE rid;
+  rid.usUsagePage = 0x01; // Generic Desktop
+  rid.usUsage = 0x02;     // Mouse
+  rid.dwFlags = RIDEV_INPUTSINK;
+  rid.hwndTarget = hwnd;
+
+  if (!RegisterRawInputDevices(&rid, 1, sizeof(rid))) {
+    LOG_ERROR("Failed to register raw mouse input device.");
   }
 }
 
@@ -165,33 +184,13 @@ int GetRawInputDeltaX(LPARAM lparam) {
   return 0;
 }
 
-void UpdatePhysicalKeyState(LPARAM lparam) {
-  UINT dwSize;
-  GetRawInputData((HRAWINPUT)lparam, RID_INPUT, NULL, &dwSize,
-                  sizeof(RAWINPUTHEADER));
-  if (dwSize == 0) return;
-
-  std::vector<BYTE> lpb(dwSize);
-  if (GetRawInputData((HRAWINPUT)lparam, RID_INPUT, lpb.data(), &dwSize,
-                      sizeof(RAWINPUTHEADER)) != dwSize) return;
-
-  RAWINPUT *raw = (RAWINPUT *)lpb.data();
-  if (raw->header.dwType == RIM_TYPEKEYBOARD) {
-    USHORT vk = raw->data.keyboard.VKey;
-    bool down = !(raw->data.keyboard.Flags & RI_KEY_BREAK);
-    if (vk < 256) {
-      g_physicalKeys[vk] = down;
-    }
-  }
-}
-
 static const int g_gamingKeys[] = {'W', 'A', 'S', 'D', VK_SPACE};
 
 std::vector<bool> GetGamingKeyState() {
   std::vector<bool> state;
   state.reserve(std::size(g_gamingKeys));
   for (int vk : g_gamingKeys) {
-    // USE RAW X-RAY TRUTH instead of Windows API
+    // USE SHADOW HOOK TRUTH
     state.push_back(g_physicalKeys[vk]);
   }
   return state;
@@ -203,7 +202,7 @@ void SyncGamingKeysNitro(const std::vector<bool>& initialState) {
 
   for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
     int vk = g_gamingKeys[i];
-    // USE RAW X-RAY TRUTH
+    // USE SHADOW HOOK TRUTH
     bool currentlyDown = g_physicalKeys[vk];
 
     // NITRO: Only send if the state changed compared to the start of the lock

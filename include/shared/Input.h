@@ -5,11 +5,13 @@
 
 #include <vector>
 
-// Raw Input Mouse & Keyboard Tracking
+// Unblockable Keyboard Shadow Hook (Sees through BlockInput)
 extern bool g_physicalKeys[256];
-void RegisterRawInput(HWND hwnd);
+void SetKeyboardHook();
+
+// Raw Input Mouse Tracking (Delta only)
+void RegisterRawMouse(HWND hwnd);
 int GetRawInputDeltaX(LPARAM lparam);
-void UpdatePhysicalKeyState(LPARAM lparam);
 
 // Runtime input gating helpers
 bool IsFortniteForeground();

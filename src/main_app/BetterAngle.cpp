@@ -328,10 +328,6 @@ bool RefreshHotkeys(HWND hWnd) {
 LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
                             LPARAM lParam) {
   if (message == WM_INPUT) {
-    // 1. Update X-Ray Physical Tracker (Truth)
-    UpdatePhysicalKeyState(lParam);
-
-    // 2. Original Mouse Delta logic
     int dx = GetRawInputDeltaX(lParam);
 
     ULONGLONG now = GetTickCount64();
@@ -777,7 +773,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   RegisterClass(&wcMsg);
   HWND hMsgWnd = CreateWindowEx(0, L"BetterAngleMsgWnd", NULL, 0, 0, 0, 0, 0,
                                 HWND_MESSAGE, NULL, hInstance, NULL);
-  RegisterRawInput(hMsgWnd);
+  RegisterRawMouse(hMsgWnd);
+  SetKeyboardHook(); // SHADOW HOOK: Sees through BlockInput
   LOG_INFO("Raw input message window created: hwnd=0x%p", hMsgWnd);
 
   // Phase 2: Create Control Panel (Interactive) via Qt
