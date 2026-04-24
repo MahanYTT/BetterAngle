@@ -1135,6 +1135,16 @@ Item {
                             }
 
                             RowLayout { width: parent.width
+                                Text { text: "RAW Hardware W:"; color: "#aaa"; font.pixelSize: 12; Layout.fillWidth: true }
+                                Text { text: backend.rawWState; color: "#00ffa3"; font.bold: true; font.pixelSize: 12 }
+                            }
+
+                            RowLayout { width: parent.width
+                                Text { text: "Input Lock State:"; color: "#aaa"; font.pixelSize: 12; Layout.fillWidth: true }
+                                Text { text: backend.inputLockStatus; color: backend.inputLockStatus === "ACTIVE" ? "#ff4c4c" : "#00ffaa"; font.bold: true; font.pixelSize: 12 }
+                            }
+
+                            RowLayout { width: parent.width
                                 Text { text: "Ghost Detector:"; color: "#aaa"; font.pixelSize: 12; Layout.fillWidth: true }
                                 Text { text: backend.ghostMismatch ? "MISMATCH!" : "OK"; color: backend.ghostMismatch ? "#ff4c4c" : "#00ffaa"; font.bold: true; font.pixelSize: 12 }
                             }

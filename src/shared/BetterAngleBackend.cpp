@@ -1066,6 +1066,16 @@ bool BetterAngleBackend::ghostMismatch() const {
   return false;
 }
 
+QString BetterAngleBackend::rawWState() const {
+    bool rawW = (GetAsyncKeyState('W') & 0x8000) != 0;
+    return rawW ? "PRESSED" : "RELEASED";
+}
+
+QString BetterAngleBackend::inputLockStatus() const {
+    bool isLocked = (GetTickCount64() < g_mouseSuspendedUntil.load());
+    return isLocked ? "ACTIVE" : "IDLE";
+}
+
 QString BetterAngleBackend::nitroSyncLog() const {
   return QString::fromStdString(g_nitroSyncLog);
 }

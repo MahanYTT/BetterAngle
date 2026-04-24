@@ -63,6 +63,8 @@ class BetterAngleBackend : public QObject {
   Q_PROPERTY(int scannerCpuPct READ scannerCpuPct NOTIFY debugDataChanged)
   Q_PROPERTY(QString physicalKeyStates READ physicalKeyStates NOTIFY debugDataChanged)
   Q_PROPERTY(bool ghostMismatch READ ghostMismatch NOTIFY debugDataChanged)
+  Q_PROPERTY(QString rawWState READ rawWState NOTIFY debugDataChanged)
+  Q_PROPERTY(QString inputLockStatus READ inputLockStatus NOTIFY debugDataChanged)
   Q_PROPERTY(QString nitroSyncLog READ nitroSyncLog NOTIFY debugDataChanged)
 
   // Custom Keybinds
@@ -137,6 +139,8 @@ public:
   int scannerCpuPct() const;
   QString physicalKeyStates() const;
   bool ghostMismatch() const;
+  QString rawWState() const;
+  QString inputLockStatus() const;
   QString nitroSyncLog() const;
   Q_INVOKABLE void refreshDebugData();
 
