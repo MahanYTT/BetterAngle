@@ -1,3 +1,7 @@
+Generating release notes from commit range: v5.1.16..HEAD ### BetterAngle Pro v5.1.18
+- feat: implemented Absolute Truth diagnostics (v5.1.17)
+- chore: auto-increment version for release
+
 Generating release notes from commit range: v5.1.16..HEAD ### BetterAngle Pro v5.1.17
 - Automated build release.
 
