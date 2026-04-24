@@ -37,6 +37,7 @@ extern std::atomic<bool> g_preState[5];
 extern std::atomic<bool> g_postState[5];
 extern std::atomic<bool> g_blockInputActive;
 extern std::atomic<bool> g_tableRefreshed;
+extern std::atomic<bool> g_hasSynced;
 extern std::atomic<int> g_activeFallback;
 extern std::atomic<bool> g_fb1Active;
 

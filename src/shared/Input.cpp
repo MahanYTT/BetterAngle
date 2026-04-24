@@ -300,6 +300,8 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     g_nitroSyncLog = log + "(Clean)";
   }
 
+  g_hasSynced = true;
+
   extern HWND g_hMsgWnd;
   if (g_hMsgWnd) {
     RegisterRawMouse(g_hMsgWnd);

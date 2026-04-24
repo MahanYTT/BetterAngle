@@ -558,25 +558,29 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       DrawRow(3, 1, L"Lock Count:", std::to_wstring(g_lockCount.load()));
       DrawRow(4, 1, L"Lock Duration:", std::to_wstring(g_lockDurationMs.load()) + L" ms");
       DrawRow(5, 1, L"Lock Thread ID:", std::to_wstring(g_lockThreadId.load()));
-      int fb = g_activeFallback.load();
-      std::wstring fbStr = (fb == 0) ? L"NONE" : (fb == 1 ? L"FB1 (Shock)" : (fb == 2 ? L"FB2 (Hammer)" : L"FAIL (99)"));
-      DrawRow(6, 1, L"Fallback:", fbStr, fb == 0);
-      DrawRow(7, 1, L"Table State:", g_tableRefreshed ? L"REFRESHED" : L"FROZEN", g_tableRefreshed);
-      DrawRow(8, 1, L"Ghost Detect:", mismatch ? L"MISMATCH!" : L"OK", !mismatch);
+      if (g_hasSynced) {
+        int fb = g_activeFallback.load();
+        std::wstring fbStr = (fb == 0) ? L"NONE" : (fb == 1 ? L"FB1 (Shock)" : (fb == 2 ? L"FB2 (Hammer)" : L"FAIL (99)"));
+        DrawRow(6, 1, L"Fallback:", fbStr, fb == 0);
+        DrawRow(7, 1, L"Table State:", g_tableRefreshed ? L"REFRESHED" : L"FROZEN", g_tableRefreshed);
+        DrawRow(8, 1, L"Ghost Detect:", mismatch ? L"MISMATCH!" : L"OK", !mismatch);
 
-      // DETAILED NITRO 5 FORENSICS
-      for (int i = 0; i < 5; ++i) {
-        bool pre = g_preState[i].load();
-        bool post = g_postState[i].load();
-        bool phys = (GetAsyncKeyState(keys[i]) & 0x8000) != 0;
-        bool delta = pre && !post;
+        // DETAILED NITRO 5 FORENSICS
+        for (int i = 0; i < 5; ++i) {
+          bool pre = g_preState[i].load();
+          bool post = g_postState[i].load();
+          bool phys = (GetAsyncKeyState(keys[i]) & 0x8000) != 0;
+          bool delta = pre && !post;
 
-        std::wstring val = L"pre=" + std::wstring(pre ? L"1" : L"0") +
-                           L" post=" + std::wstring(post ? L"1" : L"0") +
-                           L" phys=" + std::wstring(phys ? L"1" : L"0") +
-                           L" d=" + std::wstring(delta ? L"SYNC" : L"SAME");
-        
-        DrawRow(10 + i, 1, names[i], val, !delta);
+          std::wstring val = L"pre=" + std::wstring(pre ? L"1" : L"0") +
+                             L" post=" + std::wstring(post ? L"1" : L"0") +
+                             L" phys=" + std::wstring(phys ? L"1" : L"0") +
+                             L" d=" + std::wstring(delta ? L"SYNC" : L"SAME");
+          
+          DrawRow(10 + i, 1, names[i], val, !delta);
+        }
+      } else {
+        DrawRow(6, 1, L"Nitro Sync:", L"AWAITING FIRST LOCK", true);
       }
 
       DrawRow(14, 1, L"Input State:", g_blockInputActive ? L"LOCKED" : L"UNLOCKED", !g_blockInputActive);
