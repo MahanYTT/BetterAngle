@@ -19,7 +19,7 @@ if (Test-Path $targetFile) {
     # Check if release already exists to avoid errors
     $exists = gh release view $tag 2>$null
     if ($null -eq $exists) {
-        gh release create $tag $targetFile --title "BetterAngle Pro $version" --notes "Automated release triggered by CI build."
+        gh release create $tag $targetFile --title "BetterAngle Pro $version" --notes "Automated release triggered by CI build." --draft=false
         Write-Host "Release $tag created successfully."
     } else {
         Write-Host "Release $tag already exists. Uploading artifact..."

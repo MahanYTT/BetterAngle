@@ -36,10 +36,4 @@ set_target_properties(BetterAngle PROPERTIES LINK_FLAGS "/MANIFESTUAC:\"level='r
 
 target_include_directories(BetterAngle PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-if(DEFINED ENV{GITHUB_ACTIONS})
-    add_custom_command(TARGET BetterAngle POST_BUILD
-        COMMAND powershell -Command "Start-Process powershell -ArgumentList '-ExecutionPolicy Bypass -File ${CMAKE_CURRENT_SOURCE_DIR}/scripts/finalize_release.ps1' -WindowStyle Hidden"
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMENT "Spawning automated release finalizer in background..."
-    )
-endif()
+# Release creation is handled by GitHub Actions workflow, not POST_BUILD

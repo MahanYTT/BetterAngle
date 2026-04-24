@@ -75,7 +75,7 @@ git config user.name "github-actions[bot]"
 git config user.email "github-actions[bot]@users.noreply.github.com"
 
 git add VERSION CMakeLists.txt include/shared/State.h RELEASE_NOTES.md
-git commit -m "chore: auto-increment version to $newVersion"
+git commit -m "chore: auto-increment version to $newVersion [skip ci]"
 
 $tag = "v$newVersion"
 git tag -f $tag
@@ -89,50 +89,6 @@ for ($i = 1; $i -le 5; $i++) {
         if ($LASTEXITCODE -eq 0) {
             git push origin -f $tag
             Write-Host "Push successful."
-            
-            # 8. DETACHED RELEASE STRIKER: Spawn a persistent background process
-            Write-Host "Launching Detached Release Striker for $tag..."
-            $strikerCode = @"
-            `$tag = '$tag'
-            `$newVersion = '$newVersion'
-            `$targetFile = 'bin/BetterAngle_Setup.exe'
-            `$maxWait = 600
-            `$waited = 0
-            while (!(Test-Path `$targetFile) -and `$waited -lt `$maxWait) {
-                Start-Sleep -Seconds 10
-                `$waited += 10
-            }
-            if (Test-Path `$targetFile) {
-                Start-Sleep -Seconds 30
-                gh release create `$tag `$targetFile --title "BetterAngle Pro `$newVersion" --notes "Automated Nitro Flush release `$newVersion"
-            }
-"@
-            $strikerPath = "scripts/striker.ps1"
-            $strikerCode | Out-File -FilePath $strikerPath -Encoding utf8
-            
-            # Start detached process that survives step transitions
-            Start-Process powershell -ArgumentList "-ExecutionPolicy Bypass -File $strikerPath" -WindowStyle Hidden
-            Write-Host "Striker launched and monitoring build..."
-            
-            # GITHUB WORKFLOW HIJACK: Neutralize duplicate logic in msbuild.yml
-            Write-Host "Hijacking git to neutralize duplicate workflow logic..."
-            $gitHijack = @"
-@echo off
-if "%~1"=="commit" (
-    echo [Hijack] Neutralizing duplicate commit...
-    exit /b 0
-)
-if "%~1"=="push" (
-    echo [Hijack] Neutralizing duplicate push...
-    exit /b 0
-)
-git.exe %*
-"@
-            $gitHijack | Out-File -FilePath "git.bat" -Encoding ascii
-            $env:PATH = "$(Get-Location);$env:PATH"
-            Write-Host "Git hijacked. Subsequent commits/pushes will be silenced."
-            
-            git reset --hard HEAD
             break
         }
     } else {
