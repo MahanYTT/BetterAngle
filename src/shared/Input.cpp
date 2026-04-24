@@ -127,23 +127,24 @@ bool IsCursorCurrentlyVisible() {
 bool g_physicalKeys[256] = {false};
 static bool g_pollingRunning = false;
 
-static const int g_gamingKeys[] = {'W', 'A', 'S', 'D', VK_SPACE};
+// The "Essential 6" - Zero-Ghosting Movement Cluster
+static const int g_gamingKeys[] = {'W', 'A', 'S', 'D', VK_SPACE, VK_SHIFT};
 
 void StartPollingThread() {
   if (g_pollingRunning) return;
   g_pollingRunning = true;
 
   std::thread([]() {
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
     while (g_pollingRunning) {
       for (int vk : g_gamingKeys) {
         g_physicalKeys[vk] = (GetAsyncKeyState(vk) & 0x8000) != 0;
       }
-      Sleep(1); // 1ms high-frequency poll
+      Sleep(1); // 1ms high-frequency hardware scan
     }
   }).detach();
   
-  LOG_INFO("Physical Truth Polling Thread started (1ms Hardware Scan)");
+  LOG_INFO("Physical Truth Polling Thread started (1ms Essential-6 Scan)");
 }
 
 void RegisterRawMouse(HWND hwnd) {
@@ -181,8 +182,8 @@ std::vector<bool> GetGamingKeyState() {
   std::vector<bool> state;
   state.reserve(std::size(g_gamingKeys));
   for (int vk : g_gamingKeys) {
-    // USE PHYSICAL TRUTH (GetAsyncKeyState bypasses BlockInput)
-    state.push_back(g_physicalKeys[vk]);
+    // FRESH SCAN: Ensure snapshot is absolute latest
+    state.push_back((GetAsyncKeyState(vk) & 0x8000) != 0);
   }
   return state;
 }
@@ -193,8 +194,12 @@ void SyncGamingKeysNitro(const std::vector<bool>& initialState) {
 
   for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
     int vk = g_gamingKeys[i];
-    // Compare hardware state now vs before lock
-    bool currentlyDown = g_physicalKeys[vk];
+    
+    // DOUBLE-CHECK HANDSHAKE:
+    // Read from the 1ms thread table AND do a fresh inline scan
+    bool threadState = g_physicalKeys[vk];
+    bool freshState = (GetAsyncKeyState(vk) & 0x8000) != 0;
+    bool currentlyDown = threadState || freshState; // Be conservative for ghosting
 
     // NITRO: Only send if the state changed compared to the start of the lock
     if (currentlyDown == initialState[i])
