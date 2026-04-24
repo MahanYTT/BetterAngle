@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.6
+- fix: remove redundant skip-ci from bump logic [v5.5.7] - fix: implemented granular ghost forensics debug rows [v5.5.6] 
+
 ### BetterAngle Pro v5.5.5
 - Automated build release.
 
