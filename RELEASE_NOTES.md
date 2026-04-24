@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.4.4
+- Update msbuild.yml
+
 ### BetterAngle Pro v5.4.3
 - feat: implemented 15ms Atomic Shield for settled input snapshots (v5.4.2)
 
