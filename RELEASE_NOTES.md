@@ -1,3 +1,6 @@
+Generating release notes from commit range: v5.0.75..HEAD ### BetterAngle Pro v5.0.76
+- Automated build release.
+
 ### BetterAngle Pro v5.0.75
 - perf: completely eliminated floating-point operations from the hot loop. Implemented pre-calculated logic scales, absolute integer matching thresholds, and an optimized SIMD pixel scanning pipeline for maximum detection speed without accuracy loss.
 
