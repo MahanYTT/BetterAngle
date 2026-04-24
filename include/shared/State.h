@@ -36,6 +36,8 @@ extern std::atomic<short> g_wPostFlush;
 extern std::atomic<bool> g_preState[5];
 extern std::atomic<bool> g_postState[5];
 extern std::atomic<bool> g_blockInputActive;
+extern std::atomic<bool> g_tableRefreshed;
+extern std::atomic<bool> g_fb1Active;
 
 extern std::string g_lastVersionRun;
 

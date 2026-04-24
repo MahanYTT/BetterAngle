@@ -203,62 +203,62 @@ std::vector<bool> GetGamingKeyState() {
 }
 
 void SyncGamingKeysNitro(const std::vector<bool> &preState) {
-  // Capture diagnostic pre-flush state
-  short wBefore = GetAsyncKeyState('W');
-  g_wPostUnlock = wBefore;
+  g_wPostUnlock = GetAsyncKeyState('W');
+  g_fb1Active = true; 
 
-  // NITRO FLUSH THEORY:
-  // Unregistering and reregistering Raw Input forces Windows to flush and
-  // rebuild the async key state table from actual hardware state.
-  
-  // Step 1: Unregister Raw Input to force table rebuild
-  RAWINPUTDEVICE rid = {0};
-  rid.usUsagePage = 0x01;
-  rid.usUsage = 0x06; // Keyboard
-  rid.dwFlags = RIDEV_REMOVE;
-  rid.hwndTarget = NULL;
-  RegisterRawInputDevices(&rid, 1, sizeof(rid));
-
-  // Step 2: Small wait for table rebuild
-  Sleep(2);
-
-  // Step 3: Read fresh post-snapshot (Table should be rebuilt now)
-  std::vector<bool> postState;
+  // FALLBACK 1: Scancode Flush (v5.5.19)
+  // Rapidly tap all gaming keys via scancodes to shock the async table into updating.
   for (int vk : g_gamingKeys) {
-    postState.push_back((GetAsyncKeyState(vk) & 0x8000) != 0);
+    INPUT flush[2] = {0};
+    flush[0].type = INPUT_KEYBOARD;
+    flush[0].ki.wVk = (WORD)vk;
+    flush[0].ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+    flush[0].ki.dwFlags = KEYEVENTF_SCANCODE; // Down
+    
+    flush[1] = flush[0];
+    flush[1].ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP; // Up
+    
+    SendInput(2, flush, sizeof(INPUT));
+  }
+
+  // Small wait for Windows to process the shock events
+  Sleep(10); 
+
+  // Step 2: Read fresh post-snapshot
+  std::vector<bool> postState;
+  bool refreshed = false;
+  for (size_t i = 0; i < g_gamingKeys.size(); ++i) {
+    bool current = (GetAsyncKeyState(g_gamingKeys[i]) & 0x8000) != 0;
+    postState.push_back(current);
+    if (preState[i] != current) refreshed = true;
   }
   
-  short wAfter = GetAsyncKeyState('W');
-  g_wPostFlush = wAfter;
+  g_tableRefreshed = refreshed;
+  g_wPostFlush = GetAsyncKeyState('W');
 
   for (int i = 0; i < 5; ++i) {
     g_preState[i] = preState[i];
     g_postState[i] = postState[i];
   }
 
-  // Step 4: Delta compare and inject KeyUp only for changed keys
+  // Step 3: Delta compare and inject KeyUp only for keys physically released
   std::vector<INPUT> outInputs;
-  std::string log = "Nitro Flush [W: " + std::to_string(wBefore) + "->" + std::to_string(wAfter) + "]: ";
-  bool restored = false;
-
+  std::string log = "[FB1] Table: " + std::string(refreshed ? "REFRESHED" : "FROZEN") + " | ";
+  
   for (size_t i = 0; i < preState.size(); ++i) {
-    // If key was held BEFORE lock, but is NOT held now
     if (preState[i] && !postState[i]) {
       int vk = g_gamingKeys[i];
-      restored = true;
-
       INPUT input = {0};
       input.type = INPUT_KEYBOARD;
       input.ki.wVk = (WORD)vk;
       input.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
       input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
       outInputs.push_back(input);
-
       log += std::to_string(vk) + "↑ ";
     }
   }
 
-  if (restored) {
+  if (!outInputs.empty()) {
     SendInput((UINT)outInputs.size(), outInputs.data(), sizeof(INPUT));
     g_nitroSyncLog = log + "(Injected)";
     LOG_INFO(g_nitroSyncLog.c_str());
@@ -266,10 +266,7 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     g_nitroSyncLog = log + "(Clean)";
   }
 
-  // Step 5: Reregister Raw Input immediately after
-  // Note: BetterAngle.cpp calls RegisterRawMouse(hMsgWnd) which is what we need
-  // We'll rely on the caller or a global handle to reregister
-  extern HWND g_hMsgWnd; 
+  extern HWND g_hMsgWnd;
   if (g_hMsgWnd) {
     RegisterRawMouse(g_hMsgWnd);
   }

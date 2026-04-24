@@ -558,8 +558,9 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       DrawRow(3, 1, L"Lock Count:", std::to_wstring(g_lockCount.load()));
       DrawRow(4, 1, L"Lock Duration:", std::to_wstring(g_lockDurationMs.load()) + L" ms");
       DrawRow(5, 1, L"Lock Thread ID:", std::to_wstring(g_lockThreadId.load()));
-      
-      DrawRow(7, 1, L"Ghost Detect:", mismatch ? L"MISMATCH!" : L"OK", !mismatch);
+      DrawRow(6, 1, L"Fallback:", g_fb1Active ? L"FB1 (Scancode)" : L"NONE", !g_fb1Active);
+      DrawRow(7, 1, L"Table State:", g_tableRefreshed ? L"REFRESHED" : L"FROZEN", g_tableRefreshed);
+      DrawRow(8, 1, L"Ghost Detect:", mismatch ? L"MISMATCH!" : L"OK", !mismatch);
 
       // DETAILED NITRO 5 FORENSICS
       for (int i = 0; i < 5; ++i) {
@@ -573,7 +574,7 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
                            L" phys=" + std::wstring(phys ? L"1" : L"0") +
                            L" d=" + std::wstring(delta ? L"SYNC" : L"SAME");
         
-        DrawRow(8 + i, 1, names[i], val, !delta);
+        DrawRow(10 + i, 1, names[i], val, !delta);
       }
 
       DrawRow(14, 1, L"Input State:", g_blockInputActive ? L"LOCKED" : L"UNLOCKED", !g_blockInputActive);

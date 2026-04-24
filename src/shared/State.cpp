@@ -32,6 +32,8 @@ std::atomic<short> g_wPostFlush(0);
 std::atomic<bool> g_preState[5];
 std::atomic<bool> g_postState[5];
 std::atomic<bool> g_blockInputActive(false);
+std::atomic<bool> g_tableRefreshed(false);
+std::atomic<bool> g_fb1Active(false);
 std::string g_nitroSyncLog = "No sync events yet";
 std::atomic<int> g_peakMatchCount{0};
 std::atomic<int> g_requiredMatchCount{0};
