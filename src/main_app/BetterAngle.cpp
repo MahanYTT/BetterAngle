@@ -125,7 +125,7 @@ void DetectorThread() {
         if (nowDiving && !lastDiving &&
             (GetTickCount64() - g_lastLockTime > 500)) {
           g_lastLockTime = GetTickCount64();
-          g_mouseSuspendedUntil = GetTickCount64() + 700;
+          g_mouseSuspendedUntil = GetTickCount64() + 600;
 
           std::thread([]() {
             g_lockCount++;
@@ -142,7 +142,7 @@ void DetectorThread() {
               std::lock_guard<std::mutex> lock(g_blockInputMutex);
               g_blockInputActive = true;
               BlockInput(TRUE);
-              Sleep(700);
+              Sleep(600);
               BlockInput(FALSE);
               g_blockInputActive = false;
             }
@@ -151,7 +151,7 @@ void DetectorThread() {
             SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
           }).detach();
 
-          LOG_INFO("Transition: glide->dive, Nitro Delta sync (700ms)");
+          LOG_INFO("Transition: glide->dive, Nitro Delta sync (600ms)");
           g_lockTriggerReason = 1; // Glide → Dive
         }
         // Edge: Diving -> Gliding (Nitro)
