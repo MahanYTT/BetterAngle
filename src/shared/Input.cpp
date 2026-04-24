@@ -210,6 +210,7 @@ void ReleaseGamingKeys() {
 void SyncGamingKeys() {
   static const int gamingKeys[] = {
     'W', 'A', 'S', 'D', VK_SPACE, VK_LSHIFT, VK_LCONTROL,
+    VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT,
     VK_LBUTTON, VK_RBUTTON, VK_MBUTTON, VK_XBUTTON1, VK_XBUTTON2
   };
 
@@ -238,11 +239,20 @@ void SyncGamingKeys() {
     } else {
       in.type = INPUT_KEYBOARD;
       in.ki.wVk = (WORD)vk;
+      // We provide both VK and Scancode for maximum compatibility, 
+      // but we do NOT set KEYEVENTF_SCANCODE so the system uses the VK as primary.
       in.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+      
       if (physicallyDown) {
-        in.ki.dwFlags = KEYEVENTF_SCANCODE; // KEYDOWN
+        in.ki.dwFlags = 0; // KEYDOWN
       } else {
-        in.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP; // KEYUP
+        in.ki.dwFlags = KEYEVENTF_KEYUP; // KEYUP
+      }
+
+      // Handle extended keys (Arrows, etc)
+      if (vk == VK_UP || vk == VK_DOWN || vk == VK_LEFT || vk == VK_RIGHT ||
+          vk == VK_RCONTROL || vk == VK_RMENU) {
+        in.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
       }
     }
     inputs.push_back(in);
