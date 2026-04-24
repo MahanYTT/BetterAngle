@@ -128,16 +128,16 @@ void DetectorThread() {
       if (GetTickCount64() >= g_mouseSuspendedUntil) {
         // Edge: Gliding -> Diving  (FOV zoom-in anim ~1.0s)
         if (nowDiving && !lastDiving) {
-          g_mouseSuspendedUntil = GetTickCount64() + 500;
+          g_mouseSuspendedUntil = GetTickCount64() + 567;
           
           // Async Lock
           std::thread([]() {
             BlockInput(TRUE);
-            Sleep(500);
+            Sleep(567);
             BlockInput(FALSE);
             SyncMovementKeys();
           }).detach();
-          LOG_INFO("Transition: glide->dive, Input blocked for 500ms");
+          LOG_INFO("Transition: glide->dive, Input blocked for 567ms");
           g_lockTriggerReason = 1; // Glide → Dive
         }
         // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)

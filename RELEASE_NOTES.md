@@ -1,10 +1,10 @@
-Generating release notes from commit range: v5.0.71..HEAD ### BetterAngle Pro v5.0.72
-- Automated build release.
+### BetterAngle Pro v5.0.72
+- perf: fine-tuned Glide->Dive lock duration to 567ms.
 
 ### BetterAngle Pro v5.0.71
 - perf: adjusted input lock durations for faster transitions (Alt-tab: 400ms, Glide->Dive: 500ms, Dive->Glide: 1000ms).
 
-### BetterAngle Pro v5.0.70
+### BetterAngle Pro v5.0.71
 - chore: final production release with Ghost-Buster movement sync and optimized scanner. Resolved pipeline sync issues.
 
 ### BetterAngle Pro v5.0.69
