@@ -50,9 +50,8 @@ static void FlushPendingInputMessages() {
   }
 }
 
-
-
-// High-frequency thread to detect Fortnite focus changes instantly (Alt-Tab detection)
+// High-frequency thread to detect Fortnite focus changes instantly (Alt-Tab
+// detection)
 void FocusMonitorThread() {
   bool lastFortniteFocused = false;
   while (g_running) {
@@ -69,9 +68,10 @@ void FocusMonitorThread() {
         BlockInput(TRUE);
         Sleep(400);
         BlockInput(FALSE);
-        SyncGamingKeys(); // Seamlessly restore state
+        SyncGamingKeys();
       }).detach();
-      LOG_INFO("High-Speed Detection: Alt-tab back to Fortnite detected. Input blocked.");
+      LOG_INFO("High-Speed Detection: Alt-tab back to Fortnite detected. Input "
+               "blocked.");
     }
     lastFortniteFocused = currentFortniteFocused;
     Sleep(0); // Max CPU performance for lightning fast focus detection
@@ -87,7 +87,8 @@ void DetectorThread() {
     if (!g_allProfiles.empty() && g_currentSelection == NONE) {
       Profile &p = g_allProfiles[g_selectedProfileIdx];
       g_logic.LoadProfile(p.sensitivityX);
-      g_requiredMatchCount = (int)((p.diveGlideMatch / 100.0f) * (p.roi_w * p.roi_h));
+      g_requiredMatchCount =
+          (int)((p.diveGlideMatch / 100.0f) * (p.roi_w * p.roi_h));
 
       bool currentFortniteFocused = g_fortniteFocusedCache.load();
       g_isCursorVisible = IsCursorCurrentlyVisible();
@@ -95,8 +96,9 @@ void DetectorThread() {
       // Only scan ROI when Fortnite is the foreground window
       if (currentFortniteFocused) {
         RECT mRect = GetMonitorRectByIndex(g_screenIndex);
-        RoiConfig cfg = {p.roi_x + mRect.left, p.roi_y + mRect.top, p.roi_w,
-                         p.roi_h, p.target_color, p.tolerance};
+        RoiConfig cfg = {
+            p.roi_x + mRect.left, p.roi_y + mRect.top, p.roi_w, p.roi_h,
+            p.target_color,       p.tolerance};
         ULONGLONG startMs = GetTickCount64();
         g_matchCount = g_detector.Scan(cfg);
         ULONGLONG endMs = GetTickCount64();
@@ -129,31 +131,39 @@ void DetectorThread() {
         // Edge: Gliding -> Diving  (FOV zoom-in anim ~1.0s)
         if (nowDiving && !lastDiving) {
           g_mouseSuspendedUntil = GetTickCount64() + 700;
-          
-          // Seamless Anti-Ghosting (No pause at start)
+
+          // Async 'Live Snapshot' Anti-Ghosting
           std::thread([]() {
+            ReleaseGamingKeys(); // Flush stale state
             BlockInput(TRUE);    // Lock door
-            Sleep(700);          
-            BlockInput(FALSE);   // Open door
-            SyncGamingKeys();    // Sync all keys at once (No dead zone)
+
+            Sleep(700); // Waiting while 'watching' fingers (GetAsyncKeyState is
+                        // live)
+
+            BlockInput(FALSE); // Open door
+            SyncGamingKeys();  // Sync with the final hardware snapshot
           }).detach();
 
-          LOG_INFO("Transition: glide->dive, Seamless sync (700ms)");
+          LOG_INFO("Transition: glide->dive, Live Snapshot sync (700ms)");
           g_lockTriggerReason = 1; // Glide → Dive
         }
         // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)
         else if (!nowDiving && lastDiving) {
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
-          
-          // Seamless Anti-Ghosting (No pause at start)
+
+          // Async 'Live Snapshot' Anti-Ghosting
           std::thread([]() {
+            ReleaseGamingKeys(); // Flush stale state
             BlockInput(TRUE);    // Lock door
-            Sleep(1000);         
-            BlockInput(FALSE);   // Open door
-            SyncGamingKeys();    // Sync all keys at once (No dead zone)
+
+            Sleep(1000); // Waiting while 'watching' fingers (GetAsyncKeyState
+                         // is live)
+
+            BlockInput(FALSE); // Open door
+            SyncGamingKeys();  // Sync with the final hardware snapshot
           }).detach();
 
-          LOG_INFO("Transition: dive->glide, Seamless sync (1000ms)");
+          LOG_INFO("Transition: dive->glide, Live Snapshot sync (1000ms)");
           g_lockTriggerReason = 2; // Dive → Glide
         }
       }
@@ -171,7 +181,6 @@ void DetectorThread() {
     Sleep(1); // CPU Fix: Drops usage from 100% to ~1%
   }
 }
-
 
 // Screen Snapshot for Flicker-Free Selection (v4.9.15)
 void CaptureDesktop() {
@@ -316,7 +325,8 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
     int dx = GetRawInputDeltaX(lParam);
 
     ULONGLONG now = GetTickCount64();
-    bool isMouseSuspended = (g_mouseSuspendedUntil > 0 && now < g_mouseSuspendedUntil);
+    bool isMouseSuspended =
+        (g_mouseSuspendedUntil > 0 && now < g_mouseSuspendedUntil);
 
     // Use high-frequency caches updated in DetectorThread (10ms polling)
     // instead of local 250ms caching.
@@ -547,9 +557,11 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       return 0;
     }
     if (wParam == 1) { // 60fps HUD / Input processing timer
-      // Skip drawing and processing for the first 2.5s while the splash screen is active
+      // Skip drawing and processing for the first 2.5s while the splash screen
+      // is active
       static ULONGLONG s_bootTime = GetTickCount64();
-      if (GetTickCount64() - s_bootTime < 2500) return 0;
+      if (GetTickCount64() - s_bootTime < 2500)
+        return 0;
 
       if (g_currentSelection == NONE) {
         bool lDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
@@ -581,15 +593,15 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         bool fnFocused = IsFortniteForeground();
         long ex = GetWindowLong(hWnd, GWL_EXSTYLE);
         if (fnFocused) {
-            // When Fortnite is focused, make HUD transparent to clicks
-            if (!(ex & WS_EX_TRANSPARENT)) {
-                SetWindowLong(hWnd, GWL_EXSTYLE, ex | WS_EX_TRANSPARENT);
-            }
+          // When Fortnite is focused, make HUD transparent to clicks
+          if (!(ex & WS_EX_TRANSPARENT)) {
+            SetWindowLong(hWnd, GWL_EXSTYLE, ex | WS_EX_TRANSPARENT);
+          }
         } else {
-            // When not focused, ensure HUD receives mouse events for dragging
-            if (ex & WS_EX_TRANSPARENT) {
-                SetWindowLong(hWnd, GWL_EXSTYLE, ex & ~WS_EX_TRANSPARENT);
-            }
+          // When not focused, ensure HUD receives mouse events for dragging
+          if (ex & WS_EX_TRANSPARENT) {
+            SetWindowLong(hWnd, GWL_EXSTYLE, ex & ~WS_EX_TRANSPARENT);
+          }
         }
       }
 
@@ -644,12 +656,14 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                    LPSTR lpCmdLine, int nCmdShow) {
   // Phase -1: DPI Awareness (CRITICAL for multi-monitor alignment)
-  // We need Per-Monitor Awareness V2 to ensure that GetSystemMetrics and EnumDisplayMonitors
-  // return physical pixels, matching the game's coordinate space exactly.
+  // We need Per-Monitor Awareness V2 to ensure that GetSystemMetrics and
+  // EnumDisplayMonitors return physical pixels, matching the game's coordinate
+  // space exactly.
   BOOL dpiSet = FALSE;
   HMODULE hUser32 = GetModuleHandleW(L"user32.dll");
   if (hUser32) {
-    typedef BOOL(WINAPI * SetProcessDpiAwarenessContextProc)(DPI_AWARENESS_CONTEXT);
+    typedef BOOL(WINAPI *
+                 SetProcessDpiAwarenessContextProc)(DPI_AWARENESS_CONTEXT);
     auto setDpiContext = (SetProcessDpiAwarenessContextProc)GetProcAddress(
         hUser32, "SetProcessDpiAwarenessContext");
     if (setDpiContext) {
@@ -743,8 +757,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   RECT mRect = GetMonitorRectByIndex(g_screenIndex);
   g_selectionRect.left = g_currentProfile.roi_x + mRect.left;
   g_selectionRect.top = g_currentProfile.roi_y + mRect.top;
-  g_selectionRect.right = g_currentProfile.roi_x + g_currentProfile.roi_w + mRect.left;
-  g_selectionRect.bottom = g_currentProfile.roi_y + g_currentProfile.roi_h + mRect.top;
+  g_selectionRect.right =
+      g_currentProfile.roi_x + g_currentProfile.roi_w + mRect.left;
+  g_selectionRect.bottom =
+      g_currentProfile.roi_y + g_currentProfile.roi_h + mRect.top;
   g_targetColor = g_currentProfile.target_color;
 
   g_logic.LoadProfile(g_currentProfile.sensitivityX);
@@ -800,7 +816,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
   std::thread detThread(DetectorThread);
   std::thread focusThread(FocusMonitorThread);
-  
+
   // Run Qt Event Loop
   int exitCode = app.exec();
   LOG_INFO("Qt event loop exited with code=%d", exitCode);

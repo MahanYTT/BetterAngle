@@ -174,25 +174,34 @@ bool IsCursorCurrentlyVisible() {
 }
 
 void ReleaseGamingKeys() {
-  static const int gamingKeys[] = {
-    'W', 'A', 'S', 'D', VK_SPACE, VK_LSHIFT, VK_LCONTROL,
-    VK_LBUTTON, VK_RBUTTON, VK_MBUTTON, VK_XBUTTON1, VK_XBUTTON2
-  };
+  static const int gamingKeys[] = {'W',         'A',         'S',
+                                   'D',         VK_SPACE,    VK_LSHIFT,
+                                   VK_LCONTROL, VK_LBUTTON,  VK_RBUTTON,
+                                   VK_MBUTTON,  VK_XBUTTON1, VK_XBUTTON2};
 
   std::vector<INPUT> inputs;
   inputs.reserve(std::size(gamingKeys));
 
   for (int vk : gamingKeys) {
-    if (!(GetAsyncKeyState(vk) & 0x8000)) continue;
+    if (!(GetAsyncKeyState(vk) & 0x8000))
+      continue;
 
     INPUT in = {0};
     if (vk >= VK_LBUTTON && vk <= VK_XBUTTON2) {
       in.type = INPUT_MOUSE;
-      if      (vk == VK_LBUTTON)  in.mi.dwFlags = MOUSEEVENTF_LEFTUP;
-      else if (vk == VK_RBUTTON)  in.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
-      else if (vk == VK_MBUTTON)  in.mi.dwFlags = MOUSEEVENTF_MIDDLEUP;
-      else if (vk == VK_XBUTTON1) { in.mi.dwFlags = MOUSEEVENTF_XUP; in.mi.mouseData = XBUTTON1; }
-      else if (vk == VK_XBUTTON2) { in.mi.dwFlags = MOUSEEVENTF_XUP; in.mi.mouseData = XBUTTON2; }
+      if (vk == VK_LBUTTON)
+        in.mi.dwFlags = MOUSEEVENTF_LEFTUP;
+      else if (vk == VK_RBUTTON)
+        in.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
+      else if (vk == VK_MBUTTON)
+        in.mi.dwFlags = MOUSEEVENTF_MIDDLEUP;
+      else if (vk == VK_XBUTTON1) {
+        in.mi.dwFlags = MOUSEEVENTF_XUP;
+        in.mi.mouseData = XBUTTON1;
+      } else if (vk == VK_XBUTTON2) {
+        in.mi.dwFlags = MOUSEEVENTF_XUP;
+        in.mi.mouseData = XBUTTON2;
+      }
     } else {
       in.type = INPUT_KEYBOARD;
       in.ki.wVk = (WORD)vk;
@@ -208,10 +217,10 @@ void ReleaseGamingKeys() {
 }
 
 void SyncGamingKeys() {
-  static const int gamingKeys[] = {
-    'W', 'A', 'S', 'D', VK_SPACE, VK_LSHIFT, VK_LCONTROL,
-    VK_LBUTTON, VK_RBUTTON, VK_MBUTTON, VK_XBUTTON1, VK_XBUTTON2
-  };
+  static const int gamingKeys[] = {'W',         'A',         'S',
+                                   'D',         VK_SPACE,    VK_LSHIFT,
+                                   VK_LCONTROL, VK_LBUTTON,  VK_RBUTTON,
+                                   VK_MBUTTON,  VK_XBUTTON1, VK_XBUTTON2};
 
   std::vector<INPUT> inputs;
   inputs.reserve(std::size(gamingKeys));
@@ -223,17 +232,33 @@ void SyncGamingKeys() {
     if (vk >= VK_LBUTTON && vk <= VK_XBUTTON2) {
       in.type = INPUT_MOUSE;
       if (physicallyDown) {
-        if      (vk == VK_LBUTTON)  in.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
-        else if (vk == VK_RBUTTON)  in.mi.dwFlags = MOUSEEVENTF_RIGHTDOWN;
-        else if (vk == VK_MBUTTON)  in.mi.dwFlags = MOUSEEVENTF_MIDDLEDOWN;
-        else if (vk == VK_XBUTTON1) { in.mi.dwFlags = MOUSEEVENTF_XDOWN; in.mi.mouseData = XBUTTON1; }
-        else if (vk == VK_XBUTTON2) { in.mi.dwFlags = MOUSEEVENTF_XDOWN; in.mi.mouseData = XBUTTON2; }
+        if (vk == VK_LBUTTON)
+          in.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+        else if (vk == VK_RBUTTON)
+          in.mi.dwFlags = MOUSEEVENTF_RIGHTDOWN;
+        else if (vk == VK_MBUTTON)
+          in.mi.dwFlags = MOUSEEVENTF_MIDDLEDOWN;
+        else if (vk == VK_XBUTTON1) {
+          in.mi.dwFlags = MOUSEEVENTF_XDOWN;
+          in.mi.mouseData = XBUTTON1;
+        } else if (vk == VK_XBUTTON2) {
+          in.mi.dwFlags = MOUSEEVENTF_XDOWN;
+          in.mi.mouseData = XBUTTON2;
+        }
       } else {
-        if      (vk == VK_LBUTTON)  in.mi.dwFlags = MOUSEEVENTF_LEFTUP;
-        else if (vk == VK_RBUTTON)  in.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
-        else if (vk == VK_MBUTTON)  in.mi.dwFlags = MOUSEEVENTF_MIDDLEUP;
-        else if (vk == VK_XBUTTON1) { in.mi.dwFlags = MOUSEEVENTF_XUP; in.mi.mouseData = XBUTTON1; }
-        else if (vk == VK_XBUTTON2) { in.mi.dwFlags = MOUSEEVENTF_XUP; in.mi.mouseData = XBUTTON2; }
+        if (vk == VK_LBUTTON)
+          in.mi.dwFlags = MOUSEEVENTF_LEFTUP;
+        else if (vk == VK_RBUTTON)
+          in.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
+        else if (vk == VK_MBUTTON)
+          in.mi.dwFlags = MOUSEEVENTF_MIDDLEUP;
+        else if (vk == VK_XBUTTON1) {
+          in.mi.dwFlags = MOUSEEVENTF_XUP;
+          in.mi.mouseData = XBUTTON1;
+        } else if (vk == VK_XBUTTON2) {
+          in.mi.dwFlags = MOUSEEVENTF_XUP;
+          in.mi.mouseData = XBUTTON2;
+        }
       }
     } else {
       in.type = INPUT_KEYBOARD;
