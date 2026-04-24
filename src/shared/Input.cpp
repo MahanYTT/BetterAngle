@@ -370,40 +370,23 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     }
   }
 
-  // Enhanced diagnostic logging for ghost key failures
-  // Only log failure if we're not using keybd_event fallback (FB=3)
+  // Enhanced diagnostic logging for ghost key failures (Consolidated to Master Log)
   if (!g_tableRefreshed && !outInputs.empty() && g_activeFallback.load() != 3) {
-    // Don't set g_activeFallback to 99 yet - wait to see if SendInput fails
-    std::ofstream failLog("ghostkey_fail.log", std::ios::app);
-    failLog << GetTickCount64() << " - FAIL | FB=" << g_activeFallback.load()
-            << " Table=" << (g_tableRefreshed ? "REFRESHED" : "FROZEN")
-            << " Keys=[";
+    std::string forensic = "[GHOST_FAIL] FB=" + std::to_string(g_activeFallback.load()) +
+                           " Table=FROZEN Keys=[";
     for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
       int vk = g_gamingKeys[i];
-      failLog << (i > 0 ? "," : "") << (char)(vk == VK_SPACE ? ' ' : vk) << ":"
-              << (preState[i] ? "1" : "0") << "->"
-              << (finalState[i] ? "1" : "0")
-              << (g_rawKeyUpDetected[vk] ? "(R)" : "");
+      forensic += (i > 0 ? "," : "") + std::string(1, (char)vk) + ":" + 
+                  (preState[i] ? "1" : "0") + "->" + (finalState[i] ? "1" : "0") +
+                  (g_rawKeyUpDetected[vk] ? "(R)" : "");
     }
-    failLog << "] ";
-    failLog << "Wpre=" << (g_wPreLock ? "1" : "0")
-            << " Wpost=" << (g_wPostUnlock ? "1" : "0")
-            << " Wflush=" << (g_wPostFlush ? "1" : "0");
-    failLog << std::endl;
+    forensic += "] Wpre=" + std::to_string(g_wPreLock) + 
+                " Wpost=" + std::to_string(g_wPostUnlock) +
+                " Wflush=" + std::to_string(g_wPostFlush);
+    LOG_ERROR(forensic.c_str());
   }
 
-  // Log when keybd_event fallback is used
-  if (g_activeFallback.load() == 3) {
-    std::ofstream failLog("ghostkey_fail.log", std::ios::app);
-    failLog << GetTickCount64() << " - KEYBD_EVENT_FALLBACK | ";
-    for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
-      if (preState[i] && !finalState[i]) {
-        int vk = g_gamingKeys[i];
-        failLog << (char)(vk == VK_SPACE ? ' ' : vk) << " ";
-      }
-    }
-    failLog << std::endl;
-  }
+  // Final state sync completed
 
   if (!outInputs.empty()) {
     // Try primary injection with SendInput
@@ -426,16 +409,14 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     if (anyStillHeld) {
       // SendInput failed, try keybd_event fallback
       g_activeFallback = 3; // Mark as using keybd_event fallback
-      // Log the fallback usage immediately
-      std::ofstream failLog("ghostkey_fail.log", std::ios::app);
-      failLog << GetTickCount64() << " - KEYBD_EVENT_FALLBACK | ";
+      // Log the fallback usage immediately (Consolidated to Master Log)
+      std::string fbLog = "[GHOST_FALLBACK] Using keybd_event for: ";
       for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
         if (preState[i] && !finalState[i]) {
-          int vk = g_gamingKeys[i];
-          failLog << (char)(vk == VK_SPACE ? ' ' : vk) << " ";
+          fbLog += std::string(1, (char)g_gamingKeys[i]) + " ";
         }
       }
-      failLog << std::endl;
+      LOG_WARNING(fbLog.c_str());
 
       for (size_t i = 0; i < preState.size(); ++i) {
         if (preState[i] && !finalState[i]) {
