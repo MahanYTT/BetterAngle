@@ -558,7 +558,9 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       DrawRow(3, 1, L"Lock Count:", std::to_wstring(g_lockCount.load()));
       DrawRow(4, 1, L"Lock Duration:", std::to_wstring(g_lockDurationMs.load()) + L" ms");
       DrawRow(5, 1, L"Lock Thread ID:", std::to_wstring(g_lockThreadId.load()));
-      DrawRow(6, 1, L"Fallback:", g_fb1Active ? L"FB1 (Scancode)" : L"NONE", !g_fb1Active);
+      int fb = g_activeFallback.load();
+      std::wstring fbStr = (fb == 0) ? L"NONE" : (fb == 1 ? L"FB1 (Shock)" : (fb == 2 ? L"FB2 (Hammer)" : L"FAIL (99)"));
+      DrawRow(6, 1, L"Fallback:", fbStr, fb == 0);
       DrawRow(7, 1, L"Table State:", g_tableRefreshed ? L"REFRESHED" : L"FROZEN", g_tableRefreshed);
       DrawRow(8, 1, L"Ghost Detect:", mismatch ? L"MISMATCH!" : L"OK", !mismatch);
 

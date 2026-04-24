@@ -2,13 +2,12 @@
 #include "shared/EnhancedLogging.h"
 #include "shared/State.h"
 #include <cwchar>
+#include <fstream>
 #include <string>
 #include <thread>
 #include <tlhelp32.h>
 #include <vector>
 #include <windows.h>
-#include <iterator>
-
 
 extern std::string g_nitroSyncLog;
 
@@ -152,8 +151,9 @@ void StartPollingThread() {
                                  std::memory_order_relaxed);
       }
       // Also poll LBUTTON for HUD dragging (fixes legacy bug)
-      g_physicalKeys[VK_LBUTTON].store((GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0,
-                                 std::memory_order_relaxed);
+      g_physicalKeys[VK_LBUTTON].store(
+          (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0,
+          std::memory_order_relaxed);
       Sleep(1);
     }
     timeEndPeriod(1);
@@ -205,49 +205,73 @@ std::vector<bool> GetGamingKeyState() {
 
 void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   g_wPostUnlock = GetAsyncKeyState('W');
-  g_fb1Active = true; 
+  g_activeFallback = 0; 
 
-  // FALLBACK 1: Scancode Flush (v5.5.19)
-  // Rapidly tap all gaming keys via scancodes to shock the async table into updating.
+  // FALLBACK 1: Scancode Flush (Shock)
   for (int vk : g_gamingKeys) {
     INPUT flush[2] = {0};
     flush[0].type = INPUT_KEYBOARD;
     flush[0].ki.wVk = (WORD)vk;
     flush[0].ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-    flush[0].ki.dwFlags = KEYEVENTF_SCANCODE; // Down
-    
+    flush[0].ki.dwFlags = KEYEVENTF_SCANCODE; 
     flush[1] = flush[0];
-    flush[1].ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP; // Up
-    
+    flush[1].ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
     SendInput(2, flush, sizeof(INPUT));
   }
-
-  // Small wait for Windows to process the shock events
   Sleep(10); 
 
-  // Step 2: Read fresh post-snapshot
-  std::vector<bool> postState;
-  bool refreshed = false;
+  // Read State after FB1
+  std::vector<bool> state1;
+  bool refreshed1 = false;
   for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
     bool current = (GetAsyncKeyState(g_gamingKeys[i]) & 0x8000) != 0;
-    postState.push_back(current);
-    if (preState[i] != current) refreshed = true;
+    state1.push_back(current);
+    if (preState[i] != current) refreshed1 = true;
   }
-  
-  g_tableRefreshed = refreshed;
+  if (refreshed1) g_activeFallback = 1;
+
+  // FALLBACK 2: Unconditional KeyUp + Repress (The "Hammer")
+  bool refreshed2 = false;
+  for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
+    if (preState[i]) {
+      int vk = g_gamingKeys[i];
+      INPUT seq[2] = {0};
+      seq[0].type = INPUT_KEYBOARD;
+      seq[0].ki.wVk = (WORD)vk;
+      seq[0].ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+      seq[0].ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP; // Force Up
+      seq[1] = seq[0];
+      seq[1].ki.dwFlags = KEYEVENTF_SCANCODE; // Immediate Down
+      SendInput(2, seq, sizeof(INPUT));
+      Sleep(1);
+    }
+  }
+  Sleep(5);
+
+  // Read Final State after FB2
+  std::vector<bool> finalState;
+  for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
+    bool current = (GetAsyncKeyState(g_gamingKeys[i]) & 0x8000) != 0;
+    finalState.push_back(current);
+    if (!refreshed1 && preState[i] != current) refreshed2 = true;
+  }
+  if (refreshed2) g_activeFallback = 2;
+
+  g_tableRefreshed = refreshed1 || refreshed2;
   g_wPostFlush = GetAsyncKeyState('W');
 
   for (int i = 0; i < 5; ++i) {
     g_preState[i] = preState[i];
-    g_postState[i] = postState[i];
+    g_postState[i] = finalState[i];
   }
 
-  // Step 3: Delta compare and inject KeyUp only for keys physically released
+  // FINAL DELTA INJECT
   std::vector<INPUT> outInputs;
-  std::string log = "[FB1] Table: " + std::string(refreshed ? "REFRESHED" : "FROZEN") + " | ";
+  std::string log = "[FB" + std::to_string(g_activeFallback.load()) + "] " + 
+                    (g_tableRefreshed ? "REFRESHED" : "FROZEN") + " | ";
   
   for (size_t i = 0; i < preState.size(); ++i) {
-    if (preState[i] && !postState[i]) {
+    if (preState[i] && !finalState[i]) {
       int vk = g_gamingKeys[i];
       INPUT input = {0};
       input.type = INPUT_KEYBOARD;
@@ -257,6 +281,15 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
       outInputs.push_back(input);
       log += std::to_string(vk) + "↑ ";
     }
+  }
+
+  // Emergency Logging if everything failed
+  if (!g_tableRefreshed && !outInputs.empty()) {
+    g_activeFallback = 99;
+    std::ofstream failLog("ghostkey_fail.log", std::ios::app);
+    failLog << GetTickCount64() << " - FAIL | ";
+    for(int i=0; i<5; i++) failLog << (preState[i]?"1":"0") << "->" << (finalState[i]?"1":"0") << " ";
+    failLog << std::endl;
   }
 
   if (!outInputs.empty()) {
