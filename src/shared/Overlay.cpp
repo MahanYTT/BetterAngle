@@ -449,11 +449,10 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       auto &dbgP = g_allProfiles[g_selectedProfileIdx];
       bool suspended = (g_mouseSuspendedUntil > 0 &&
                         GetTickCount64() < g_mouseSuspendedUntil);
-
       int dx = rx;
       int dy = ry + rh + 8;
       int dw = rw;
-      int dh = 244; // 14 rows * 16px + padding
+      int dh = 300; // Expanded for X-RAY Monitor (v5.1.15)
 
       LinearGradientBrush dbgBrush(Point(dx, dy), Point(dx, dy + dh),
                                    Color(175, 8, 10, 14), Color(175, 3, 5, 8));
@@ -474,8 +473,13 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
                             &dbgTextL);
         SolidBrush valBrush(isGood ? Color(255, 0, 220, 170)
                                    : Color(255, 255, 80, 80));
+        
+        // Dynamic alignment for wider values
+        float xVal = float(dx + dw - 74);
+        if (val.length() > 10) xVal = float(dx + dw - 110);
+        
         graphics.DrawString(val.c_str(), -1, &dbgFont,
-                            PointF(float(dx + dw - 74), yPos), &valBrush);
+                            PointF(xVal, yPos), &valBrush);
       };
 
       bool fnRun = CheckFortniteProcessFast();
@@ -533,7 +537,30 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       DrawRow(12, L"Scanner CPU:",
               std::to_wstring(g_scannerCpuPct.load()) + L"%",
               g_scannerCpuPct.load() < 50);
-      DrawRow(13, L"Version:", L"v" VERSION_WSTR);
+
+      // NITRO X-RAY MONITOR (v5.1.15)
+      static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE, VK_SHIFT};
+      static const wchar_t* names[] = {L"W", L"A", L"S", L"D", L"SPC", L"SHFT"};
+      std::wstring wasdStr, otherStr;
+      bool mismatch = false;
+
+      for (int i = 0; i < 4; ++i) {
+        bool p = (GetAsyncKeyState(keys[i]) & 0x8000) != 0;
+        bool t = (GetKeyState(keys[i]) & 0x8000) != 0;
+        if (p != t) mismatch = true;
+        wasdStr += names[i] + std::wstring(L":") + (p?L"1":L"0") + L"/" + (t?L"1":L"0") + L" ";
+      }
+      for (int i = 4; i < 6; ++i) {
+        bool p = (GetAsyncKeyState(keys[i]) & 0x8000) != 0;
+        bool t = (GetKeyState(keys[i]) & 0x8000) != 0;
+        if (p != t) mismatch = true;
+        otherStr += names[i] + std::wstring(L":") + (p?L"1":L"0") + L"/" + (t?L"1":L"0") + L" ";
+      }
+
+      DrawRow(13, L"Phys Truth (WASD):", wasdStr);
+      DrawRow(14, L"Phys Truth (Misc):", otherStr);
+      DrawRow(15, L"Ghost Detect:", mismatch ? L"MISMATCH!" : L"OK", !mismatch);
+      DrawRow(16, L"Version:", L"v" VERSION_WSTR);
     }
   }
 
