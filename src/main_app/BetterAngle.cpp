@@ -61,13 +61,13 @@ void FocusMonitorThread() {
 
     // Detect Alt-Tab back into Fortnite with ultra-low latency (1ms polling)
     if (!lastFortniteFocused && currentFortniteFocused) {
-      g_mouseSuspendedUntil = GetTickCount64() + 1650;
+      g_mouseSuspendedUntil = GetTickCount64() + 400;
       g_lockTriggerReason = 3; // Alt-Tab Return
 
       // SAFE ASYNC LOCK: Lightning detection, but safe background unblocking
       std::thread([]() {
         BlockInput(TRUE);
-        Sleep(1650);
+        Sleep(400);
         BlockInput(FALSE);
         SyncMovementKeys();
       }).detach();
@@ -128,16 +128,16 @@ void DetectorThread() {
       if (GetTickCount64() >= g_mouseSuspendedUntil) {
         // Edge: Gliding -> Diving  (FOV zoom-in anim ~1.0s)
         if (nowDiving && !lastDiving) {
-          g_mouseSuspendedUntil = GetTickCount64() + 1000;
+          g_mouseSuspendedUntil = GetTickCount64() + 500;
           
           // Async Lock
           std::thread([]() {
             BlockInput(TRUE);
-            Sleep(1000);
+            Sleep(500);
             BlockInput(FALSE);
             SyncMovementKeys();
           }).detach();
-          LOG_INFO("Transition: glide->dive, Input blocked for 1000ms");
+          LOG_INFO("Transition: glide->dive, Input blocked for 500ms");
           g_lockTriggerReason = 1; // Glide → Dive
         }
         // Edge: Diving -> Gliding  (FOV zoom-out anim ~1.0s)

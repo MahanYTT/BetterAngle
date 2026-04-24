@@ -1,7 +1,7 @@
-### BetterAngle Pro v5.0.70
-- fix: disabled unstable automated version bumping in GitHub Actions to prevent pipeline conflicts. Final production release of the Ghost-Buster movement sync.
+### BetterAngle Pro v5.0.71
+- perf: adjusted input lock durations for faster transitions (Alt-tab: 400ms, Glide->Dive: 500ms, Dive->Glide: 1000ms).
 
-### BetterAngle Pro v5.0.69
+### BetterAngle Pro v5.0.70
 - chore: final production release with Ghost-Buster movement sync and optimized scanner. Resolved pipeline sync issues.
 
 ### BetterAngle Pro v5.0.69
