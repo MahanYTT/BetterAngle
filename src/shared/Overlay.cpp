@@ -565,7 +565,27 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       DrawRow(22, L"W State (FLUSH):", std::to_wstring(g_wPostFlush.load()));
 
       DrawRow(23, L"Ghost Detect:", mismatch ? L"MISMATCH!" : L"OK", !mismatch);
-      DrawRow(24, L"Version:", L"v" + std::wstring(VERSION_WSTR), true);
+
+      // NITRO 5 FORENSICS (Detailed Sync Tracking)
+      static const int dbgKeys[] = {'W', 'A', 'S', 'D', VK_SPACE};
+      static const wchar_t* dbgNames[] = {L"W", L"A", L"S", L"D", L"SPC"};
+      
+      for (int i = 0; i < 5; ++i) {
+        bool pre = g_preState[i].load();
+        bool post = g_postState[i].load();
+        bool phys = (GetAsyncKeyState(dbgKeys[i]) & 0x8000) != 0;
+        bool delta = pre && !post;
+
+        std::wstring val = L"pre=" + std::wstring(pre ? L"1" : L"0") +
+                           L" post=" + std::wstring(post ? L"1" : L"0") +
+                           L" phys=" + std::wstring(phys ? L"1" : L"0") +
+                           L" d=" + std::wstring(delta ? L"SYNC" : L"SAME");
+        
+        DrawRow(24 + i, dbgNames[i], val, !delta);
+      }
+
+      DrawRow(29, L"Input Lock:", g_blockInputActive ? L"LOCKED" : L"UNLOCKED", !g_blockInputActive);
+      DrawRow(30, L"Version:", L"v" + std::wstring(VERSION_WSTR), true);
     }
   }
 

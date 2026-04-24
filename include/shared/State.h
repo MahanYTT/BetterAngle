@@ -33,6 +33,9 @@ extern std::atomic<long long> g_lockDurationMs;
 extern std::atomic<short> g_wPreLock;
 extern std::atomic<short> g_wPostUnlock;
 extern std::atomic<short> g_wPostFlush;
+extern std::atomic<bool> g_preState[5];
+extern std::atomic<bool> g_postState[5];
+extern std::atomic<bool> g_blockInputActive;
 
 extern std::string g_lastVersionRun;
 

@@ -71,9 +71,11 @@ void FocusMonitorThread() {
         g_wPreLock = (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
         auto initialState = GetGamingKeyState(); // Pre-lock snapshot
         
+        g_blockInputActive = true;
         BlockInput(TRUE);
         Sleep(400);
         BlockInput(FALSE);
+        g_blockInputActive = false;
         
         g_lockDurationMs = (long long)(GetTickCount64() - start);
         SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
@@ -148,9 +150,11 @@ void DetectorThread() {
             g_wPreLock = (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
             auto initialState = GetGamingKeyState(); // Pre-lock snapshot
             
+            g_blockInputActive = true;
             BlockInput(TRUE);
             Sleep(700);
             BlockInput(FALSE);
+            g_blockInputActive = false;
             
             g_lockDurationMs = (long long)(GetTickCount64() - start);
             SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
@@ -171,9 +175,11 @@ void DetectorThread() {
             g_wPreLock = (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
             auto initialState = GetGamingKeyState(); // Pre-lock snapshot
             
+            g_blockInputActive = true;
             BlockInput(TRUE);
             Sleep(1000);
             BlockInput(FALSE);
+            g_blockInputActive = false;
             
             g_lockDurationMs = (long long)(GetTickCount64() - start);
             SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync

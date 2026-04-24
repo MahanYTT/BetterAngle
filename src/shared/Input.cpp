@@ -231,6 +231,11 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   short wAfter = GetAsyncKeyState('W');
   g_wPostFlush = wAfter;
 
+  for (int i = 0; i < 5; ++i) {
+    g_preState[i] = preState[i];
+    g_postState[i] = postState[i];
+  }
+
   // Step 4: Delta compare and inject KeyUp only for changed keys
   std::vector<INPUT> outInputs;
   std::string log = "Nitro Flush [W: " + std::to_string(wBefore) + "->" + std::to_string(wAfter) + "]: ";
