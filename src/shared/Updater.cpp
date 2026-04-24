@@ -22,10 +22,9 @@ bool DownloadFile(const std::wstring &url, const std::wstring &dest) {
   if (!hInternet)
     return false;
 
-  // GitHub API requires a User-Agent and recommends an Accept header
+  // Use a more standard User-Agent to avoid being blocked by GitHub
   std::wstring headers =
-      L"Accept: application/vnd.github.v3+json\r\nUser-Agent: "
-      L"BetterAngleUpdater\r\n";
+      L"Accept: application/vnd.github.v3+json\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36\r\n";
   HINTERNET hUrl =
       InternetOpenUrlW(hInternet, url.c_str(), headers.c_str(), (DWORD)-1,
                        INTERNET_FLAG_RELOAD | INTERNET_FLAG_SECURE, 0);
@@ -99,53 +98,55 @@ bool CheckForUpdates() {
                        std::istreambuf_iterator<char>());
       ifs.close();
 
-      // Search for "tag_name": "vX.Y.Z"
-      size_t tagPos = json.find("\"tag_name\":");
-      if (tagPos != std::string::npos) {
-        size_t start = json.find("\"", tagPos + 11);
-        size_t end = (start != std::string::npos) ? json.find("\"", start + 1)
-                                                  : std::string::npos;
+        // Search for "tag_name": "vX.Y.Z" - Handle varying spacing
+        size_t tagPos = json.find("\"tag_name\"");
+        if (tagPos != std::string::npos) {
+          size_t colonPos = json.find(":", tagPos + 10);
+          if (colonPos != std::string::npos) {
+            size_t start = json.find("\"", colonPos + 1);
+            size_t end = (start != std::string::npos) ? json.find("\"", start + 1)
+                                                      : std::string::npos;
 
-        if (start != std::string::npos && end != std::string::npos) {
-          std::string latestVerStr = json.substr(start + 1, end - start - 1);
-          g_latestVersionOnline = latestVerStr;
-          success = true;
+            if (start != std::string::npos && end != std::string::npos) {
+              std::string latestVerStr = json.substr(start + 1, end - start - 1);
+              g_latestVersionOnline = latestVerStr;
+              success = true;
 
-          // Search for "browser_download_url": "..."
-          size_t assetPos = json.find("\"browser_download_url\":");
-          while (assetPos != std::string::npos) {
-            size_t uS = json.find("\"", assetPos + 23);
-            size_t uE = (uS != std::string::npos) ? json.find("\"", uS + 1)
-                                                  : std::string::npos;
-            if (uS != std::string::npos && uE != std::string::npos) {
-              std::string uStr = json.substr(uS + 1, uE - uS - 1);
-              if (uStr.find("BetterAngle_Setup.exe") != std::string::npos) {
-                g_dynamicDownloadUrl = std::wstring(uStr.begin(), uStr.end());
-                break;
+              // Search for "browser_download_url": "..."
+              size_t assetPos = json.find("\"browser_download_url\":");
+              while (assetPos != std::string::npos) {
+                size_t uS = json.find("\"", assetPos + 23);
+                size_t uE = (uS != std::string::npos) ? json.find("\"", uS + 1)
+                                                      : std::string::npos;
+                if (uS != std::string::npos && uE != std::string::npos) {
+                  std::string uStr = json.substr(uS + 1, uE - uS - 1);
+                  if (uStr.find("BetterAngle_Setup.exe") != std::string::npos) {
+                    g_dynamicDownloadUrl = std::wstring(uStr.begin(), uStr.end());
+                    break;
+                  }
+                }
+                assetPos = json.find("\"browser_download_url\":", assetPos + 23);
+              }
+
+              // Version normalization
+              std::string normLatest = latestVerStr;
+              if (!normLatest.empty() && (normLatest[0] == 'v' || normLatest[0] == 'V'))
+                normLatest = normLatest.substr(1);
+
+              std::string currentVer = VERSION_STR;
+              if (!currentVer.empty() && (currentVer[0] == 'v' || currentVer[0] == 'V'))
+                currentVer = currentVer.substr(1);
+
+              if (!normLatest.empty() && normLatest != currentVer) {
+                g_updateAvailable = true;
+                g_updateHistory = "New version available: v" + normLatest;
+              } else {
+                g_updateAvailable = false;
+                g_updateHistory = "Software is up to date (v" + currentVer + ")";
               }
             }
-            assetPos = json.find("\"browser_download_url\":", assetPos + 23);
-          }
-
-          // Version normalization (strip 'v')
-          std::string normLatest = latestVerStr;
-          if (!normLatest.empty() &&
-              (normLatest[0] == 'v' || normLatest[0] == 'V'))
-            normLatest = normLatest.substr(1);
-
-          std::string currentVer = VERSION_STR;
-          if (!currentVer.empty() &&
-              (currentVer[0] == 'v' || currentVer[0] == 'V'))
-            currentVer = currentVer.substr(1);
-
-          if (!normLatest.empty() && normLatest != currentVer) {
-            g_updateAvailable = true;
-            g_updateHistory = "Latest: " + latestVerStr + " (Manual Check)";
-          } else {
-            g_updateAvailable = false;
           }
         }
-      }
     }
     DeleteFileW(tempRes.c_str());
   }

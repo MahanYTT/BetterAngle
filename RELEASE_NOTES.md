@@ -1,10 +1,13 @@
-Generating release notes from commit range: v5.0.80..HEAD ### BetterAngle Pro v5.0.81
+### BetterAngle Pro v5.0.82
+- fix: improved updater reliability with a more robust JSON parser and standard User-Agent to ensure smooth updates from GitHub.
+
+### BetterAngle Pro v5.0.81
 - Automated build release.
 
 ### BetterAngle Pro v5.0.80
 - release: baseline stability restoration. This version resets the codebase to the stable v5.0.74 logic, providing a reliable foundation for future manual optimizations.
 
-### BetterAngle Pro v5.0.74
+### BetterAngle Pro v5.0.80
 - perf: implemented ultra-fast focus and detector threads using yield/Sleep(0) and HWND caching for zero-delay input locking.
 
 ### BetterAngle Pro v5.0.73
