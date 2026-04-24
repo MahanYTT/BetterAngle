@@ -269,6 +269,10 @@ bool RefreshHotkeys(HWND hWnd) {
     UnregisterHotKey(hWnd, i);
   }
 
+  if (hWndMsg) {
+    RegisterRawInput(hWndMsg);
+  }
+
   // Small delay to allow system to process unregistration (optional but can
   // help)
   Sleep(10);
@@ -327,26 +331,20 @@ bool RefreshHotkeys(HWND hWnd) {
 LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
                             LPARAM lParam) {
   if (message == WM_INPUT) {
+    // 1. Update X-Ray Physical Tracker (Truth)
+    UpdatePhysicalKeyState(lParam);
+
+    // 2. Original Mouse Delta logic
     int dx = GetRawInputDeltaX(lParam);
 
     ULONGLONG now = GetTickCount64();
     bool isMouseSuspended =
         (g_mouseSuspendedUntil > 0 && now < g_mouseSuspendedUntil);
 
-    // Use high-frequency caches updated in DetectorThread (10ms polling)
-    // instead of local 250ms caching.
     const bool allowAngleUpdate =
         (g_fortniteFocusedCache && !g_isCursorVisible && !isMouseSuspended);
 
-    static bool lastAllowAngleUpdate = true;
-    if (allowAngleUpdate != lastAllowAngleUpdate) {
-      LOG_INFO("Input gate changed: allow=%d dx=%d", allowAngleUpdate ? 1 : 0,
-               dx);
-      lastAllowAngleUpdate = allowAngleUpdate;
-    }
-
     if (allowAngleUpdate) {
-      // Update angle accumulation (the decimal) based on raw input
       g_logic.Update(dx);
     }
     return 0;
@@ -569,7 +567,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         return 0;
 
       if (g_currentSelection == NONE) {
-        bool lDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
+        bool lDown = g_physicalKeys[VK_LBUTTON];
         POINT pt;
         GetCursorPos(&pt);
 

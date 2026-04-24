@@ -173,13 +173,75 @@ bool IsCursorCurrentlyVisible() {
   return (cursorInfo.flags & CURSOR_SHOWING) != 0;
 }
 
+bool g_physicalKeys[256] = {false};
+
+void RegisterRawInput(HWND hwnd) {
+  RAWINPUTDEVICE rid[2];
+  
+  // Mouse
+  rid[0].usUsagePage = 0x01;
+  rid[0].usUsage = 0x02;
+  rid[0].dwFlags = RIDEV_INPUTSINK;
+  rid[0].hwndTarget = hwnd;
+
+  // Keyboard (X-Ray tracker)
+  rid[1].usUsagePage = 0x01;
+  rid[1].usUsage = 0x06;
+  rid[1].dwFlags = RIDEV_INPUTSINK;
+  rid[1].hwndTarget = hwnd;
+
+  if (!RegisterRawInputDevices(rid, 2, sizeof(RAWINPUTDEVICE))) {
+    LOG_ERROR("Failed to register raw input devices (Mouse + Keyboard)");
+  }
+}
+
+int GetRawInputDeltaX(LPARAM lparam) {
+  UINT dwSize;
+  GetRawInputData((HRAWINPUT)lparam, RID_INPUT, NULL, &dwSize,
+                  sizeof(RAWINPUTHEADER));
+  if (dwSize == 0)
+    return 0;
+
+  std::vector<BYTE> lpb(dwSize);
+  if (GetRawInputData((HRAWINPUT)lparam, RID_INPUT, lpb.data(), &dwSize,
+                      sizeof(RAWINPUTHEADER)) != dwSize)
+    return 0;
+
+  RAWINPUT *raw = (RAWINPUT *)lpb.data();
+  if (raw->header.dwType == RIM_TYPEMOUSE) {
+    return raw->data.mouse.lLastX;
+  }
+  return 0;
+}
+
+void UpdatePhysicalKeyState(LPARAM lparam) {
+  UINT dwSize;
+  GetRawInputData((HRAWINPUT)lparam, RID_INPUT, NULL, &dwSize,
+                  sizeof(RAWINPUTHEADER));
+  if (dwSize == 0) return;
+
+  std::vector<BYTE> lpb(dwSize);
+  if (GetRawInputData((HRAWINPUT)lparam, RID_INPUT, lpb.data(), &dwSize,
+                      sizeof(RAWINPUTHEADER)) != dwSize) return;
+
+  RAWINPUT *raw = (RAWINPUT *)lpb.data();
+  if (raw->header.dwType == RIM_TYPEKEYBOARD) {
+    USHORT vk = raw->data.keyboard.VKey;
+    bool down = !(raw->data.keyboard.Flags & RI_KEY_BREAK);
+    if (vk < 256) {
+      g_physicalKeys[vk] = down;
+    }
+  }
+}
+
 static const int g_gamingKeys[] = {'W', 'A', 'S', 'D', VK_SPACE};
 
 std::vector<bool> GetGamingKeyState() {
   std::vector<bool> state;
   state.reserve(std::size(g_gamingKeys));
   for (int vk : g_gamingKeys) {
-    state.push_back((GetAsyncKeyState(vk) & 0x8000) != 0);
+    // USE RAW X-RAY TRUTH instead of Windows API
+    state.push_back(g_physicalKeys[vk]);
   }
   return state;
 }
@@ -190,7 +252,8 @@ void SyncGamingKeysNitro(const std::vector<bool>& initialState) {
 
   for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
     int vk = g_gamingKeys[i];
-    bool currentlyDown = (GetAsyncKeyState(vk) & 0x8000) != 0;
+    // USE RAW X-RAY TRUTH
+    bool currentlyDown = g_physicalKeys[vk];
 
     // NITRO: Only send if the state changed compared to the start of the lock
     if (currentlyDown == initialState[i])
