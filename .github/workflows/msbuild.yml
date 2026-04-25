@@ -29,7 +29,7 @@ jobs:
           
           $newVersion = (Get-Content VERSION).Trim()
           git add VERSION CMakeLists.txt include/shared/State.h RELEASE_NOTES.md
-          git commit -m "chore: auto-increment version to $newVersion"
+          git commit -m "chore: auto-increment version to $newVersion [skip ci]"
           git tag "v$newVersion"
           git push origin main --tags
           
@@ -40,7 +40,7 @@ jobs:
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Install Qt 6
+      - name: Set up Qt
         uses: jurplel/install-qt-action@v3
         with:
           version: '6.5.3'
@@ -80,7 +80,7 @@ jobs:
           $outLines = @()
           $seenFirst = $false
           foreach ($line in $lines) {
-              if ($line.StartsWith("### ")) {
+              if ($line.StartsWith("## v")) {
                   if ($seenFirst) { break }
                   $seenFirst = $true
               }
@@ -106,7 +106,6 @@ jobs:
           tag_name: ${{ env.RELEASE_TAG }}
           name: ${{ env.RELEASE_NAME }}
           body_path: CURRENT_RELEASE_NOTES.md
-          draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
