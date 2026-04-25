@@ -32,22 +32,28 @@ extern std::atomic<bool> g_fortniteFocusedCache;
 extern std::atomic<int> g_lockCount;
 extern std::atomic<DWORD> g_lockThreadId;
 extern std::atomic<long long> g_lockDurationMs;
+
+// Forensic Diagnostics (v5.5.28)
 extern std::atomic<short> g_wPreLock;
 extern std::atomic<short> g_wPostUnlock;
 extern std::atomic<short> g_wPostFlush;
 extern std::atomic<bool> g_preState[4];
 extern std::atomic<bool> g_postState[4];
-extern std::atomic<bool> g_blockInputActive;
+extern std::atomic<int> g_activeFallback;
 extern std::atomic<bool> g_tableRefreshed;
 extern std::atomic<bool> g_hasSynced;
-extern std::atomic<int> g_activeFallback;
-extern std::atomic<bool> g_fb1Active;
+
+// Locking State (v5.5.28)
 extern std::atomic<bool> g_rawKeyUpDetected[256];
+extern std::atomic<bool> g_blockInputActive;
+extern std::mutex g_blockInputMutex;
+extern std::atomic<int> g_lockTriggerReason; // 1:glide->dive, 2:dive->glide, 3:Alt-Tab
 extern std::atomic<bool> g_lockInProgress;
 extern std::atomic<bool> g_ghostFixInProgress;
 extern std::atomic<long long> g_ghostFixDurationMs;
 extern std::atomic<bool> g_ghostFixVerifyOk;
 extern std::mutex g_lockMutex;
+
 extern std::atomic<ULONGLONG> g_lastLockTime;
 extern std::mutex g_blockInputMutex;
 

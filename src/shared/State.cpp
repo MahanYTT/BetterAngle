@@ -26,17 +26,20 @@ std::atomic<int> g_lockTriggerReason(0);
 std::atomic<int> g_lockCount(0);
 std::atomic<DWORD> g_lockThreadId(0);
 std::atomic<long long> g_lockDurationMs(0);
-std::atomic<short> g_wPreLock(0);
-std::atomic<short> g_wPostUnlock(0);
-std::atomic<short> g_wPostFlush(0);
-std::atomic<bool> g_preState[4];
-std::atomic<bool> g_postState[4];
-std::atomic<bool> g_blockInputActive(false);
-std::atomic<bool> g_tableRefreshed(false);
-std::atomic<bool> g_hasSynced(false);
-std::atomic<int> g_activeFallback(0);
-std::atomic<bool> g_fb1Active(false);
-std::atomic<bool> g_rawKeyUpDetected[256] = {};
+// Forensic Diagnostics (v5.5.28)
+std::atomic<short> g_wPreLock{0};
+std::atomic<short> g_wPostUnlock{0};
+std::atomic<short> g_wPostFlush{0};
+std::atomic<bool> g_preState[4] = {false, false, false, false};
+std::atomic<bool> g_postState[4] = {false, false, false, false};
+std::atomic<int> g_activeFallback{0};
+std::atomic<bool> g_tableRefreshed{false};
+std::atomic<bool> g_hasSynced{false};
+
+// Locking State (v5.5.28)
+std::atomic<bool> g_rawKeyUpDetected[256] = {false};
+std::atomic<bool> g_blockInputActive{false};
+std::mutex g_blockInputMutex;
 std::atomic<ULONGLONG> g_lastLockTime(0);
 std::atomic<bool> g_lockInProgress(false);
 std::atomic<bool> g_ghostFixInProgress(false);

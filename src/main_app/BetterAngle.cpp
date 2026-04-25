@@ -130,8 +130,64 @@ void DetectorThread() {
 
         // Peak match tracking (2s decay window)
         int currentMatch = g_matchCount.load();
+        bool currentDiving = (currentMatch >= g_requiredMatchCount.load());
         ULONGLONG now = GetTickCount64();
         if (now - peakMatchTimestamp > 2000) {
+          if (!lastDiving && currentDiving) {
+            std::thread([]() {
+              ULONGLONG start = GetTickCount64();
+              g_lockCount++;
+
+              // PRE-LOCK SNAPSHOT
+              for (int i = 0; i < 256; i++)
+                g_rawKeyUpDetected[i] = false;
+              g_wPreLock =
+                  (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
+              auto initialState = GetGamingKeyState(); // WASD Snapshot
+
+              {
+                std::lock_guard<std::mutex> lock(g_blockInputMutex);
+                g_blockInputActive = true;
+                BlockInput(TRUE);
+                Sleep(700);
+                BlockInput(FALSE);
+                g_blockInputActive = false;
+              }
+
+              g_lockDurationMs = (long long)(GetTickCount64() - start);
+              SyncGamingKeysNitro(initialState); // v5.5.28 Sync
+            }).detach();
+
+            LOG_INFO("Transition: glide->dive, v5.5.28 Logic (700ms)");
+            g_lockTriggerReason = 1; // Glide → Dive
+          } else if (lastDiving && !currentDiving) {
+            std::thread([]() {
+              ULONGLONG start = GetTickCount64();
+              g_lockCount++;
+
+              // PRE-LOCK SNAPSHOT
+              for (int i = 0; i < 256; i++)
+                g_rawKeyUpDetected[i] = false;
+              g_wPreLock =
+                  (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
+              auto initialState = GetGamingKeyState(); // WASD Snapshot
+
+              {
+                std::lock_guard<std::mutex> lock(g_blockInputMutex);
+                g_blockInputActive = true;
+                BlockInput(TRUE);
+                Sleep(1000);
+                BlockInput(FALSE);
+                g_blockInputActive = false;
+              }
+
+              g_lockDurationMs = (long long)(GetTickCount64() - start);
+              SyncGamingKeysNitro(initialState); // v5.5.28 Sync
+            }).detach();
+
+            LOG_INFO("Transition: dive->glide, v5.5.28 Logic (1000ms)");
+            g_lockTriggerReason = 2; // Dive → Glide
+          }
           g_peakMatchCount = currentMatch;
           peakMatchTimestamp = now;
         } else if (currentMatch > g_peakMatchCount.load()) {
@@ -145,91 +201,6 @@ void DetectorThread() {
       }
 
       bool nowDiving = (g_matchCount.load() >= g_requiredMatchCount.load());
-
-      if (GetTickCount64() >= g_mouseSuspendedUntil) {
-        // Edge: Gliding -> Diving (Nitro)
-        if (nowDiving && !lastDiving &&
-            (GetTickCount64() - g_lastLockTime > 500)) {
-          g_lastLockTime = GetTickCount64();
-          g_mouseSuspendedUntil = GetTickCount64() + 700;
-
-          std::thread([]() {
-            std::lock_guard<std::mutex> lock(g_lockMutex);
-            g_lockInProgress = true;
-            g_lockCount++;
-            g_lockThreadId = GetCurrentThreadId();
-            ULONGLONG start = GetTickCount64();
-
-            for (int i = 0; i < 256; i++)
-              g_rawKeyUpDetected[i] = false;
-            g_wPreLock =
-                (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
-            auto initialState = GetGamingKeyState(); // Pre-lock snapshot
-
-            {
-              std::lock_guard<std::mutex> lock(g_blockInputMutex);
-              g_blockInputActive = true;
-              BlockInput(TRUE);
-              Sleep(700);
-              BlockInput(FALSE);
-              g_blockInputActive = false;
-            }
-
-            g_lockDurationMs = (long long)(GetTickCount64() - start);
-            SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
-
-            g_lastLockTime = GetTickCount64();
-            g_lockInProgress = false;
-          }).detach();
-
-          LOG_INFO("Transition: glide->dive, Nitro Delta sync (700ms)");
-          g_lockTriggerReason = 1; // Glide → Dive
-        }
-        // Edge: Diving -> Gliding (Nitro)
-        else if (!nowDiving && lastDiving &&
-                 (GetTickCount64() - g_lastLockTime > 500)) {
-          g_lastLockTime = GetTickCount64();
-          g_mouseSuspendedUntil = GetTickCount64() + 1000;
-
-          std::thread([]() {
-            std::lock_guard<std::mutex> lock(g_lockMutex);
-            g_lockInProgress = true;
-            g_lockCount++;
-            g_lockThreadId = GetCurrentThreadId();
-            ULONGLONG start = GetTickCount64();
-
-            for (int i = 0; i < 256; i++)
-              g_rawKeyUpDetected[i] = false;
-            g_wPreLock =
-                (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
-            auto initialState = GetGamingKeyState(); // Pre-lock snapshot
-
-            {
-              std::lock_guard<std::mutex> lock(g_blockInputMutex);
-              g_blockInputActive = true;
-              BlockInput(TRUE);
-              Sleep(1000);
-              BlockInput(FALSE);
-              g_blockInputActive = false;
-            }
-
-            g_lockDurationMs = (long long)(GetTickCount64() - start);
-            SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
-
-            g_lastLockTime = GetTickCount64();
-            g_lockInProgress = false;
-          }).detach();
-
-          LOG_INFO("Transition: dive->glide, Nitro Delta sync (1000ms)");
-          g_lockTriggerReason = 2; // Dive → Glide
-        }
-      }
-
-      // Reset UI tracker once timer expires
-      if (g_mouseSuspendedUntil > 0 &&
-          GetTickCount64() >= g_mouseSuspendedUntil) {
-        g_mouseSuspendedUntil = 0;
-      }
 
       lastDiving = nowDiving;
       g_isDiving = nowDiving;
