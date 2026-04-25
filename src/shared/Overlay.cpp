@@ -616,13 +616,12 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
                              std::wstring(brk ? L"1" : L"0") + L" Mk=" +
                              std::wstring(mk ? L"1" : L"0");
 
-          // Green if: key wasn't held, or Raw Input confirms state
+          // INVERSE LOGIC (v5.5.69): Only Make proves user is still holding.
+          // Mk=1 → post should be 1 (still held)
+          // Mk=0 → post should be 0 (ghost killed — user released during lock)
           bool rawConsistent = true;
           if (pre) {
-            if (brk && !mk)
-              rawConsistent = !post; // corrected ghost → post should be 0
-            else if (mk)
-              rawConsistent = post; // still held → post should be 1
+            rawConsistent = (mk ? post : !post);
           }
           DrawRow(8 + i, 1, names[i], val, pre ? rawConsistent : true);
         }
