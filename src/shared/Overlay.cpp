@@ -158,6 +158,12 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
     SolidBrush whiteBrush(Color(255, 255, 255, 255));
     SolidBrush dimWhite(Color(180, 220, 220, 220));
 
+    // For ROI/Selection drawing, we need to map from Screen to Client
+    // Since our window is exactly at mRect.left/top, we subtract those.
+    RECT mRect = GetMonitorRectByIndex(g_screenIndex);
+    int ox = mRect.left;
+    int oy = mRect.top;
+
     if (g_currentSelection == SELECTING_ROI) {
       graphics.DrawString(L"STAGE 1  \xB7  Drag to select the dive prompt area",
                           -1, &selFont, PointF(50.0f, 42.0f), &whiteBrush);
@@ -169,7 +175,8 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
         REAL dash[] = {6.0f, 4.0f};
         dashPen.SetDashPattern(dash, 2);
         graphics.DrawRectangle(
-            &dashPen, (int)g_selectionRect.left, (int)g_selectionRect.top,
+            &dashPen, (int)(g_selectionRect.left - ox),
+            (int)(g_selectionRect.top - oy),
             (int)(g_selectionRect.right - g_selectionRect.left),
             (int)(g_selectionRect.bottom - g_selectionRect.top));
       }
@@ -186,7 +193,8 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
         REAL dash[] = {6.0f, 4.0f};
         dashPen.SetDashPattern(dash, 2);
         graphics.DrawRectangle(
-            &dashPen, (int)g_selectionRect.left, (int)g_selectionRect.top,
+            &dashPen, (int)(g_selectionRect.left - ox),
+            (int)(g_selectionRect.top - oy),
             (int)(g_selectionRect.right - g_selectionRect.left),
             (int)(g_selectionRect.bottom - g_selectionRect.top));
       }
@@ -248,6 +256,7 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
         Pen roiPen(roiCol, 2.0f);
         REAL dash[] = {8.0f, 4.0f};
         roiPen.SetDashPattern(dash, 2);
+        // roi_x/y in the profile are ALREADY local to the monitor's top-left
         graphics.DrawRectangle(&roiPen, p.roi_x, p.roi_y, p.roi_w, p.roi_h);
 
         std::wstring stateLabel = suspended    ? L"LOCKING"
@@ -266,22 +275,11 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
 
     // Crosshair
     if (showCrosshair) {
-      RECT mRect = GetMonitorRectByIndex(g_screenIndex);
-      int sx = GetSystemMetrics(SM_XVIRTUALSCREEN);
-      int sy = GetSystemMetrics(SM_YVIRTUALSCREEN);
-
-      // Clip graphics rendering strictly to the selected monitor's boundaries
-      // so the massive crosshair lines don't bleed onto other screens
-      int clientMonX = mRect.left - sx;
-      int clientMonY = mRect.top - sy;
-      int monW = mRect.right - mRect.left;
-      int monH = mRect.bottom - mRect.top;
-
-      graphics.SetClip(Rect(clientMonX, clientMonY, monW, monH));
-
       // Map the monitor's center to the HUD's client coordinate space
-      float cx = clientMonX + monW * 0.5f + g_crossOffsetX;
-      float cy = clientMonY + monH * 0.5f + g_crossOffsetY;
+      // Window is now localized to the monitor, so center is just sw/2 and sh/2
+      float cx = (float)sw * 0.5f + g_crossOffsetX;
+      float cy = (float)sh * 0.5f + g_crossOffsetY;
+
       // Make crosshair massive like the Java reference
       float hw = (sw > sh ? sw : sh) * 3.0f;
       float hh = hw;
@@ -559,8 +557,12 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
 
       if (g_hasSynced) {
         // GHOST STATUS: Instant problem identification.
-        // Scans all 4 keys for ghost-walk (post=1 but user released)
-        // or under-restore (post=0 but user still holding).
+        // Uses INVERSE LOGIC matching the correction: only Make (typematic
+        // repeat) proves the user is still holding. Arrays are from the clean
+        // 200ms window after Restore (contamination-filtered).
+        // Combined logic: only Mk=1 Br=0 means still holding.
+        // post=1 + (Br=1 || Mk=0) → ghost-walk (restored but user released)
+        // post=0 + Mk=1 Br=0 → under-restore (corrected but user still holding)
         std::wstring ghostStatus;
         bool ghostOk = true;
         for (int i = 0; i < 4; ++i) {
@@ -570,11 +572,12 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
           bool mk = g_rawKeyMakeDetected[keys[i]].load();
           if (!pre)
             continue;
-          if (post && brk && !mk) {
-            // Restored but user released → ghost-walk
+          bool shouldStillBePressed = mk && !brk;
+          if (post && !shouldStillBePressed) {
+            // Restored but user released (Br=1 or no Mk) → ghost-walk
             ghostStatus += std::wstring(names[i]) + L":GHOST! ";
             ghostOk = false;
-          } else if (!post && mk && !brk) {
+          } else if (!post && shouldStillBePressed) {
             // Not restored but user still holding → under-restore
             ghostStatus += std::wstring(names[i]) + L":UNDER ";
             ghostOk = false;
@@ -602,7 +605,7 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
 
         // Per-key forensics: pre/post/phys/Br/Mk
         // pre = held before lock, post = after fix, phys = live OS read
-        // Br = Raw Input break (HID release), Mk = Raw Input make (HID press)
+        // Br/Mk = Raw Input from clean 200ms window (contamination-filtered)
         for (int i = 0; i < 4; ++i) {
           bool pre = g_preState[i].load();
           bool post = g_postState[i].load();
@@ -616,12 +619,13 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
                              std::wstring(brk ? L"1" : L"0") + L" Mk=" +
                              std::wstring(mk ? L"1" : L"0");
 
-          // INVERSE LOGIC (v5.5.69): Only Make proves user is still holding.
-          // Mk=1 → post should be 1 (still held)
-          // Mk=0 → post should be 0 (ghost killed — user released during lock)
+          // COMBINED LOGIC (v5.5.69): Only keep pressed if Mk=1 AND Br=0.
+          // Br=1 || Mk=0 → user released → post should be 0 (ghost killed)
+          // Br=0 && Mk=1 → still holding → post should be 1
           bool rawConsistent = true;
           if (pre) {
-            rawConsistent = (mk ? post : !post);
+            bool shouldStillBePressed = mk && !brk;
+            rawConsistent = (shouldStillBePressed ? post : !post);
           }
           DrawRow(8 + i, 1, names[i], val, pre ? rawConsistent : true);
         }

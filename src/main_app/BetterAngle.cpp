@@ -396,12 +396,18 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
                           sizeof(RAWINPUTHEADER)) == dwSize) {
         RAWINPUT *raw = (RAWINPUT *)lpb.data();
         if (raw->header.dwType == RIM_TYPEKEYBOARD) {
-          if (raw->data.keyboard.Flags & RI_KEY_BREAK) {
-            // HARDWARE LEVEL RELEASE DETECTED
-            g_rawKeyUpDetected[raw->data.keyboard.VKey] = true;
+          if (g_ghostFixInProgress.load()) {
+            // CONTAMINATION FIX: Skip events during Shock&Restore — our
+            // synthetic SendInput calls would set Br=1 (Shock KeyUp) and
+            // Mk=1 (Restore KeyDown), making the correction logic think the
+            // user released and re-pressed the key. Real hardware events are
+            // collected in a dedicated window after Restore completes.
           } else {
-            // HARDWARE LEVEL PRESS/REPEAT DETECTED
-            g_rawKeyMakeDetected[raw->data.keyboard.VKey] = true;
+            if (raw->data.keyboard.Flags & RI_KEY_BREAK) {
+              g_rawKeyUpDetected[raw->data.keyboard.VKey] = true;
+            } else {
+              g_rawKeyMakeDetected[raw->data.keyboard.VKey] = true;
+            }
           }
         }
       }
@@ -733,9 +739,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   // Phase -2: Single Instance Guard (v5.5.75)
   // Create a named mutex to ensure only one instance of the app is running.
   // The mutex name must be unique to the application.
-  HANDLE hMutex = CreateMutexW(NULL, TRUE, L"BetterAnglePro_SingleInstance_Mutex");
+  HANDLE hMutex =
+      CreateMutexW(NULL, TRUE, L"BetterAnglePro_SingleInstance_Mutex");
   if (GetLastError() == ERROR_ALREADY_EXISTS) {
-    MessageBoxW(NULL, L"BetterAngle is already running.\n\nCheck your system tray to open the dashboard.", 
+    MessageBoxW(NULL,
+                L"BetterAngle is already running.\n\nCheck your system tray to "
+                L"open the dashboard.",
                 L"Application Already Running", MB_OK | MB_ICONINFORMATION);
     return 0;
   }
@@ -841,6 +850,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   g_screenIndex = g_currentProfile.screenIndex;
 
   // Sync Trigger Calibration from Profile to Global State
+  // Sync Trigger Calibration from Profile to Global State
   RECT mRect = GetMonitorRectByIndex(g_screenIndex);
   g_selectionRect.left = g_currentProfile.roi_x + mRect.left;
   g_selectionRect.top = g_currentProfile.roi_y + mRect.top;
@@ -883,10 +893,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   wc.lpszClassName = L"BetterAngleHUD";
   RegisterClass(&wc);
 
-  int screenW = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-  int screenH = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-  int screenX = GetSystemMetrics(SM_XVIRTUALSCREEN);
-  int screenY = GetSystemMetrics(SM_YVIRTUALSCREEN);
+  // Use selected monitor's RECT for the HUD window (v5.5.76)
+  int screenW = mRect.right - mRect.left;
+  int screenH = mRect.bottom - mRect.top;
+  int screenX = mRect.left;
+  int screenY = mRect.top;
 
   g_hHUD = CreateWindowEx(
       WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW,

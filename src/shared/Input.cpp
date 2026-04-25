@@ -235,10 +235,10 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   //   so GetAsyncKeyState returns false even when the user is still holding
   //   the key. This was the root cause of the double-press bug.
   // Phase 4 — VERIFY: Confirm restored keys are seen as held.
-  // Phase 5 — RAW INPUT CORRECTION: Wait 200ms for WM_INPUT messages to
-  //   arrive, then check g_rawKeyUpDetected. If a hardware break was detected
-  //   during/after the lock (and no subsequent make), the user released the
-  //   key — send KeyUp to kill the ghost-walk.
+  // Phase 5 — RAW INPUT CORRECTION: Reset arrays and open a 200ms collection
+  //   window (g_ghostFixInProgress=false) so only REAL hardware typematic
+  //   events are recorded. If no Make is seen for a key, the user released
+  //   it during the lock — send KeyUp to kill the ghost-walk.
 
   // Store preState for forensics overlay
   for (size_t i = 0; i < preState.size() && i < 4; ++i) {
@@ -352,17 +352,34 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     }
 
     // Step 5: RAW INPUT CORRECTION — Kill ghost-walk for keys the user
-    // released during the lock. After 200ms, WM_INPUT messages have arrived
-    // with hardware make/break events.
+    // released during the lock.
     //
-    // KEY INSIGHT: When a key is released during BlockInput(TRUE), Windows
-    // SWALLOWS the RI_KEY_BREAK event — it never reaches our WM_INPUT handler.
-    // So both Break and Make will be false for released keys. We must use
-    // INVERSE logic: only KEEP a key pressed if we see Make (typematic repeat
-    // proves the user is still holding). Everything else is a ghost.
+    // CONTAMINATION FIX: During Shock&Restore, g_ghostFixInProgress was true,
+    // so the WM_INPUT handler ignored our synthetic SendInput events. Now we
+    // reset the arrays and open the collection window (g_ghostFixInProgress=
+    // false) so only REAL hardware typematic events are recorded.
     //
-    // Make detected  → user still holding → leave pressed
-    // No Make        → user released during lock → KeyUp (kill ghost)
+    // KEY INSIGHT: Two release scenarios must be handled:
+    //
+    // 1. Released DURING BlockInput(TRUE): Windows SWALLOWS the RI_KEY_BREAK
+    //    event — it never reaches WM_INPUT. Both Break and Make are false.
+    //    Inverse logic: no Make → user released → kill ghost.
+    //
+    // 2. Released AFTER BlockInput(FALSE) but during the 200ms collection
+    //    window: Typematic Make events arrive first (user was holding), then
+    //    Break arrives when they release. Both Br=1 and Mk=1. Break is the
+    //    LATER event and represents the user's final action → kill ghost.
+    //
+    // Combined rule: Only keep pressed if Make AND no Break.
+    //   Mk=1 Br=0 → still holding → leave pressed
+    //   Mk=0 Br=0 → released during lock (swallowed) → kill ghost
+    //   Mk=1 Br=1 → released after lock → kill ghost (Break is final)
+    //   Mk=0 Br=1 → released, no typematic → kill ghost
+    for (int i = 0; i < 256; i++) {
+      g_rawKeyUpDetected[i] = false;
+      g_rawKeyMakeDetected[i] = false;
+    }
+    g_ghostFixInProgress = false; // Open collection window
     Sleep(200);
     for (size_t i = 0; i < preState.size() && i < 4; ++i) {
       if (preState[i]) {
@@ -370,8 +387,11 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
         bool breakDetected = g_rawKeyUpDetected[vk].load();
         bool makeDetected = g_rawKeyMakeDetected[vk].load();
 
-        if (!makeDetected) {
-          // No typematic Make seen → user released during lock → kill ghost
+        if (breakDetected || !makeDetected) {
+          // Break detected OR no Make → user released → kill ghost
+          // Covers: Br=1 Mk=0 (released during lock, Break swallowed)
+          //         Br=0 Mk=0 (released during lock, both swallowed)
+          //         Br=1 Mk=1 (released after lock, Break is final action)
           UINT scanCode = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
           if (scanCode == 0)
             continue;
@@ -385,13 +405,11 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
 
           g_postState[i] = false;
           anyCorrected = true;
-          LOG_WARN("RawCorrected: key %d no Make seen (Br=%d Mk=0), ghost "
-                   "killed",
-                   vk, breakDetected ? 1 : 0);
+          LOG_WARN("RawCorrected: key %d ghost killed (Br=%d Mk=%d)", vk,
+                   breakDetected ? 1 : 0, makeDetected ? 1 : 0);
           log += "(Corrected:" + std::to_string(vk) + ") ";
         } else {
-          LOG_INFO("RawCorrected: key %d Make seen (Br=%d Mk=1), still held",
-                   vk, breakDetected ? 1 : 0);
+          // Mk=1 Br=0 → user still holding → no correction needed
         }
       }
     }

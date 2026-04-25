@@ -182,6 +182,16 @@ void BetterAngleBackend::setScreenIndex(int v) {
     p.Save(GetProfilesPath() + p.name + L".json");
   }
   SaveSettings();
+
+  // Move the HUD window to the new monitor (v5.5.76)
+  if (g_hHUD) {
+    RECT mRect = GetMonitorRectByIndex(v);
+    SetWindowPos(g_hHUD, HWND_TOPMOST, mRect.left, mRect.top,
+                 mRect.right - mRect.left, mRect.bottom - mRect.top,
+                 SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    g_forceRedraw = true;
+  }
+
   emit profileChanged();
 }
 
