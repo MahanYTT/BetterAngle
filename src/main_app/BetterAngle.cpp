@@ -24,8 +24,10 @@
 #include <QCoreApplication>
 #include <QGuiApplication>
 
+#include <psapi.h>
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "gdiplus.lib")
+#pragma comment(lib, "psapi.lib")
 
 using namespace Gdiplus;
 
