@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.66
+- Automated build release.
+
 ### BetterAngle Pro v5.5.65
 - **Burst Restore Loop**: Implemented 3-pulse typematic simulation to force game engine acknowledgement.
 - **Enhanced Thaw Wait**: Increased post-Shock delay to 100ms to guarantee hardware-to-OS synchronization.
