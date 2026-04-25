@@ -238,8 +238,6 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       graphics.DrawLine(&magCross, zx, zy + (mh * 3 / 2), zx + (mw * 3),
                         zy + (mh * 3 / 2));
 
-      // Precision dot removed
-
       DeleteObject(hbmZoom);
       DeleteDC(hdcZoom);
       ReleaseDC(NULL, hdcScr);

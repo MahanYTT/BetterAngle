@@ -555,35 +555,29 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       g_selectionRect = {cur.x, cur.y, cur.x, cur.y};
     } else if (g_currentSelection == SELECTING_COLOR) {
       LOG_INFO("Stage 2 LBUTTONDOWN executed");
-      // STAGE 2: PRECISION COLOR PICK from LIVE screen
-      // (Previous bug: sampled from stale g_screenSnapshot captured at
-      // STAGE 1 start, causing mismatch with the live magnifier view)
+      // STAGE 2: PRECISION COLOR PICK (Snap-Shot Bypass)
       LOG_INFO("Stage 2 LBUTTONDOWN: Starting to finalize selection");
-      {
-        LOG_TRACE("Sampling color from LIVE screen (Stealth Mode)...");
-        // Hide overlay so we don't pick the magnifier's own red crosshair
-        ShowWindow(hWnd, SW_HIDE);
-        UpdateWindow(hWnd);
-        Sleep(20);
-
+      if (g_screenSnapshot) {
+        LOG_TRACE("Sampling color from g_screenSnapshot...");
         HDC hdcScreen = GetDC(NULL);
+        HDC hdcMem = CreateCompatibleDC(hdcScreen);
+        HGDIOBJ hOld = SelectObject(hdcMem, g_screenSnapshot);
+
+        int sx = GetSystemMetrics(SM_XVIRTUALSCREEN);
+        int sy = GetSystemMetrics(SM_YVIRTUALSCREEN);
+
         POINT cur;
         GetCursorPos(&cur);
-        COLORREF pixel = GetPixel(hdcScreen, cur.x, cur.y);
-
-        if (pixel == CLR_INVALID) {
-          LOG_WARN("GetPixel returned CLR_INVALID at (%ld,%ld). Using white as fallback.",
-                   cur.x, cur.y);
-          pixel = RGB(255, 255, 255);
-        } else {
-          LOG_TRACE("Color sampled successfully: R=%d G=%d B=%d",
-                    GetRValue(pixel), GetGValue(pixel), GetBValue(pixel));
-        }
+        // Adjust color sample coord by the same virtual screen offset used in
+        // CaptureDesktop
+        COLORREF pixel = GetPixel(hdcMem, cur.x - sx, cur.y - sy);
 
         g_pickedColor = pixel;
         g_targetColor = pixel;
+        SelectObject(hdcMem, hOld);
+        DeleteDC(hdcMem);
         ReleaseDC(NULL, hdcScreen);
-        ShowWindow(hWnd, SW_SHOW);
+        LOG_TRACE("Color sampled successfully.");
       }
 
       // Finalize and Exit Selection
@@ -602,10 +596,9 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
       if (!g_allProfiles.empty()) {
         Profile &p = g_allProfiles[g_selectedProfileIdx];
-        RECT mRect = GetMonitorRectByIndex(g_screenIndex);
         p.target_color = g_pickedColor;
-        p.roi_x = g_selectionRect.left - mRect.left;
-        p.roi_y = g_selectionRect.top - mRect.top;
+        p.roi_x = g_selectionRect.left;
+        p.roi_y = g_selectionRect.top;
         p.roi_w = g_selectionRect.right - g_selectionRect.left;
         p.roi_h = g_selectionRect.bottom - g_selectionRect.top;
 
@@ -641,10 +634,6 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       // Allow transition to color selection even when Fortnite not focused
       // (safe switch for selection process)
       g_currentSelection = SELECTING_COLOR;
-      // Re-capture snapshot so STAGE 2 background is fresh (not stale from
-      // STAGE 1 start). The magnifier reads live screen, so the background
-      // should match what the user sees.
-      CaptureDesktop();
       InvalidateRect(hWnd, NULL, FALSE);
     }
     return 0;
