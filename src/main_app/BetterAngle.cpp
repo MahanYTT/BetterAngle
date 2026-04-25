@@ -62,12 +62,35 @@ void FocusMonitorThread() {
 
     // Detect Alt-Tab back into Fortnite with ultra-low latency (1ms polling)
     if (!lastFortniteFocused && currentFortniteFocused) {
-      // ALT-TAB COOLDOWN: Windows handles key state restoration automatically
-      // No BlockInput needed for focus changes - just suspend mouse for 200ms
+      // ALT-TAB COOLDOWN: BlockInput locks the mouse at the OS level so
+      // physical mouse movement during the focus switch can't affect
+      // Fortnite's FOV. Uses same Shock & Restore pattern as glide/dive.
       g_mouseSuspendedUntil = GetTickCount64() + 200;
       g_lockTriggerReason = 3; // Alt-Tab Return
       g_lockCount++;
-      LOG_INFO("Alt-tab cooldown active (200ms) - skipping BlockInput");
+
+      std::thread([]() {
+        std::lock_guard<std::mutex> lock(g_lockMutex);
+        g_lockInProgress = true;
+        g_lockThreadId = GetCurrentThreadId();
+
+        auto initialState = GetGamingKeyState(); // Pre-lock snapshot
+
+        {
+          std::lock_guard<std::mutex> bLock(g_blockInputMutex);
+          g_blockInputActive = true;
+          BlockInput(TRUE);
+          Sleep(200);
+          BlockInput(FALSE);
+          g_blockInputActive = false;
+        }
+
+        SyncGamingKeysNitro(initialState); // Shock & Restore
+
+        g_lockInProgress = false;
+      }).detach();
+
+      LOG_INFO("Alt-tab cooldown active (200ms BlockInput + Nitro sync)");
     }
     lastFortniteFocused = currentFortniteFocused;
     Sleep(0); // Max CPU performance for lightning fast focus detection
@@ -154,7 +177,7 @@ void DetectorThread() {
 
             g_lockDurationMs = (long long)(GetTickCount64() - start);
             SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
-            
+
             g_lastLockTime = GetTickCount64();
             g_lockInProgress = false;
           }).detach();
@@ -192,7 +215,7 @@ void DetectorThread() {
 
             g_lockDurationMs = (long long)(GetTickCount64() - start);
             SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
-            
+
             g_lastLockTime = GetTickCount64();
             g_lockInProgress = false;
           }).detach();
@@ -872,7 +895,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     detThread.join();
   if (focusThread.joinable())
     focusThread.join();
-  if (perfThread.joinable()) perfThread.join();
+  if (perfThread.joinable())
+    perfThread.join();
 
   // Final Save on Exit
   if (!g_allProfiles.empty()) {
@@ -891,30 +915,28 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 // Performance Monitoring Thread - Logs metrics to perf.log every 5 seconds
 void PerformanceMonitorThread() {
-    // Initialize the performance log file
-    std::wstring perfLogPath = GetAppRootPath() + L"logs\\perf.log";
-    PerformanceLogger::Instance().Initialize(perfLogPath);
-    LOG_INFO("Performance monitor thread started.");
+  // Initialize the performance log file
+  std::wstring perfLogPath = GetAppRootPath() + L"logs\\perf.log";
+  PerformanceLogger::Instance().Initialize(perfLogPath);
+  LOG_INFO("Performance monitor thread started.");
 
-    while (g_running) {
-        // Collect metrics
-        PROCESS_MEMORY_COUNTERS pmc;
-        double ramMb = 0.0;
-        if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
-            ramMb = (double)pmc.WorkingSetSize / (1024.0 * 1024.0);
-        }
-
-        // Metrics: CPU (Scanner), RAM, Scan Latency, HUD FPS
-        PerformanceLogger::Instance().LogMetrics(
-            (double)g_scannerCpuPct.load(), 
-            ramMb, 
-            (int)g_detectionDelayMs.load(),
-            0 // FPS tracking removed for stability
-        );
-
-        // Wait 5 seconds
-        for (int i = 0; i < 50 && g_running; i++) {
-            Sleep(100);
-        }
+  while (g_running) {
+    // Collect metrics
+    PROCESS_MEMORY_COUNTERS pmc;
+    double ramMb = 0.0;
+    if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+      ramMb = (double)pmc.WorkingSetSize / (1024.0 * 1024.0);
     }
+
+    // Metrics: CPU (Scanner), RAM, Scan Latency, HUD FPS
+    PerformanceLogger::Instance().LogMetrics(
+        (double)g_scannerCpuPct.load(), ramMb, (int)g_detectionDelayMs.load(),
+        0 // FPS tracking removed for stability
+    );
+
+    // Wait 5 seconds
+    for (int i = 0; i < 50 && g_running; i++) {
+      Sleep(100);
+    }
+  }
 }

@@ -1,5 +1,7 @@
 ### BetterAngle Pro v5.5.62
-- Automated build release.
+- **Shock & Restore Engine**: Replaces unreliable delta-sync with unconditional release and hardware-thaw restoration.
+- **Alt-Tab Lock Guard**: Extended BlockInput to focus switches to prevent FOV drift.
+- **Serialized Execution**: Prevents rapid transition overlaps from corrupting input state.
 
 ### BetterAngle Pro v5.5.61
 - Automated build release.
