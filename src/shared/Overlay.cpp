@@ -356,8 +356,8 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
 
     // HUD box
     int rw = 260, rh = 150;
-    int rx = (g_hudX >= 0) ? g_hudX : 40;
-    int ry = (g_hudY >= 0) ? g_hudY : 40;
+    int rx = (g_hudX == -1) ? 40 : g_hudX; // -1 is sentinel for "use default"
+    int ry = (g_hudY == -1) ? 40 : g_hudY; // -1 is sentinel for "use default"
 
     // Background gradient (More transparent for sleekness)
     LinearGradientBrush bgBrush(Point(rx, ry), Point(rx, ry + rh),
