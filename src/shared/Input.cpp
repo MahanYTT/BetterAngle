@@ -136,8 +136,8 @@ bool IsCursorCurrentlyVisible() {
 
 static bool g_pollingRunning = false;
 
-// The "Nitro 5" - Absolute Movement Cluster (v5.5.0)
-static const int g_gamingKeys[] = {'W', 'A', 'S', 'D'};
+// The "Essential 5" - Core Movement Cluster (v5.5.59)
+static const int g_gamingKeys[] = {'W', 'A', 'S', 'D', VK_SPACE};
 
 // Physical Truth Table (v5.1.16)
 // Using std::atomic<bool> g_physicalKeys[256] from State.h
@@ -213,238 +213,65 @@ std::vector<bool> GetGamingKeyState() {
 
 void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   g_wPostUnlock = GetAsyncKeyState('W');
-  g_activeFallback = 0;
+  
+  // NITRO FLUSH THEORY (v5.5.59):
+  // Unregistering and reregistering Raw Input forces Windows to flush and
+  // rebuild the async key state table from actual hardware state.
+  
+  // Step 1: Unregister Raw Input to force table rebuild
+  RAWINPUTDEVICE rid = {0};
+  rid.usUsagePage = 0x01;
+  rid.usUsage = 0x06; // Keyboard
+  rid.dwFlags = RIDEV_REMOVE;
+  rid.hwndTarget = NULL;
+  RegisterRawInputDevices(&rid, 1, sizeof(rid));
 
-  // NEW APPROACH: Wait 50ms for natural table thaw after BlockInput
-  // Windows often recovers key state automatically after focus returns
-  Sleep(50);
+  // Step 2: Small wait for table rebuild
+  Sleep(2);
 
-  // Read state after 50ms wait
-  std::vector<bool> stateAfterWait;
-  bool tableThawed = true;
-  for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
-    bool current = (GetAsyncKeyState(g_gamingKeys[i]) & 0x8000) != 0;
-    stateAfterWait.push_back(current);
-
-    // Check if this key's state matches what we expect
-    // If key was held before lock but is physically released now, it should
-    // show 0 If it still shows 1, the table might still be frozen
-    if (preState[i] && !current) {
-      // Good: table shows key as released (thawed)
-    } else if (preState[i] && current) {
-      // Key was held and still shows held - could be correct or frozen
-      // We'll check later with fallbacks
-    }
-  }
-
-  // If table appears thawed (no obvious frozen states), try simple injection
-  bool simpleInjectionNeeded = false;
-  std::vector<INPUT> simpleInputs;
-  for (size_t i = 0; i < preState.size(); ++i) {
-    if (preState[i] && !stateAfterWait[i]) {
-      // Key was held before lock but is now released - inject KeyUp
-      int vk = g_gamingKeys[i];
-      INPUT input = {0};
-      input.type = INPUT_KEYBOARD;
-      input.ki.wVk = (WORD)vk;
-      input.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-      input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
-      simpleInputs.push_back(input);
-      simpleInjectionNeeded = true;
-    }
-  }
-
-  if (simpleInjectionNeeded && !simpleInputs.empty()) {
-    SendInput((UINT)simpleInputs.size(), simpleInputs.data(), sizeof(INPUT));
-    g_activeFallback = 4; // 50ms wait approach
-    g_tableRefreshed = true;
-
-    // Update finalState to reflect injection
-    for (size_t i = 0; i < preState.size(); ++i) {
-      if (preState[i] && !stateAfterWait[i]) {
-        stateAfterWait[i] = false; // Key is now released after injection
-      }
-    }
-
-    // Skip further fallbacks if successful
-    g_wPostFlush = GetAsyncKeyState('W');
-    for (int i = 0; i < 4; ++i) {
-      g_preState[i] = preState[i];
-      g_postState[i] = stateAfterWait[i];
-    }
-    LOG_INFO("[GhostFix] FB=4 50ms-wait | Table thawed naturally");
-    return;
-  }
-
-  // If 50ms wait didn't work, proceed with original fallbacks
-  // FALLBACK 1: Scancode Flush (Shock) - Exclude VK_SPACE to prevent FOV
-  // transition loops
+  // Step 3: Read fresh post-snapshot (Table should be rebuilt now)
+  std::vector<bool> postState;
   for (int vk : g_gamingKeys) {
-    if (vk == VK_SPACE)
-      continue; // Skip spacebar to avoid triggering FOV transitions
-    INPUT flush[2] = {0};
-    flush[0].type = INPUT_KEYBOARD;
-    flush[0].ki.wVk = (WORD)vk;
-    flush[0].ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-    flush[0].ki.dwFlags = KEYEVENTF_SCANCODE;
-    flush[1] = flush[0];
-    flush[1].ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
-    SendInput(2, flush, sizeof(INPUT));
+    postState.push_back((GetAsyncKeyState(vk) & 0x8000) != 0);
   }
-  Sleep(10);
-
-  // Read State after FB1
-  std::vector<bool> state1;
-  bool refreshed1 = false;
-  for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
-    bool current = (GetAsyncKeyState(g_gamingKeys[i]) & 0x8000) != 0;
-    state1.push_back(current);
-    if (preState[i] != current)
-      refreshed1 = true;
-  }
-  if (refreshed1)
-    g_activeFallback = 1;
-
-  // FALLBACK 2: Unconditional KeyUp + Repress (The "Hammer")
-  // Only repress keys that are confirmed still HELD (state1[i] == true)
-  bool refreshed2 = false;
-  if (g_lockTriggerReason != 3) {
-    for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
-      int vk = g_gamingKeys[i];
-      if (preState[i] && state1[i]) {
-        INPUT seq[2] = {0};
-        seq[0].type = INPUT_KEYBOARD;
-        seq[0].ki.wVk = (WORD)vk;
-        seq[0].ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-        seq[0].ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP; // Force Up
-        seq[1] = seq[0];
-        seq[1].ki.dwFlags = KEYEVENTF_SCANCODE; // Immediate Down
-        SendInput(2, seq, sizeof(INPUT));
-        Sleep(1);
-      }
-    }
-    Sleep(5);
-  }
-
-  // Read Final State after FB2
-  std::vector<bool> finalState;
-  for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
-    bool current = (GetAsyncKeyState(g_gamingKeys[i]) & 0x8000) != 0;
-    finalState.push_back(current);
-    if (!refreshed1 && preState[i] != current)
-      refreshed2 = true;
-  }
-  if (refreshed2)
-    g_activeFallback = 2;
-
-  g_tableRefreshed = refreshed1 || refreshed2;
+  
   g_wPostFlush = GetAsyncKeyState('W');
 
-  for (int i = 0; i < 4; ++i) {
-    g_preState[i] = preState[i];
-    g_postState[i] = finalState[i];
-  }
-
-  // FINAL DELTA INJECT
+  // Step 4: Delta compare and inject KeyUp only for keys physically released
   std::vector<INPUT> outInputs;
-  std::string log = "[GhostFix] FB=" + std::to_string(g_activeFallback.load()) +
-                    " " + (g_tableRefreshed ? "REFRESHED" : "FROZEN") + " | ";
+  std::string log = "Nitro Flush [W: " + std::to_string(g_wPostUnlock.load()) + "->" + std::to_string(g_wPostFlush.load()) + "]: ";
+  bool restored = false;
 
   for (size_t i = 0; i < preState.size(); ++i) {
-    int vk = g_gamingKeys[i];
-    // HARDWARE TRUTH: Key is released if finalState says so OR if we captured a
-    // Raw KeyUp during the lock
-    bool isReleased = !finalState[i] || g_rawKeyUpDetected[vk];
+    // If key was held BEFORE lock, but is NOT held now in the fresh table
+    if (preState[i] && !postState[i]) {
+      int vk = g_gamingKeys[i];
+      restored = true;
 
-    if (preState[i] && isReleased) {
       INPUT input = {0};
       input.type = INPUT_KEYBOARD;
       input.ki.wVk = (WORD)vk;
       input.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
       input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
       outInputs.push_back(input);
+
       log += std::to_string(vk) + "↑ ";
     }
   }
 
-  // Enhanced diagnostic logging for ghost key failures
-  // Only log failure if we're not using keybd_event fallback (FB=3)
-  if (!g_tableRefreshed && !outInputs.empty() && g_activeFallback.load() != 3) {
-    g_activeFallback = 99;
-    std::ofstream failLog("ghostkey_fail.log", std::ios::app);
-    failLog << GetTickCount64() << " - FAIL | FB=" << g_activeFallback.load()
-            << " Table=" << (g_tableRefreshed ? "REFRESHED" : "FROZEN")
-            << " Keys=[";
-    for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
-      int vk = g_gamingKeys[i];
-      failLog << (i > 0 ? "," : "") << (char)(vk == VK_SPACE ? ' ' : vk) << ":"
-              << (preState[i] ? "1" : "0") << "->"
-              << (finalState[i] ? "1" : "0")
-              << (g_rawKeyUpDetected[vk] ? "(R)" : "");
-    }
-    failLog << "] ";
-    failLog << "Wpre=" << (g_wPreLock ? "1" : "0")
-            << " Wpost=" << (g_wPostUnlock ? "1" : "0")
-            << " Wflush=" << (g_wPostFlush ? "1" : "0");
-    failLog << std::endl;
-  }
-
-  // Log when keybd_event fallback is used
-  if (g_activeFallback.load() == 3) {
-    std::ofstream failLog("ghostkey_fail.log", std::ios::app);
-    failLog << GetTickCount64() << " - KEYBD_EVENT_FALLBACK | ";
-    for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
-      if (preState[i] && !finalState[i]) {
-        int vk = g_gamingKeys[i];
-        failLog << (char)(vk == VK_SPACE ? ' ' : vk) << " ";
-      }
-    }
-    failLog << std::endl;
-  }
-
-  if (!outInputs.empty()) {
-    // Try primary injection with SendInput
+  if (restored) {
     SendInput((UINT)outInputs.size(), outInputs.data(), sizeof(INPUT));
-
-    // Check if injection succeeded by verifying key states after a short delay
-    Sleep(5);
-    bool anyStillHeld = false;
-    for (size_t i = 0; i < preState.size(); ++i) {
-      if (preState[i] && !finalState[i]) {
-        // This key should have been released
-        bool current = (GetAsyncKeyState(g_gamingKeys[i]) & 0x8000) != 0;
-        if (current) {
-          anyStillHeld = true;
-          break;
-        }
-      }
-    }
-
-    if (anyStillHeld) {
-      // SendInput failed, try keybd_event fallback
-      g_activeFallback = 3; // Mark as using keybd_event fallback
-      for (size_t i = 0; i < preState.size(); ++i) {
-        if (preState[i] && !finalState[i]) {
-          int vk = g_gamingKeys[i];
-          // Use keybd_event as alternative to SendInput
-          keybd_event((BYTE)vk, 0, KEYEVENTF_KEYUP, 0);
-          Sleep(1);
-        }
-      }
-      g_nitroSyncLog = log + "(Injected via keybd_event)";
-    } else {
-      g_nitroSyncLog = log + "(Injected via SendInput)";
-    }
-
+    g_nitroSyncLog = log + "(Injected)";
     LOG_INFO(g_nitroSyncLog.c_str());
   } else {
     g_nitroSyncLog = log + "(Clean)";
   }
 
-  g_hasSynced = true;
-
-  extern HWND g_hMsgWnd;
+  // Step 5: Reregister Raw Input immediately after
+  extern HWND g_hMsgWnd; 
   if (g_hMsgWnd) {
     RegisterRawMouse(g_hMsgWnd);
   }
+  
+  g_hasSynced = true;
 }
