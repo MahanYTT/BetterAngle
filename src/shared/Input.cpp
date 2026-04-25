@@ -212,204 +212,242 @@ std::vector<bool> GetGamingKeyState() {
 }
 
 void SyncGamingKeysNitro(const std::vector<bool> &preState) {
-  // Capture diagnostic post-unlock state (before any wait)
-  g_wPostUnlock = GetAsyncKeyState('W');
-
-  // Step 1: Small wait (50ms) to see if table settles naturally
-  // v5.5.28 approach: wait and check for "natural thaw"
-  Sleep(50);
-
-  std::vector<bool> stateAfterWait;
-  bool naturallyThawed = false;
-  for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
-    bool current = (GetAsyncKeyState(g_gamingKeys[i]) & 0x8000) != 0;
-    stateAfterWait.push_back(current);
-    if (preState[i] != current)
-      naturallyThawed = true;
-  }
-
-  std::vector<INPUT> simpleInputs;
-  bool simpleInjectionNeeded = false;
-  for (size_t i = 0; i < preState.size(); ++i) {
-    if (preState[i] && !stateAfterWait[i]) {
-      // Key was held before lock but is now released - inject KeyUp
-      int vk = g_gamingKeys[i];
-      INPUT input = {0};
-      input.type = INPUT_KEYBOARD;
-      input.ki.wVk = (WORD)vk;
-      input.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-      input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
-      simpleInputs.push_back(input);
-      simpleInjectionNeeded = true;
-    }
-  }
-
-  if (simpleInjectionNeeded && !simpleInputs.empty()) {
-    SendInput((UINT)simpleInputs.size(), simpleInputs.data(), sizeof(INPUT));
-    g_activeFallback = 4; // 50ms wait approach
-    g_tableRefreshed = true;
-
-    // Update finalState to reflect injection
-    for (size_t i = 0; i < preState.size(); ++i) {
-      if (preState[i] && !stateAfterWait[i]) {
-        stateAfterWait[i] = false; // Key is now released after injection
-      }
-    }
-
-    // Skip further fallbacks if successful
-    g_wPostFlush = GetAsyncKeyState('W');
-    for (int i = 0; i < 4; ++i) {
-      g_preState[i] = preState[i];
-      g_postState[i] = stateAfterWait[i];
-    }
-    LOG_INFO("[GhostFix] FB=4 50ms-wait | Table thawed naturally");
-    g_hasSynced = true;
+  // GUARD: Prevent back-to-back rapid transitions from interrupting a
+  // fix sequence that is mid-execution.
+  if (g_ghostFixInProgress.exchange(true)) {
+    LOG_WARN("GhostFix: Already in progress — skipping duplicate.");
     return;
   }
 
-  // If 50ms wait didn't work, proceed with original fallbacks
-  // FALLBACK 1: Scancode Flush (Shock) - Exclude VK_SPACE to prevent FOV
-  // transition loops
-  for (int vk : g_gamingKeys) {
-    if (vk == VK_SPACE)
-      continue; // Skip spacebar to avoid triggering FOV transitions
-    INPUT flush[2] = {0};
-    flush[0].type = INPUT_KEYBOARD;
-    flush[0].ki.wVk = (WORD)vk;
-    flush[0].ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-    flush[0].ki.dwFlags = KEYEVENTF_SCANCODE;
-    flush[1] = flush[0];
-    flush[1].ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
-    SendInput(2, flush, sizeof(INPUT));
-  }
-  Sleep(10);
+  ULONGLONG fixStart = GetTickCount64();
+  LOG_INFO("GhostFix: Starting Shock & Restore sequence...");
+  g_wPostUnlock = GetAsyncKeyState('W');
 
-  // Read State after FB1
-  std::vector<bool> state1;
-  bool refreshed1 = false;
-  for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
-    bool current = (GetAsyncKeyState(g_gamingKeys[i]) & 0x8000) != 0;
-    state1.push_back(current);
-    if (preState[i] != current)
-      refreshed1 = true;
-  }
-  if (refreshed1)
-    g_activeFallback = 1;
+  // SHOCK & RESTORE + RAW INPUT CORRECTION (v5.5.69):
+  //
+  // PROBLEM: After BlockInput(FALSE), GetAsyncKeyState is UNRELIABLE for
+  // determining if a key is still physically held. When we inject KeyUp
+  // via SendInput ("Shock"), the OS keyboard driver stops the typematic
+  // repeat cycle for that key. No amount of waiting will cause
+  // GetAsyncKeyState to return "held" again, because the OS needs a NEW
+  // initial physical KeyDown to restart the cycle — but the key is already
+  // physically held so no new initial press event occurs.
+  //
+  // SOLUTION: Three-phase approach using Raw Input (HID driver) as the
+  // source of physical truth instead of GetAsyncKeyState:
+  //
+  // Phase 1: SHOCK — Unconditionally KeyUp all preState=true keys
+  // Phase 2: UNCONDITIONAL RESTORE — KeyDown ALL preState=true keys
+  //          (no GetAsyncKeyState check — it's unreliable after Shock)
+  // Phase 3: RAW INPUT CORRECTION — Wait 200ms for WM_INPUT messages,
+  //          then check g_rawKeyUpDetected/g_rawKeyMakeDetected:
+  //          - Break detected, no Make → user released → KeyUp (kill ghost)
+  //          - Make detected → user still holding → leave pressed
+  //          - Neither → ambiguous, leave pressed (safe fallback)
+  //
+  // The HID driver generates RI_KEY_BREAK/RI_KEY_MAKE events by comparing
+  // consecutive USB reports, INDEPENDENT of the OS logical state table.
+  // Our SendInput events don't affect the HID report stream.
 
-  // FALLBACK 2: Unconditional KeyUp + Repress (The "Hammer")
-  // Only repress keys that are confirmed still HELD (state1[i] == true)
-  // Skip VK_SPACE to avoid triggering FOV transitions (same as FB1)
-  bool refreshed2 = false;
-  if (g_lockTriggerReason != 3) {
-    for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
-      int vk = g_gamingKeys[i];
-      if (vk == VK_SPACE)
-        continue; // Skip spacebar to avoid triggering FOV transitions
-      if (preState[i] && state1[i]) {
-        INPUT seq[2] = {0};
-        seq[0].type = INPUT_KEYBOARD;
-        seq[0].ki.wVk = (WORD)vk;
-        seq[0].ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-        seq[0].ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP; // Force Up
-        seq[1] = seq[0];
-        seq[1].ki.dwFlags = KEYEVENTF_SCANCODE; // Immediate Down
-        SendInput(2, seq, sizeof(INPUT));
-        Sleep(1);
-      }
-    }
-    Sleep(5);
-  }
-
-  // Read Final State after FB2
-  std::vector<bool> finalState;
-  for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
-    bool current = (GetAsyncKeyState(g_gamingKeys[i]) & 0x8000) != 0;
-    finalState.push_back(current);
-    if (!refreshed1 && preState[i] != current)
-      refreshed2 = true;
-  }
-  if (refreshed2)
-    g_activeFallback = 2;
-
-  g_tableRefreshed = refreshed1 || refreshed2;
-  g_wPostFlush = GetAsyncKeyState('W');
-
-  for (int i = 0; i < 4; ++i) {
+  // Store preState for forensics overlay
+  for (size_t i = 0; i < preState.size() && i < 4; ++i) {
     g_preState[i] = preState[i];
-    g_postState[i] = finalState[i];
   }
 
-  // FINAL DELTA INJECT
-  std::vector<INPUT> outInputs;
-  std::string log = "[GhostFix] FB=" + std::to_string(g_activeFallback.load()) +
-                    " " + (g_tableRefreshed ? "REFRESHED" : "FROZEN") + " | ";
+  std::vector<INPUT> releaseInputs;
+  std::string log =
+      "Shock&Restore [W:" + std::to_string(g_wPostUnlock.load()) + "]: ";
 
+  extern std::atomic<bool> g_fortniteFocusedCache;
+
+  // ── PHASE 1: UNCONDITIONAL SHOCK ──────────────────────────────────
+  // Release every key that was held before lock. ALWAYS run — ghost keys
+  // must be cleared even when tabbed out.
   for (size_t i = 0; i < preState.size(); ++i) {
-    int vk = g_gamingKeys[i];
-    // HARDWARE TRUTH: Key is released if finalState says so OR if we captured a
-    // Raw KeyUp during the lock
-    bool isReleased = !finalState[i] || g_rawKeyUpDetected[vk];
+    if (preState[i]) {
+      int vk = g_gamingKeys[i];
 
-    if (preState[i] && isReleased) {
+      // WHITELIST CHECK: STRICTLY W, A, S, D, SPACE ONLY
+      bool whitelisted = false;
+      for (int wvk : g_gamingKeys)
+        if (vk == wvk)
+          whitelisted = true;
+      if (!whitelisted)
+        continue;
+
+      UINT scanCode = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+      if (scanCode == 0)
+        continue;
+
       INPUT input = {0};
       input.type = INPUT_KEYBOARD;
       input.ki.wVk = (WORD)vk;
-      input.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+      input.ki.wScan = (WORD)scanCode;
       input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
-      outInputs.push_back(input);
-      log += std::to_string(vk) + "↑ ";
+      releaseInputs.push_back(input);
+      log += std::to_string(vk) + "\xe2\x86\x91 ";
     }
   }
 
-  if (!outInputs.empty()) {
-    // Try primary injection with SendInput
-    SendInput((UINT)outInputs.size(), outInputs.data(), sizeof(INPUT));
-
-    // Check if injection succeeded by verifying key states after a short delay
-    Sleep(5);
-    bool anyStillHeld = false;
-    for (size_t i = 0; i < preState.size(); ++i) {
-      if (preState[i] && !finalState[i]) {
-        // This key should have been released
-        bool current = (GetAsyncKeyState(g_gamingKeys[i]) & 0x8000) != 0;
-        if (current) {
-          anyStillHeld = true;
-          break;
-        }
-      }
+  if (!releaseInputs.empty()) {
+    UINT sent = SendInput((UINT)releaseInputs.size(), releaseInputs.data(),
+                          sizeof(INPUT));
+    if (sent != releaseInputs.size()) {
+      LOG_ERROR("GhostFix: Shock SendInput FAILED — sent %u/%u keys!", sent,
+                (UINT)releaseInputs.size());
+      log += "(SHOCK_FAIL:" + std::to_string(sent) + "/" +
+             std::to_string(releaseInputs.size()) + ") ";
     }
-
-    if (anyStillHeld) {
-      // SendInput failed, try keybd_event fallback
-      g_activeFallback = 3; // Mark as using keybd_event fallback
-      for (size_t i = 0; i < preState.size(); ++i) {
-        if (preState[i] && !finalState[i]) {
-          int vk = g_gamingKeys[i];
-          // Use keybd_event as alternative to SendInput
-          keybd_event((BYTE)vk, 0, KEYEVENTF_KEYUP, 0);
-          Sleep(1);
-        }
-      }
-      g_nitroSyncLog = log + "(Injected via keybd_event)";
-    } else {
-      g_nitroSyncLog = log + "(Injected via SendInput)";
-      // If we had a ghost key failure condition but SendInput succeeded,
-      // mark as failure (99) for diagnostics
-      if (!g_tableRefreshed && !outInputs.empty() &&
-          g_activeFallback.load() != 3) {
-        g_activeFallback = 99;
-      }
-    }
-
-    LOG_INFO(g_nitroSyncLog.c_str());
   } else {
-    g_nitroSyncLog = log + "(Clean)";
+    log += "(No keys to Shock) ";
   }
 
+  // ── PHASE 2: THAW + UNCONDITIONAL RESTORE ─────────────────────────
+  // Wait for async key state table to settle after Shock.
+  Sleep(100);
+
+  // UNCONDITIONAL RESTORE: Always inject KeyDown for ALL preState=true keys.
+  // GetAsyncKeyState is UNRELIABLE after Shock because the injected KeyUp
+  // breaks the OS typematic repeat cycle — the OS won't generate new KeyDown
+  // events for a key it already saw KeyUp for, even if physically held.
+  // We rely on Raw Input Correction (Phase 3) to kill ghosts for released
+  // keys, rather than trying to detect held keys with GetAsyncKeyState.
+  if (g_fortniteFocusedCache.load()) {
+    bool anyRestored = false;
+    for (size_t i = 0; i < preState.size(); ++i) {
+      if (preState[i]) {
+        int vk = g_gamingKeys[i];
+        UINT scanCode = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+        if (scanCode == 0)
+          continue;
+
+        // TYPEMATIC BURST: 3 pulses with 10ms gaps to simulate hardware
+        // typematic stream. Ensures the game engine catches the press
+        // across multiple polling ticks.
+        for (int burst = 0; burst < 3; burst++) {
+          INPUT input = {0};
+          input.type = INPUT_KEYBOARD;
+          input.ki.wVk = (WORD)vk;
+          input.ki.wScan = (WORD)scanCode;
+          input.ki.dwFlags = KEYEVENTF_SCANCODE; // KeyDown
+          SendInput(1, &input, sizeof(INPUT));
+          if (burst < 2)
+            Sleep(10);
+        }
+        if (i < 4)
+          g_postState[i] = true; // Assume held until correction
+        anyRestored = true;
+        log += std::to_string(vk) + "\xe2\x86\x93(x3) ";
+      }
+    }
+    log += anyRestored ? "(Restored)" : "(Clean)";
+
+    // ── VERIFY: Confirm restored keys are seen as held ───────────────
+    Sleep(5);
+    bool verifyOk = true;
+    for (size_t i = 0; i < preState.size() && i < 4; ++i) {
+      if (preState[i]) {
+        int vk = g_gamingKeys[i];
+        bool seen = (GetAsyncKeyState(vk) & 0x8000) != 0;
+        if (!seen) {
+          LOG_WARN("GhostFix: VERIFY WARN — key %d restored but not seen "
+                   "(may be corrected by Raw Input phase)",
+                   vk);
+          log += "(VWARN:" + std::to_string(vk) + ") ";
+          // Not a hard failure — Raw Input Correction may fix this
+        }
+      }
+    }
+    g_ghostFixVerifyOk = verifyOk;
+    if (verifyOk) {
+      log += "(Verified)";
+    }
+
+    // ── PHASE 3: RAW INPUT CORRECTION ────────────────────────────────
+    // Wait for WM_INPUT messages to arrive. The HID driver generates
+    // RI_KEY_BREAK events for keys released during the lock, and
+    // RI_KEY_MAKE events for keys still held (typematic repeat).
+    // These are INDEPENDENT of the OS logical state table.
+    LOG_INFO("GhostFix: Waiting 200ms for Raw Input correction data...");
+    Sleep(200);
+
+    int correctionsMade = 0;
+    for (size_t i = 0; i < preState.size() && i < 4; ++i) {
+      if (preState[i]) {
+        int vk = g_gamingKeys[i];
+        bool breakDetected = g_rawKeyUpDetected[vk].load();
+        bool makeDetected = g_rawKeyMakeDetected[vk].load();
+
+        if (breakDetected && !makeDetected) {
+          // Break seen, no subsequent Make → user released during lock.
+          // Kill the ghost by sending KeyUp.
+          UINT scanCode = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+          if (scanCode != 0) {
+            INPUT input = {0};
+            input.type = INPUT_KEYBOARD;
+            input.ki.wVk = (WORD)vk;
+            input.ki.wScan = (WORD)scanCode;
+            input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+            UINT sent = SendInput(1, &input, sizeof(INPUT));
+            if (sent == 1) {
+              g_postState[i] = false;
+              correctionsMade++;
+              LOG_INFO("GhostFix: Raw Input correction — key %d released "
+                       "during lock (Break=1 Make=0)",
+                       vk);
+              log += "(Corrected:" + std::to_string(vk) + ") ";
+            } else {
+              LOG_ERROR("GhostFix: Correction SendInput FAILED for key %d!",
+                        vk);
+              log += "(CORR_FAIL:" + std::to_string(vk) + ") ";
+            }
+          }
+        } else if (makeDetected) {
+          // Make detected → user is still physically holding the key.
+          // Our Restore was correct — leave it pressed.
+          LOG_INFO("GhostFix: Raw Input confirms key %d held (Break=%d "
+                   "Make=1)",
+                   vk, breakDetected ? 1 : 0);
+        } else {
+          // Neither break nor make detected. This can happen if:
+          // 1. Key was held throughout but no typematic repeat arrived yet
+          //    (typematic delay can be up to 250ms on some keyboards)
+          // 2. WM_INPUT messages haven't been delivered yet
+          // Safe fallback: leave pressed. If it's a ghost, the user can
+          // tap the key to clear it.
+          LOG_INFO("GhostFix: No Raw Input data for key %d (Break=0 Make=0) "
+                   "— leaving pressed as safe fallback",
+                   vk);
+        }
+      }
+    }
+
+    if (correctionsMade > 0) {
+      log += "(RawCorrected:" + std::to_string(correctionsMade) + ")";
+    } else {
+      log += "(RawOK)";
+    }
+
+    g_activeFallback = correctionsMade > 0 ? 5 : 0;
+    g_tableRefreshed = true;
+  } else {
+    g_ghostFixVerifyOk = true; // No restore needed = no verify needed
+    g_activeFallback = 0;
+    g_tableRefreshed = true;
+    log += "(No Restore - Not Focused)";
+  }
+
+  ULONGLONG fixEnd = GetTickCount64();
+  g_ghostFixDurationMs = (long long)(fixEnd - fixStart);
+  g_wPostFlush = GetAsyncKeyState('W');
+  g_nitroSyncLog = log;
+  LOG_INFO("GhostFix: Complete in %llums — %s",
+           (unsigned long long)(fixEnd - fixStart), log.c_str());
   g_hasSynced = true;
+  g_ghostFixInProgress = false;
 
+  // Re-register Raw Input for normal app operation
   extern HWND g_hMsgWnd;
-  if (g_hMsgWnd) {
+  if (g_hMsgWnd)
     RegisterRawMouse(g_hMsgWnd);
-  }
 }

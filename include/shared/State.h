@@ -43,9 +43,12 @@ extern std::atomic<bool> g_hasSynced;
 
 // Locking State (v5.5.28)
 extern std::atomic<bool> g_rawKeyUpDetected[256];
+extern std::atomic<bool>
+    g_rawKeyMakeDetected[256]; // v5.5.69: Raw Input make events
 extern std::atomic<bool> g_blockInputActive;
 extern std::mutex g_blockInputMutex;
-extern std::atomic<int> g_lockTriggerReason; // 1:glide->dive, 2:dive->glide, 3:Alt-Tab
+extern std::atomic<int>
+    g_lockTriggerReason; // 1:glide->dive, 2:dive->glide, 3:Alt-Tab
 extern std::atomic<bool> g_lockInProgress;
 extern std::atomic<bool> g_ghostFixInProgress;
 extern std::atomic<long long> g_ghostFixDurationMs;

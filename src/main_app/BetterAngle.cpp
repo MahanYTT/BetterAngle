@@ -139,8 +139,10 @@ void DetectorThread() {
               g_lockCount++;
 
               // PRE-LOCK SNAPSHOT
-              for (int i = 0; i < 256; i++)
+              for (int i = 0; i < 256; i++) {
                 g_rawKeyUpDetected[i] = false;
+                g_rawKeyMakeDetected[i] = false; // v5.5.69
+              }
               g_wPreLock =
                   (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
               auto initialState = GetGamingKeyState(); // WASD Snapshot
@@ -166,8 +168,10 @@ void DetectorThread() {
               g_lockCount++;
 
               // PRE-LOCK SNAPSHOT
-              for (int i = 0; i < 256; i++)
+              for (int i = 0; i < 256; i++) {
                 g_rawKeyUpDetected[i] = false;
+                g_rawKeyMakeDetected[i] = false; // v5.5.69
+              }
               g_wPreLock =
                   (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
               auto initialState = GetGamingKeyState(); // WASD Snapshot
@@ -362,6 +366,12 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
           if (raw->data.keyboard.Flags & RI_KEY_BREAK) {
             // HARDWARE LEVEL RELEASE DETECTED
             g_rawKeyUpDetected[raw->data.keyboard.VKey] = true;
+          } else {
+            // HARDWARE LEVEL PRESS DETECTED (v5.5.69)
+            // Tracks typematic repeat and initial key presses from the HID
+            // driver. Independent of OS logical state table — works even
+            // after our synthetic KeyUp breaks the typematic cycle.
+            g_rawKeyMakeDetected[raw->data.keyboard.VKey] = true;
           }
         }
       }

@@ -38,6 +38,7 @@ std::atomic<bool> g_hasSynced{false};
 
 // Locking State (v5.5.28)
 std::atomic<bool> g_rawKeyUpDetected[256] = {false};
+std::atomic<bool> g_rawKeyMakeDetected[256] = {false}; // v5.5.69
 std::atomic<bool> g_blockInputActive{false};
 std::mutex g_blockInputMutex;
 std::atomic<ULONGLONG> g_lastLockTime(0);
