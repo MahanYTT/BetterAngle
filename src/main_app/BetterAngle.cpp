@@ -215,7 +215,7 @@ void DetectorThread() {
       g_isDiving = nowDiving;
       g_logic.SetDivingState(nowDiving);
     }
-    Sleep(8); // Cap scan rate to ~120 FPS to save CPU and prevent false positives
+    Sleep(1); // Ultra-fast scan rate for instant transition detection
   }
 }
 
