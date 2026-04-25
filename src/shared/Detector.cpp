@@ -54,7 +54,10 @@ int FovDetector::Scan(const RoiConfig& cfg) {
 
     int match = 0;
     int totalPixels = cfg.w * cfg.h;
-    int tolSq = cfg.tolerance * cfg.tolerance;
+    
+    // Pro-Grade Tolerance Buffer: Multiply by 1.5 to handle dynamic game lighting
+    int adjustedTol = (int)(cfg.tolerance * 1.5f);
+    int tolSq = adjustedTol * adjustedTol;
     
     // Explicit COLORREF extraction (0x00BBGGRR)
     int tr = (int)(cfg.target & 0xFF);

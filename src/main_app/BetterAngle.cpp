@@ -88,7 +88,7 @@ void FocusMonitorThread() {
         }
 
         // 2. Nitro Flush to sync keys held during Alt-Tab
-        Sleep(20); 
+        Sleep(20);
         SyncGamingKeysNitro(initialState);
       }).detach();
     }
@@ -112,11 +112,18 @@ void DetectorThread() {
       bool nowDiving = (g_matchCount.load() >= g_requiredMatchCount.load());
 
       bool currentFortniteFocused = g_fortniteFocusedCache.load();
+      
+      // NEW: Also consider app focused if the Dashboard window is foreground
+      HWND foreground = GetForegroundWindow();
+      DWORD procId = 0;
+      GetWindowThreadProcessId(foreground, &procId);
+      bool appFocused = (procId == GetCurrentProcessId());
+
       g_isCursorVisible = IsCursorCurrentlyVisible();
 
       // Scan ROI if game is focused OR if we are actively setting up/selecting
-      // (PICK_DIVE, etc)
-      if (currentFortniteFocused || g_currentSelection != NONE) {
+      // OR if the user is looking at the dashboard (appFocused)
+      if (currentFortniteFocused || g_currentSelection != NONE || appFocused) {
         RECT mRect = GetMonitorRectByIndex(g_screenIndex);
         RoiConfig cfg = {
             p.roi_x + mRect.left, p.roi_y + mRect.top, p.roi_w, p.roi_h,
@@ -548,29 +555,30 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       g_selectionRect = {cur.x, cur.y, cur.x, cur.y};
     } else if (g_currentSelection == SELECTING_COLOR) {
       LOG_INFO("Stage 2 LBUTTONDOWN executed");
-      // STAGE 2: PRECISION COLOR PICK (Snap-Shot Bypass)
+      // STAGE 2: PRECISION COLOR PICK from LIVE screen
+      // (Previous bug: sampled from stale g_screenSnapshot captured at
+      // STAGE 1 start, causing mismatch with the live magnifier view)
       LOG_INFO("Stage 2 LBUTTONDOWN: Starting to finalize selection");
-      if (g_screenSnapshot) {
-        LOG_TRACE("Sampling color from g_screenSnapshot...");
+      {
+        LOG_TRACE("Sampling color from LIVE screen...");
         HDC hdcScreen = GetDC(NULL);
-        HDC hdcMem = CreateCompatibleDC(hdcScreen);
-        HGDIOBJ hOld = SelectObject(hdcMem, g_screenSnapshot);
-
-        int sx = GetSystemMetrics(SM_XVIRTUALSCREEN);
-        int sy = GetSystemMetrics(SM_YVIRTUALSCREEN);
-
         POINT cur;
         GetCursorPos(&cur);
-        // Adjust color sample coord by the same virtual screen offset used in
-        // CaptureDesktop
-        COLORREF pixel = GetPixel(hdcMem, cur.x - sx, cur.y - sy);
+        COLORREF pixel = GetPixel(hdcScreen, cur.x, cur.y);
+
+        if (pixel == CLR_INVALID) {
+          LOG_WARN("GetPixel returned CLR_INVALID at (%ld,%ld). Using white as "
+                   "fallback.",
+                   cur.x, cur.y);
+          pixel = RGB(255, 255, 255);
+        } else {
+          LOG_TRACE("Color sampled successfully: R=%d G=%d B=%d",
+                    GetRValue(pixel), GetGValue(pixel), GetBValue(pixel));
+        }
 
         g_pickedColor = pixel;
         g_targetColor = pixel;
-        SelectObject(hdcMem, hOld);
-        DeleteDC(hdcMem);
         ReleaseDC(NULL, hdcScreen);
-        LOG_TRACE("Color sampled successfully.");
       }
 
       // Finalize and Exit Selection
@@ -628,6 +636,10 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       // Allow transition to color selection even when Fortnite not focused
       // (safe switch for selection process)
       g_currentSelection = SELECTING_COLOR;
+      // Re-capture snapshot so STAGE 2 background is fresh (not stale from
+      // STAGE 1 start). The magnifier reads live screen, so the background
+      // should match what the user sees.
+      CaptureDesktop();
       InvalidateRect(hWnd, NULL, FALSE);
     }
     return 0;
@@ -933,7 +945,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     detThread.join();
   if (focusThread.joinable())
     focusThread.join();
-  if (perfThread.joinable()) perfThread.join();
+  if (perfThread.joinable())
+    perfThread.join();
 
   // Final Save on Exit
   if (!g_allProfiles.empty()) {
@@ -954,25 +967,28 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 #pragma comment(lib, "psapi.lib")
 
 void PerformanceMonitorThread() {
-    PerformanceLogger::Instance().Initialize(GetAppRootPath() + L"logs\\perf.log");
-    
-    while (g_running) {
-        // Memory Usage
-        PROCESS_MEMORY_COUNTERS_EX pmc;
-        double ramMb = 0;
-        if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc))) {
-            ramMb = (double)pmc.WorkingSetSize / (1024.0 * 1024.0);
-        }
+  PerformanceLogger::Instance().Initialize(GetAppRootPath() +
+                                           L"logs\\perf.log");
 
-        // CPU Heuristic (Based on scanner load)
-        double cpuPct = (double)g_scannerCpuPct.load();
-
-        // HUD Performance
-        int scanMs = g_detectionDelayMs.load();
-        int currentAngle = (int)g_logic.GetAngle(); 
-
-        PerformanceLogger::Instance().LogMetrics(cpuPct, ramMb, scanMs, currentAngle);
-        
-        Sleep(5000); // Log every 5 seconds
+  while (g_running) {
+    // Memory Usage
+    PROCESS_MEMORY_COUNTERS_EX pmc;
+    double ramMb = 0;
+    if (GetProcessMemoryInfo(GetCurrentProcess(),
+                             (PROCESS_MEMORY_COUNTERS *)&pmc, sizeof(pmc))) {
+      ramMb = (double)pmc.WorkingSetSize / (1024.0 * 1024.0);
     }
+
+    // CPU Heuristic (Based on scanner load)
+    double cpuPct = (double)g_scannerCpuPct.load();
+
+    // HUD Performance
+    int scanMs = g_detectionDelayMs.load();
+    int currentAngle = (int)g_logic.GetAngle();
+
+    PerformanceLogger::Instance().LogMetrics(cpuPct, ramMb, scanMs,
+                                             currentAngle);
+
+    Sleep(5000); // Log every 5 seconds
+  }
 }

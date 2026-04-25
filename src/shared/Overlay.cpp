@@ -85,7 +85,8 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
     POINT ptWin = {wRect.left, wRect.top};
     SIZE size = {wRect.right - wRect.left, wRect.bottom - wRect.top};
     BLENDFUNCTION blend = {AC_SRC_OVER, 0, 0, AC_SRC_ALPHA}; // 0 alpha = hidden
-    UpdateLayeredWindow(hwnd, hdcScreen, &ptWin, &size, NULL, NULL, 0, &blend, ULW_ALPHA);
+    UpdateLayeredWindow(hwnd, hdcScreen, &ptWin, &size, NULL, NULL, 0, &blend,
+                        ULW_ALPHA);
     ReleaseDC(NULL, hdcScreen);
     return;
   }
@@ -451,8 +452,9 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
 
     // Target colour swatch (top-right corner)
     int swatchX = rx + rw - 28, swatchY = ry + 8;
-    Color swatch(255, GetBValue(g_targetColor), GetGValue(g_targetColor),
-                 GetRValue(g_targetColor));
+    // GDI+ Color(a,r,g,b) - was incorrectly passing (a,B,G,R) swapping red/blue
+    Color swatch(255, GetRValue(g_targetColor), GetGValue(g_targetColor),
+                 GetBValue(g_targetColor));
     SolidBrush swatchB(swatch);
     graphics.FillEllipse(&swatchB, swatchX, swatchY, 16, 16);
     Pen swatchP(Color(100, 220, 220, 220), 1.0f);
