@@ -66,6 +66,20 @@ Item {
 
                     Text { text: "MANUAL SENSITIVITY"; color: "#666"; font.pixelSize: 11; font.bold: true }
 
+                    Button {
+                        text: "RESET ANGLE TO 0"
+                        width: parent.width
+                        height: 44
+                        contentItem: Text { text: parent.text; color: "white"; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                        background: Rectangle { 
+                            color: parent.hovered ? "#00cca3" : "#00a382"
+                            radius: 4 
+                            border.color: "#00ffa3"
+                            border.width: 1
+                        }
+                        onClicked: backend.setZero()
+                    }
+
                     // Sens X
                     Column {
                         spacing: 4

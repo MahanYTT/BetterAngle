@@ -212,6 +212,8 @@ void BetterAngleBackend::setCrosshairOn(bool v) {
     p.Save(GetProfilesPath() + p.name + L".json");
   }
   SaveSettings();
+  if (v) Beep(750, 50);
+  else Beep(500, 50);
   emit crosshairChanged();
 }
 
@@ -1094,4 +1096,11 @@ void BetterAngleBackend::finishBooting() {
   if (g_hHUD) {
     ShowWindow(g_hHUD, SW_SHOW);
   }
+}
+
+void BetterAngleBackend::setZero() {
+  extern std::atomic<float> g_currentAngle;
+  g_currentAngle = 0.0f;
+  g_logic.SetZero();
+  Beep(1000, 80);
 }

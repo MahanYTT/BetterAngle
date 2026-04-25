@@ -499,10 +499,15 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       }
       SaveSettings();
       NotifyBackendCrosshairChanged();
+      // Acoustic Cue: High beep for ON, Low beep for OFF
+      if (g_showCrosshair) Beep(750, 50);
+      else Beep(500, 50);
       break;
     case 4:
       g_currentAngle = 0.0f;
       g_logic.SetZero();
+      // Acoustic Cue: Premium reset chime
+      Beep(1000, 80);
       break;
     }
     return 0;

@@ -172,6 +172,8 @@ public:
   Q_INVOKABLE void startKeybindAssignment();
   Q_INVOKABLE void endKeybindAssignment();
 
+  Q_INVOKABLE void setZero();
+
 signals:
   void profileChanged();
   void crosshairChanged();
