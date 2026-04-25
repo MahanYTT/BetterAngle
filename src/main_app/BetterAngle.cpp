@@ -66,7 +66,7 @@ void FocusMonitorThread() {
       LOG_INFO("[MASTER] Alt-tab return detected. Cooldown 400ms started (No BlockInput).");
     }
     lastFortniteFocused = currentFortniteFocused;
-    Sleep(0); // Max CPU performance for lightning fast focus detection
+    Sleep(16); // Balanced: Responsive alt-tab detection with low CPU overhead
   }
 }
 
@@ -131,37 +131,35 @@ void DetectorThread() {
           } else {
             g_lastLockTime = GetTickCount64();
             g_mouseSuspendedUntil = GetTickCount64() + 600;
-            LOG_INFO("[MASTER] Triggering transition lock: glide->dive (600ms)");
+            g_lockTriggerReason = 1; // Glide → Dive
 
-            std::thread([]() {
+            // 1. Snapshot state on main thread
+            auto initialState = GetGamingKeyState();
+
+            // 2. ZERO-LAG LOCK: Engage hardware instantly
+            {
+              std::lock_guard<std::mutex> lock(g_blockInputMutex);
+              g_blockInputActive = true;
+              BlockInput(TRUE);
+              LOG_INFO("[MASTER] Zero-Lag Lock: Glide->Dive (600ms)");
+            }
+
+            // 3. Helper thread handles the wait and cleanup
+            std::thread([initialState]() {
               g_lockCount++;
               g_lockThreadId = GetCurrentThreadId();
-              ULONGLONG start = GetTickCount64();
-
-              for (int i = 0; i < 256; i++)
-                g_rawKeyUpDetected[i] = false;
-              g_wPreLock =
-                  (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
-              auto initialState = GetGamingKeyState(); // Pre-lock snapshot
-
+              Sleep(600);
+              
               {
                 std::lock_guard<std::mutex> lock(g_blockInputMutex);
-                g_blockInputActive = true;
-                LOG_INFO("[MASTER] BlockInput(TRUE) engaged.");
-                BlockInput(TRUE);
-                Sleep(600);
                 BlockInput(FALSE);
-                LOG_INFO("[MASTER] BlockInput(FALSE) released.");
                 g_blockInputActive = false;
+                LOG_INFO("[MASTER] Hardware released.");
               }
 
-              g_lockDurationMs = (long long)(GetTickCount64() - start);
-              Sleep(20); // Strategic 'Thaw' delay (Optimized for speed/reliability)
-              SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
+              Sleep(20); // Strategic 'Thaw' delay
+              SyncGamingKeysNitro(initialState);
             }).detach();
-
-            LOG_INFO("Transition: glide->dive, Nitro Delta sync (600ms)");
-            g_lockTriggerReason = 1; // Glide → Dive
           }
         }
         // Edge: Diving -> Gliding (Nitro)
@@ -172,37 +170,35 @@ void DetectorThread() {
           } else {
             g_lastLockTime = GetTickCount64();
             g_mouseSuspendedUntil = GetTickCount64() + 1000;
-            LOG_INFO("[MASTER] Triggering transition lock: dive->glide (1000ms)");
+            g_lockTriggerReason = 2; // Dive → Glide
 
-            std::thread([]() {
+            // 1. Snapshot state on main thread
+            auto initialState = GetGamingKeyState();
+
+            // 2. ZERO-LAG LOCK: Engage hardware instantly
+            {
+              std::lock_guard<std::mutex> lock(g_blockInputMutex);
+              g_blockInputActive = true;
+              BlockInput(TRUE);
+              LOG_INFO("[MASTER] Zero-Lag Lock: Dive->Glide (1000ms)");
+            }
+
+            // 3. Helper thread handles the wait and cleanup
+            std::thread([initialState]() {
               g_lockCount++;
               g_lockThreadId = GetCurrentThreadId();
-              ULONGLONG start = GetTickCount64();
-
-              for (int i = 0; i < 256; i++)
-                g_rawKeyUpDetected[i] = false;
-              g_wPreLock =
-                  (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
-              auto initialState = GetGamingKeyState(); // Pre-lock snapshot
-
+              Sleep(1000);
+              
               {
                 std::lock_guard<std::mutex> lock(g_blockInputMutex);
-                g_blockInputActive = true;
-                LOG_INFO("[MASTER] BlockInput(TRUE) engaged.");
-                BlockInput(TRUE);
-                Sleep(1000);
                 BlockInput(FALSE);
-                LOG_INFO("[MASTER] BlockInput(FALSE) released.");
                 g_blockInputActive = false;
+                LOG_INFO("[MASTER] Hardware released.");
               }
 
-              g_lockDurationMs = (long long)(GetTickCount64() - start);
-              Sleep(20); // Strategic 'Thaw' delay (Optimized for speed/reliability)
-              SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
+              Sleep(20); // Strategic 'Thaw' delay
+              SyncGamingKeysNitro(initialState);
             }).detach();
-
-            LOG_INFO("Transition: dive->glide, Nitro Delta sync (1000ms)");
-            g_lockTriggerReason = 2; // Dive → Glide
           }
         }
       }
