@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.64
+- Automated build release.
+
 ### BetterAngle Pro v5.5.63
 - **Self-Correcting GhostFix**: Added a Verification step to confirm successful input restoration.
 - **Enhanced Reliability**: Added SendInput error handling and diagnostic retry logic.
