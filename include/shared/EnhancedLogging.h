@@ -74,3 +74,14 @@ private:
     std::string TimestampNow() const;
     std::string ToNarrow(const std::wstring& wstr);
 };
+class PerformanceLogger {
+public:
+    static PerformanceLogger& Instance();
+    void Initialize(const std::wstring& logPath);
+    void LogMetrics(double cpuPct, double ramMb, int scanMs, int fps);
+private:
+    PerformanceLogger() = default;
+    std::ofstream m_stream;
+    std::mutex m_mutex;
+    bool m_initialized = false;
+};

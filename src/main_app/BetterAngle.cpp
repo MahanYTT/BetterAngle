@@ -915,6 +915,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
   std::thread detThread(DetectorThread);
   std::thread focusThread(FocusMonitorThread);
+  std::thread perfThread(PerformanceMonitorThread);
 
   // Run Qt Event Loop
   int exitCode = app.exec();
@@ -925,6 +926,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     detThread.join();
   if (focusThread.joinable())
     focusThread.join();
+  if (perfThread.joinable()) perfThread.join();
 
   // Final Save on Exit
   if (!g_allProfiles.empty()) {
@@ -939,4 +941,31 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   GdiplusShutdown(g_gdiplusToken);
   ShutdownEnhancedLogging();
   return exitCode;
+}
+
+#include <psapi.h>
+#pragma comment(lib, "psapi.lib")
+
+void PerformanceMonitorThread() {
+    PerformanceLogger::Instance().Initialize(GetAppRootPath() + L"logs\\perf.log");
+    
+    while (g_running) {
+        // Memory Usage
+        PROCESS_MEMORY_COUNTERS_EX pmc;
+        double ramMb = 0;
+        if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc))) {
+            ramMb = (double)pmc.WorkingSetSize / (1024.0 * 1024.0);
+        }
+
+        // CPU Heuristic (Based on scanner load)
+        double cpuPct = (double)g_scannerCpuPct.load();
+
+        // HUD Performance
+        int scanMs = g_detectionDelayMs.load();
+        int fps = (int)g_logic.GetCurrentAngle(); // Placeholder or actual FPS if available
+
+        PerformanceLogger::Instance().LogMetrics(cpuPct, ramMb, scanMs, 0);
+        
+        Sleep(5000); // Log every 5 seconds
+    }
 }
