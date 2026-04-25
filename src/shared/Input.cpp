@@ -393,7 +393,7 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     SendInput((UINT)outInputs.size(), outInputs.data(), sizeof(INPUT));
 
     // Check if injection succeeded by verifying key states after a short delay
-    Sleep(5);
+    Sleep(1); // Optimized from 5ms for faster recovery
     bool anyStillHeld = false;
     for (size_t i = 0; i < preState.size(); ++i) {
       if (preState[i] && !finalState[i]) {

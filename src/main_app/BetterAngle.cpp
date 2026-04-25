@@ -156,6 +156,7 @@ void DetectorThread() {
               }
 
               g_lockDurationMs = (long long)(GetTickCount64() - start);
+              Sleep(20); // Strategic 'Thaw' delay (Optimized for speed/reliability)
               SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
             }).detach();
 
@@ -196,6 +197,7 @@ void DetectorThread() {
               }
 
               g_lockDurationMs = (long long)(GetTickCount64() - start);
+              Sleep(20); // Strategic 'Thaw' delay (Optimized for speed/reliability)
               SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
             }).detach();
 
