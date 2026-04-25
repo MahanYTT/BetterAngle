@@ -63,7 +63,8 @@ void FocusMonitorThread() {
       // No BlockInput needed for focus changes - just suspend mouse for 400ms
       g_mouseSuspendedUntil = GetTickCount64() + 400;
       g_lockCount++;
-      LOG_INFO("[MASTER] Alt-tab return detected. Cooldown 400ms started (No BlockInput).");
+      LOG_INFO("[MASTER] Alt-tab return detected. Cooldown 400ms started (No "
+               "BlockInput).");
     }
     lastFortniteFocused = currentFortniteFocused;
     Sleep(16); // Balanced: Responsive alt-tab detection with low CPU overhead
@@ -112,8 +113,9 @@ void DetectorThread() {
         }
       } else {
         if (g_matchCount > 0) {
-            LOG_DEBUG("[MASTER] ROI Match detected (%d/%d) but Fortnite not focused. Ignoring.", 
-                      g_matchCount.load(), g_requiredMatchCount.load());
+          LOG_DEBUG("[MASTER] ROI Match detected (%d/%d) but Fortnite not "
+                    "focused. Ignoring.",
+                    g_matchCount.load(), g_requiredMatchCount.load());
         }
         g_matchCount = 0;
         g_detectionDelayMs = 0;
@@ -127,7 +129,9 @@ void DetectorThread() {
         if (nowDiving && !lastDiving) {
           ULONGLONG cooldownLeft = 500 - (GetTickCount64() - g_lastLockTime);
           if (cooldownLeft > 0 && cooldownLeft <= 500) {
-            LOG_INFO("[MASTER] Transition (glide->dive) blocked by cooldown. %llums remaining.", cooldownLeft);
+            LOG_INFO("[MASTER] Transition (glide->dive) blocked by cooldown. "
+                     "%llums remaining.",
+                     cooldownLeft);
           } else {
             g_lastLockTime = GetTickCount64();
             g_mouseSuspendedUntil = GetTickCount64() + 600;
@@ -149,7 +153,7 @@ void DetectorThread() {
               g_lockCount++;
               g_lockThreadId = GetCurrentThreadId();
               Sleep(600);
-              
+
               {
                 std::lock_guard<std::mutex> lock(g_blockInputMutex);
                 BlockInput(FALSE);
@@ -166,7 +170,9 @@ void DetectorThread() {
         else if (!nowDiving && lastDiving) {
           ULONGLONG cooldownLeft = 500 - (GetTickCount64() - g_lastLockTime);
           if (cooldownLeft > 0 && cooldownLeft <= 500) {
-            LOG_INFO("[MASTER] Transition (dive->glide) blocked by cooldown. %llums remaining.", cooldownLeft);
+            LOG_INFO("[MASTER] Transition (dive->glide) blocked by cooldown. "
+                     "%llums remaining.",
+                     cooldownLeft);
           } else {
             g_lastLockTime = GetTickCount64();
             g_mouseSuspendedUntil = GetTickCount64() + 1000;
@@ -188,7 +194,7 @@ void DetectorThread() {
               g_lockCount++;
               g_lockThreadId = GetCurrentThreadId();
               Sleep(1000);
-              
+
               {
                 std::lock_guard<std::mutex> lock(g_blockInputMutex);
                 BlockInput(FALSE);
@@ -213,10 +219,13 @@ void DetectorThread() {
       g_isDiving = nowDiving;
       g_logic.SetDivingState(nowDiving);
     }
-    if (g_fortniteFocusedCache.load()) {
-        Sleep(1); // High-speed scanning while gaming
+    // Adaptive CPU optimization: Three-tier sleep (50ms / 10ms / 1ms)
+    if (!g_fortniteFocusedCache.load()) {
+      Sleep(50); // Dormant: Game not focused
+    } else if (!nowDiving && !lastDiving) {
+      Sleep(10); // Cruising: Game focused but no activity
     } else {
-        Sleep(100); // Power-saving mode when game is not focused
+      Sleep(1); // Racing: Active diving/gliding transition
     }
   }
 }
@@ -868,7 +877,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   SetWindowPos(g_hHUD, HWND_TOPMOST, 0, 0, 0, 0,
                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
   UpdateWindow(g_hHUD);
-  SetTimer(g_hHUD, 1, 10, NULL);    // 100fps (~10ms) Repaint Timer
+  SetTimer(g_hHUD, 1, 33, NULL);    // 30fps (~33ms) Repaint Timer (reduced from
+                                    // 10ms for CPU optimization)
   SetTimer(g_hHUD, 2, 30000, NULL); // 30s Auto-Save Timer
 
   std::thread detThread(DetectorThread);

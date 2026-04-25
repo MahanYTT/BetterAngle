@@ -146,15 +146,19 @@ void StartPollingThread() {
   std::thread([]() {
     timeBeginPeriod(1); // Force 1ms Windows resolution
     while (g_running) {
-      for (int vk : g_gamingKeys) {
-        g_physicalKeys[vk].store((GetAsyncKeyState(vk) & 0x8000) != 0,
-                                 std::memory_order_relaxed);
+      if (g_fortniteFocusedCache.load()) {
+        for (int vk : g_gamingKeys) {
+          g_physicalKeys[vk].store((GetAsyncKeyState(vk) & 0x8000) != 0,
+                                   std::memory_order_relaxed);
+        }
+        // Also poll LBUTTON for HUD dragging (fixes legacy bug)
+        g_physicalKeys[VK_LBUTTON].store(
+            (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0,
+            std::memory_order_relaxed);
+        Sleep(5); // 200Hz polling while gaming
+      } else {
+        Sleep(500); // Dormant polling (2Hz) when not focused
       }
-      // Also poll LBUTTON for HUD dragging (fixes legacy bug)
-      g_physicalKeys[VK_LBUTTON].store(
-          (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0,
-          std::memory_order_relaxed);
-      Sleep(5); // 200Hz polling (Saves CPU, still plenty fast for Nitro sync)
     }
     timeEndPeriod(1);
   }).detach();
@@ -323,7 +327,8 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
         seq[1] = seq[0];
         seq[1].ki.dwFlags = KEYEVENTF_SCANCODE; // Immediate Down
         SendInput(2, seq, sizeof(INPUT));
-        Sleep(1);
+        Sleep(
+            5); // Reduced from 1ms to 5ms for CPU optimization (200Hz polling)
       }
     }
     Sleep(5);
@@ -370,17 +375,20 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     }
   }
 
-  // Enhanced diagnostic logging for ghost key failures (Consolidated to Master Log)
+  // Enhanced diagnostic logging for ghost key failures (Consolidated to Master
+  // Log)
   if (!g_tableRefreshed && !outInputs.empty() && g_activeFallback.load() != 3) {
-    std::string forensic = "[GHOST_FAIL] FB=" + std::to_string(g_activeFallback.load()) +
-                           " Table=FROZEN Keys=[";
+    std::string forensic =
+        "[GHOST_FAIL] FB=" + std::to_string(g_activeFallback.load()) +
+        " Table=FROZEN Keys=[";
     for (size_t i = 0; i < std::size(g_gamingKeys); ++i) {
       int vk = g_gamingKeys[i];
-      forensic += (i > 0 ? "," : "") + std::string(1, (char)vk) + ":" + 
-                  (preState[i] ? "1" : "0") + "->" + (finalState[i] ? "1" : "0") +
+      forensic += (i > 0 ? "," : "") + std::string(1, (char)vk) + ":" +
+                  (preState[i] ? "1" : "0") + "->" +
+                  (finalState[i] ? "1" : "0") +
                   (g_rawKeyUpDetected[vk] ? "(R)" : "");
     }
-    forensic += "] Wpre=" + std::to_string(g_wPreLock) + 
+    forensic += "] Wpre=" + std::to_string(g_wPreLock) +
                 " Wpost=" + std::to_string(g_wPostUnlock) +
                 " Wflush=" + std::to_string(g_wPostFlush);
     LOG_ERROR(forensic.c_str());

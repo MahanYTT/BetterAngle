@@ -76,6 +76,20 @@ static bool CheckFortniteProcessFast() {
 }
 
 void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
+  // ADAPTIVE HUD: Skip heavy rendering if game not focused
+  if (!g_fortniteFocusedCache.load()) {
+    // Just clear the layer and exit
+    HDC hdcScreen = GetDC(NULL);
+    RECT wRect;
+    GetWindowRect(hwnd, &wRect);
+    POINT ptWin = {wRect.left, wRect.top};
+    SIZE size = {wRect.right - wRect.left, wRect.bottom - wRect.top};
+    BLENDFUNCTION blend = {AC_SRC_OVER, 0, 0, AC_SRC_ALPHA}; // 0 alpha = hidden
+    UpdateLayeredWindow(hwnd, hdcScreen, &ptWin, &size, NULL, NULL, 0, &blend, ULW_ALPHA);
+    ReleaseDC(NULL, hdcScreen);
+    return;
+  }
+
   TickFPS();
 
   RECT rect;
