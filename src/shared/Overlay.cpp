@@ -76,8 +76,8 @@ static bool CheckFortniteProcessFast() {
 }
 
 void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
-  // ADAPTIVE HUD: Skip heavy rendering if game not focused
-  if (!g_fortniteFocusedCache.load()) {
+  // ADAPTIVE HUD: Skip heavy rendering if game not focused (Bypass during setup)
+  if (!g_fortniteFocusedCache.load() && g_currentSelection == NONE) {
     // Just clear the layer and exit
     HDC hdcScreen = GetDC(NULL);
     RECT wRect;
