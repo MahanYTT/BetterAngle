@@ -37,6 +37,7 @@ std::atomic<bool> g_hasSynced(false);
 std::atomic<int> g_activeFallback(0);
 std::atomic<bool> g_fb1Active(false);
 std::atomic<bool> g_rawKeyUpDetected[256] = {};
+std::atomic<bool> g_rawKeyMakeDetected[256] = {};
 std::atomic<ULONGLONG> g_lastLockTime(0);
 std::atomic<bool> g_lockInProgress(false);
 std::atomic<bool> g_ghostFixInProgress(false);

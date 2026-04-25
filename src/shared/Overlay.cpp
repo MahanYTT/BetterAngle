@@ -578,7 +578,9 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
         std::wstring fbStr =
             (fb == 0) ? L"NONE"
                       : (fb == 1 ? L"FB1 (Shock)"
-                                 : (fb == 2 ? L"FB2 (Hammer)" : L"FAIL (99)"));
+                                 : (fb == 2 ? L"FB2 (Hammer)"
+                                            : (fb == 5 ? L"FB5 (RawCorrected)"
+                                                       : L"FAIL (99)")));
         DrawRow(6, 1, L"Fallback:", fbStr, fb == 0);
         DrawRow(7, 1, L"Table State:", g_tableRefreshed ? L"THAWED" : L"FROZEN",
                 g_tableRefreshed);
@@ -589,31 +591,46 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
                 !g_ghostFixInProgress);
         DrawRow(10, 1, L"Fix Duration:",
                 std::to_wstring(g_ghostFixDurationMs.load()) + L" ms",
-                g_ghostFixDurationMs.load() < 100);
+                g_ghostFixDurationMs.load() < 400);
         DrawRow(11, 1, L"Fix Verify:",
                 std::wstring(g_ghostFixVerifyOk ? L"PASS" : L"FAIL!"),
                 g_ghostFixVerifyOk.load());
 
-        // SHOCK & RESTORE FORENSICS (v5.5.62)
+        // SHOCK & RESTORE + RAW INPUT FORENSICS (v5.5.69)
         // pre = key held before lock (from preState snapshot)
-        // post = key still physically held after Shock+Thaw (from
-        // GetAsyncKeyState) phys = current live hardware read Shock = was this
-        // key Shocked (released unconditionally)? Restore = was this key
-        // Restored (re-pressed because still held)?
+        // post = key state after Shock+Restore+Correction
+        // phys = current live GetAsyncKeyState read (unreliable after Shock)
+        // S = Shocked (released unconditionally in Phase 1)
+        // R = Restored (re-pressed unconditionally in Phase 2)
+        // Br = Raw Input Break detected (HID release event)
+        // Mk = Raw Input Make detected (HID press/typematic event)
         for (int i = 0; i < 4; ++i) {
           bool pre = g_preState[i].load();
           bool post = g_postState[i].load();
           bool phys = (GetAsyncKeyState(keys[i]) & 0x8000) != 0;
           bool shocked = pre;
           bool restored = pre && post;
+          bool brk = g_rawKeyUpDetected[keys[i]].load();
+          bool mk = g_rawKeyMakeDetected[keys[i]].load();
 
           std::wstring val = L"pre=" + std::wstring(pre ? L"1" : L"0") +
                              L" post=" + std::wstring(post ? L"1" : L"0") +
                              L" phys=" + std::wstring(phys ? L"1" : L"0") +
                              L" S=" + std::wstring(shocked ? L"1" : L"0") +
-                             L" R=" + std::wstring(restored ? L"1" : L"0");
+                             L" R=" + std::wstring(restored ? L"1" : L"0") +
+                             L" Br=" + std::wstring(brk ? L"1" : L"0") +
+                             L" Mk=" + std::wstring(mk ? L"1" : L"0");
 
-          DrawRow(12 + i, 1, names[i], val, pre ? (phys == post) : true);
+          // Green if: key wasn't held, or post matches phys, or Raw Input
+          // confirms correction (Break && !Make → post should be 0)
+          bool rawConsistent = true;
+          if (pre) {
+            if (brk && !mk)
+              rawConsistent = !post; // corrected ghost → post should be 0
+            else if (mk)
+              rawConsistent = post; // still held → post should be 1
+          }
+          DrawRow(12 + i, 1, names[i], val, pre ? rawConsistent : true);
         }
       } else {
         DrawRow(6, 1, L"Nitro Sync:", L"AWAITING FIRST LOCK", true);
