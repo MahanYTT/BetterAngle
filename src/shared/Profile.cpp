@@ -21,7 +21,9 @@ bool Profile::Load(const std::wstring &path) {
   if (namePos != std::string::npos) {
     size_t end = content.find("\"", namePos + 9);
     std::string n = content.substr(namePos + 9, end - (namePos + 9));
-    name = std::wstring(n.begin(), n.end());
+    int size_needed = MultiByteToWideChar(CP_UTF8, 0, &n[0], (int)n.size(), NULL, 0);
+    name.assign(size_needed, 0);
+    MultiByteToWideChar(CP_UTF8, 0, &n[0], (int)n.size(), &name[0], size_needed);
   }
 
   // Extract scales
@@ -149,7 +151,9 @@ bool Profile::Load(const std::wstring &path) {
       if (nP != std::string::npos) {
         size_t nE = obj.find("\"", nP + 9);
         std::string nStr = obj.substr(nP + 9, nE - (nP + 9));
-        cp.name = std::wstring(nStr.begin(), nStr.end());
+        int size_needed = MultiByteToWideChar(CP_UTF8, 0, &nStr[0], (int)nStr.size(), NULL, 0);
+        cp.name.assign(size_needed, 0);
+        MultiByteToWideChar(CP_UTF8, 0, &nStr[0], (int)nStr.size(), &cp.name[0], size_needed);
       }
       // Parse coords
       auto exD = [&](std::string k) -> float {
@@ -189,68 +193,72 @@ bool Profile::Save(const std::wstring &path) {
   // Ensure file is not hidden before writing to avoid permission issues
   SetFileAttributesW(path.c_str(), FILE_ATTRIBUTE_NORMAL);
 
-  std::wofstream f(tempPath.c_str(), std::ios::trunc);
+  // Use narrow ofstream for consistent UTF-8 behavior
+  std::ofstream f(tempPath, std::ios::trunc);
   if (!f.is_open())
     return false;
 
-  std::string nStr;
-  for (wchar_t c : name)
-    nStr += (char)c;
+  // Use a stringstream with C locale for consistent decimal points
+  std::stringstream ss;
+  ss.imbue(std::locale("C"));
 
-  // Ensure we write with a safe dot decimal regardless of locale
-  std::wostringstream oss;
-  oss.imbue(std::locale("C"));
+  auto toUtf8 = [](const std::wstring &wstr) -> std::string {
+    if (wstr.empty()) return "";
+    int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
+    std::string strTo(size_needed, 0);
+    WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
+    return strTo;
+  };
 
-  oss << L"{\n";
-  oss << L"  \"name\": \"" << name << L"\",\n";
-  oss << L"  \"sensitivityX\": " << sensitivityX << L",\n";
-  oss << L"  \"sensitivityY\": " << sensitivityY << L",\n";
-  oss << L"  \"fov\": " << fov << L",\n";
-  oss << L"  \"resolutionWidth\": " << resolutionWidth << L",\n";
-  oss << L"  \"resolutionHeight\": " << resolutionHeight << L",\n";
-  oss << L"  \"renderScale\": " << renderScale << L",\n";
-  oss << L"  \"roi_x\": " << roi_x << L",\n";
-  oss << L"  \"roi_y\": " << roi_y << L",\n";
-  oss << L"  \"roi_w\": " << roi_w << L",\n";
-  oss << L"  \"roi_h\": " << roi_h << L",\n";
-  oss << L"  \"target_color\": " << (unsigned long)target_color << L",\n";
-  oss << L"  \"tolerance\": " << tolerance << L",\n";
-  oss << L"  \"diveGlideMatch\": " << diveGlideMatch << L",\n";
-  oss << L"  \"screenIndex\": " << screenIndex << L",\n";
-  oss << L"  \"kb_toggleMod\": " << keybinds.toggleMod << L",\n";
-  oss << L"  \"kb_toggleKey\": " << keybinds.toggleKey << L",\n";
-  oss << L"  \"kb_roiMod\": " << keybinds.roiMod << L",\n";
-  oss << L"  \"kb_roiKey\": " << keybinds.roiKey << L",\n";
-  oss << L"  \"kb_crossMod\": " << keybinds.crossMod << L",\n";
-  oss << L"  \"kb_crossKey\": " << keybinds.crossKey << L",\n";
-  oss << L"  \"kb_zeroMod\": " << keybinds.zeroMod << L",\n";
-  oss << L"  \"kb_zeroKey\": " << keybinds.zeroKey << L",\n";
+  ss << "{\n";
+  ss << "  \"name\": \"" << toUtf8(name) << "\",\n";
+  ss << "  \"sensitivityX\": " << sensitivityX << ",\n";
+  ss << "  \"sensitivityY\": " << sensitivityY << ",\n";
+  ss << "  \"fov\": " << fov << ",\n";
+  ss << "  \"resolutionWidth\": " << resolutionWidth << ",\n";
+  ss << "  \"resolutionHeight\": " << resolutionHeight << ",\n";
+  ss << "  \"renderScale\": " << renderScale << ",\n";
+  ss << "  \"roi_x\": " << roi_x << ",\n";
+  ss << "  \"roi_y\": " << roi_y << ",\n";
+  ss << "  \"roi_w\": " << roi_w << ",\n";
+  ss << "  \"roi_h\": " << roi_h << ",\n";
+  ss << "  \"target_color\": " << (unsigned long)target_color << ",\n";
+  ss << "  \"tolerance\": " << tolerance << ",\n";
+  ss << "  \"diveGlideMatch\": " << diveGlideMatch << ",\n";
+  ss << "  \"screenIndex\": " << screenIndex << ",\n";
+  ss << "  \"kb_toggleMod\": " << keybinds.toggleMod << ",\n";
+  ss << "  \"kb_toggleKey\": " << keybinds.toggleKey << ",\n";
+  ss << "  \"kb_roiMod\": " << keybinds.roiMod << ",\n";
+  ss << "  \"kb_roiKey\": " << keybinds.roiKey << ",\n";
+  ss << "  \"kb_crossMod\": " << keybinds.crossMod << ",\n";
+  ss << "  \"kb_crossKey\": " << keybinds.crossKey << ",\n";
+  ss << "  \"kb_zeroMod\": " << keybinds.zeroMod << ",\n";
+  ss << "  \"kb_zeroKey\": " << keybinds.zeroKey << ",\n";
 
-  oss << L"  \"crossThickness\": " << std::fixed << std::setprecision(6)
-      << crossThickness << L",\n";
-  oss << L"  \"showCrosshair\": " << (showCrosshair ? 1 : 0) << L",\n";
-  oss << L"  \"crossColor\": " << (unsigned long)crossColor << L",\n";
-  oss << L"  \"crossOffsetX\": " << crossOffsetX << L",\n";
-  oss << L"  \"crossOffsetY\": " << crossOffsetY << L",\n";
-  oss << L"  \"crossAngle\": " << crossAngle << L",\n";
-  oss << L"  \"crossPulse\": " << (crossPulse ? 1 : 0) << L",\n";
+  ss << "  \"crossThickness\": " << std::fixed << std::setprecision(6) << crossThickness << ",\n";
+  ss << "  \"showCrosshair\": " << (showCrosshair ? 1 : 0) << ",\n";
+  ss << "  \"crossColor\": " << (unsigned long)crossColor << ",\n";
+  ss << "  \"crossOffsetX\": " << crossOffsetX << ",\n";
+  ss << "  \"crossOffsetY\": " << crossOffsetY << ",\n";
+  ss << "  \"crossAngle\": " << crossAngle << ",\n";
+  ss << "  \"crossPulse\": " << (crossPulse ? 1 : 0) << ",\n";
 
-  oss << L"  \"crosshairPresets\": [\n";
+  ss << "  \"crosshairPresets\": [\n";
   for (size_t i = 0; i < crosshairPresets.size(); i++) {
     const auto &cp = crosshairPresets[i];
-    oss << L"    {\"name\": \"" << cp.name << L"\", \"x\": " << cp.offsetX
-        << L", \"y\": " << cp.offsetY << L", \"a\": " << cp.angle
-        << L", \"t\": " << cp.thickness << L", \"c\": "
-        << (unsigned long)cp.color << L", \"p\": " << (cp.pulse ? 1 : 0)
-        << L"}";
+    ss << "    {\"name\": \"" << toUtf8(cp.name) << "\", \"x\": " << cp.offsetX
+       << ", \"y\": " << cp.offsetY << ", \"a\": " << cp.angle
+       << ", \"t\": " << cp.thickness << ", \"c\": "
+       << (unsigned long)cp.color << ", \"p\": " << (cp.pulse ? 1 : 0)
+       << "}";
     if (i < crosshairPresets.size() - 1)
-      oss << L",";
-    oss << L"\n";
+      ss << ",";
+    ss << "\n";
   }
-  oss << L"  ]\n";
-  oss << L"}";
+  ss << "  ]\n";
+  ss << "}";
 
-  f << oss.str();
+  f << ss.str();
   f.close();
 
   // Atomic swap
