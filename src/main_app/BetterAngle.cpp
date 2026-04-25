@@ -213,7 +213,11 @@ void DetectorThread() {
       g_isDiving = nowDiving;
       g_logic.SetDivingState(nowDiving);
     }
-    Sleep(1); // Ultra-fast scan rate for instant transition detection
+    if (g_fortniteFocusedCache.load()) {
+        Sleep(1); // High-speed scanning while gaming
+    } else {
+        Sleep(100); // Power-saving mode when game is not focused
+    }
   }
 }
 

@@ -154,7 +154,7 @@ void StartPollingThread() {
       g_physicalKeys[VK_LBUTTON].store(
           (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0,
           std::memory_order_relaxed);
-      Sleep(1);
+      Sleep(5); // 200Hz polling (Saves CPU, still plenty fast for Nitro sync)
     }
     timeEndPeriod(1);
   }).detach();
