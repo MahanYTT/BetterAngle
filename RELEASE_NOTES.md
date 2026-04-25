@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.54
+- Automated build release.
+
 ### BetterAngle Pro v5.5.23
 - **BlockInput Keyboard Ghosting Fixes**:
   - Skip BlockInput for alt-tab transitions (200ms cooldown only)
