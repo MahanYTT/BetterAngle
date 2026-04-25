@@ -38,6 +38,9 @@ void PerformanceMonitorThread();
 // Global handles defined in State.h/cpp
 ULONG_PTR g_gdiplusToken;
 FovDetector g_detector;
+std::atomic<bool> g_lockInProgress(false);
+std::mutex g_lockMutex;
+std::atomic<ULONGLONG> g_lastLockTime(0);
 
 // Helper function to flush pending input messages before blocking
 static void FlushPendingInputMessages() {
@@ -131,6 +134,8 @@ void DetectorThread() {
           g_mouseSuspendedUntil = GetTickCount64() + 700;
 
           std::thread([]() {
+            std::lock_guard<std::mutex> lock(g_lockMutex);
+            g_lockInProgress = true;
             g_lockCount++;
             g_lockThreadId = GetCurrentThreadId();
             ULONGLONG start = GetTickCount64();
@@ -152,6 +157,9 @@ void DetectorThread() {
 
             g_lockDurationMs = (long long)(GetTickCount64() - start);
             SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
+            
+            g_lastLockTime = GetTickCount64();
+            g_lockInProgress = false;
           }).detach();
 
           LOG_INFO("Transition: glide->dive, Nitro Delta sync (700ms)");
@@ -164,6 +172,8 @@ void DetectorThread() {
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
 
           std::thread([]() {
+            std::lock_guard<std::mutex> lock(g_lockMutex);
+            g_lockInProgress = true;
             g_lockCount++;
             g_lockThreadId = GetCurrentThreadId();
             ULONGLONG start = GetTickCount64();
@@ -185,6 +195,9 @@ void DetectorThread() {
 
             g_lockDurationMs = (long long)(GetTickCount64() - start);
             SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
+            
+            g_lastLockTime = GetTickCount64();
+            g_lockInProgress = false;
           }).detach();
 
           LOG_INFO("Transition: dive->glide, Nitro Delta sync (1000ms)");
@@ -588,8 +601,6 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       return 0;
     }
     if (wParam == 1) { // 60fps HUD / Input processing timer
-      // Skip drawing and processing for the first 2.5s while the splash screen
-      // is active
       static ULONGLONG s_bootTime = GetTickCount64();
       if (GetTickCount64() - s_bootTime < 2500)
         return 0;

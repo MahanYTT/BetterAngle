@@ -242,16 +242,33 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   std::string log = "Nitro Flush [W: " + std::to_string(g_wPostUnlock.load()) + "->" + std::to_string(g_wPostFlush.load()) + "]: ";
   bool restored = false;
 
+  // SAFETY: Only inject if Fortnite is the active window.
+  // This prevents accidental key presses (like Inventory/Tab) during Alt-Tabs.
+  extern std::atomic<bool> g_fortniteFocusedCache;
+  if (!g_fortniteFocusedCache.load()) {
+    g_nitroSyncLog = log + "(Skipped - Not Focused)";
+    g_hasSynced = true;
+    return;
+  }
+
   for (size_t i = 0; i < preState.size(); ++i) {
     // If key was held BEFORE lock, but is NOT held now in the fresh table
     if (preState[i] && !postState[i]) {
       int vk = g_gamingKeys[i];
-      restored = true;
+      
+      // WHITELIST CHECK (v5.5.60): Ensure we ONLY ever touch WASD + Space.
+      bool isWhitelisted = false;
+      for (int wvk : g_gamingKeys) if (vk == wvk) isWhitelisted = true;
+      if (!isWhitelisted) continue;
 
+      UINT scanCode = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+      if (scanCode == 0) continue; // Invalid mapping
+
+      restored = true;
       INPUT input = {0};
       input.type = INPUT_KEYBOARD;
       input.ki.wVk = (WORD)vk;
-      input.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+      input.ki.wScan = (WORD)scanCode;
       input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
       outInputs.push_back(input);
 

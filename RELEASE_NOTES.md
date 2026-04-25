@@ -1,3 +1,7 @@
+### BetterAngle Pro v5.5.60
+- **Serialized Lock Guard**: Prevents missed GhostFixes during rapid transitions (back-to-back glide/dive).
+- **Inventory Safety**: Skips key injection when Fortnite is not focused and enforces a strict whitelist for WASD + Space only.
+
 ### BetterAngle Pro v5.5.57
 - Automated build release.
 

@@ -43,6 +43,8 @@ extern std::atomic<bool> g_hasSynced;
 extern std::atomic<int> g_activeFallback;
 extern std::atomic<bool> g_fb1Active;
 extern std::atomic<bool> g_rawKeyUpDetected[256];
+extern std::atomic<bool> g_lockInProgress;
+extern std::mutex g_lockMutex;
 extern std::atomic<ULONGLONG> g_lastLockTime;
 extern std::mutex g_blockInputMutex;
 
@@ -52,7 +54,7 @@ extern std::string g_lastVersionRun;
 #ifndef V_MAJ
 #define V_MAJ 5
 #define V_MIN 5
-#define V_PAT 57
+#define V_PAT 60
 #endif
 
 #define VERSION_STR APP_STR_Y(V_MAJ) "." APP_STR_Y(V_MIN) "." APP_STR_Y(V_PAT)
