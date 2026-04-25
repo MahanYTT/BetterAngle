@@ -826,6 +826,31 @@ Item {
                             onClicked: backend.crossOffsetY = backend.crossOffsetY + 0.5 }
                     }
 
+                    // Snap to Center
+                    Button {
+                        text: "SNAP TO CENTER"
+                        width: parent.width
+                        height: 36
+                        contentItem: Text {
+                            text: parent.text
+                            color: "white"
+                            font.pixelSize: 12
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        background: Rectangle {
+                            color: parent.hovered ? "#3375ee" : "#224ecc"
+                            radius: 6
+                            border.color: "#4488ff"
+                            border.width: 1
+                        }
+                        onClicked: {
+                            backend.crossOffsetX = 0;
+                            backend.crossOffsetY = 0;
+                        }
+                    }
+
                     // Reset to Defaults
                     Button {
                         text: "RESET TO DEFAULTS"
