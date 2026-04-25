@@ -40,7 +40,6 @@ std::atomic<bool> g_hasSynced{false};
 std::atomic<bool> g_rawKeyUpDetected[256] = {false};
 std::atomic<bool> g_blockInputActive{false};
 std::mutex g_blockInputMutex;
-std::atomic<int> g_lockTriggerReason{0};
 std::atomic<ULONGLONG> g_lastLockTime(0);
 std::atomic<bool> g_lockInProgress(false);
 std::atomic<bool> g_ghostFixInProgress(false);
