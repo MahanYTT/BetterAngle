@@ -137,7 +137,7 @@ bool IsCursorCurrentlyVisible() {
 static bool g_pollingRunning = false;
 
 // The "Nitro 5" - Absolute Movement Cluster (v5.5.0)
-static const int g_gamingKeys[] = {'W', 'A', 'S', 'D'};
+static const int g_gamingKeys[] = {'W', 'A', 'S', 'D', VK_SHIFT, VK_CONTROL, VK_SPACE, VK_MENU};
 
 // Physical Truth Table (v5.1.16)
 // Using std::atomic<bool> g_physicalKeys[256] from State.h
