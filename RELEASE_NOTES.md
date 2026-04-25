@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.65
+- Automated build release.
+
 ### BetterAngle Pro v5.5.64
 - **Fixed Build Errors**: Resolved undeclared identifier and syntax errors in Overlay.cpp and Input.cpp.
 - **Improved Overlay Stability**: Hardened DrawRow calls with explicit string conversions.
