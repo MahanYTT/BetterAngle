@@ -77,7 +77,7 @@ void DetectorThread() {
   ULONGLONG peakMatchTimestamp = 0;
 
   while (g_running) {
-    if (!g_allProfiles.empty() && g_currentSelection == NONE) {
+    if (!g_allProfiles.empty()) {
       Profile &p = g_allProfiles[g_selectedProfileIdx];
       g_logic.LoadProfile(p.sensitivityX);
       g_requiredMatchCount =
@@ -88,8 +88,8 @@ void DetectorThread() {
       bool currentFortniteFocused = g_fortniteFocusedCache.load();
       g_isCursorVisible = IsCursorCurrentlyVisible();
 
-      // Only scan ROI when Fortnite is the foreground window
-      if (currentFortniteFocused) {
+      // Scan ROI if game is focused OR if we are actively setting up/selecting (PICK_DIVE, etc)
+      if (currentFortniteFocused || g_currentSelection != NONE) {
         RECT mRect = GetMonitorRectByIndex(g_screenIndex);
         RoiConfig cfg = {
             p.roi_x + mRect.left, p.roi_y + mRect.top, p.roi_w, p.roi_h,
@@ -221,7 +221,7 @@ void DetectorThread() {
       g_logic.SetDivingState(nowDiving);
 
       // Adaptive CPU optimization: Three-tier sleep (50ms / 10ms / 1ms)
-      if (!g_fortniteFocusedCache.load()) {
+      if (!g_fortniteFocusedCache.load() && g_currentSelection == NONE) {
         Sleep(50); // Dormant: Game not focused
       } else if (!nowDiving && !lastDiving) {
         Sleep(10); // Cruising: Game focused but no activity
