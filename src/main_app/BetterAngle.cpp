@@ -65,7 +65,7 @@ void FocusMonitorThread() {
       // ALT-TAB COOLDOWN: BlockInput locks the mouse at the OS level so
       // physical mouse movement during the focus switch can't affect
       // Fortnite's FOV. Uses same Shock & Restore pattern as glide/dive.
-      g_mouseSuspendedUntil = GetTickCount64() + 200;
+      g_mouseSuspendedUntil = GetTickCount64() + 400;
       g_lockTriggerReason = 3; // Alt-Tab Return
       g_lockCount++;
 
@@ -84,7 +84,7 @@ void FocusMonitorThread() {
           std::lock_guard<std::mutex> bLock(g_blockInputMutex);
           g_blockInputActive = true;
           BlockInput(TRUE);
-          Sleep(200);
+          Sleep(400);
           BlockInput(FALSE);
           g_blockInputActive = false;
         }
@@ -94,7 +94,7 @@ void FocusMonitorThread() {
         g_lockInProgress = false;
       }).detach();
 
-      LOG_INFO("Alt-tab cooldown active (200ms BlockInput + Nitro sync)");
+      LOG_INFO("Alt-tab cooldown active (400ms BlockInput + Nitro sync)");
     }
     lastFortniteFocused = currentFortniteFocused;
     Sleep(0); // Max CPU performance for lightning fast focus detection
