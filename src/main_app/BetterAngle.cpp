@@ -560,15 +560,19 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       // STAGE 1 start, causing mismatch with the live magnifier view)
       LOG_INFO("Stage 2 LBUTTONDOWN: Starting to finalize selection");
       {
-        LOG_TRACE("Sampling color from LIVE screen...");
+        LOG_TRACE("Sampling color from LIVE screen (Stealth Mode)...");
+        // Hide overlay so we don't pick the magnifier's own red crosshair
+        ShowWindow(hWnd, SW_HIDE);
+        UpdateWindow(hWnd);
+        Sleep(20);
+
         HDC hdcScreen = GetDC(NULL);
         POINT cur;
         GetCursorPos(&cur);
         COLORREF pixel = GetPixel(hdcScreen, cur.x, cur.y);
 
         if (pixel == CLR_INVALID) {
-          LOG_WARN("GetPixel returned CLR_INVALID at (%ld,%ld). Using white as "
-                   "fallback.",
+          LOG_WARN("GetPixel returned CLR_INVALID at (%ld,%ld). Using white as fallback.",
                    cur.x, cur.y);
           pixel = RGB(255, 255, 255);
         } else {
@@ -579,6 +583,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         g_pickedColor = pixel;
         g_targetColor = pixel;
         ReleaseDC(NULL, hdcScreen);
+        ShowWindow(hWnd, SW_SHOW);
       }
 
       // Finalize and Exit Selection
