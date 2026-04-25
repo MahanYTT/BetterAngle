@@ -88,7 +88,8 @@ void DetectorThread() {
       bool currentFortniteFocused = g_fortniteFocusedCache.load();
       g_isCursorVisible = IsCursorCurrentlyVisible();
 
-      // Scan ROI if game is focused OR if we are actively setting up/selecting (PICK_DIVE, etc)
+      // Scan ROI if game is focused OR if we are actively setting up/selecting
+      // (PICK_DIVE, etc)
       if (currentFortniteFocused || g_currentSelection != NONE) {
         RECT mRect = GetMonitorRectByIndex(g_screenIndex);
         RoiConfig cfg = {
@@ -123,7 +124,6 @@ void DetectorThread() {
         g_detectionDelayMs = 0;
         g_scannerCpuPct = 0;
       }
-
 
       if (GetTickCount64() >= g_mouseSuspendedUntil) {
         // Edge: Gliding -> Diving (Nitro)
@@ -629,13 +629,18 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
         bool canDrag = !IsFortniteForeground();
 
+        // Compute actual HUD position (same logic as in Overlay.cpp)
+        int hudX = (g_hudX == -1) ? 40 : g_hudX;
+        int hudY = (g_hudY == -1) ? 40 : g_hudY;
+
         if (lDown && !g_isDraggingHUD && canDrag) {
-          if (pt.x >= g_hudX && pt.x <= g_hudX + 260 && pt.y >= g_hudY &&
-              pt.y <= g_hudY + 150) {
+          if (pt.x >= hudX && pt.x <= hudX + 260 && pt.y >= hudY &&
+              pt.y <= hudY + 150) {
             g_isDraggingHUD = true;
             g_dragStartMouse = pt;
-            g_dragStartHUD.x = g_hudX;
-            g_dragStartHUD.y = g_hudY;
+            // Store the actual drawn position for drag calculations
+            g_dragStartHUD.x = hudX;
+            g_dragStartHUD.y = hudY;
           }
         } else if (!lDown && g_isDraggingHUD) {
           g_isDraggingHUD = false;
@@ -643,8 +648,15 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         }
 
         if (g_isDraggingHUD && lDown) {
-          g_hudX = g_dragStartHUD.x + (pt.x - g_dragStartMouse.x);
-          g_hudY = g_dragStartHUD.y + (pt.y - g_dragStartMouse.y);
+          // Calculate new position based on drag offset
+          int newHudX = g_dragStartHUD.x + (pt.x - g_dragStartMouse.x);
+          int newHudY = g_dragStartHUD.y + (pt.y - g_dragStartMouse.y);
+
+          // Update raw values (preserve -1 sentinel if position is exactly at
+          // default)
+          g_hudX = (newHudX == 40) ? -1 : newHudX;
+          g_hudY = (newHudY == 40) ? -1 : newHudY;
+
           InvalidateRect(hWnd, NULL, FALSE);
         }
 
