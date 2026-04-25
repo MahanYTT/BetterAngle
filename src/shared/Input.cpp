@@ -416,7 +416,7 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
           fbLog += std::string(1, (char)g_gamingKeys[i]) + " ";
         }
       }
-      LOG_WARNING(fbLog.c_str());
+      LOG_WARN(fbLog.c_str());
 
       for (size_t i = 0; i < preState.size(); ++i) {
         if (preState[i] && !finalState[i]) {

@@ -125,83 +125,83 @@ void DetectorThread() {
       if (GetTickCount64() >= g_mouseSuspendedUntil) {
         // Edge: Gliding -> Diving (Nitro)
         if (nowDiving && !lastDiving) {
-            ULONGLONG cooldownLeft = 500 - (GetTickCount64() - g_lastLockTime);
-            if (cooldownLeft > 0 && cooldownLeft <= 500) {
-                LOG_INFO("[MASTER] Transition (glide->dive) blocked by cooldown. %llums remaining.", cooldownLeft);
-            } else {
-                g_lastLockTime = GetTickCount64();
-                g_mouseSuspendedUntil = GetTickCount64() + 600;
-                LOG_INFO("[MASTER] Triggering transition lock: glide->dive (600ms)");
-            }
-        }
+          ULONGLONG cooldownLeft = 500 - (GetTickCount64() - g_lastLockTime);
+          if (cooldownLeft > 0 && cooldownLeft <= 500) {
+            LOG_INFO("[MASTER] Transition (glide->dive) blocked by cooldown. %llums remaining.", cooldownLeft);
+          } else {
+            g_lastLockTime = GetTickCount64();
+            g_mouseSuspendedUntil = GetTickCount64() + 600;
+            LOG_INFO("[MASTER] Triggering transition lock: glide->dive (600ms)");
 
-          std::thread([]() {
-            g_lockCount++;
-            g_lockThreadId = GetCurrentThreadId();
-            ULONGLONG start = GetTickCount64();
+            std::thread([]() {
+              g_lockCount++;
+              g_lockThreadId = GetCurrentThreadId();
+              ULONGLONG start = GetTickCount64();
 
-            for (int i = 0; i < 256; i++)
-              g_rawKeyUpDetected[i] = false;
-            g_wPreLock =
-                (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
-            auto initialState = GetGamingKeyState(); // Pre-lock snapshot
+              for (int i = 0; i < 256; i++)
+                g_rawKeyUpDetected[i] = false;
+              g_wPreLock =
+                  (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
+              auto initialState = GetGamingKeyState(); // Pre-lock snapshot
 
-            {
-              std::lock_guard<std::mutex> lock(g_blockInputMutex);
-              g_blockInputActive = true;
-              LOG_INFO("[MASTER] BlockInput(TRUE) engaged.");
-              BlockInput(TRUE);
-              Sleep(600); // Note: The other branch uses 1000ms
-              BlockInput(FALSE);
-              LOG_INFO("[MASTER] BlockInput(FALSE) released.");
-              g_blockInputActive = false;
-            }
+              {
+                std::lock_guard<std::mutex> lock(g_blockInputMutex);
+                g_blockInputActive = true;
+                LOG_INFO("[MASTER] BlockInput(TRUE) engaged.");
+                BlockInput(TRUE);
+                Sleep(600);
+                BlockInput(FALSE);
+                LOG_INFO("[MASTER] BlockInput(FALSE) released.");
+                g_blockInputActive = false;
+              }
 
-            g_lockDurationMs = (long long)(GetTickCount64() - start);
-            SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
-          }).detach();
+              g_lockDurationMs = (long long)(GetTickCount64() - start);
+              SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
+            }).detach();
 
-          LOG_INFO("Transition: glide->dive, Nitro Delta sync (600ms)");
-          g_lockTriggerReason = 1; // Glide → Dive
+            LOG_INFO("Transition: glide->dive, Nitro Delta sync (600ms)");
+            g_lockTriggerReason = 1; // Glide → Dive
+          }
         }
         // Edge: Diving -> Gliding (Nitro)
         else if (!nowDiving && lastDiving) {
-            ULONGLONG cooldownLeft = 500 - (GetTickCount64() - g_lastLockTime);
-            if (cooldownLeft > 0 && cooldownLeft <= 500) {
-                LOG_INFO("[MASTER] Transition (dive->glide) blocked by cooldown. %llums remaining.", cooldownLeft);
-            } else {
-                g_lastLockTime = GetTickCount64();
-                g_mouseSuspendedUntil = GetTickCount64() + 1000;
-                LOG_INFO("[MASTER] Triggering transition lock: dive->glide (1000ms)");
-            }
-        }
+          ULONGLONG cooldownLeft = 500 - (GetTickCount64() - g_lastLockTime);
+          if (cooldownLeft > 0 && cooldownLeft <= 500) {
+            LOG_INFO("[MASTER] Transition (dive->glide) blocked by cooldown. %llums remaining.", cooldownLeft);
+          } else {
+            g_lastLockTime = GetTickCount64();
+            g_mouseSuspendedUntil = GetTickCount64() + 1000;
+            LOG_INFO("[MASTER] Triggering transition lock: dive->glide (1000ms)");
 
-          std::thread([]() {
-            g_lockCount++;
-            g_lockThreadId = GetCurrentThreadId();
-            ULONGLONG start = GetTickCount64();
+            std::thread([]() {
+              g_lockCount++;
+              g_lockThreadId = GetCurrentThreadId();
+              ULONGLONG start = GetTickCount64();
 
-            for (int i = 0; i < 256; i++)
-              g_rawKeyUpDetected[i] = false;
-            g_wPreLock =
-                (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
-            auto initialState = GetGamingKeyState(); // Pre-lock snapshot
+              for (int i = 0; i < 256; i++)
+                g_rawKeyUpDetected[i] = false;
+              g_wPreLock =
+                  (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
+              auto initialState = GetGamingKeyState(); // Pre-lock snapshot
 
-            {
-              std::lock_guard<std::mutex> lock(g_blockInputMutex);
-              g_blockInputActive = true;
-              BlockInput(TRUE);
-              Sleep(1000);
-              BlockInput(FALSE);
-              g_blockInputActive = false;
-            }
+              {
+                std::lock_guard<std::mutex> lock(g_blockInputMutex);
+                g_blockInputActive = true;
+                LOG_INFO("[MASTER] BlockInput(TRUE) engaged.");
+                BlockInput(TRUE);
+                Sleep(1000);
+                BlockInput(FALSE);
+                LOG_INFO("[MASTER] BlockInput(FALSE) released.");
+                g_blockInputActive = false;
+              }
 
-            g_lockDurationMs = (long long)(GetTickCount64() - start);
-            SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
-          }).detach();
+              g_lockDurationMs = (long long)(GetTickCount64() - start);
+              SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
+            }).detach();
 
-          LOG_INFO("Transition: dive->glide, Nitro Delta sync (1000ms)");
-          g_lockTriggerReason = 2; // Dive → Glide
+            LOG_INFO("Transition: dive->glide, Nitro Delta sync (1000ms)");
+            g_lockTriggerReason = 2; // Dive → Glide
+          }
         }
       }
 
