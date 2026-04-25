@@ -29,6 +29,7 @@
 
 using namespace Gdiplus;
 
+void PerformanceMonitorThread();
 #include "shared/State.h"
 
 // Global State
@@ -850,6 +851,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
   std::thread detThread(DetectorThread);
   std::thread focusThread(FocusMonitorThread);
+  std::thread perfThread(PerformanceMonitorThread);
 
   // Run Qt Event Loop
   int exitCode = app.exec();
@@ -860,6 +862,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     detThread.join();
   if (focusThread.joinable())
     focusThread.join();
+  if (perfThread.joinable()) perfThread.join();
 
   // Final Save on Exit
   if (!g_allProfiles.empty()) {
@@ -874,4 +877,34 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   GdiplusShutdown(g_gdiplusToken);
   ShutdownEnhancedLogging();
   return exitCode;
+}
+
+// Performance Monitoring Thread - Logs metrics to perf.log every 5 seconds
+void PerformanceMonitorThread() {
+    // Initialize the performance log file
+    std::wstring perfLogPath = GetAppRootPath() + L"logs\\perf.log";
+    PerformanceLogger::Instance().Initialize(perfLogPath);
+    LOG_INFO("Performance monitor thread started.");
+
+    while (g_running) {
+        // Collect metrics
+        PROCESS_MEMORY_COUNTERS pmc;
+        double ramMb = 0.0;
+        if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+            ramMb = (double)pmc.WorkingSetSize / (1024.0 * 1024.0);
+        }
+
+        // Metrics: CPU (Scanner), RAM, Scan Latency, HUD FPS
+        PerformanceLogger::Instance().LogMetrics(
+            (double)g_scannerCpuPct.load(), 
+            ramMb, 
+            (int)g_detectionDelayMs.load(),
+            0 // FPS tracking removed for stability
+        );
+
+        // Wait 5 seconds
+        for (int i = 0; i < 50 && g_running; i++) {
+            Sleep(100);
+        }
+    }
 }

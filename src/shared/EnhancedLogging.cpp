@@ -188,3 +188,37 @@ std::string EnhancedLogger::ToNarrow(const std::wstring& wstr) {
     WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
     return strTo;
 }
+
+// Performance Logger Implementation
+PerformanceLogger& PerformanceLogger::Instance() {
+    static PerformanceLogger instance;
+    return instance;
+}
+
+void PerformanceLogger::Initialize(const std::wstring& logPath) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (m_initialized) return;
+    m_stream.open(logPath, std::ios::out | std::ios::trunc); // Overwrite fresh for each run
+    if (m_stream.is_open()) {
+        m_stream << "Timestamp,CPU_Usage_Pct,Memory_MB,Scan_Latency_MS,HUD_FPS\n";
+        m_initialized = true;
+    }
+}
+
+void PerformanceLogger::LogMetrics(double cpuPct, double ramMb, int scanMs, int fps) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (!m_initialized || !m_stream.is_open()) return;
+
+    using namespace std::chrono;
+    auto now = system_clock::now();
+    auto time = system_clock::to_time_t(now);
+    std::tm tmValue{};
+    localtime_s(&tmValue, &time);
+
+    m_stream << std::put_time(&tmValue, "%H:%M:%S") << ","
+             << std::fixed << std::setprecision(2) << cpuPct << ","
+             << ramMb << ","
+             << scanMs << ","
+             << fps << "\n";
+    m_stream.flush();
+}
