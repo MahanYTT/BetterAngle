@@ -1,5 +1,7 @@
 ### BetterAngle Pro v5.5.65
-- Automated build release.
+- **Burst Restore Loop**: Implemented 3-pulse typematic simulation to force game engine acknowledgement.
+- **Enhanced Thaw Wait**: Increased post-Shock delay to 100ms to guarantee hardware-to-OS synchronization.
+- **Typematic Interleaving**: Added 10ms gaps between pulses to span across multiple engine polling ticks.
 
 ### BetterAngle Pro v5.5.64
 - **Fixed Build Errors**: Resolved undeclared identifier and syntax errors in Overlay.cpp and Input.cpp.

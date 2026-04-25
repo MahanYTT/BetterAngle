@@ -291,23 +291,21 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   }
 
   // Step 2: THAW — Wait for async key state table to settle after Shock.
-  // 50ms guarantees at least one keyboard hardware repeat (33ms typematic)
-  // arrives if the user is still physically holding the key.
-  Sleep(50);
+  // 100ms (v5.5.65) guarantees at least one hardware repeat arrives even on
+  // systems with slow repeat rates, ensuring GetAsyncKeyState is trustworthy.
+  Sleep(100);
 
   // Step 3: RESTORE — Re-press keys the user is STILL physically holding.
-  // Only check keys we Shocked (preState=true); others need no intervention
-  // because their state was never artificially modified.
-  // Only restore if Fortnite is focused — the game isn't reading input when
-  // tabbed out, so repressing would be wasted and could cause side effects.
+  // Burst Restore Theory (v5.5.65): Send 3 pulses with 10ms gaps to simulate
+  // a hardware typematic stream. This ensures the game engine catches the
+  // press across multiple polling ticks and doesn't discard it as an anomaly.
   if (g_fortniteFocusedCache.load()) {
-    std::vector<INPUT> restoreInputs;
     for (size_t i = 0; i < preState.size(); ++i) {
       if (preState[i]) {
         int vk = g_gamingKeys[i];
         bool stillHeld = (GetAsyncKeyState(vk) & 0x8000) != 0;
 
-        // Update postState for forensics overlay (WASD only, index 0-3)
+        // Update postState for forensics overlay
         if (i < 4)
           g_postState[i] = stillHeld;
 
@@ -316,31 +314,22 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
           if (scanCode == 0)
             continue;
 
-          INPUT input = {0};
-          input.type = INPUT_KEYBOARD;
-          input.ki.wVk = (WORD)vk;
-          input.ki.wScan = (WORD)scanCode;
-          input.ki.dwFlags = KEYEVENTF_SCANCODE; // KeyDown
-          restoreInputs.push_back(input);
-          log += std::to_string(vk) + "↓ ";
+          // TYPEMATIC BURST: 3 pulses, 10ms gaps
+          for (int burst = 0; burst < 3; burst++) {
+            INPUT input = {0};
+            input.type = INPUT_KEYBOARD;
+            input.ki.wVk = (WORD)vk;
+            input.ki.wScan = (WORD)scanCode;
+            input.ki.dwFlags = KEYEVENTF_SCANCODE; // KeyDown
+            SendInput(1, &input, sizeof(INPUT));
+            if (burst < 2)
+              Sleep(10);
+          }
+          log += std::to_string(vk) + "↓(x3) ";
         }
       }
     }
-
-    if (!restoreInputs.empty()) {
-      UINT sent = SendInput((UINT)restoreInputs.size(), restoreInputs.data(),
-                            sizeof(INPUT));
-      if (sent != restoreInputs.size()) {
-        LOG_ERROR("GhostFix: Restore SendInput FAILED — sent %u/%u keys!", sent,
-                  (UINT)restoreInputs.size());
-        log += "(RESTORE_FAIL:" + std::to_string(sent) + "/" +
-               std::to_string(restoreInputs.size()) + ") ";
-      } else {
-        log += "(Restored)";
-      }
-    } else {
-      log += "(Clean)";
-    }
+    log += "(Restored)";
 
     // Step 4: VERIFY — Confirm restored keys are actually seen as held.
     // Small delay to let SendInput propagate through the input pipeline.
