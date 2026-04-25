@@ -59,12 +59,35 @@ void FocusMonitorThread() {
 
     // Detect Alt-Tab back into Fortnite with ultra-low latency (1ms polling)
     if (!lastFortniteFocused && currentFortniteFocused) {
-      // ALT-TAB COOLDOWN: Windows handles key state restoration automatically
-      // No BlockInput needed for focus changes - just suspend mouse for 400ms
+      // PRO ALT-TAB RETURN: Hardware lock + Nitro Flush for perfect sync
+      g_lastLockTime = GetTickCount64();
       g_mouseSuspendedUntil = GetTickCount64() + 400;
       g_lockCount++;
-      LOG_INFO("[MASTER] Alt-tab return detected. Cooldown 400ms started (No "
-               "BlockInput).");
+      g_lockTriggerReason = 3; // Alt-Tab Return
+
+      std::thread([]() {
+        // 1. Hardware Lock (200ms to allow Windows to settle)
+        {
+          std::lock_guard<std::mutex> lock(g_blockInputMutex);
+          g_blockInputActive = true;
+          BlockInput(TRUE);
+          LOG_INFO("[MASTER] Alt-tab return: Hardware Lock engaged (200ms).");
+        }
+
+        auto initialState = GetGamingKeyState();
+        Sleep(200);
+
+        {
+          std::lock_guard<std::mutex> lock(g_blockInputMutex);
+          BlockInput(FALSE);
+          g_blockInputActive = false;
+          LOG_INFO("[MASTER] Alt-tab return: Hardware released.");
+        }
+
+        // 2. Nitro Flush to sync keys held during Alt-Tab
+        Sleep(20); 
+        SyncGamingKeysNitro(initialState);
+      }).detach();
     }
     lastFortniteFocused = currentFortniteFocused;
     Sleep(16); // Balanced: Responsive alt-tab detection with low CPU overhead
@@ -648,15 +671,9 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         }
 
         if (g_isDraggingHUD && lDown) {
-          // Calculate new position based on drag offset
-          int newHudX = g_dragStartHUD.x + (pt.x - g_dragStartMouse.x);
-          int newHudY = g_dragStartHUD.y + (pt.y - g_dragStartMouse.y);
-
-          // Update raw values (preserve -1 sentinel if position is exactly at
-          // default)
-          g_hudX = (newHudX == 40) ? -1 : newHudX;
-          g_hudY = (newHudY == 40) ? -1 : newHudY;
-
+          // Calculate new position based on drag offset from the drawn position
+          g_hudX = g_dragStartHUD.x + (pt.x - g_dragStartMouse.x);
+          g_hudY = g_dragStartHUD.y + (pt.y - g_dragStartMouse.y);
           InvalidateRect(hWnd, NULL, FALSE);
         }
 
@@ -768,11 +785,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, NULL);
 
   LoadSettings();
-  // Initialize HUD position if not set (first run)
-  if (g_hudX < 0) {
-    int screenW = GetSystemMetrics(SM_CXSCREEN);
-    g_hudX = (screenW / 2) - 130; // Center horizontally (HUD width is 260)
-  }
+  // HUD position: -1 is the sentinel for "use default" (Overlay.cpp renders at
+  // x=40 when g_hudX==-1).  Do NOT overwrite negative values here -- negative
+  // coordinates are valid (the user may have dragged the HUD off-screen) and
+  // Overlay.cpp already handles the -1 sentinel correctly.
   SetLogLevel(LogLevel::Info);
   LogStartup();
   CleanupUpdateJunk();
