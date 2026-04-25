@@ -220,6 +220,7 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     return;
   }
 
+  ULONGLONG fixStart = GetTickCount64();
   LOG_INFO("GhostFix: Starting Shock & Restore sequence...");
   g_wPostUnlock = GetAsyncKeyState('W');
 
@@ -277,7 +278,16 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   }
 
   if (!releaseInputs.empty()) {
-    SendInput((UINT)releaseInputs.size(), releaseInputs.data(), sizeof(INPUT));
+    UINT sent = SendInput((UINT)releaseInputs.size(), releaseInputs.data(),
+                          sizeof(INPUT));
+    if (sent != releaseInputs.size()) {
+      LOG_ERROR("GhostFix: Shock SendInput FAILED — sent %u/%u keys!", sent,
+                (UINT)releaseInputs.size());
+      log += "(SHOCK_FAIL:" + std::to_string(sent) + "/" +
+             std::to_string(releaseInputs.size()) + ") ";
+    }
+  } else {
+    log += "(No keys to Shock) ";
   }
 
   // Step 2: THAW — Wait for async key state table to settle after Shock.
@@ -318,20 +328,52 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     }
 
     if (!restoreInputs.empty()) {
-      SendInput((UINT)restoreInputs.size(), restoreInputs.data(),
-                sizeof(INPUT));
-      log += "(Restored)";
+      UINT sent = SendInput((UINT)restoreInputs.size(), restoreInputs.data(),
+                            sizeof(INPUT));
+      if (sent != restoreInputs.size()) {
+        LOG_ERROR("GhostFix: Restore SendInput FAILED — sent %u/%u keys!", sent,
+                  (UINT)restoreInputs.size());
+        log += "(RESTORE_FAIL:" + std::to_string(sent) + "/" +
+               std::to_string(restoreInputs.size()) + ") ";
+      } else {
+        log += "(Restored)";
+      }
     } else {
       log += "(Clean)";
     }
+
+    // Step 4: VERIFY — Confirm restored keys are actually seen as held.
+    // Small delay to let SendInput propagate through the input pipeline.
+    Sleep(5);
+    bool verifyOk = true;
+    for (size_t i = 0; i < preState.size() && i < 4; ++i) {
+      if (preState[i] && g_postState[i].load()) {
+        // We expected this key to be restored — check it
+        int vk = g_gamingKeys[i];
+        bool seen = (GetAsyncKeyState(vk) & 0x8000) != 0;
+        if (!seen) {
+          LOG_WARN("GhostFix: VERIFY FAIL — key %d restored but not seen!", vk);
+          log += "(VFAIL:" + std::to_string(vk) + ") ";
+          verifyOk = false;
+        }
+      }
+    }
+    g_ghostFixVerifyOk = verifyOk;
+    if (verifyOk) {
+      log += "(Verified)";
+    }
   } else {
+    g_ghostFixVerifyOk = true; // No restore needed = no verify needed
     log += "(No Restore - Not Focused)";
   }
 
+  ULONGLONG fixEnd = GetTickCount64();
+  g_ghostFixDurationMs = (long long)(fixEnd - fixStart);
   g_tableRefreshed = true;
   g_wPostFlush = GetAsyncKeyState('W');
   g_nitroSyncLog = log;
-  LOG_INFO(g_nitroSyncLog.c_str());
+  LOG_INFO("GhostFix: Complete in %llums — %s",
+           (unsigned long long)(fixEnd - fixStart), log.c_str());
   g_hasSynced = true;
   g_ghostFixInProgress = false;
 

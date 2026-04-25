@@ -1,3 +1,8 @@
+### BetterAngle Pro v5.5.63
+- **Self-Correcting GhostFix**: Added a Verification step to confirm successful input restoration.
+- **Enhanced Reliability**: Added SendInput error handling and diagnostic retry logic.
+- **Latency Tracking**: Measured GhostFix execution time for performance tuning.
+
 ### BetterAngle Pro v5.5.62
 - **Shock & Restore Engine**: Replaces unreliable delta-sync with unconditional release and hardware-thaw restoration.
 - **Alt-Tab Lock Guard**: Extended BlockInput to focus switches to prevent FOV drift.

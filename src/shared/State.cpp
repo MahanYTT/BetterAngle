@@ -40,6 +40,8 @@ std::atomic<bool> g_rawKeyUpDetected[256] = {};
 std::atomic<ULONGLONG> g_lastLockTime(0);
 std::atomic<bool> g_lockInProgress(false);
 std::atomic<bool> g_ghostFixInProgress(false);
+std::atomic<long long> g_ghostFixDurationMs(0);
+std::atomic<bool> g_ghostFixVerifyOk(true);
 std::mutex g_lockMutex;
 std::mutex g_blockInputMutex;
 std::string g_nitroSyncLog = "No sync events yet";

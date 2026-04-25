@@ -587,6 +587,11 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
         DrawRow(9, 1, L"Fix State:",
                 g_ghostFixInProgress ? L"RUNNING" : L"IDLE",
                 !g_ghostFixInProgress);
+        DrawRow(10, 1, L"Fix Duration:",
+                std::to_wstring(g_ghostFixDurationMs.load()) + L" ms",
+                g_ghostFixDurationMs.load() < 100);
+        DrawRow(11, 1, L"Fix Verify:", g_ghostFixVerifyOk ? L"PASS" : L"FAIL!",
+                g_ghostFixVerifyOk);
 
         // SHOCK & RESTORE FORENSICS (v5.5.62)
         // pre = key held before lock (from preState snapshot)
