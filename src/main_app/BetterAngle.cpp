@@ -36,6 +36,9 @@ using namespace Gdiplus;
 ULONG_PTR g_gdiplusToken;
 FovDetector g_detector;
 
+// Forward Declarations
+void PerformanceMonitorThread();
+
 // Helper function to flush pending input messages before blocking
 static void FlushPendingInputMessages() {
   MSG msg;
@@ -966,9 +969,9 @@ void PerformanceMonitorThread() {
 
         // HUD Performance
         int scanMs = g_detectionDelayMs.load();
-        int fps = (int)g_logic.GetCurrentAngle(); // Placeholder or actual FPS if available
+        int currentAngle = (int)g_logic.GetAngle(); 
 
-        PerformanceLogger::Instance().LogMetrics(cpuPct, ramMb, scanMs, 0);
+        PerformanceLogger::Instance().LogMetrics(cpuPct, ramMb, scanMs, currentAngle);
         
         Sleep(5000); // Log every 5 seconds
     }
