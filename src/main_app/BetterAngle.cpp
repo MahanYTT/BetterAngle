@@ -657,8 +657,12 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         int hudY = (g_hudY == -1) ? 40 : g_hudY;
 
         if (lDown && !g_isDraggingHUD && canDrag) {
-          if (pt.x >= hudX && pt.x <= hudX + 260 && pt.y >= hudY &&
-              pt.y <= hudY + 150) {
+          // Expanded Technical Hitbox (v5.7.8)
+          int currentWidth = g_showDebugOverlay ? 520 : 260;
+          int currentHeight = g_showDebugOverlay ? 440 : 155;
+
+          if (pt.x >= hudX && pt.x <= hudX + currentWidth && pt.y >= hudY &&
+              pt.y <= hudY + currentHeight) {
             g_isDraggingHUD = true;
             g_dragStartMouse = pt;
             // Store the actual drawn position for drag calculations
