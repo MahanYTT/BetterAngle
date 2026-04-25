@@ -223,26 +223,29 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   ULONGLONG fixStart = GetTickCount64();
   g_wPostUnlock = GetAsyncKeyState('W');
 
-  // SHOCK & RESTORE THEORY (v5.5.67):
+  // RAW INPUT HARD-RESET (v5.5.80):
   // BlockInput freezes the Windows Async Key State Table. Key releases during
   // the lock are discarded, causing ghost keys.
   //
   // Phase 1 — SHOCK: Unconditionally release all keys held before the lock.
-  // Phase 2 — THAW: Wait for the async key state table to settle.
-  // Phase 3 — RESTORE: Unconditionally re-press ALL preState keys. We do NOT
-  //   check GetAsyncKeyState because after Shock, the HID parser won't generate
-  //   a new make event for a key already pressed in the previous USB report —
-  //   so GetAsyncKeyState returns false even when the user is still holding
-  //   the key. This was the root cause of the double-press bug.
-  // Phase 4 — VERIFY: Confirm restored keys are seen as held.
-  // Phase 5 — RAW INPUT CORRECTION: Reset arrays and open a 200ms collection
+  // Phase 2 — THAW: Short Sleep(5) for the async key state table to register
+  //   the Shock KeyUp. Minimal delay — we want the Reboot signal to land fast.
+  // Phase 3 — RESTORE (REBOOT SIGNAL): Unconditionally re-press ALL preState
+  //   keys with a 3-pulse typematic burst using KEYEVENTF_SCANCODE. We do NOT
+  //   gate on GetAsyncKeyState because after Shock, the HID parser won't
+  //   generate a new make event for a key already pressed in the previous USB
+  //   report — so GetAsyncKeyState returns false even when the user is still
+  //   holding the key. This was the root cause of the double-press bug.
+  // Phase 4 — RAW INPUT CORRECTION: Reset arrays and open a 200ms collection
   //   window (g_ghostFixInProgress=false) so only REAL hardware typematic
-  //   events are recorded. If no Make is seen for a key, the user released
-  //   it during the lock — send KeyUp to kill the ghost-walk.
+  //   events are recorded. Combined rule: only keep pressed if Mk=1 AND Br=0.
+  //   All other combinations → kill ghost (user released the key).
 
-  // Store preState for forensics overlay
+  // Store preState for forensics overlay, and RESET postState to prevent
+  // stale values from a prior lock cycle (0/1/0 Logic Hallucination bug).
   for (size_t i = 0; i < preState.size() && i < 4; ++i) {
     g_preState[i] = preState[i];
+    g_postState[i] = false; // Will be set true only if we actually restore
   }
 
   std::vector<INPUT> releaseInputs;
@@ -293,8 +296,8 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     log += "(NoShock) ";
   }
 
-  // Step 2: THAW — Wait for async key state table to settle after Shock.
-  Sleep(100);
+  // Step 2: THAW — Short delay for async key state table to register Shock.
+  Sleep(5);
 
   // Step 3: UNCONDITIONAL RESTORE — Re-press ALL keys that were held before
   // the lock. We do NOT check GetAsyncKeyState because after Shock sends a
@@ -332,26 +335,12 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     }
     log += anyRestored ? "(Restored)" : "(Clean)";
 
-    // Step 4: VERIFY — Confirm restored keys are actually seen as held.
-    Sleep(5);
-    bool verifyOk = true;
-    for (size_t i = 0; i < preState.size() && i < 4; ++i) {
-      if (preState[i] && g_postState[i].load()) {
-        int vk = g_gamingKeys[i];
-        bool seen = (GetAsyncKeyState(vk) & 0x8000) != 0;
-        if (!seen) {
-          LOG_WARN("Verify FAIL: key %d not seen after restore", vk);
-          log += "(VFAIL:" + std::to_string(vk) + ") ";
-          verifyOk = false;
-        }
-      }
-    }
-    g_ghostFixVerifyOk = verifyOk;
-    if (!verifyOk) {
-      g_activeFallback = 1; // FB1: Shock-only (restore didn't stick)
-    }
+    // No Verify phase: GetAsyncKeyState is unreliable after Shock/Restore and
+    // was the source of false 1/1/0 "Thaw Failure" diagnostics. We trust the
+    // pre-lock snapshot plus Raw Input correction instead.
+    g_ghostFixVerifyOk = true;
 
-    // Step 5: RAW INPUT CORRECTION — Kill ghost-walk for keys the user
+    // Step 4: RAW INPUT CORRECTION — Kill ghost-walk for keys the user
     // released during the lock.
     //
     // CONTAMINATION FIX: During Shock&Restore, g_ghostFixInProgress was true,
@@ -359,18 +348,18 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     // reset the arrays and open the collection window (g_ghostFixInProgress=
     // false) so only REAL hardware typematic events are recorded.
     //
-    // KEY INSIGHT: Two release scenarios must be handled:
+    // CORRECTION RULE: kill ghost if Br=1 OR Mk=0 (i.e. breakDetected ||
+    // !makeDetected). This is broader than the simple "Br=1 AND Mk=0" check
+    // because it also handles:
     //
-    // 1. Released DURING BlockInput(TRUE): Windows SWALLOWS the RI_KEY_BREAK
-    //    event — it never reaches WM_INPUT. Both Break and Make are false.
-    //    Inverse logic: no Make → user released → kill ghost.
+    //   Mk=0 Br=0 → released during lock, BOTH events swallowed by Windows
+    //                (simple rule would MISS this — key stays ghost-pressed!)
+    //   Mk=1 Br=1 → released after lock, Break is the user's final action
+    //                (simple rule would MISS this — ghost-walk persists!)
     //
-    // 2. Released AFTER BlockInput(FALSE) but during the 200ms collection
-    //    window: Typematic Make events arrive first (user was holding), then
-    //    Break arrives when they release. Both Br=1 and Mk=1. Break is the
-    //    LATER event and represents the user's final action → kill ghost.
+    // Only Mk=1 Br=0 (typematic Make with no Break) proves the user is still
+    // holding the key. All other combinations → kill ghost.
     //
-    // Combined rule: Only keep pressed if Make AND no Break.
     //   Mk=1 Br=0 → still holding → leave pressed
     //   Mk=0 Br=0 → released during lock (swallowed) → kill ghost
     //   Mk=1 Br=1 → released after lock → kill ghost (Break is final)
@@ -418,7 +407,7 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     }
     if (anyCorrected) {
       g_activeFallback = 5; // FB5: Raw Input correction applied
-    } else if (verifyOk && anyRestored) {
+    } else if (anyRestored) {
       g_activeFallback = 0; // Clean — no fallback needed
     }
   } else {
@@ -433,7 +422,7 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   g_wPostFlush = GetAsyncKeyState('W');
   g_nitroSyncLog = log;
   // Only log to file on issues; routine success is captured in nitroSyncLog
-  if (!g_ghostFixVerifyOk || anyCorrected) {
+  if (anyCorrected) {
     LOG_WARN("GhostFix: %llums — %s", (unsigned long long)(fixEnd - fixStart),
              log.c_str());
   }

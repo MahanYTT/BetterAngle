@@ -599,9 +599,7 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
         DrawRow(6, 1, L"Fix Duration:",
                 std::to_wstring(g_ghostFixDurationMs.load()) + L" ms",
                 g_ghostFixDurationMs.load() < 400);
-        DrawRow(7, 1, L"Fix Verify:",
-                std::wstring(g_ghostFixVerifyOk ? L"PASS" : L"FAIL!"),
-                g_ghostFixVerifyOk.load());
+        DrawRow(7, 1, L"Method:", L"HARD-RESET", true);
 
         // Per-key forensics: pre/post/phys/Br/Mk
         // pre = held before lock, post = after fix, phys = live OS read
