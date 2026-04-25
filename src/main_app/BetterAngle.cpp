@@ -845,8 +845,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   // Sync Crosshair Settings from Profile to Global State
   g_crossThickness = g_currentProfile.crossThickness;
   g_crossColor = g_currentProfile.crossColor;
-  g_crossOffsetX = g_currentProfile.crossOffsetX;
-  g_crossOffsetY = g_currentProfile.crossOffsetY;
+  // Always start at center (0.0) on app load as per user request
+  g_crossOffsetX = 0.0f;
+  g_crossOffsetY = 0.0f;
   g_crossAngle = g_currentProfile.crossAngle;
   g_crossPulse = g_currentProfile.crossPulse;
   g_showCrosshair = g_currentProfile.showCrosshair;
