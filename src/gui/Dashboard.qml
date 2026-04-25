@@ -565,11 +565,25 @@ Item {
                     }
 
                     Button {
+                        id: pulseToggleBtn
                         text: backend.crossPulse ? "PULSE ANIMATION: ON" : "PULSE ANIMATION: OFF"
                         width: parent.width
                         height: 38
-                        contentItem: Text { text: parent.text; color: "white"; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
-                        background: Rectangle { color: backend.crossPulse ? "#4a3080" : "#333"; radius: 4; border.color: backend.crossPulse ? "#6644aa" : "#444"; border.width: 1 }
+                        enabled: backend.crosshairOn
+                        opacity: enabled ? 1.0 : 0.4
+                        contentItem: Text { 
+                            text: parent.text; 
+                            color: "white"; 
+                            font.bold: true; 
+                            horizontalAlignment: Text.AlignHCenter; 
+                            verticalAlignment: Text.AlignVCenter 
+                        }
+                        background: Rectangle { 
+                            color: !pulseToggleBtn.enabled ? "#222" : (backend.crossPulse ? "#4a3080" : "#333"); 
+                            radius: 4; 
+                            border.color: !pulseToggleBtn.enabled ? "#333" : (backend.crossPulse ? "#6644aa" : "#444"); 
+                            border.width: 1 
+                        }
                         onClicked: backend.crossPulse = !backend.crossPulse
                     }
 
