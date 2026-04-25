@@ -221,7 +221,6 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   }
 
   ULONGLONG fixStart = GetTickCount64();
-  LOG_INFO("GhostFix: Starting Shock & Restore sequence...");
   g_wPostUnlock = GetAsyncKeyState('W');
 
   // SHOCK & RESTORE THEORY (v5.5.67):
@@ -286,13 +285,12 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     UINT sent = SendInput((UINT)releaseInputs.size(), releaseInputs.data(),
                           sizeof(INPUT));
     if (sent != releaseInputs.size()) {
-      LOG_ERROR("GhostFix: Shock SendInput FAILED — sent %u/%u keys!", sent,
-                (UINT)releaseInputs.size());
+      LOG_ERROR("Shock FAIL: sent %u/%u", sent, (UINT)releaseInputs.size());
       log += "(SHOCK_FAIL:" + std::to_string(sent) + "/" +
              std::to_string(releaseInputs.size()) + ") ";
     }
   } else {
-    log += "(No keys to Shock) ";
+    log += "(NoShock) ";
   }
 
   // Step 2: THAW — Wait for async key state table to settle after Shock.
@@ -341,15 +339,15 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
         int vk = g_gamingKeys[i];
         bool seen = (GetAsyncKeyState(vk) & 0x8000) != 0;
         if (!seen) {
-          LOG_WARN("GhostFix: VERIFY FAIL — key %d restored but not seen!", vk);
+          LOG_WARN("Verify FAIL: key %d not seen after restore", vk);
           log += "(VFAIL:" + std::to_string(vk) + ") ";
           verifyOk = false;
         }
       }
     }
     g_ghostFixVerifyOk = verifyOk;
-    if (verifyOk) {
-      log += "(Verified)";
+    if (!verifyOk) {
+      g_activeFallback = 1; // FB1: Shock-only (restore didn't stick)
     }
 
     // Step 5: RAW INPUT CORRECTION — Kill ghost-walk for keys the user
@@ -380,8 +378,7 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
 
           g_postState[i] = false;
           anyCorrected = true;
-          LOG_INFO("GhostFix: Raw Input correction — key %d released during "
-                   "lock, ghost killed",
+          LOG_WARN("RawCorrected: key %d released during lock, ghost killed",
                    vk);
           log += "(Corrected:" + std::to_string(vk) + ") ";
         }
@@ -390,9 +387,15 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     if (!anyCorrected) {
       log += "(NoCorrection)";
     }
+    if (anyCorrected) {
+      g_activeFallback = 5; // FB5: Raw Input correction applied
+    } else if (verifyOk && anyRestored) {
+      g_activeFallback = 0; // Clean — no fallback needed
+    }
   } else {
     g_ghostFixVerifyOk = true; // No restore needed = no verify needed
-    log += "(No Restore - Not Focused)";
+    g_activeFallback = 0;
+    log += "(NoRestore:Unfocused)";
   }
 
   ULONGLONG fixEnd = GetTickCount64();
@@ -400,8 +403,11 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   g_tableRefreshed = true;
   g_wPostFlush = GetAsyncKeyState('W');
   g_nitroSyncLog = log;
-  LOG_INFO("GhostFix: Complete in %llums — %s",
-           (unsigned long long)(fixEnd - fixStart), log.c_str());
+  // Only log to file on issues; routine success is captured in nitroSyncLog
+  if (!g_ghostFixVerifyOk || anyCorrected) {
+    LOG_WARN("GhostFix: %llums — %s", (unsigned long long)(fixEnd - fixStart),
+             log.c_str());
+  }
   g_hasSynced = true;
   g_ghostFixInProgress = false;
 
