@@ -1099,7 +1099,7 @@ void BetterAngleBackend::finishBooting() {
 }
 
 void BetterAngleBackend::setZero() {
-  extern std::atomic<float> g_currentAngle;
+  extern float g_currentAngle;
   g_currentAngle = 0.0f;
   g_logic.SetZero();
   Beep(1000, 80);
