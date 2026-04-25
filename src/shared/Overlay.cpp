@@ -585,13 +585,14 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
         DrawRow(8, 1, L"Ghost Detect:", mismatch ? L"MISMATCH!" : L"OK",
                 !mismatch);
         DrawRow(9, 1, L"Fix State:",
-                g_ghostFixInProgress ? L"RUNNING" : L"IDLE",
+                std::wstring(g_ghostFixInProgress ? L"RUNNING" : L"IDLE"),
                 !g_ghostFixInProgress);
         DrawRow(10, 1, L"Fix Duration:",
                 std::to_wstring(g_ghostFixDurationMs.load()) + L" ms",
                 g_ghostFixDurationMs.load() < 100);
-        DrawRow(11, 1, L"Fix Verify:", g_ghostFixVerifyOk ? L"PASS" : L"FAIL!",
-                g_ghostFixVerifyOk);
+        DrawRow(11, 1, L"Fix Verify:",
+                std::wstring(g_ghostFixVerifyOk ? L"PASS" : L"FAIL!"),
+                g_ghostFixVerifyOk.load());
 
         // SHOCK & RESTORE FORENSICS (v5.5.62)
         // pre = key held before lock (from preState snapshot)
@@ -612,16 +613,16 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
                              L" S=" + std::wstring(shocked ? L"1" : L"0") +
                              L" R=" + std::wstring(restored ? L"1" : L"0");
 
-          DrawRow(10 + i, 1, names[i], val, pre ? (phys == post) : true);
+          DrawRow(12 + i, 1, names[i], val, pre ? (phys == post) : true);
         }
       } else {
         DrawRow(6, 1, L"Nitro Sync:", L"AWAITING FIRST LOCK", true);
       }
 
-      DrawRow(14, 1, L"Input State:",
+      DrawRow(16, 1, L"Input State:",
               g_blockInputActive ? L"LOCKED" : L"UNLOCKED",
               !g_blockInputActive);
-      DrawRow(15, 1, L"Version:", L"v" + std::wstring(VERSION_WSTR), true);
+      DrawRow(17, 1, L"Version:", L"v" + std::wstring(VERSION_WSTR), true);
     }
   }
 
