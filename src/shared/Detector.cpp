@@ -56,25 +56,24 @@ int FovDetector::Scan(const RoiConfig& cfg) {
     int totalPixels = cfg.w * cfg.h;
     int tolSq = cfg.tolerance * cfg.tolerance;
     
-    // Explicit COLORREF extraction (0x00BBGGRR)
-    int tr = (int)(cfg.target & 0xFF);
-    int tg = (int)((cfg.target >> 8) & 0xFF);
-    int tb = (int)((cfg.target >> 16) & 0xFF);
+    BYTE tr = GetRValue(cfg.target);
+    BYTE tg = GetGValue(cfg.target);
+    BYTE tb = GetBValue(cfg.target);
 
-    DWORD* p = (DWORD*)m_pixels;
+    DWORD* pPixels = (DWORD*)m_pixels;
 
-    for (int i = 0; i < totalPixels; i++, p++) {
-        DWORD pix = *p;
+    for (int i = 0; i < totalPixels; i++) {
+        DWORD p = pPixels[i];
+        
+        // Exact v5.0.0 byte extraction (Direct Memory Mapping)
+        int r = p & 0xFF;
+        int g = (p >> 8) & 0xFF;
+        int b = (p >> 16) & 0xFF;
 
-        // Explicit GDI Pixel extraction (BGRA -> 0xXXRRGGBB)
-        int pr = (int)((pix >> 16) & 0xFF);
-        int pg = (int)((pix >> 8) & 0xFF);
-        int pb = (int)(pix & 0xFF);
-
-        int dr = pr - tr;
-        int dg = pg - tg;
-        int db = pb - tb;
-
+        int dr = r - (int)tr;
+        int dg = g - (int)tg;
+        int db = b - (int)tb;
+        
         if ((dr * dr + dg * dg + db * db) <= tolSq) {
             match++;
         }
