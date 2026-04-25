@@ -83,6 +83,8 @@ void DetectorThread() {
       g_requiredMatchCount =
           (int)((p.diveGlideMatch / 100.0f) * (p.roi_w * p.roi_h));
 
+      bool nowDiving = (g_matchCount.load() >= g_requiredMatchCount.load());
+
       bool currentFortniteFocused = g_fortniteFocusedCache.load();
       g_isCursorVisible = IsCursorCurrentlyVisible();
 
@@ -122,7 +124,6 @@ void DetectorThread() {
         g_scannerCpuPct = 0;
       }
 
-      bool nowDiving = (g_matchCount.load() >= g_requiredMatchCount.load());
 
       if (GetTickCount64() >= g_mouseSuspendedUntil) {
         // Edge: Gliding -> Diving (Nitro)
@@ -218,14 +219,17 @@ void DetectorThread() {
       lastDiving = nowDiving;
       g_isDiving = nowDiving;
       g_logic.SetDivingState(nowDiving);
-    }
-    // Adaptive CPU optimization: Three-tier sleep (50ms / 10ms / 1ms)
-    if (!g_fortniteFocusedCache.load()) {
-      Sleep(50); // Dormant: Game not focused
-    } else if (!nowDiving && !lastDiving) {
-      Sleep(10); // Cruising: Game focused but no activity
+
+      // Adaptive CPU optimization: Three-tier sleep (50ms / 10ms / 1ms)
+      if (!g_fortniteFocusedCache.load()) {
+        Sleep(50); // Dormant: Game not focused
+      } else if (!nowDiving && !lastDiving) {
+        Sleep(10); // Cruising: Game focused but no activity
+      } else {
+        Sleep(1); // Racing: Active diving/gliding transition
+      }
     } else {
-      Sleep(1); // Racing: Active diving/gliding transition
+      Sleep(100); // Standard idle sleep if no profile selected
     }
   }
 }
