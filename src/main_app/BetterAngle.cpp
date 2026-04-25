@@ -38,9 +38,6 @@ void PerformanceMonitorThread();
 // Global handles defined in State.h/cpp
 ULONG_PTR g_gdiplusToken;
 FovDetector g_detector;
-std::atomic<bool> g_lockInProgress(false);
-std::mutex g_lockMutex;
-std::atomic<ULONGLONG> g_lastLockTime(0);
 
 // Helper function to flush pending input messages before blocking
 static void FlushPendingInputMessages() {
