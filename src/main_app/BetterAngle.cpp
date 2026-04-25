@@ -730,6 +730,16 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                    LPSTR lpCmdLine, int nCmdShow) {
+  // Phase -2: Single Instance Guard (v5.5.75)
+  // Create a named mutex to ensure only one instance of the app is running.
+  // The mutex name must be unique to the application.
+  HANDLE hMutex = CreateMutexW(NULL, TRUE, L"BetterAnglePro_SingleInstance_Mutex");
+  if (GetLastError() == ERROR_ALREADY_EXISTS) {
+    MessageBoxW(NULL, L"BetterAngle is already running.\n\nCheck your system tray to open the dashboard.", 
+                L"Application Already Running", MB_OK | MB_ICONINFORMATION);
+    return 0;
+  }
+
   // Phase -1: Ultra-Fast Timer Precision (v5.1.19)
   timeBeginPeriod(1);
   // Phase -1: DPI Awareness (CRITICAL for multi-monitor alignment)
@@ -921,6 +931,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   RemoveSystrayIcon(g_hHUD);
   GdiplusShutdown(g_gdiplusToken);
   ShutdownEnhancedLogging();
+
+  if (hMutex) {
+    ReleaseMutex(hMutex);
+    CloseHandle(hMutex);
+  }
+
   return exitCode;
 }
 
