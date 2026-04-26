@@ -1,3 +1,7 @@
+### BetterAngle Pro v5.5.86
+- Improved detector and overlay logic for smoother performance
+- Automated build release.
+
 ### BetterAngle Pro v5.5.85
 - Automated build release.
 
