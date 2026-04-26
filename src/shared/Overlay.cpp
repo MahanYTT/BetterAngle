@@ -601,6 +601,30 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
                 g_ghostFixDurationMs.load() < 400);
         DrawRow(7, 1, L"Method:", L"HARD-RESET", true);
 
+        auto RawCell = [&](int vk) -> std::wstring {
+          bool brk = g_rawKeyUpDetected[vk].load();
+          bool mk = g_rawKeyMakeDetected[vk].load();
+          if (mk && brk)
+            return L"MB";
+          if (mk)
+            return L"M";
+          if (brk)
+            return L"B";
+          return L".";
+        };
+
+        auto OsCell = [&](int vk) -> wchar_t {
+          return (GetAsyncKeyState(vk) & 0x8000) ? L'1' : L'0';
+        };
+
+        std::wstring rawState = L"W:" + RawCell('W') + L" A:" + RawCell('A') +
+                                L" S:" + RawCell('S') + L" D:" + RawCell('D');
+        std::wstring osState = std::wstring(L"W:") + OsCell('W') + L" A:" +
+                               OsCell('A') + L" S:" + OsCell('S') + L" D:" +
+                               OsCell('D');
+        DrawRow(8, 1, L"Raw State:", rawState, true);
+        DrawRow(9, 1, L"OS State:", osState, true);
+
         // Per-key forensics: pre/post/phys/Br/Mk
         // pre = held before lock, post = after fix, phys = live OS read
         // Br/Mk = Raw Input from clean 200ms window (contamination-filtered)
@@ -625,16 +649,16 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
             bool shouldStillBePressed = mk && !brk;
             rawConsistent = (shouldStillBePressed ? post : !post);
           }
-          DrawRow(8 + i, 1, names[i], val, pre ? rawConsistent : true);
+          DrawRow(10 + i, 1, names[i], val, pre ? rawConsistent : true);
         }
       } else {
         DrawRow(3, 1, L"Ghost Status:", L"AWAITING FIRST LOCK", true);
       }
 
-      DrawRow(12, 1, L"Input State:",
+      DrawRow(14, 1, L"Input State:",
               g_blockInputActive ? L"LOCKED" : L"UNLOCKED",
               !g_blockInputActive);
-      DrawRow(13, 1, L"Version:", L"v" + std::wstring(VERSION_WSTR), true);
+      DrawRow(15, 1, L"Version:", L"v" + std::wstring(VERSION_WSTR), true);
     }
   }
 
