@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.89
+- Automated build release.
+
 ### BetterAngle Pro v5.5.88
 - **Input System Upgrade**: Completely rewrote the global hotkey engine to use manual hardware polling instead of Windows `RegisterHotKey`. This officially adds full support for mapping custom functions (Dashboard, Crosshair, etc.) to extra mouse buttons (Mouse4/Mouse5) which was previously blocked by the OS.
 - Automated build release.
