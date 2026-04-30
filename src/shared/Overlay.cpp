@@ -545,8 +545,8 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
               g_scannerCpuPct.load() < 50);
 
       // Column 1: Ghost Fix & Forensics (v5.5.69)
-      static const int keys[] = {'W', 'A', 'S', 'D'};
-      static const wchar_t *names[] = {L"W", L"A", L"S", L"D"};
+      static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE};
+      static const wchar_t *names[] = {L"W", L"A", L"S", L"D", L"SPC"};
 
       bool isLocked = suspended;
       DrawRow(0, 1, L"Input Lock:", isLocked ? L"ACTIVE" : L"IDLE", !isLocked);
@@ -565,7 +565,7 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
         // post=0 + Mk=1 Br=0 → under-restore (corrected but user still holding)
         std::wstring ghostStatus;
         bool ghostOk = true;
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < 5; ++i) {
           bool pre = g_preState[i].load();
           bool post = g_postState[i].load();
           bool brk = g_rawKeyUpDetected[keys[i]].load();
@@ -618,17 +618,18 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
         };
 
         std::wstring rawState = L"W:" + RawCell('W') + L" A:" + RawCell('A') +
-                                L" S:" + RawCell('S') + L" D:" + RawCell('D');
+                                L" S:" + RawCell('S') + L" D:" + RawCell('D') +
+                                L" SPC:" + RawCell(VK_SPACE);
         std::wstring osState = std::wstring(L"W:") + OsCell('W') + L" A:" +
                                OsCell('A') + L" S:" + OsCell('S') + L" D:" +
-                               OsCell('D');
+                               OsCell('D') + L" SPC:" + OsCell(VK_SPACE);
         DrawRow(8, 1, L"Raw State:", rawState, true);
         DrawRow(9, 1, L"OS State:", osState, true);
 
         // Per-key forensics: pre/post/phys/Br/Mk
         // pre = held before lock, post = after fix, phys = live OS read
         // Br/Mk = Raw Input from clean 200ms window (contamination-filtered)
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < 5; ++i) {
           bool pre = g_preState[i].load();
           bool post = g_postState[i].load();
           bool phys = (GetAsyncKeyState(keys[i]) & 0x8000) != 0;

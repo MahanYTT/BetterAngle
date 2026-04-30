@@ -70,7 +70,8 @@ void FocusMonitorThread() {
       g_lockCount++;
 
       std::thread([]() {
-        std::lock_guard<std::mutex> lock(g_lockMutex);
+        std::unique_lock<std::mutex> lock(g_lockMutex, std::try_to_lock);
+        if (!lock.owns_lock()) return;
         g_lockInProgress = true;
         g_lockThreadId = GetCurrentThreadId();
 
@@ -150,7 +151,10 @@ void DetectorThread() {
 
       bool nowDiving = (g_matchCount.load() >= g_requiredMatchCount.load());
 
-      if (GetTickCount64() >= g_mouseSuspendedUntil) {
+      // Only trigger input blocking locks if Fortnite is actually focused AND the cursor is hidden.
+      // This prevents the mouse from locking up on the desktop if the user tabs out,
+      // or if they open the in-game map/inventory (which shows the cursor and obscures the ROI).
+      if (currentFortniteFocused && !g_isCursorVisible && GetTickCount64() >= g_mouseSuspendedUntil) {
         // Edge: Gliding -> Diving (Nitro)
         if (nowDiving && !lastDiving &&
             (GetTickCount64() - g_lastLockTime > 500)) {
@@ -158,7 +162,8 @@ void DetectorThread() {
           g_mouseSuspendedUntil = GetTickCount64() + 700;
 
           std::thread([]() {
-            std::lock_guard<std::mutex> lock(g_lockMutex);
+            std::unique_lock<std::mutex> lock(g_lockMutex, std::try_to_lock);
+            if (!lock.owns_lock()) return;
             g_lockInProgress = true;
             g_lockCount++;
             g_lockThreadId = GetCurrentThreadId();
@@ -198,7 +203,8 @@ void DetectorThread() {
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
 
           std::thread([]() {
-            std::lock_guard<std::mutex> lock(g_lockMutex);
+            std::unique_lock<std::mutex> lock(g_lockMutex, std::try_to_lock);
+            if (!lock.owns_lock()) return;
             g_lockInProgress = true;
             g_lockCount++;
             g_lockThreadId = GetCurrentThreadId();
@@ -673,18 +679,21 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
           InvalidateRect(hWnd, NULL, FALSE);
         }
 
-        // Adjust click-through based on Fortnite focus
+        // Adjust click-through and Z-order based on Fortnite focus
         bool fnFocused = IsFortniteForeground();
         long ex = GetWindowLong(hWnd, GWL_EXSTYLE);
         if (fnFocused) {
-          // When Fortnite is focused, make HUD transparent to clicks
+          // When Fortnite is focused, make HUD transparent to clicks and Topmost
           if (!(ex & WS_EX_TRANSPARENT)) {
             SetWindowLong(hWnd, GWL_EXSTYLE, ex | WS_EX_TRANSPARENT);
+            SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
           }
         } else {
-          // When not focused, ensure HUD receives mouse events for dragging
+          // When not focused, ensure HUD receives mouse events for dragging and drop Topmost
+          // Dropping Topmost prevents Windows from hiding the taskbar ("bottom of screen disappearing")
           if (ex & WS_EX_TRANSPARENT) {
             SetWindowLong(hWnd, GWL_EXSTYLE, ex & ~WS_EX_TRANSPARENT);
+            SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
           }
         }
       }
@@ -707,6 +716,17 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
             L".json");
       }
     }
+    return 0;
+  }
+
+  case WM_DISPLAYCHANGE: {
+    RECT mRect = GetMonitorRectByIndex(g_screenIndex);
+    int screenW = mRect.right - mRect.left;
+    int screenH = mRect.bottom - mRect.top;
+    int screenX = mRect.left;
+    int screenY = mRect.top;
+    SetWindowPos(hWnd, NULL, screenX, screenY, screenW, screenH,
+                 SWP_NOACTIVATE | SWP_NOZORDER);
     return 0;
   }
 
@@ -780,7 +800,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   LOG_INFO("WinMain entered");
 
   int argc = 1;
-  char *argv[] = {(char *)"BetterAngle.exe", nullptr};
+  char exeName[] = "BetterAngle.exe";
+  char *argv[] = {exeName, nullptr};
   QGuiApplication app(argc, argv);
   app.setQuitOnLastWindowClosed(
       false); // Prevent premature exit if windows are still initializing

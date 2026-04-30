@@ -1,4 +1,7 @@
 ### BetterAngle Pro v5.5.87
+- **Stability Fixes**: Resolved IsFortniteForeground data race and eliminated BlockInput thread queuing to prevent mouse freezes.
+- **UI Enhancements**: Fixed taskbar disappearing on Alt-Tab and mouse freezes when the in-game map is opened.
+- **Engine Safety**: Fixed undefined behavior in Qt initialization and invalid monitor fallback logic.
 - Automated build release.
 
 ### BetterAngle Pro v5.5.86

@@ -29,8 +29,8 @@ std::atomic<long long> g_lockDurationMs(0);
 std::atomic<short> g_wPreLock(0);
 std::atomic<short> g_wPostUnlock(0);
 std::atomic<short> g_wPostFlush(0);
-std::atomic<bool> g_preState[4];
-std::atomic<bool> g_postState[4];
+std::atomic<bool> g_preState[5];
+std::atomic<bool> g_postState[5];
 std::atomic<bool> g_blockInputActive(false);
 std::atomic<bool> g_tableRefreshed(false);
 std::atomic<bool> g_hasSynced(false);
@@ -245,7 +245,7 @@ RECT GetMonitorRectByIndex(int index) {
     int targetIndex;
     int currentIndex;
     RECT rect;
-  } data = {index, 0, {0, 0, 0, 0}};
+  } data = {index, 0, {0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)}};
 
   EnumDisplayMonitors(
       NULL, NULL,

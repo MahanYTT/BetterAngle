@@ -74,8 +74,8 @@ const wchar_t *GetProcessBaseName(HWND hwnd, wchar_t *buffer,
 #include "shared/EnhancedLogging.h"
 
 bool IsFortniteForeground() {
-  static HWND s_lastFg = NULL;
-  static bool s_lastResult = false;
+  thread_local HWND s_lastFg = NULL;
+  thread_local bool s_lastResult = false;
 
   HWND fg = GetForegroundWindow();
   if (!fg) {
@@ -243,7 +243,7 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
 
   // Store preState for forensics overlay, and RESET postState to prevent
   // stale values from a prior lock cycle (0/1/0 Logic Hallucination bug).
-  for (size_t i = 0; i < preState.size() && i < 4; ++i) {
+  for (size_t i = 0; i < preState.size() && i < 5; ++i) {
     g_preState[i] = preState[i];
     g_postState[i] = false; // Will be set true only if we actually restore
   }
@@ -327,7 +327,7 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
             Sleep(10);
         }
 
-        if (i < 4)
+        if (i < 5)
           g_postState[i] = true; // Always true — we unconditionally restored
         anyRestored = true;
         log += std::to_string(vk) + "↓(x3) ";
@@ -370,7 +370,7 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     }
     g_ghostFixInProgress = false; // Open collection window
     Sleep(200);
-    for (size_t i = 0; i < preState.size() && i < 4; ++i) {
+    for (size_t i = 0; i < preState.size() && i < 5; ++i) {
       if (preState[i]) {
         int vk = g_gamingKeys[i];
         bool breakDetected = g_rawKeyUpDetected[vk].load();
