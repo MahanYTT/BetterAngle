@@ -300,93 +300,33 @@ static std::wstring GetLastErrorString() {
   return message;
 }
 
+// Helper for manual global hotkey polling
+static bool CheckCustomHotkey(UINT mod, UINT vk, bool& wasPressed) {
+    if (vk == 0) {
+        wasPressed = false;
+        return false;
+    }
+    bool pressed = (GetAsyncKeyState(vk) & 0x8000) != 0;
+    if (mod & MOD_CONTROL) pressed &= (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
+    if (mod & MOD_SHIFT) pressed &= (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+    if (mod & MOD_ALT) pressed &= (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
+    if (mod & MOD_WIN) pressed &= ((GetAsyncKeyState(VK_LWIN) & 0x8000) || (GetAsyncKeyState(VK_RWIN) & 0x8000));
+    
+    if (pressed && !wasPressed) {
+        wasPressed = true;
+        return true;
+    }
+    if (!pressed) {
+        wasPressed = false;
+    }
+    return false;
+}
+
 // Refreshes all global hotkeys for the HUD window
 bool RefreshHotkeys(HWND hWnd) {
-  if (!hWnd)
-    return false;
-
-  // Cache the current keybinds to avoid unnecessary re-registration
-  static Keybinds lastKeybinds = {};
-  static int lastProfileIdx = -1;
-
-  if (g_allProfiles.empty())
-    return false;
-
-  Profile &p = g_allProfiles[g_selectedProfileIdx];
-
-  // Check if keybinds have actually changed
-  bool keybindsChanged = (g_selectedProfileIdx != lastProfileIdx) ||
-                         (p.keybinds.toggleMod != lastKeybinds.toggleMod ||
-                          p.keybinds.toggleKey != lastKeybinds.toggleKey) ||
-                         (p.keybinds.roiMod != lastKeybinds.roiMod ||
-                          p.keybinds.roiKey != lastKeybinds.roiKey) ||
-                         (p.keybinds.crossMod != lastKeybinds.crossMod ||
-                          p.keybinds.crossKey != lastKeybinds.crossKey) ||
-                         (p.keybinds.zeroMod != lastKeybinds.zeroMod ||
-                          p.keybinds.zeroKey != lastKeybinds.zeroKey);
-
-  if (!keybindsChanged) {
-    // Keybinds haven't changed, no need to re-register
-    return true;
-  }
-
-  // Unregister all hotkeys first
-  for (int i = 1; i <= 6; i++) {
-    UnregisterHotKey(hWnd, i);
-  }
-
-  // Small delay to allow system to process unregistration (optional but can
-  // help)
-  Sleep(10);
-
-  // Register new hotkeys with MOD_NOREPEAT to prevent key repeat issues
-  // MOD_NOREPEAT (0x4000) prevents the hotkey from firing repeatedly when held
-  // down
-  bool ok = true;
-  std::vector<std::pair<int, std::wstring>> failedHotkeys;
-
-  auto registerWithErrorCheck = [&](int id, UINT mod, UINT vk,
-                                    const wchar_t *name) -> bool {
-    if (vk == 0) {
-      // Zero key means hotkey is disabled
-      return true;
-    }
-
-    // Apply MOD_NOREPEAT flag
-    UINT flags = mod; // Removed MOD_NOREPEAT for compat
-
-    if (!RegisterHotKey(hWnd, id, flags, vk)) {
-      DWORD err = GetLastError();
-      std::wstring errorMsg = GetLastErrorString();
-      failedHotkeys.push_back({id, L"Hotkey " + std::wstring(name) +
-                                       L" failed: " + errorMsg + L" (Error " +
-                                       std::to_wstring(err) + L")"});
-      return false;
-    }
-    return true;
-  };
-
-  ok &= registerWithErrorCheck(1, p.keybinds.toggleMod, p.keybinds.toggleKey,
-                               L"Toggle Panel");
-  ok &= registerWithErrorCheck(2, p.keybinds.roiMod, p.keybinds.roiKey,
-                               L"ROI Select");
-  ok &= registerWithErrorCheck(3, p.keybinds.crossMod, p.keybinds.crossKey,
-                               L"Crosshair Toggle");
-  ok &= registerWithErrorCheck(4, p.keybinds.zeroMod, p.keybinds.zeroKey,
-                               L"Zero Angle");
-
-  // Log failures
-  if (!failedHotkeys.empty()) {
-    for (const auto &failure : failedHotkeys) {
-      OutputDebugStringW((L"BetterAngle: " + failure.second + L"\n").c_str());
-    }
-  }
-
-  // Update cache
-  lastKeybinds = p.keybinds;
-  lastProfileIdx = g_selectedProfileIdx;
-
-  return ok;
+  // Legacy: We now use manual async polling in WM_TIMER so mouse buttons can be bound.
+  // RegisterHotKey does not support mouse buttons.
+  return true;
 }
 
 // Message-Only Window for Bullet-Proof Raw Input
@@ -444,78 +384,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
     RefreshHotkeys(hWnd);
     return 0;
 
-  case WM_HOTKEY:
-    // Ignore hotkey actions when user is assigning a keybind in settings
-    if (g_keybindAssignmentActive) {
-      return 0;
-    }
-    switch (wParam) {
-    case 1: // Toggle Panel
-      ShowControlPanel();
-      break;
-    case 2: // ROI Select Toggle
-      if (g_currentSelection == NONE) {
-        // Only allow ROI selection when Fortnite is focused
-        if (!IsFortniteForeground()) {
-          LOG_INFO("ROI selection blocked: Fortnite not focused");
-          break;
-        }
-        CaptureDesktop(); // Capture before dimming
-        g_currentSelection = SELECTING_ROI;
-        g_isSelectionActive = true;
-        long exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
-        exStyle &= ~WS_EX_TRANSPARENT;
-        SetWindowLong(hWnd, GWL_EXSTYLE, exStyle);
-        SetForegroundWindow(hWnd);
-      } else {
-        // Save the current ROI rectangle if valid before exiting selection
-        if (!g_allProfiles.empty() &&
-            g_selectionRect.right > g_selectionRect.left &&
-            g_selectionRect.bottom > g_selectionRect.top) {
-          Profile &p = g_allProfiles[g_selectedProfileIdx];
-          RECT mRect = GetMonitorRectByIndex(g_screenIndex);
-          p.roi_x = g_selectionRect.left - mRect.left;
-          p.roi_y = g_selectionRect.top - mRect.top;
-          p.roi_w = g_selectionRect.right - g_selectionRect.left;
-          p.roi_h = g_selectionRect.bottom - g_selectionRect.top;
-          // Keep existing target_color unchanged
-          p.Save(GetProfilesPath() + p.name + L".json");
-          p.Save(GetProfilesPath() + L"last_calibrated.json");
-        }
-        g_currentSelection = NONE;
-        g_isSelectionActive = false;
-        if (g_screenSnapshot) {
-          DeleteObject(g_screenSnapshot);
-          g_screenSnapshot = NULL;
-        }
-        SetWindowLong(hWnd, GWL_EXSTYLE,
-                      GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
-        InvalidateRect(hWnd, NULL, FALSE);
-        g_forceRedraw = true;
-      }
-      break;
-    case 3:
-      g_showCrosshair = !g_showCrosshair;
-      g_forceRedraw = true;
-      if (!g_allProfiles.empty()) {
-        g_allProfiles[g_selectedProfileIdx].showCrosshair = g_showCrosshair;
-        g_allProfiles[g_selectedProfileIdx].Save(
-            GetProfilesPath() + g_allProfiles[g_selectedProfileIdx].name +
-            L".json");
-      }
-      SaveSettings();
-      NotifyBackendCrosshairChanged();
-      // Acoustic Cue: High beep for ON, Low beep for OFF
-      if (g_showCrosshair) Beep(750, 50);
-      else Beep(500, 50);
-      break;
-    case 4:
-      g_currentAngle = 0.0f;
-      g_logic.SetZero();
-      // Acoustic Cue: Premium reset chime
-      Beep(1000, 80);
-      break;
-    }
+    // Removed WM_HOTKEY logic. Now handled in WM_TIMER to support mouse buttons.
     return 0;
 
   case WM_TRAYICON:
@@ -652,6 +521,82 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
       static ULONGLONG s_bootTime = GetTickCount64();
       if (GetTickCount64() - s_bootTime < 2500)
         return 0;
+
+      // --- Manual Hotkey Polling (Supports Mouse Buttons) ---
+      if (!g_allProfiles.empty() && !g_keybindAssignmentActive) {
+        static bool s_toggleWasPressed = false;
+        static bool s_roiWasPressed = false;
+        static bool s_crossWasPressed = false;
+        static bool s_zeroWasPressed = false;
+
+        Profile &p = g_allProfiles[g_selectedProfileIdx];
+
+        // 1: Toggle Panel
+        if (CheckCustomHotkey(p.keybinds.toggleMod, p.keybinds.toggleKey, s_toggleWasPressed)) {
+          ShowControlPanel();
+        }
+
+        // 2: ROI Select
+        if (CheckCustomHotkey(p.keybinds.roiMod, p.keybinds.roiKey, s_roiWasPressed)) {
+          if (g_currentSelection == NONE) {
+            if (!IsFortniteForeground()) {
+              LOG_INFO("ROI selection blocked: Fortnite not focused");
+            } else {
+              CaptureDesktop();
+              g_currentSelection = SELECTING_ROI;
+              g_isSelectionActive = true;
+              long exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+              exStyle &= ~WS_EX_TRANSPARENT;
+              SetWindowLong(hWnd, GWL_EXSTYLE, exStyle);
+              SetForegroundWindow(hWnd);
+            }
+          } else {
+            if (!g_allProfiles.empty() &&
+                g_selectionRect.right > g_selectionRect.left &&
+                g_selectionRect.bottom > g_selectionRect.top) {
+              RECT mRect = GetMonitorRectByIndex(g_screenIndex);
+              p.roi_x = g_selectionRect.left - mRect.left;
+              p.roi_y = g_selectionRect.top - mRect.top;
+              p.roi_w = g_selectionRect.right - g_selectionRect.left;
+              p.roi_h = g_selectionRect.bottom - g_selectionRect.top;
+              p.Save(GetProfilesPath() + p.name + L".json");
+              p.Save(GetProfilesPath() + L"last_calibrated.json");
+            }
+            g_currentSelection = NONE;
+            g_isSelectionActive = false;
+            if (g_screenSnapshot) {
+              DeleteObject(g_screenSnapshot);
+              g_screenSnapshot = NULL;
+            }
+            SetWindowLong(hWnd, GWL_EXSTYLE,
+                          GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
+            InvalidateRect(hWnd, NULL, FALSE);
+            g_forceRedraw = true;
+          }
+        }
+
+        // 3: Toggle Crosshair
+        if (CheckCustomHotkey(p.keybinds.crossMod, p.keybinds.crossKey, s_crossWasPressed)) {
+          g_showCrosshair = !g_showCrosshair;
+          g_forceRedraw = true;
+          if (!g_allProfiles.empty()) {
+            p.showCrosshair = g_showCrosshair;
+            p.Save(GetProfilesPath() + p.name + L".json");
+          }
+          SaveSettings();
+          NotifyBackendCrosshairChanged();
+          if (g_showCrosshair) Beep(750, 50);
+          else Beep(500, 50);
+        }
+
+        // 4: Zero Angle
+        if (CheckCustomHotkey(p.keybinds.zeroMod, p.keybinds.zeroKey, s_zeroWasPressed)) {
+          g_currentAngle = 0.0f;
+          g_logic.SetZero();
+          Beep(1000, 80);
+        }
+      }
+      // ------------------------------------------------------
 
       if (g_currentSelection == NONE) {
         bool lDown = g_physicalKeys[VK_LBUTTON];
