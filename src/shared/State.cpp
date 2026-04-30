@@ -239,6 +239,8 @@ POINT g_dragStartMouse = {0, 0};
 HWND g_hHUD = NULL;
 HWND g_hPanel = NULL;
 HWND g_hMsgWnd = NULL;
+HWND g_fortniteWindow = NULL;
+RECT g_fortniteRect = {0, 0, 0, 0};
 
 RECT GetMonitorRectByIndex(int index) {
   struct RectData {

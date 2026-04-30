@@ -83,7 +83,20 @@ bool IsFortniteForeground() {
     return false;
   }
 
+  auto updateFortniteRect = [](HWND wnd) {
+    g_fortniteWindow = wnd;
+    RECT cr;
+    if (GetClientRect(wnd, &cr)) {
+      POINT ptTL = {cr.left, cr.top};
+      POINT ptBR = {cr.right, cr.bottom};
+      ClientToScreen(wnd, &ptTL);
+      ClientToScreen(wnd, &ptBR);
+      g_fortniteRect = {ptTL.x, ptTL.y, ptBR.x, ptBR.y};
+    }
+  };
+
   if (fg == s_lastFg) {
+    if (s_lastResult) updateFortniteRect(fg);
     return s_lastResult;
   }
 
@@ -101,6 +114,7 @@ bool IsFortniteForeground() {
   const wchar_t *processName = GetProcessBaseName(fg, processPath, MAX_PATH);
   if (processName && processName[0] && IsFortniteProcessName(processName)) {
     s_lastResult = true;
+    updateFortniteRect(fg);
     return true;
   }
 
@@ -114,6 +128,7 @@ bool IsFortniteForeground() {
         if (pe.th32ProcessID == pid) {
           CloseHandle(snap);
           s_lastResult = IsFortniteProcessName(pe.szExeFile);
+          if (s_lastResult) updateFortniteRect(fg);
           return s_lastResult;
         }
       } while (Process32NextW(snap, &pe));

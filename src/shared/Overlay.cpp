@@ -275,10 +275,22 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
 
     // Crosshair
     if (showCrosshair) {
-      // Map the monitor's center to the HUD's client coordinate space
-      // Window is now localized to the monitor, so center is just sw/2 and sh/2
-      float cx = (float)sw * 0.5f + g_crossOffsetX;
-      float cy = (float)sh * 0.5f + g_crossOffsetY;
+      // Center crosshair dynamically on the Fortnite game window if active
+      float cx, cy;
+      if (g_fortniteWindow && g_fortniteRect.right > g_fortniteRect.left) {
+        // Find physical center of the active game client in screen space
+        float gameCenterX = g_fortniteRect.left + (g_fortniteRect.right - g_fortniteRect.left) * 0.5f;
+        float gameCenterY = g_fortniteRect.top + (g_fortniteRect.bottom - g_fortniteRect.top) * 0.5f;
+        
+        // HUD starts at mRect.left, mRect.top. Map screen space to HUD local space
+        RECT mRect = GetMonitorRectByIndex(g_screenIndex);
+        cx = gameCenterX - mRect.left + g_crossOffsetX;
+        cy = gameCenterY - mRect.top + g_crossOffsetY;
+      } else {
+        // Fallback: Map the monitor's center to the HUD's client coordinate space
+        cx = (float)sw * 0.5f + g_crossOffsetX;
+        cy = (float)sh * 0.5f + g_crossOffsetY;
+      }
 
       // Make crosshair massive like the Java reference
       float hw = (sw > sh ? sw : sh) * 3.0f;

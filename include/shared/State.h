@@ -71,6 +71,9 @@ extern std::vector<Profile> g_allProfiles;
 extern int g_selectedProfileIdx;
 extern std::wstring g_lastLoadedProfileName;
 
+extern HWND g_fortniteWindow;
+extern RECT g_fortniteRect;
+
 // HUD & Global Shared State
 enum SelectionState { NONE, SELECTING_ROI, SELECTING_COLOR };
 extern SelectionState g_currentSelection;
