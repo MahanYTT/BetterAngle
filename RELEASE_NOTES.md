@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.90
+- Automated build release.
+
 ### BetterAngle Pro v5.5.89
 - **Dynamic Crosshair Centering**: The crosshair now perfectly centers itself on the active Fortnite game window, natively fixing misalignment issues for users playing in Windowed or Custom Stretched resolutions. 
 - Automated build release.
