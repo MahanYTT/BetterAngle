@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.92
+- Automated build release.
+
 ### BetterAngle Pro v5.5.91
 - **Performance Impact Diagnostics**: Added a live Performance Impact tracking table to the Dashboard under the Debug menu. Tracks per-process CPU usage and RAM footprint natively via Windows API.
 - Automated build release.
