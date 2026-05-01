@@ -231,6 +231,7 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   // fix sequence that is mid-execution (caused missed fixes when
   // transitions fired ~1 second apart).
   if (g_ghostFixInProgress.exchange(true)) {
+    g_syncSkipCount.fetch_add(1, std::memory_order_relaxed);
     LOG_WARN("GhostFix: Already in progress — skipping duplicate.");
     return;
   }
@@ -406,6 +407,12 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
           input.ki.wScan = (WORD)scanCode;
           input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
           SendInput(1, &input, sizeof(INPUT));
+          LOG_INFO("Correction KEYUP for vk=%d", vk);
+
+          g_correctionCount.fetch_add(1, std::memory_order_relaxed);
+          g_correctionLastVk.store(vk, std::memory_order_relaxed);
+          g_correctionLastTime.store(GetTickCount64(),
+                                     std::memory_order_relaxed);
 
           g_postState[i] = false;
           anyCorrected = true;

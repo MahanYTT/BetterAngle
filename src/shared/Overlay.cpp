@@ -470,7 +470,7 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       int dx = rx;
       int dy = ry + rh + 8;
       int dw = rw * 2; // Double width for columns (v5.5.17)
-      int dh = 280;    // Optimized height for two-column layout
+      int dh = 348;    // Expanded for v5.5.98 diagnostic rows (4 new in col 0)
 
       LinearGradientBrush dbgBrush(Point(dx, dy), Point(dx, dy + dh),
                                    Color(175, 8, 10, 14), Color(175, 3, 5, 8));
@@ -555,6 +555,43 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       DrawRow(12, 0, L"Scanner CPU:",
               std::to_wstring(g_scannerCpuPct.load()) + L"%",
               g_scannerCpuPct.load() < 50);
+
+      // Diagnostics rows (v5.5.98) — drive the 4 ghost-walk tests.
+      // Test 1: typematic gap on W. ~33ms = healthy fast-repeat. >200ms means
+      // the 200ms correction collection window can't see typematic and will
+      // false-fire a KEYUP (manifests as forced double-press).
+      long long tmGap = g_typematicGapMsW.load();
+      std::wstring tmStr = (tmGap > 0)
+          ? (std::to_wstring(tmGap) + L" ms")
+          : std::wstring(L"(press W)");
+      DrawRow(13, 0, L"Typematic Δ W:", tmStr,
+              tmGap > 0 && tmGap <= 60);
+
+      // Test 4: safety-net KEYUPs fired (one per FOV transition).
+      DrawRow(14, 0, L"SafetyNet Fires:",
+              std::to_wstring(g_safetyNetCount.load()), true);
+
+      // Test 3: re-entrancy — SyncGamingKeysNitro skipped because a previous
+      // sync was still in its 200ms window. Any nonzero value is a missed
+      // ghost-fix cycle.
+      int skips = g_syncSkipCount.load();
+      DrawRow(15, 0, L"Sync Skips:",
+              std::to_wstring(skips), skips == 0);
+
+      // Test 2: Raw-Input correction fired. If you see ghost walk in-game
+      // while this counter increments on the same lock, SendInput KEYUP is
+      // not reaching Fortnite (EAC filtering or similar).
+      int corr = g_correctionCount.load();
+      ULONGLONG lastCorr = g_correctionLastTime.load();
+      std::wstring corrStr = std::to_wstring(corr);
+      if (corr > 0 && lastCorr > 0) {
+        ULONGLONG ageMs = GetTickCount64() - lastCorr;
+        int lastVk = g_correctionLastVk.load();
+        wchar_t vkChar = (lastVk == VK_SPACE) ? L'_' : (wchar_t)lastVk;
+        corrStr += std::wstring(L" (last:") + vkChar + L" " +
+                   std::to_wstring(ageMs / 1000) + L"s)";
+      }
+      DrawRow(16, 0, L"Corrections:", corrStr, true);
 
       // Column 1: Ghost Fix & Forensics (v5.5.69)
       static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE};

@@ -359,6 +359,20 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
               g_rawKeyUpDetected[raw->data.keyboard.VKey] = true;
             } else {
               g_rawKeyMakeDetected[raw->data.keyboard.VKey] = true;
+              // Test 1 diagnostic: measure typematic gap on W. Only outside
+              // ghostFix to keep synthetic SHOCK/RESTORE events from polluting
+              // the reading.
+              if (raw->data.keyboard.VKey == 'W') {
+                static ULONGLONG s_lastWMakeMs = 0;
+                ULONGLONG now = GetTickCount64();
+                if (s_lastWMakeMs > 0) {
+                  long long gap = (long long)(now - s_lastWMakeMs);
+                  // Clamp to a sane window — values above ~2s mean the user
+                  // released and re-pressed, which isn't a typematic gap.
+                  if (gap < 2000) g_typematicGapMsW = gap;
+                }
+                s_lastWMakeMs = now;
+              }
             }
           }
         }
@@ -389,6 +403,8 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
   case WM_USER + 42: {
     // SAFETY NET: Unconditional KeyUp for all WASD keys.
     // This fires regardless of whether the fake death works.
+    LOG_INFO("SafetyNet KEYUP fired for WASD");
+    g_safetyNetCount.fetch_add(1, std::memory_order_relaxed);
     static const int keys[] = {'W', 'A', 'S', 'D'};
     for (int vk : keys) {
         INPUT input = {0};
