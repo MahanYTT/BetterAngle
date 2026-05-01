@@ -668,10 +668,10 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
         DrawRow(3, 1, L"Ghost Status:", L"AWAITING FIRST LOCK", true);
       }
 
-      DrawRow(14, 1, L"Input State:",
+      DrawRow(16, 1, L"Input State:",
               g_blockInputActive ? L"LOCKED" : L"UNLOCKED",
               !g_blockInputActive);
-      DrawRow(15, 1, L"Version:", L"v" + std::wstring(VERSION_WSTR), true);
+      DrawRow(17, 1, L"Version:", L"v" + std::wstring(VERSION_WSTR), true);
     }
   }
 

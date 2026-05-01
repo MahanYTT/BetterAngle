@@ -1,4 +1,5 @@
 ### BetterAngle Pro v5.5.94
+- **UI Bug Fix**: Resolved a visual bug in the GDI+ debug overlay where the "Input State" text and "Version" text were overlapping due to a Y-coordinate collision.
 - Automated build release.
 
 ### BetterAngle Pro v5.5.93
