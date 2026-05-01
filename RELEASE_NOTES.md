@@ -1,12 +1,15 @@
+### BetterAngle Pro v5.5.101
+- Automated build release.
+
 ### BetterAngle Pro v5.5.100
-- **Critical Logging Fix**: `EnhancedLogger::Log` now flushes after every write. Previously, log lines stayed in the `std::ofstream` buffer and never reached `%LOCALAPPDATA%\BetterAngle\logs\debug.log` until the app shut down — which made every diagnostic LOG_INFO line invisible during a live session and broke the Test 2 / Test 4 EAC-filter check.
-- **Per-Key Event Counts**: `g_rawMakeCount[256]` and `g_rawBreakCount[256]` now track how many Make / Break Raw-Input events arrive per VK. The previous boolean (`g_rawKeyMakeDetected`) couldn't distinguish "1 contaminating event" from "6 real typematic repeats" — counts can.
+- **Critical Logging Fix**: `EnhancedLogger::Log` now flushes after every write. Previously, log lines stayed in the `std::ofstream` buffer and never reached `%LOCALAPPDATA%\BetterAngle\logs\debug.log` until the app shut down ? which made every diagnostic LOG_INFO line invisible during a live session and broke the Test 2 / Test 4 EAC-filter check.
+- **Per-Key Event Counts**: `g_rawMakeCount[256]` and `g_rawBreakCount[256]` now track how many Make / Break Raw-Input events arrive per VK. The previous boolean (`g_rawKeyMakeDetected`) couldn't distinguish "1 contaminating event" from "6 real typematic repeats" ? counts can.
 - **Last-Lock Snapshot**: At the end of `SyncGamingKeysNitro`, the per-key Make / Break counts, preState, and corrected-flag are snapshotted into dedicated globals (`g_lastLockMakeCount`, `g_lastLockBreakCount`, `g_lastLockPreState`, `g_lastLockCorrected`). This survives the next lock's array reset, so the operator can read what the correction logic actually saw on the last transition.
-- **Three new debug overlay rows** (Column 0, rows 17–20) display the snapshot:
-  - `Last Lock:` — seconds since the last lock completed.
-  - `  Mk count:` — per-key Make-event count during the 200 ms collection window. Real typematic produces ~5–7 events; a contamination-only reading is 1–3.
-  - `  Br count:` — per-key Break-event count. Should be 0 for keys the user is still holding.
-  - `  Pre/Corr:` — `W:PC` means W was in preState (P) and correction fired (C). `W:P.` is the ghost-walk smoking gun (preState held but no correction).
+- **Three new debug overlay rows** (Column 0, rows 17?20) display the snapshot:
+  - `Last Lock:` ? seconds since the last lock completed.
+  - `  Mk count:` ? per-key Make-event count during the 200 ms collection window. Real typematic produces ~5?7 events; a contamination-only reading is 1?3.
+  - `  Br count:` ? per-key Break-event count. Should be 0 for keys the user is still holding.
+  - `  Pre/Corr:` ? `W:PC` means W was in preState (P) and correction fired (C). `W:P.` is the ghost-walk smoking gun (preState held but no correction).
 - Diagnostic-only release; no behavioural changes to the lock pipeline, Shock & Restore, Fake Death, or correction logic.
 
 ### BetterAngle Pro v5.5.99

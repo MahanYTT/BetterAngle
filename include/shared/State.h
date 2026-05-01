@@ -60,13 +60,13 @@ extern std::atomic<int> g_correctionCount;       // total Raw-Input corrections 
 extern std::atomic<int> g_correctionLastVk;      // VK of most recent correction
 extern std::atomic<ULONGLONG> g_correctionLastTime; // tick of most recent correction
 
-// v5.5.99 — per-key event COUNTS (not bool). Lets us distinguish a single
+// v5.5.99 ? per-key event COUNTS (not bool). Lets us distinguish a single
 // contaminating event (count=1) from real typematic (count>=3 in 200ms).
 // Indexed by VK, but only WASD+SPACE matter.
 extern std::atomic<int> g_rawMakeCount[256];
 extern std::atomic<int> g_rawBreakCount[256];
 
-// v5.5.99 — last-lock snapshot. Captured at the end of SyncGamingKeysNitro
+// v5.5.99 ? last-lock snapshot. Captured at the end of SyncGamingKeysNitro
 // so the overlay can show what the correction logic actually saw, even after
 // the live counters have been reset for the next lock.
 extern std::atomic<int> g_lastLockMakeCount[5];   // by g_gamingKeys index
@@ -81,7 +81,7 @@ extern std::string g_lastVersionRun;
 #ifndef V_MAJ
 #define V_MAJ 5
 #define V_MIN 5
-#define V_PAT 100
+#define V_PAT 101
 #endif
 
 #define VERSION_STR APP_STR_Y(V_MAJ) "." APP_STR_Y(V_MIN) "." APP_STR_Y(V_PAT)
