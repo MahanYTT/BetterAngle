@@ -146,6 +146,9 @@ public:
   QString rawWState() const;
   QString inputLockStatus() const;
   QString nitroSyncLog() const;
+  
+  double cpuUsage() const;
+  double ramUsageMb() const;
   Q_INVOKABLE void refreshDebugData();
 
   Q_INVOKABLE void terminateApp();
