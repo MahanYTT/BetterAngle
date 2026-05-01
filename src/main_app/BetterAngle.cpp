@@ -62,40 +62,17 @@ void FocusMonitorThread() {
 
     // Detect Alt-Tab back into Fortnite with ultra-low latency (1ms polling)
     if (!lastFortniteFocused && currentFortniteFocused) {
-      // ALT-TAB COOLDOWN: BlockInput locks the mouse at the OS level so
-      // physical mouse movement during the focus switch can't affect
-      // Fortnite's FOV. Uses same Shock & Restore pattern as glide/dive.
-      g_mouseSuspendedUntil = GetTickCount64() + 400;
+      // ALT-TAB FOCUS CHANGE: No BlockInput or Shock&Restore needed.
+      // Windows already restores key state correctly on focus change, and
+      // BlockInput freezes user input for 400ms (especially bad during Win+Tab).
+      // The g_mouseSuspendedUntil guard in MsgWndProc prevents angle calculation
+      // during the focus transition window. This eliminates the 400ms input freeze
+      // and the double-press requirement on every alt-tab transition.
+      g_mouseSuspendedUntil = GetTickCount64() + 100;
       g_lockTriggerReason = 3; // Alt-Tab Return
       g_lockCount++;
 
-      std::thread([]() {
-        std::unique_lock<std::mutex> lock(g_lockMutex, std::try_to_lock);
-        if (!lock.owns_lock()) return;
-        g_lockInProgress = true;
-        g_lockThreadId = GetCurrentThreadId();
-
-        for (int i = 0; i < 256; i++) {
-          g_rawKeyUpDetected[i] = false;
-          g_rawKeyMakeDetected[i] = false;
-        }
-        auto initialState = GetGamingKeyState(); // Pre-lock snapshot
-
-        {
-          std::lock_guard<std::mutex> bLock(g_blockInputMutex);
-          g_blockInputActive = true;
-          BlockInput(TRUE);
-          Sleep(400);
-          BlockInput(FALSE);
-          g_blockInputActive = false;
-        }
-
-        SyncGamingKeysNitro(initialState); // Shock & Restore
-
-        g_lockInProgress = false;
-      }).detach();
-
-      LOG_INFO("Alt-tab cooldown active (400ms BlockInput + Nitro sync)");
+      LOG_INFO("Alt-tab focus detected (100ms mouse suspension, no BlockInput)");
     }
     lastFortniteFocused = currentFortniteFocused;
     Sleep(0); // Max CPU performance for lightning fast focus detection

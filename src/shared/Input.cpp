@@ -381,6 +381,22 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     //   Mk=0 Br=0 → released during lock (swallowed) → kill ghost
     //   Mk=1 Br=1 → released after lock → kill ghost (Break is final)
     //   Mk=0 Br=1 → released, no typematic → kill ghost
+
+    // v5.5.104 — DRAIN-BEFORE-RESET. The lock thread is a worker thread and
+    // does not own g_hMsgWnd; the main thread's message pump runs concurrently.
+    // Synthetic WM_INPUT events from the safety-net (WM_USER+42), SHOCK, and
+    // RESTORE SendInput calls were arriving at the pump asynchronously, and on
+    // a busy main thread some were dispatched AFTER the array reset, recording
+    // 1–3 stray Make events into the freshly-cleared collection window. That
+    // contamination falsely tripped the "still holding" branch and skipped the
+    // ghost-kill KEYUP (smoking gun: Mk=3 Br=0 in v5.5.100 diagnostics).
+    //
+    // Sleep(50) here keeps g_ghostFixInProgress=true while the main thread
+    // catches up and dispatches all queued synthetic events. MsgWndProc filters
+    // them via the contamination check, leaving the array reset truly clean.
+    // After this, the original boolean correction rule is sound.
+    Sleep(50);
+
     for (int i = 0; i < 256; i++) {
       g_rawKeyUpDetected[i] = false;
       g_rawKeyMakeDetected[i] = false;
@@ -392,22 +408,24 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     for (size_t i = 0; i < preState.size() && i < 5; ++i) {
       if (preState[i]) {
         int vk = g_gamingKeys[i];
-        int makeCount = g_rawMakeCount[vk].load();
-        int breakCount = g_rawBreakCount[vk].load();
+        bool breakDetected = g_rawKeyUpDetected[vk].load();
+        bool makeDetected = g_rawKeyMakeDetected[vk].load();
+        int makeCount = g_rawMakeCount[vk].load();   // for logging only
+        int breakCount = g_rawBreakCount[vk].load(); // for logging only
 
-        // v5.5.102: COUNT-BASED CORRECTION (was boolean).
-        // The old check `breakDetected || !makeDetected` tripped on a single
-        // contaminating Make event leaking past the array reset, falsely
-        // concluding "user is still holding". Live data showed Mk=3 Br=0
-        // contamination patterns where the correction silently skipped and
-        // the ghost walked.
+        // v5.5.104 — Reverted to the original boolean rule. The Sleep(50)
+        // drain above eliminates the contamination that v5.5.102's count
+        // threshold was working around, so this is now safe again. v5.5.102's
+        // threshold of >=4 was over-correcting and forcing a double-press on
+        // every transition where real typematic produced <4 events in the
+        // 200ms window — exactly the UX previously rejected.
         //
-        // Real typematic in the 200ms window: ~5–7 Makes, 0 Breaks.
-        // Contamination from queued SHOCK/RESTORE: 0–3 Makes, 0–1 Breaks.
-        // A threshold of >=4 sustained Makes with 0 Breaks cleanly separates
-        // the two cases. Anything else → user released → kill ghost.
-        bool stillHolding = (makeCount >= 4) && (breakCount == 0);
-        if (!stillHolding) {
+        // CORRECTION RULE: kill ghost if Br=1 OR Mk=0.
+        //   Mk=1 Br=0 → still holding → leave pressed
+        //   Mk=0 Br=0 → released during lock (swallowed) → kill ghost
+        //   Mk=1 Br=1 → released after lock → kill ghost (Break is final)
+        //   Mk=0 Br=1 → released, no typematic → kill ghost
+        if (breakDetected || !makeDetected) {
           UINT scanCode = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
           if (scanCode == 0)
             continue;
@@ -434,7 +452,7 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
                    makeCount, breakCount);
           log += "(Corrected:" + std::to_string(vk) + ") ";
         } else {
-          // Mk>=4 + Br=0 → sustained typematic → user still holding
+          // Mk=1 Br=0 → user still holding → no correction needed
         }
       }
     }

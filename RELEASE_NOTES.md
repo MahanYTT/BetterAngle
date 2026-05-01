@@ -1,3 +1,11 @@
+### BetterAngle Pro v5.5.104
+- **GHOST WALK ROOT FIX (true root cause this time)**: The v5.5.102 count-threshold of `Mk>=4` was a heuristic that solved the ghost walk but introduced a double-press regression — real typematic in the 200 ms window often produced <4 events, so legitimate holds were getting spurious KEYUPs.
+  - **What was actually wrong**: synthetic SendInput events from the safety-net (WM_USER+42), SHOCK, and RESTORE were being dispatched to MsgWndProc asynchronously by the main thread's message pump. On a busy frame, some events were dispatched AFTER the lock thread reset the raw-input arrays, contaminating the freshly-cleared 200 ms collection window with 1–3 stray Make events.
+  - **The fix**: Added `Sleep(50)` on the lock thread AFTER RESTORE finishes but BEFORE the array reset. The lock thread is a worker thread; sleeping it does NOT block the main thread's pump. During those 50 ms, the pump dispatches all queued synthetic WM_INPUTs while `g_ghostFixInProgress` is still true, so MsgWndProc filters them out. The reset that follows is genuinely clean.
+  - **Reverted v5.5.102's threshold**: now that contamination is gone at the source, the original boolean rule (`breakDetected || !makeDetected`) is sound again. No double-press on real holds. No ghost walk on real releases.
+- **ALT-TAB / WIN+TAB FIX**: Removed `BlockInput(TRUE)` + `Sleep(400)` + `SyncGamingKeysNitro` from the alt-tab focus-change path. Windows already restores keyboard state correctly on focus changes, so the cooldown was both unnecessary and actively harmful — it froze user input for 400 ms on every Win+Tab/Alt-Tab and inherited the Shock & Restore double-press. Replaced with a 100 ms `g_mouseSuspendedUntil` that gates angle calculation only, no keyboard interference.
+- Net effect: ghost walk dies, double-press regression gone, Win+Tab no longer bugs out.
+
 ### BetterAngle Pro v5.5.103
 - Automated build release.
 
