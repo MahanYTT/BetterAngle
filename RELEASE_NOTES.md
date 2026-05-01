@@ -1,13 +1,16 @@
+### BetterAngle Pro v5.5.99
+- Automated build release.
+
 ### BetterAngle Pro v5.5.98
-- **Ghost-Walk Diagnostic Overlay**: Added four new rows to the debug overlay (Column 0, rows 13–16) that surface the live signals needed to root-cause the remaining ghost-walk cases without rebuilds.
-  - **Typematic Δ W**: ms gap between successive hardware Make events on `W`. Healthy fast-repeat sits around ~33 ms; values above ~60 ms (or `(press W)` when no recent press) mean the 200 ms post-restore collection window is too short to see typematic, causing the correction logic to false-fire a KEYUP and force a double-press.
+- **Ghost-Walk Diagnostic Overlay**: Added four new rows to the debug overlay (Column 0, rows 13?16) that surface the live signals needed to root-cause the remaining ghost-walk cases without rebuilds.
+  - **Typematic ? W**: ms gap between successive hardware Make events on `W`. Healthy fast-repeat sits around ~33 ms; values above ~60 ms (or `(press W)` when no recent press) mean the 200 ms post-restore collection window is too short to see typematic, causing the correction logic to false-fire a KEYUP and force a double-press.
   - **SafetyNet Fires**: count of `WM_USER+42` invocations (one per FOV transition).
   - **Sync Skips**: count of `SyncGamingKeysNitro` re-entrancy skips. Any nonzero value is a missed ghost-fix cycle from rapid back-to-back transitions.
   - **Corrections**: total Raw-Input corrections fired, plus the last corrected key and seconds since. If this increments during a transition where the character keeps walking, `SendInput` is not reaching Fortnite (EAC filtering suspected).
 - **Test 4 Logging**: Added two `LOG_INFO` lines so the EAC-filtering test can be confirmed from `debug.log` directly:
-  - `SafetyNet KEYUP fired for WASD` — at the top of the `WM_USER+42` handler.
-  - `Correction KEYUP for vk=%d` — immediately after the correction `SendInput` in `SyncGamingKeysNitro`.
-  - Reading the log: SafetyNet **and** Correction firing while the character still walks ⇒ `SendInput` is being filtered (EAC). SafetyNet firing but no Correction during ghost walk ⇒ typematic mistiming (the 200 ms window decided the user was still holding when they weren't).
+  - `SafetyNet KEYUP fired for WASD` ? at the top of the `WM_USER+42` handler.
+  - `Correction KEYUP for vk=%d` ? immediately after the correction `SendInput` in `SyncGamingKeysNitro`.
+  - Reading the log: SafetyNet **and** Correction firing while the character still walks ? `SendInput` is being filtered (EAC). SafetyNet firing but no Correction during ghost walk ? typematic mistiming (the 200 ms window decided the user was still holding when they weren't).
 - Diagnostic-only release; no behavioural changes to the lock pipeline, Shock & Restore, Fake Death, or correction logic.
 
 ### BetterAngle Pro v5.5.97

@@ -52,7 +52,7 @@ extern std::mutex g_lockMutex;
 extern std::atomic<ULONGLONG> g_lastLockTime;
 extern std::mutex g_blockInputMutex;
 
-// Diagnostic counters (v5.5.98) — drive the new debug overlay test rows.
+// Diagnostic counters (v5.5.98) ? drive the new debug overlay test rows.
 extern std::atomic<long long> g_typematicGapMsW; // ms between successive W Make events
 extern std::atomic<int> g_safetyNetCount;        // WM_USER+42 fires (safety-net KEYUP)
 extern std::atomic<int> g_syncSkipCount;         // re-entrancy: SyncGamingKeysNitro skipped
@@ -66,7 +66,7 @@ extern std::string g_lastVersionRun;
 #ifndef V_MAJ
 #define V_MAJ 5
 #define V_MIN 5
-#define V_PAT 98
+#define V_PAT 99
 #endif
 
 #define VERSION_STR APP_STR_Y(V_MAJ) "." APP_STR_Y(V_MIN) "." APP_STR_Y(V_PAT)
