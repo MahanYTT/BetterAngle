@@ -66,6 +66,11 @@ class BetterAngleBackend : public QObject {
   Q_PROPERTY(QString rawWState READ rawWState NOTIFY debugDataChanged)
   Q_PROPERTY(QString inputLockStatus READ inputLockStatus NOTIFY debugDataChanged)
   Q_PROPERTY(QString nitroSyncLog READ nitroSyncLog NOTIFY debugDataChanged)
+  
+  // Performance Impact Diagnostics
+  Q_PROPERTY(double cpuUsage READ cpuUsage NOTIFY debugDataChanged)
+  Q_PROPERTY(double ramUsageMb READ ramUsageMb NOTIFY debugDataChanged)
+  Q_PROPERTY(QString gpuUsage READ gpuUsage NOTIFY debugDataChanged)
 
   // Custom Keybinds
   Q_PROPERTY(

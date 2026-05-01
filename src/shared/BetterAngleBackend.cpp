@@ -14,6 +14,7 @@
 #include <thread>
 #include <tlhelp32.h>
 #include <windows.h>
+#include <psapi.h>
 
 extern std::vector<Profile> g_allProfiles;
 extern int g_selectedProfileIdx;
@@ -1111,4 +1112,49 @@ void BetterAngleBackend::setZero() {
   g_currentAngle = 0.0f;
   g_logic.SetZero();
   Beep(1000, 80);
+}
+
+static ULONGLONG FileTimeToInt64(const FILETIME& ft) {
+    return (((ULONGLONG)ft.dwHighDateTime) << 32) | ((ULONGLONG)ft.dwLowDateTime);
+}
+
+double BetterAngleBackend::cpuUsage() const {
+    static ULONGLONG lastSystemTime = 0;
+    static ULONGLONG lastProcessTime = 0;
+    static double lastCpu = 0.0;
+
+    FILETIME fCreation, fExit, fKernel, fUser;
+    FILETIME fSystemIdle, fSystemKernel, fSystemUser;
+
+    if (GetProcessTimes(GetCurrentProcess(), &fCreation, &fExit, &fKernel, &fUser) &&
+        GetSystemTimes(&fSystemIdle, &fSystemKernel, &fSystemUser)) {
+        
+        ULONGLONG sysTime = FileTimeToInt64(fSystemKernel) + FileTimeToInt64(fSystemUser);
+        ULONGLONG procTime = FileTimeToInt64(fKernel) + FileTimeToInt64(fUser);
+
+        if (lastSystemTime != 0) {
+            ULONGLONG sysDiff = sysTime - lastSystemTime;
+            ULONGLONG procDiff = procTime - lastProcessTime;
+            if (sysDiff > 0) {
+                lastCpu = (double)procDiff / (double)sysDiff * 100.0;
+            }
+        }
+        lastSystemTime = sysTime;
+        lastProcessTime = procTime;
+    }
+    return lastCpu;
+}
+
+double BetterAngleBackend::ramUsageMb() const {
+    PROCESS_MEMORY_COUNTERS pmc;
+    if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+        return (double)pmc.WorkingSetSize / (1024.0 * 1024.0);
+    }
+    return 0.0;
+}
+
+QString BetterAngleBackend::gpuUsage() const {
+    // Tracking per-process GPU usage requires deep hooks (NVAPI/DXGI) which can trigger anti-cheat.
+    // Display N/A to maintain absolute safety.
+    return "N/A (Safe Mode)";
 }
