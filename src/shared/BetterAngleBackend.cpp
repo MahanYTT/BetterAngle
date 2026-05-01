@@ -1152,9 +1152,3 @@ double BetterAngleBackend::ramUsageMb() const {
     }
     return 0.0;
 }
-
-QString BetterAngleBackend::gpuUsage() const {
-    // Tracking per-process GPU usage requires deep hooks (NVAPI/DXGI) which can trigger anti-cheat.
-    // Display N/A to maintain absolute safety.
-    return "N/A (Safe Mode)";
-}
