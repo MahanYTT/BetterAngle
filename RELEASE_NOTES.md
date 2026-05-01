@@ -1,6 +1,9 @@
+### BetterAngle Pro v5.5.103
+- Automated build release.
+
 ### BetterAngle Pro v5.5.102
-- **GHOST WALK ROOT-CAUSE FIX**: The post-restore correction logic was tripping a false-positive on contaminating Raw-Input events that leaked past the array reset, falsely concluding "user is still holding W" and skipping the KEYUP that would kill the ghost. Live diagnostics from v5.5.100 captured the smoking gun: `Mk count W:3, Br count W:0, Pre/Corr W:P.` — 3 contaminating Make events with 0 Breaks, no correction fired.
-- **The Fix**: Replaced the boolean correction check (`breakDetected || !makeDetected`) with a count threshold (`makeCount >= 4 && breakCount == 0`). Real typematic in the 200 ms window produces ~5–7 Make events; queued SHOCK/RESTORE contamination tops out around 3. The threshold cleanly separates the two cases without affecting genuine holds.
+- **GHOST WALK ROOT-CAUSE FIX**: The post-restore correction logic was tripping a false-positive on contaminating Raw-Input events that leaked past the array reset, falsely concluding "user is still holding W" and skipping the KEYUP that would kill the ghost. Live diagnostics from v5.5.100 captured the smoking gun: `Mk count W:3, Br count W:0, Pre/Corr W:P.` ? 3 contaminating Make events with 0 Breaks, no correction fired.
+- **The Fix**: Replaced the boolean correction check (`breakDetected || !makeDetected`) with a count threshold (`makeCount >= 4 && breakCount == 0`). Real typematic in the 200 ms window produces ~5?7 Make events; queued SHOCK/RESTORE contamination tops out around 3. The threshold cleanly separates the two cases without affecting genuine holds.
 - **Net effect**: Released-during-lock keys are now reliably killed (no more ghost walk after release-during-transition); held-through-lock keys continue to be left alone (no double-press regression).
 - The diagnostic LOG line in `SyncGamingKeysNitro` now logs `(Mk=N Br=N)` counts instead of bools so future regressions are visible at a glance in `debug.log`.
 
