@@ -392,14 +392,22 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     for (size_t i = 0; i < preState.size() && i < 5; ++i) {
       if (preState[i]) {
         int vk = g_gamingKeys[i];
-        bool breakDetected = g_rawKeyUpDetected[vk].load();
-        bool makeDetected = g_rawKeyMakeDetected[vk].load();
+        int makeCount = g_rawMakeCount[vk].load();
+        int breakCount = g_rawBreakCount[vk].load();
 
-        if (breakDetected || !makeDetected) {
-          // Break detected OR no Make → user released → kill ghost
-          // Covers: Br=1 Mk=0 (released during lock, Break swallowed)
-          //         Br=0 Mk=0 (released during lock, both swallowed)
-          //         Br=1 Mk=1 (released after lock, Break is final action)
+        // v5.5.102: COUNT-BASED CORRECTION (was boolean).
+        // The old check `breakDetected || !makeDetected` tripped on a single
+        // contaminating Make event leaking past the array reset, falsely
+        // concluding "user is still holding". Live data showed Mk=3 Br=0
+        // contamination patterns where the correction silently skipped and
+        // the ghost walked.
+        //
+        // Real typematic in the 200ms window: ~5–7 Makes, 0 Breaks.
+        // Contamination from queued SHOCK/RESTORE: 0–3 Makes, 0–1 Breaks.
+        // A threshold of >=4 sustained Makes with 0 Breaks cleanly separates
+        // the two cases. Anything else → user released → kill ghost.
+        bool stillHolding = (makeCount >= 4) && (breakCount == 0);
+        if (!stillHolding) {
           UINT scanCode = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
           if (scanCode == 0)
             continue;
@@ -410,7 +418,8 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
           input.ki.wScan = (WORD)scanCode;
           input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
           SendInput(1, &input, sizeof(INPUT));
-          LOG_INFO("Correction KEYUP for vk=%d", vk);
+          LOG_INFO("Correction KEYUP for vk=%d (Mk=%d Br=%d)", vk, makeCount,
+                   breakCount);
 
           g_correctionCount.fetch_add(1, std::memory_order_relaxed);
           g_correctionLastVk.store(vk, std::memory_order_relaxed);
@@ -421,11 +430,11 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
 
           g_postState[i] = false;
           anyCorrected = true;
-          LOG_WARN("RawCorrected: key %d ghost killed (Br=%d Mk=%d)", vk,
-                   breakDetected ? 1 : 0, makeDetected ? 1 : 0);
+          LOG_WARN("RawCorrected: key %d ghost killed (Mk=%d Br=%d)", vk,
+                   makeCount, breakCount);
           log += "(Corrected:" + std::to_string(vk) + ") ";
         } else {
-          // Mk=1 Br=0 → user still holding → no correction needed
+          // Mk>=4 + Br=0 → sustained typematic → user still holding
         }
       }
     }
