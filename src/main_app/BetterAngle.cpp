@@ -186,6 +186,9 @@ void DetectorThread() {
               g_blockInputActive = false;
             }
 
+            // FAKE DEATH EXPERIMENT: Flush input queue via OS recreation
+            SendMessage(g_hHUD, WM_USER + 42, 0, 0);
+
             g_lockDurationMs = (long long)(GetTickCount64() - start);
             SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
 
@@ -226,6 +229,9 @@ void DetectorThread() {
               BlockInput(FALSE);
               g_blockInputActive = false;
             }
+
+            // FAKE DEATH EXPERIMENT: Flush input queue via OS recreation
+            SendMessage(g_hHUD, WM_USER + 42, 0, 0);
 
             g_lockDurationMs = (long long)(GetTickCount64() - start);
             SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
@@ -380,6 +386,36 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
 LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
                             LPARAM lParam) {
   switch (message) {
+  case WM_USER + 42: {
+    // SAFETY NET: Unconditional KeyUp for all WASD keys.
+    // This fires regardless of whether the fake death works.
+    static const int keys[] = {'W', 'A', 'S', 'D'};
+    for (int vk : keys) {
+        INPUT input = {0};
+        input.type = INPUT_KEYBOARD;
+        input.ki.wVk = (WORD)vk;
+        input.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+        input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+        SendInput(1, &input, sizeof(INPUT));
+    }
+
+    // FAKE DEATH: Destroy and recreate the input listener.
+    // This forces OS-level cleanup that may flush the buffer.
+    if (g_hMsgWnd) {
+        DestroyWindow(g_hMsgWnd);
+        g_hMsgWnd = NULL;
+    }
+
+    // RESURRECTION: Rebuild immediately.
+    HINSTANCE hInst = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
+    g_hMsgWnd = CreateWindowEx(
+        0, L"BetterAngleMsgWnd", NULL, 0,
+        0, 0, 0, 0, HWND_MESSAGE, NULL, hInst, NULL);
+
+    // RE-HOOK: Register raw input again
+    RegisterRawMouse(g_hMsgWnd);
+    return 0;
+  }
   case WM_CREATE:
     RefreshHotkeys(hWnd);
     return 0;
