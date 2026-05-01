@@ -1142,7 +1142,6 @@ Item {
                                 Text { text: "RAM Usage:"; color: "#aaa"; font.pixelSize: 13; Layout.fillWidth: true }
                                 Text { text: backend.ramUsageMb.toFixed(2) + " MB"; color: "white"; font.bold: true; font.pixelSize: 13 }
                             }
-                            }
                         }
                     }
 
