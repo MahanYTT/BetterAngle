@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.91
+- Automated build release.
+
 ### BetterAngle Pro v5.5.90
 - **Diagnostic Upgrade (Fake Death)**: Implemented an experimental fix for the Ghost Walk bug that tears down and reconstructs the Windows raw input pipeline mid-transition to flush stale `KeyUp` buffers. Includes a hard-coded safety net that manually emits `KeyUp` events for WASD on every transition.
 - Automated build release.
