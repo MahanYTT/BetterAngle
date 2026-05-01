@@ -53,6 +53,15 @@ std::atomic<int> g_syncSkipCount(0);
 std::atomic<int> g_correctionCount(0);
 std::atomic<int> g_correctionLastVk(0);
 std::atomic<ULONGLONG> g_correctionLastTime(0);
+
+// v5.5.99 — per-key event counts and last-lock snapshot
+std::atomic<int> g_rawMakeCount[256] = {};
+std::atomic<int> g_rawBreakCount[256] = {};
+std::atomic<int> g_lastLockMakeCount[5] = {};
+std::atomic<int> g_lastLockBreakCount[5] = {};
+std::atomic<bool> g_lastLockPreState[5] = {};
+std::atomic<bool> g_lastLockCorrected[5] = {};
+std::atomic<ULONGLONG> g_lastLockTimestamp(0);
 std::string g_nitroSyncLog = "No sync events yet";
 std::atomic<int> g_peakMatchCount{0};
 std::atomic<int> g_requiredMatchCount{0};

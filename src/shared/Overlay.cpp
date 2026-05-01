@@ -470,7 +470,7 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       int dx = rx;
       int dy = ry + rh + 8;
       int dw = rw * 2; // Double width for columns (v5.5.17)
-      int dh = 348;    // Expanded for v5.5.98 diagnostic rows (4 new in col 0)
+      int dh = 396;    // v5.5.99: + 3 rows for last-lock per-key snapshot
 
       LinearGradientBrush dbgBrush(Point(dx, dy), Point(dx, dy + dh),
                                    Color(175, 8, 10, 14), Color(175, 3, 5, 8));
@@ -592,6 +592,54 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
                    std::to_wstring(ageMs / 1000) + L"s)";
       }
       DrawRow(16, 0, L"Corrections:", corrStr, true);
+
+      // v5.5.99 — last-lock per-key snapshot. The hypothesis to test is that
+      // the 200ms collection window is being contaminated by typematic events
+      // queued during BlockInput. Symptoms in these rows:
+      //   real typematic on a held key  → Mk count 5–7, Br count 0
+      //   contamination only (released) → Mk count 1–3, Br count 0–1
+      //   user released cleanly         → Mk count 0,   Br count 0–1
+      // If a row shows pre=1, Mk>=3, Br=0, but the user actually released
+      // during the lock → hypothesis confirmed: those Mk events are queued
+      // typematic leaking past the array reset.
+      static const wchar_t *kn[] = {L"W", L"A", L"S", L"D", L"_"};
+      auto buildCountRow = [&](auto getter) -> std::wstring {
+        std::wstring s;
+        for (int i = 0; i < 5; ++i) {
+          if (i) s += L" ";
+          s += std::wstring(kn[i]) + L":" + std::to_wstring(getter(i));
+        }
+        return s;
+      };
+      ULONGLONG lastLockAge = 0;
+      ULONGLONG lockTs = g_lastLockTimestamp.load();
+      if (lockTs > 0) lastLockAge = (GetTickCount64() - lockTs) / 1000;
+      std::wstring ageStr = (lockTs > 0)
+          ? (std::to_wstring(lastLockAge) + L"s ago")
+          : std::wstring(L"(no lock yet)");
+      DrawRow(17, 0, L"Last Lock:", ageStr, true);
+      DrawRow(18, 0, L"  Mk count:",
+              buildCountRow([](int i) { return g_lastLockMakeCount[i].load(); }),
+              true);
+      DrawRow(19, 0, L"  Br count:",
+              buildCountRow([](int i) { return g_lastLockBreakCount[i].load(); }),
+              true);
+      // Format: pre/corr per key. P=preState was held, C=correction fired.
+      // Read as "W:PC" = pre held + correction fired (the case we want for
+      // a clean ghost kill). "W:P." = pre held but no correction (potential
+      // ghost walk). "W:.." = key wasn't in preState (ignored anyway).
+      auto pcCell = [&](int i) -> std::wstring {
+        bool pre = g_lastLockPreState[i].load();
+        bool corr = g_lastLockCorrected[i].load();
+        wchar_t s[3] = {pre ? L'P' : L'.', corr ? L'C' : L'.', 0};
+        return std::wstring(kn[i]) + L":" + s;
+      };
+      std::wstring pcStr;
+      for (int i = 0; i < 5; ++i) {
+        if (i) pcStr += L" ";
+        pcStr += pcCell(i);
+      }
+      DrawRow(20, 0, L"  Pre/Corr:", pcStr, true);
 
       // Column 1: Ghost Fix & Forensics (v5.5.69)
       static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE};

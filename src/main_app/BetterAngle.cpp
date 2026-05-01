@@ -357,8 +357,12 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
           } else {
             if (raw->data.keyboard.Flags & RI_KEY_BREAK) {
               g_rawKeyUpDetected[raw->data.keyboard.VKey] = true;
+              g_rawBreakCount[raw->data.keyboard.VKey].fetch_add(
+                  1, std::memory_order_relaxed);
             } else {
               g_rawKeyMakeDetected[raw->data.keyboard.VKey] = true;
+              g_rawMakeCount[raw->data.keyboard.VKey].fetch_add(
+                  1, std::memory_order_relaxed);
               // Test 1 diagnostic: measure typematic gap on W. Only outside
               // ghostFix to keep synthetic SHOCK/RESTORE events from polluting
               // the reading.

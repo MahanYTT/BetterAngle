@@ -262,6 +262,7 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
   for (size_t i = 0; i < preState.size() && i < 5; ++i) {
     g_preState[i] = preState[i];
     g_postState[i] = false; // Will be set true only if we actually restore
+    g_lastLockCorrected[i].store(false, std::memory_order_relaxed); // v5.5.99
   }
 
   std::vector<INPUT> releaseInputs;
@@ -383,6 +384,8 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     for (int i = 0; i < 256; i++) {
       g_rawKeyUpDetected[i] = false;
       g_rawKeyMakeDetected[i] = false;
+      g_rawMakeCount[i].store(0, std::memory_order_relaxed);
+      g_rawBreakCount[i].store(0, std::memory_order_relaxed);
     }
     g_ghostFixInProgress = false; // Open collection window
     Sleep(200);
@@ -413,6 +416,8 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
           g_correctionLastVk.store(vk, std::memory_order_relaxed);
           g_correctionLastTime.store(GetTickCount64(),
                                      std::memory_order_relaxed);
+          if (i < 5)
+            g_lastLockCorrected[i].store(true, std::memory_order_relaxed);
 
           g_postState[i] = false;
           anyCorrected = true;
@@ -432,6 +437,18 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     } else if (anyRestored) {
       g_activeFallback = 0; // Clean — no fallback needed
     }
+
+    // v5.5.99 — snapshot the last-lock raw counts for the overlay so the
+    // operator can read them after the next lock starts wiping the live ones.
+    for (size_t i = 0; i < preState.size() && i < 5; ++i) {
+      int vk = g_gamingKeys[i];
+      g_lastLockMakeCount[i].store(g_rawMakeCount[vk].load(),
+                                   std::memory_order_relaxed);
+      g_lastLockBreakCount[i].store(g_rawBreakCount[vk].load(),
+                                    std::memory_order_relaxed);
+      g_lastLockPreState[i].store(preState[i], std::memory_order_relaxed);
+    }
+    g_lastLockTimestamp.store(GetTickCount64(), std::memory_order_relaxed);
   } else {
     g_ghostFixVerifyOk = true; // No restore needed = no verify needed
     g_activeFallback = 0;
