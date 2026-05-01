@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.94
+- Automated build release.
+
 ### BetterAngle Pro v5.5.93
 - **Performance Impact Diagnostics Update**: Removed the static GPU usage readout to maintain the clean UI layout while ensuring zero risk from anti-cheat systems. The Performance Impact panel now exclusively focuses on per-process CPU usage and RAM footprint.
 - Automated build release.
