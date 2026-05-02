@@ -98,7 +98,7 @@ jobs:
           }
           echo "RELEASE_NAME=BetterAngle Pro $env:RELEASE_TAG" >> $env:GITHUB_ENV
 
-      - name: Create GitHub Release (Draft)
+      - name: Create GitHub Release
         if: env.RELEASE_TAG != ''
         uses: softprops/action-gh-release@v1
         with:
@@ -106,7 +106,7 @@ jobs:
           tag_name: ${{ env.RELEASE_TAG }}
           name: ${{ env.RELEASE_NAME }}
           body_path: CURRENT_RELEASE_NOTES.md
-          prerelease: true
-          draft: true
+          prerelease: false
+          draft: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
