@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.109
+- Automated build release.
+
 ### BetterAngle Pro v5.5.108
 - **Architecture reset**: Removed all SHOCK/RESTORE/typematic-detection logic. BlockInput alone is sufficient to prevent keyboard + mouse movement during FOV transitions. The per-key contamination filtering and raw-input correction approach (v5.5.106-107) proved unreliable for hold-through-lock cases.
 - **Pending**: Future work to explore mouse-only locking alternatives to address the remaining hold-through-lock double-press behavior.
