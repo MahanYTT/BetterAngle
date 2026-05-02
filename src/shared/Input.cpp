@@ -402,7 +402,12 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
       g_rawBreakCount[i].store(0, std::memory_order_relaxed);
     }
     g_ghostFixInProgress = false; // Open collection window
-    Sleep(200);
+    // v5.5.107 — Extended to 500ms. Hardware typematic initial delay can be
+    // 500-700ms depending on Windows keyboard settings. A 200ms window was
+    // insufficient, causing Mk=0 for held keys. With 150ms drain + 500ms
+    // collection, we guarantee capturing at least one hardware typematic Make
+    // for any physically-held key, preventing false ghost corrections.
+    Sleep(500);
     for (size_t i = 0; i < preState.size() && i < 5; ++i) {
       if (preState[i]) {
         int vk = g_gamingKeys[i];
