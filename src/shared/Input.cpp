@@ -196,18 +196,18 @@ void RegisterRawMouse(HWND hwnd) {
 }
 
 int GetRawInputDeltaX(LPARAM lparam) {
-  UINT dwSize;
+  UINT dwSize = 0;
   GetRawInputData((HRAWINPUT)lparam, RID_INPUT, NULL, &dwSize,
                   sizeof(RAWINPUTHEADER));
-  if (dwSize == 0)
+  if (dwSize == 0 || dwSize > 64)
     return 0;
 
-  std::vector<BYTE> lpb(dwSize);
-  if (GetRawInputData((HRAWINPUT)lparam, RID_INPUT, lpb.data(), &dwSize,
+  BYTE lpb[64];
+  if (GetRawInputData((HRAWINPUT)lparam, RID_INPUT, lpb, &dwSize,
                       sizeof(RAWINPUTHEADER)) != dwSize)
     return 0;
 
-  RAWINPUT *raw = (RAWINPUT *)lpb.data();
+  RAWINPUT *raw = (RAWINPUT *)lpb;
   if (raw->header.dwType == RIM_TYPEMOUSE) {
     return raw->data.mouse.lLastX;
   }

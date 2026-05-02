@@ -23,11 +23,11 @@ void AddRoundedRect(GraphicsPath &path, int x, int y, int width, int height,
   path.CloseFigure();
 }
 
-// Helper: format float to N decimal places
+// Helper: format float to N decimal places (stack-based, no stream allocation)
 static std::wstring FmtFloat(double v, int decimals = 2) {
-  std::wostringstream ss;
-  ss << std::fixed << std::setprecision(decimals) << v;
-  return ss.str();
+  wchar_t buf[32];
+  swprintf_s(buf, L"%.*f", decimals, v);
+  return buf;
 }
 
 // Static FPS tracking
@@ -77,6 +77,48 @@ static bool CheckFortniteProcessFast() {
 
 void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
   TickFPS();
+
+  // Static cached GDI+ objects (initialized once, reused every frame)
+  static FontFamily *s_ff = nullptr;
+  static Font *s_labelFont = nullptr;
+  static Font *s_angleFont = nullptr;
+  static Font *s_subFont = nullptr;
+  static Font *s_tinyFont = nullptr;
+  static Font *s_roiFont = nullptr;
+  static Font *s_selFont = nullptr;
+  static Font *s_selSubFont = nullptr;
+  static StringFormat *s_fmtCenter = nullptr;
+  static StringFormat *s_fmtAngle = nullptr;
+  static SolidBrush *s_labelBrush = nullptr;
+  static SolidBrush *s_matchLabelBrush = nullptr;
+  static SolidBrush *s_barBgBrush = nullptr;
+  static SolidBrush *s_whiteBrush = nullptr;
+  static Pen *s_barPen = nullptr;
+  static Pen *s_swatchPen = nullptr;
+  static Font *s_dbgFont = nullptr;
+
+  if (!s_ff) {
+    s_ff = new FontFamily(L"Segoe UI");
+    s_labelFont = new Font(s_ff, 9, FontStyleBold, UnitPixel);
+    s_angleFont = new Font(s_ff, 68, FontStyleBold, UnitPixel);
+    s_subFont = new Font(s_ff, 12, FontStyleBold, UnitPixel);
+    s_tinyFont = new Font(s_ff, 9, FontStyleRegular, UnitPixel);
+    s_roiFont = new Font(s_ff, 10, FontStyleBold, UnitPixel);
+    s_selFont = new Font(s_ff, 28, FontStyleBold, UnitPixel);
+    s_selSubFont = new Font(s_ff, 15, FontStyleRegular, UnitPixel);
+    s_dbgFont = new Font(s_ff, 10, FontStyleRegular, UnitPixel);
+    s_fmtCenter = new StringFormat();
+    s_fmtCenter->SetAlignment(StringAlignmentCenter);
+    s_fmtAngle = new StringFormat();
+    s_fmtAngle->SetAlignment(StringAlignmentCenter);
+    s_fmtAngle->SetLineAlignment(StringAlignmentNear);
+    s_labelBrush = new SolidBrush(Color(160, 180, 185, 195));
+    s_matchLabelBrush = new SolidBrush(Color(200, 160, 170, 185));
+    s_barBgBrush = new SolidBrush(Color(60, 255, 255, 255));
+    s_whiteBrush = new SolidBrush(Color(255, 255, 255, 255));
+    s_barPen = new Pen(Color(40, 255, 255, 255), 1.0f);
+    s_swatchPen = new Pen(Color(100, 220, 220, 220), 1.0f);
+  }
 
   RECT rect;
   GetClientRect(hwnd, &rect);
@@ -151,11 +193,6 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
     SolidBrush dimBrush(Color(120, 0, 0, 0));
     graphics.FillRectangle(&dimBrush, 0, 0, sw, sh);
 
-    FontFamily selFF(L"Segoe UI");
-    Font selFont(&selFF, 28, FontStyleBold, UnitPixel);
-    Font selSub(&selFF, 15, FontStyleRegular, UnitPixel);
-
-    SolidBrush whiteBrush(Color(255, 255, 255, 255));
     SolidBrush dimWhite(Color(180, 220, 220, 220));
 
     // For ROI/Selection drawing, we need to map from Screen to Client
@@ -166,8 +203,8 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
 
     if (g_currentSelection == SELECTING_ROI) {
       graphics.DrawString(L"STAGE 1  \xB7  Drag to select the dive prompt area",
-                          -1, &selFont, PointF(50.0f, 42.0f), &whiteBrush);
-      graphics.DrawString(L"Press the hotkey again to cancel", -1, &selSub,
+                          -1, s_selFont, PointF(50.0f, 42.0f), s_whiteBrush);
+      graphics.DrawString(L"Press the hotkey again to cancel", -1, s_selSubFont,
                           PointF(52.0f, 80.0f), &dimWhite);
 
       if (g_selectionRect.right > g_selectionRect.left) {
@@ -183,9 +220,9 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
 
     } else if (g_currentSelection == SELECTING_COLOR) {
       graphics.DrawString(L"STAGE 2  \xB7  Click to pick the prompt colour", -1,
-                          &selFont, PointF(50.0f, 42.0f), &whiteBrush);
+                          s_selFont, PointF(50.0f, 42.0f), s_whiteBrush);
       graphics.DrawString(L"Hover over the brightest part of the prompt text",
-                          -1, &selSub, PointF(52.0f, 80.0f), &dimWhite);
+                          -1, s_selSubFont, PointF(52.0f, 80.0f), &dimWhite);
 
       // Draw the selected ROI rectangle
       if (g_selectionRect.right > g_selectionRect.left) {
@@ -264,10 +301,8 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
                                                : L"GLIDING";
         std::wstring label = stateLabel;
 
-        FontFamily roiFF(L"Segoe UI");
-        Font roiFont(&roiFF, 10, FontStyleBold, UnitPixel);
         SolidBrush roiLabelBrush(roiCol);
-        graphics.DrawString(label.c_str(), -1, &roiFont,
+        graphics.DrawString(label.c_str(), -1, s_roiFont,
                             PointF(float(p.roi_x + 4), float(p.roi_y + 4)),
                             &roiLabelBrush);
       }
@@ -382,17 +417,11 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
     graphics.DrawPath(&borderPen, &path);
 
     // "CURRENT ANGLE" label
-    FontFamily ff(L"Segoe UI");
-    Font labelFont(&ff, 9, FontStyleBold, UnitPixel);
-    SolidBrush labelBrush(Color(160, 180, 185, 195));
-    StringFormat fmtLabel;
-    fmtLabel.SetAlignment(StringAlignmentCenter);
-    graphics.DrawString(L"CURRENT ANGLE", -1, &labelFont,
+    graphics.DrawString(L"CURRENT ANGLE", -1, s_labelFont,
                         RectF(float(rx), float(ry + 8), float(rw), 18.0f),
-                        &fmtLabel, &labelBrush);
+                        s_fmtCenter, s_labelBrush);
 
     // Angle text — L"\xB0" is the degree symbol (safe ASCII escape)
-    Font angleFont(&ff, 68, FontStyleBold, UnitPixel);
     double dispAngle = std::abs(angle);
     double roundedAngle = std::round(dispAngle * 10.0) / 10.0;
     if (roundedAngle >= 360.0)
@@ -402,15 +431,11 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
         g_isDiving ? Color(255, 0, 220, 255) : Color(255, 0, 210, 140);
     SolidBrush angleBrush(angleCol);
 
-    StringFormat fmtAngle;
-    fmtAngle.SetAlignment(StringAlignmentCenter);
-    fmtAngle.SetLineAlignment(StringAlignmentNear);
-    graphics.DrawString(angleStr.c_str(), -1, &angleFont,
+    graphics.DrawString(angleStr.c_str(), -1, s_angleFont,
                         RectF(float(rx), float(ry + 26), float(rw), 80.0f),
-                        &fmtAngle, &angleBrush);
+                        s_fmtAngle, &angleBrush);
 
     // Match % label
-    Font subFont(&ff, 12, FontStyleBold, UnitPixel);
     int matchCount = g_matchCount.load();
     int area = (g_allProfiles.empty())
                    ? 10000
@@ -421,16 +446,13 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
     float detectionRatio = (float)matchCount / area;
     int matchPct = int(detectionRatio * 100.0f);
     std::wstring matchStr = L"Match  " + std::to_wstring(matchPct) + L"%";
-    Color matchLabelCol(200, 160, 170, 185);
-    SolidBrush matchLabelB(matchLabelCol);
-    graphics.DrawString(matchStr.c_str(), -1, &subFont,
+    graphics.DrawString(matchStr.c_str(), -1, s_subFont,
                         PointF(float(rx + 14), float(ry + rh - 54)),
-                        &matchLabelB);
+                        s_matchLabelBrush);
 
     // Match progress bar
     int barX = rx + 14, barY = ry + rh - 38, barW = rw - 28, barH = 8;
-    SolidBrush barBgB(Color(60, 255, 255, 255));
-    graphics.FillRectangle(&barBgB, barX, barY, barW, barH);
+    graphics.FillRectangle(s_barBgBrush, barX, barY, barW, barH);
     float clampedRatio = detectionRatio > 1.0f ? 1.0f : detectionRatio;
     int fillW = int(clampedRatio * barW);
     if (fillW > 0) {
@@ -441,8 +463,7 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
                                   Color(200, r / 2, g, 80));
       graphics.FillRectangle(&barFill, barX, barY, fillW, barH);
     }
-    Pen barPen(Color(40, 255, 255, 255), 1.0f);
-    graphics.DrawRectangle(&barPen, barX, barY, barW, barH);
+    graphics.DrawRectangle(s_barPen, barX, barY, barW, barH);
 
     // Target colour swatch (top-right corner)
     int swatchX = rx + rw - 28, swatchY = ry + 8;
@@ -450,17 +471,13 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
                  GetRValue(g_targetColor));
     SolidBrush swatchB(swatch);
     graphics.FillEllipse(&swatchB, swatchX, swatchY, 16, 16);
-    Pen swatchP(Color(100, 220, 220, 220), 1.0f);
-    graphics.DrawEllipse(&swatchP, swatchX, swatchY, 16, 16);
+    graphics.DrawEllipse(s_swatchPen, swatchX, swatchY, 16, 16);
 
     // Drag hint
-    Font tinyFont(&ff, 9, FontStyleRegular, UnitPixel);
     SolidBrush tinyBrush(Color(g_isDraggingHUD ? 130 : 50, 200, 210, 220));
-    StringFormat sfCenter;
-    sfCenter.SetAlignment(StringAlignmentCenter);
-    graphics.DrawString(L":: drag", -1, &tinyFont,
+    graphics.DrawString(L":: drag", -1, s_tinyFont,
                         RectF(float(rx), float(ry + rh - 14), float(rw), 12.0f),
-                        &sfCenter, &tinyBrush);
+                        s_fmtCenter, &tinyBrush);
 
     // DEBUG Overlay Box
     if (g_showDebugOverlay && !g_allProfiles.empty()) {
@@ -481,19 +498,18 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
       Pen dBorder(Color(100, 0, 204, 153), 1.0f);
       graphics.DrawPath(&dBorder, &dPath);
 
-      Font dbgFont(&ff, 10, FontStyleRegular, UnitPixel);
       SolidBrush dbgTextL(Color(255, 160, 160, 160));
 
       auto DrawRow = [&](int row, int col, const wchar_t *label,
                          const std::wstring &val, bool isGood = true) {
         float xOff = float(dx + 10 + (col * (dw / 2)));
         float yPos = float(dy + 8 + (row * 16));
-        graphics.DrawString(label, -1, &dbgFont, PointF(xOff, yPos), &dbgTextL);
+        graphics.DrawString(label, -1, s_dbgFont, PointF(xOff, yPos), &dbgTextL);
         SolidBrush valBrush(isGood ? Color(255, 0, 220, 170)
                                    : Color(255, 255, 80, 80));
 
         float xVal = xOff + (dw / 2) - 140;
-        graphics.DrawString(val.c_str(), -1, &dbgFont, PointF(xVal, yPos),
+        graphics.DrawString(val.c_str(), -1, s_dbgFont, PointF(xVal, yPos),
                             &valBrush);
       };
 

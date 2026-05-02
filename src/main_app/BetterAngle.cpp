@@ -95,11 +95,17 @@ void FocusMonitorThread() {
 void DetectorThread() {
   bool lastDiving = false;
   ULONGLONG peakMatchTimestamp = 0;
+  float lastSensX = -1.0f;
+  RECT cachedMonitorRect = {};
+  int cachedScreenIdx = -1;
 
   while (g_running) {
     if (!g_allProfiles.empty() && g_currentSelection == NONE) {
       Profile &p = g_allProfiles[g_selectedProfileIdx];
-      g_logic.LoadProfile(p.sensitivityX);
+      if (p.sensitivityX != lastSensX) {
+        g_logic.LoadProfile(p.sensitivityX);
+        lastSensX = p.sensitivityX;
+      }
       g_requiredMatchCount =
           (int)((p.diveGlideMatch / 100.0f) * (p.roi_w * p.roi_h));
 
@@ -108,7 +114,11 @@ void DetectorThread() {
 
       // Only scan ROI when Fortnite is the foreground window
       if (currentFortniteFocused) {
-        RECT mRect = GetMonitorRectByIndex(g_screenIndex);
+        if (g_screenIndex != cachedScreenIdx) {
+          cachedMonitorRect = GetMonitorRectByIndex(g_screenIndex);
+          cachedScreenIdx = g_screenIndex;
+        }
+        RECT mRect = cachedMonitorRect;
         RoiConfig cfg = {
             p.roi_x + mRect.left, p.roi_y + mRect.top, p.roi_w, p.roi_h,
             p.target_color,       p.tolerance};
@@ -279,17 +289,6 @@ bool RefreshHotkeys(HWND hWnd) {
 LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
                             LPARAM lParam) {
   if (message == WM_INPUT) {
-    UINT dwSize;
-    GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize,
-                    sizeof(RAWINPUTHEADER));
-    if (dwSize > 0) {
-      std::vector<BYTE> lpb(dwSize);
-      if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, lpb.data(), &dwSize,
-                          sizeof(RAWINPUTHEADER)) == dwSize) {
-        RAWINPUT *raw = (RAWINPUT *)lpb.data();
-      }
-    }
-
     int dx = GetRawInputDeltaX(lParam);
 
     ULONGLONG now = GetTickCount64();
@@ -534,7 +533,8 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         POINT pt;
         GetCursorPos(&pt);
 
-        bool canDrag = !IsFortniteForeground();
+        bool fnFocused = g_fortniteFocusedCache.load();
+        bool canDrag = !fnFocused;
 
         if (lDown && !g_isDraggingHUD && canDrag) {
           if (pt.x >= g_hudX && pt.x <= g_hudX + 260 && pt.y >= g_hudY &&
@@ -556,7 +556,6 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         }
 
         // Adjust click-through and Z-order based on Fortnite focus
-        bool fnFocused = IsFortniteForeground();
         long ex = GetWindowLong(hWnd, GWL_EXSTYLE);
         if (fnFocused) {
           // When Fortnite is focused, make HUD transparent to clicks and Topmost
