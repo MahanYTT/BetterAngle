@@ -1026,19 +1026,6 @@ bool BetterAngleBackend::inputLocked() const {
 }
 bool BetterAngleBackend::isDiving() const { return g_isDiving; }
 
-QString BetterAngleBackend::lockTriggerReason() const {
-  int r = g_lockTriggerReason.load();
-  switch (r) {
-  case 1:
-    return QString::fromUtf8("Glide \xe2\x86\x92 Dive");
-  case 2:
-    return QString::fromUtf8("Dive \xe2\x86\x92 Glide");
-  case 3:
-    return "Alt-Tab Return";
-  default:
-    return "None";
-  }
-}
 
 int BetterAngleBackend::peakMatchPct() const {
   if (g_allProfiles.empty()) return 0;
@@ -1077,29 +1064,11 @@ QString BetterAngleBackend::physicalKeyStates() const {
   return states;
 }
 
-bool BetterAngleBackend::ghostMismatch() const {
-  static const int keys[] = {'W', 'A', 'S', 'D', VK_SPACE};
-  for (int vk : keys) {
-    bool phys = g_physicalKeys[vk].load(std::memory_order_relaxed);
-    bool tracked = (GetKeyState(vk) & 0x8000) != 0;
-    if (phys != tracked) return true; // THE GHOST IS PRESENT
-  }
-  return false;
-}
-
-QString BetterAngleBackend::rawWState() const {
-    bool rawW = (GetAsyncKeyState('W') & 0x8000) != 0;
-    return rawW ? "PRESSED" : "RELEASED";
-}
-
 QString BetterAngleBackend::inputLockStatus() const {
     bool isLocked = (GetTickCount64() < g_mouseSuspendedUntil.load());
     return isLocked ? "ACTIVE" : "IDLE";
 }
 
-QString BetterAngleBackend::nitroSyncLog() const {
-  return QString::fromStdString(g_nitroSyncLog);
-}
 
 void BetterAngleBackend::finishBooting() {
   if (g_hHUD) {

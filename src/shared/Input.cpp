@@ -216,23 +216,3 @@ int GetRawInputDeltaX(LPARAM lparam) {
   return 0;
 }
 
-std::vector<bool> GetGamingKeyState() {
-  std::vector<bool> state;
-  state.reserve(std::size(g_gamingKeys));
-  for (int vk : g_gamingKeys) {
-    // FRESH SCAN: Ensure snapshot is absolute latest
-    state.push_back((GetAsyncKeyState(vk) & 0x8000) != 0);
-  }
-  return state;
-}
-
-void SyncGamingKeysNitro(const std::vector<bool> &preState) {
-  // v5.5.108 — Simplified to no-op. BlockInput is sufficient to prevent
-  // keyboard + mouse movement during FOV transitions. The SHOCK/RESTORE/
-  // typematic-detection approach was unreliable for hold-through-lock cases.
-  // Future work: evaluate mouse-only locking alternatives.
-
-  extern HWND g_hMsgWnd;
-  if (g_hMsgWnd)
-    RegisterRawMouse(g_hMsgWnd);
-}

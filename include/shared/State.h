@@ -21,27 +21,12 @@ std::wstring GetProfilesPath();
 extern std::atomic<long long> g_detectionDelayMs;
 extern std::atomic<bool> g_showDebugOverlay;
 extern std::atomic<ULONGLONG> g_mouseSuspendedUntil;
-extern std::atomic<int>
-    g_lockTriggerReason; // 0=None,1=Glide?Dive,2=Dive?Glide,3=Alt-Tab
 extern std::atomic<int> g_scannerCpuPct;
 extern std::atomic<bool> g_physicalKeys[256];
 extern std::atomic<bool> g_running;
-extern std::string g_nitroSyncLog;
 extern int g_screenIndex;
 extern std::atomic<bool> g_fortniteFocusedCache;
-extern std::atomic<int> g_lockCount;
-extern std::atomic<DWORD> g_lockThreadId;
-extern std::atomic<long long> g_lockDurationMs;
-extern std::atomic<short> g_wPreLock;
-extern std::atomic<short> g_wPostUnlock;
-extern std::atomic<short> g_wPostFlush;
-extern std::atomic<bool> g_preState[5];
-extern std::atomic<bool> g_postState[5];
-extern std::atomic<bool> g_blockInputActive;
-extern std::atomic<bool> g_lockInProgress;
-extern std::mutex g_lockMutex;
 extern std::atomic<ULONGLONG> g_lastLockTime;
-extern std::mutex g_blockInputMutex;
 
 extern std::string g_lastVersionRun;
 

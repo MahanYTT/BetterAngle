@@ -71,8 +71,6 @@ void FocusMonitorThread() {
         BlockInput(FALSE);
       }).detach();
 
-      g_lockTriggerReason = 3; // Alt-Tab Return
-      g_lockCount++;
 
       LOG_INFO("Alt-tab focus detected (400ms BlockInput for FOV stabilization)");
     }
@@ -141,38 +139,13 @@ void DetectorThread() {
           g_mouseSuspendedUntil = GetTickCount64() + 700;
 
           std::thread([]() {
-            std::unique_lock<std::mutex> lock(g_lockMutex, std::try_to_lock);
-            if (!lock.owns_lock()) return;
-            g_lockInProgress = true;
-            g_lockCount++;
-            g_lockThreadId = GetCurrentThreadId();
-            ULONGLONG start = GetTickCount64();
-
-            g_wPreLock =
-                (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
-            auto initialState = GetGamingKeyState(); // Pre-lock snapshot
-
-            {
-              std::lock_guard<std::mutex> lock(g_blockInputMutex);
-              g_blockInputActive = true;
-              BlockInput(TRUE);
-              Sleep(700);
-              BlockInput(FALSE);
-              g_blockInputActive = false;
-            }
-
-            // FAKE DEATH EXPERIMENT: Flush input queue via OS recreation
-            SendMessage(g_hHUD, WM_USER + 42, 0, 0);
-
-            g_lockDurationMs = (long long)(GetTickCount64() - start);
-            SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
-
+            BlockInput(TRUE);
+            Sleep(700);
+            BlockInput(FALSE);
             g_lastLockTime = GetTickCount64();
-            g_lockInProgress = false;
           }).detach();
 
-          LOG_INFO("Transition: glide->dive, Nitro Delta sync (700ms)");
-          g_lockTriggerReason = 1; // Glide → Dive
+          LOG_INFO("Transition: glide->dive (700ms BlockInput)");
         }
         // Edge: Diving -> Gliding (Nitro)
         else if (!nowDiving && lastDiving &&
@@ -181,38 +154,13 @@ void DetectorThread() {
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
 
           std::thread([]() {
-            std::unique_lock<std::mutex> lock(g_lockMutex, std::try_to_lock);
-            if (!lock.owns_lock()) return;
-            g_lockInProgress = true;
-            g_lockCount++;
-            g_lockThreadId = GetCurrentThreadId();
-            ULONGLONG start = GetTickCount64();
-
-            g_wPreLock =
-                (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
-            auto initialState = GetGamingKeyState(); // Pre-lock snapshot
-
-            {
-              std::lock_guard<std::mutex> lock(g_blockInputMutex);
-              g_blockInputActive = true;
-              BlockInput(TRUE);
-              Sleep(1000);
-              BlockInput(FALSE);
-              g_blockInputActive = false;
-            }
-
-            // FAKE DEATH EXPERIMENT: Flush input queue via OS recreation
-            SendMessage(g_hHUD, WM_USER + 42, 0, 0);
-
-            g_lockDurationMs = (long long)(GetTickCount64() - start);
-            SyncGamingKeysNitro(initialState); // Nitro Flush + Delta sync
-
+            BlockInput(TRUE);
+            Sleep(1000);
+            BlockInput(FALSE);
             g_lastLockTime = GetTickCount64();
-            g_lockInProgress = false;
           }).detach();
 
-          LOG_INFO("Transition: dive->glide, Nitro Delta sync (1000ms)");
-          g_lockTriggerReason = 2; // Dive → Glide
+          LOG_INFO("Transition: dive->glide (1000ms BlockInput)");
         }
       }
 
@@ -318,39 +266,6 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
       if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, lpb.data(), &dwSize,
                           sizeof(RAWINPUTHEADER)) == dwSize) {
         RAWINPUT *raw = (RAWINPUT *)lpb.data();
-        if (raw->header.dwType == RIM_TYPEKEYBOARD) {
-          if (g_ghostFixInProgress.load()) {
-            // CONTAMINATION FIX: Skip events during Shock&Restore — our
-            // synthetic SendInput calls would set Br=1 (Shock KeyUp) and
-            // Mk=1 (Restore KeyDown), making the correction logic think the
-            // user released and re-pressed the key. Real hardware events are
-            // collected in a dedicated window after Restore completes.
-          } else {
-            if (raw->data.keyboard.Flags & RI_KEY_BREAK) {
-              g_rawKeyUpDetected[raw->data.keyboard.VKey] = true;
-              g_rawBreakCount[raw->data.keyboard.VKey].fetch_add(
-                  1, std::memory_order_relaxed);
-            } else {
-              g_rawKeyMakeDetected[raw->data.keyboard.VKey] = true;
-              g_rawMakeCount[raw->data.keyboard.VKey].fetch_add(
-                  1, std::memory_order_relaxed);
-              // Test 1 diagnostic: measure typematic gap on W. Only outside
-              // ghostFix to keep synthetic SHOCK/RESTORE events from polluting
-              // the reading.
-              if (raw->data.keyboard.VKey == 'W') {
-                static ULONGLONG s_lastWMakeMs = 0;
-                ULONGLONG now = GetTickCount64();
-                if (s_lastWMakeMs > 0) {
-                  long long gap = (long long)(now - s_lastWMakeMs);
-                  // Clamp to a sane window — values above ~2s mean the user
-                  // released and re-pressed, which isn't a typematic gap.
-                  if (gap < 2000) g_typematicGapMsW = gap;
-                }
-                s_lastWMakeMs = now;
-              }
-            }
-          }
-        }
       }
     }
 
@@ -375,10 +290,6 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
 LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
                             LPARAM lParam) {
   switch (message) {
-  case WM_USER + 42:
-    // v5.5.108 — Placeholder, no longer needed.
-    // Ghost-walk fixing logic moved to different architecture.
-    return 0;
   case WM_CREATE:
     RefreshHotkeys(hWnd);
     return 0;
