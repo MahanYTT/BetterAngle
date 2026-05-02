@@ -365,37 +365,35 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
     // reset the arrays and open the collection window (g_ghostFixInProgress=
     // false) so only REAL hardware typematic events are recorded.
     //
-    // CORRECTION RULE: kill ghost if Br=1 OR Mk=0 (i.e. breakDetected ||
-    // !makeDetected). This is broader than the simple "Br=1 AND Mk=0" check
-    // because it also handles:
+    // CORRECTION RULE: kill ghost if Mk=0 (no typematic = no held key).
+    // This handles:
     //
     //   Mk=0 Br=0 → released during lock, BOTH events swallowed by Windows
-    //                (simple rule would MISS this — key stays ghost-pressed!)
-    //   Mk=1 Br=1 → released after lock, Break is the user's final action
-    //                (simple rule would MISS this — ghost-walk persists!)
+    //                (correction detects: no typematic → ghost kill) ✓
+    //   Mk=0 Br=1 → released before collection window, Break leaked in
+    //                (correction detects: no typematic → ghost kill) ✓
+    //   Mk=1 Br=0 → still holding, clean collection window
+    //                (no correction: typematic detected → leave pressed) ✓
+    //   Mk=1 Br=1 → released after BlockInput(FALSE), natural KEYUP to game
+    //                OR still holding + leaked Br=1 from SHOCK
+    //                (no correction needed either way: game got KEYUP naturally,
+    //                 or user still holding so typematic = true) ✓
     //
-    // Only Mk=1 Br=0 (typematic Make with no Break) proves the user is still
-    // holding the key. All other combinations → kill ghost.
-    //
-    //   Mk=1 Br=0 → still holding → leave pressed
-    //   Mk=0 Br=0 → released during lock (swallowed) → kill ghost
-    //   Mk=1 Br=1 → released after lock → kill ghost (Break is final)
-    //   Mk=0 Br=1 → released, no typematic → kill ghost
+    // Dropping breakDetected eliminates false positives on Mk=1 Br=1 when a
+    // user is actively holding the key and a SHOCK KEYUP leaks through despite
+    // the increased drain.
 
-    // v5.5.104 — DRAIN-BEFORE-RESET. The lock thread is a worker thread and
-    // does not own g_hMsgWnd; the main thread's message pump runs concurrently.
-    // Synthetic WM_INPUT events from the safety-net (WM_USER+42), SHOCK, and
-    // RESTORE SendInput calls were arriving at the pump asynchronously, and on
-    // a busy main thread some were dispatched AFTER the array reset, recording
-    // 1–3 stray Make events into the freshly-cleared collection window. That
-    // contamination falsely tripped the "still holding" branch and skipped the
-    // ghost-kill KEYUP (smoking gun: Mk=3 Br=0 in v5.5.100 diagnostics).
-    //
-    // Sleep(50) here keeps g_ghostFixInProgress=true while the main thread
-    // catches up and dispatches all queued synthetic events. MsgWndProc filters
-    // them via the contamination check, leaving the array reset truly clean.
-    // After this, the original boolean correction rule is sound.
-    Sleep(50);
+    // v5.5.106 — DRAIN-BEFORE-RESET (increased to 150ms). The lock thread is a
+    // worker thread and does not own g_hMsgWnd; the main thread's message pump
+    // runs concurrently. Synthetic WM_INPUT events from SHOCK and RESTORE
+    // SendInput calls arrive asynchronously. The SHOCK KEYUP is posted at T+0ms;
+    // a busy Fortnite+Qt main thread may not dispatch it until T+50–75ms. The
+    // drain now runs 175ms total (T+0 to T+175ms) to ensure all 4 synthetic
+    // events (1 SHOCK + 3 RESTORE) are fully processed before the collection
+    // window opens. Combined with the correction-rule fix (drop breakDetected),
+    // this eliminates the Br=1 contamination that caused false positives on
+    // held keys.
+    Sleep(150);
 
     for (int i = 0; i < 256; i++) {
       g_rawKeyUpDetected[i] = false;
@@ -413,19 +411,20 @@ void SyncGamingKeysNitro(const std::vector<bool> &preState) {
         int makeCount = g_rawMakeCount[vk].load();   // for logging only
         int breakCount = g_rawBreakCount[vk].load(); // for logging only
 
-        // v5.5.104 — Reverted to the original boolean rule. The Sleep(50)
-        // drain above eliminates the contamination that v5.5.102's count
-        // threshold was working around, so this is now safe again. v5.5.102's
-        // threshold of >=4 was over-correcting and forcing a double-press on
-        // every transition where real typematic produced <4 events in the
-        // 200ms window — exactly the UX previously rejected.
+        // v5.5.106 — Simplified rule: kill ghost if Mk=0 only. The increased
+        // 150ms drain ensures synthetic WM_INPUT events are fully dispatched
+        // before collection opens, eliminating false Br=1 detections on held
+        // keys. Dropping the breakDetected branch fixes the double-press
+        // regression where Mk=1 Br=1 (held key + leaked SHOCK KEYUP) was
+        // incorrectly triggering correction.
         //
-        // CORRECTION RULE: kill ghost if Br=1 OR Mk=0.
+        // CORRECTION RULE: kill ghost if Mk=0.
         //   Mk=1 Br=0 → still holding → leave pressed
         //   Mk=0 Br=0 → released during lock (swallowed) → kill ghost
-        //   Mk=1 Br=1 → released after lock → kill ghost (Break is final)
+        //   Mk=1 Br=1 → still holding + leaked Br OR released after unlock
+        //                → no correction needed → leave pressed
         //   Mk=0 Br=1 → released, no typematic → kill ghost
-        if (breakDetected || !makeDetected) {
+        if (!makeDetected) {
           UINT scanCode = MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
           if (scanCode == 0)
             continue;
