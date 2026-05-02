@@ -32,36 +32,10 @@ std::atomic<short> g_wPostFlush(0);
 std::atomic<bool> g_preState[5];
 std::atomic<bool> g_postState[5];
 std::atomic<bool> g_blockInputActive(false);
-std::atomic<bool> g_tableRefreshed(false);
-std::atomic<bool> g_hasSynced(false);
-std::atomic<int> g_activeFallback(0);
-std::atomic<bool> g_fb1Active(false);
-std::atomic<bool> g_rawKeyUpDetected[256] = {};
-std::atomic<bool> g_rawKeyMakeDetected[256] = {};
 std::atomic<ULONGLONG> g_lastLockTime(0);
 std::atomic<bool> g_lockInProgress(false);
-std::atomic<bool> g_ghostFixInProgress(false);
-std::atomic<long long> g_ghostFixDurationMs(0);
-std::atomic<bool> g_ghostFixVerifyOk(true);
 std::mutex g_lockMutex;
 std::mutex g_blockInputMutex;
-
-// Diagnostic counters (v5.5.98)
-std::atomic<long long> g_typematicGapMsW(0);
-std::atomic<int> g_safetyNetCount(0);
-std::atomic<int> g_syncSkipCount(0);
-std::atomic<int> g_correctionCount(0);
-std::atomic<int> g_correctionLastVk(0);
-std::atomic<ULONGLONG> g_correctionLastTime(0);
-
-// v5.5.99 — per-key event counts and last-lock snapshot
-std::atomic<int> g_rawMakeCount[256] = {};
-std::atomic<int> g_rawBreakCount[256] = {};
-std::atomic<int> g_lastLockMakeCount[5] = {};
-std::atomic<int> g_lastLockBreakCount[5] = {};
-std::atomic<bool> g_lastLockPreState[5] = {};
-std::atomic<bool> g_lastLockCorrected[5] = {};
-std::atomic<ULONGLONG> g_lastLockTimestamp(0);
 std::string g_nitroSyncLog = "No sync events yet";
 std::atomic<int> g_peakMatchCount{0};
 std::atomic<int> g_requiredMatchCount{0};

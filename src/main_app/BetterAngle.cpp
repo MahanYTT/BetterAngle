@@ -146,10 +146,6 @@ void DetectorThread() {
             g_lockThreadId = GetCurrentThreadId();
             ULONGLONG start = GetTickCount64();
 
-            for (int i = 0; i < 256; i++) {
-              g_rawKeyUpDetected[i] = false;
-              g_rawKeyMakeDetected[i] = false;
-            }
             g_wPreLock =
                 (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
             auto initialState = GetGamingKeyState(); // Pre-lock snapshot
@@ -190,10 +186,6 @@ void DetectorThread() {
             g_lockThreadId = GetCurrentThreadId();
             ULONGLONG start = GetTickCount64();
 
-            for (int i = 0; i < 256; i++) {
-              g_rawKeyUpDetected[i] = false;
-              g_rawKeyMakeDetected[i] = false;
-            }
             g_wPreLock =
                 (GetAsyncKeyState('W') & 0x8000) != 0 ? (short)1 : (short)0;
             auto initialState = GetGamingKeyState(); // Pre-lock snapshot
@@ -381,38 +373,10 @@ LRESULT CALLBACK MsgWndProc(HWND hWnd, UINT message, WPARAM wParam,
 LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
                             LPARAM lParam) {
   switch (message) {
-  case WM_USER + 42: {
-    // SAFETY NET: Unconditional KeyUp for all WASD keys.
-    // This fires regardless of whether the fake death works.
-    LOG_INFO("SafetyNet KEYUP fired for WASD");
-    g_safetyNetCount.fetch_add(1, std::memory_order_relaxed);
-    static const int keys[] = {'W', 'A', 'S', 'D'};
-    for (int vk : keys) {
-        INPUT input = {0};
-        input.type = INPUT_KEYBOARD;
-        input.ki.wVk = (WORD)vk;
-        input.ki.wScan = (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
-        input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
-        SendInput(1, &input, sizeof(INPUT));
-    }
-
-    // FAKE DEATH: Destroy and recreate the input listener.
-    // This forces OS-level cleanup that may flush the buffer.
-    if (g_hMsgWnd) {
-        DestroyWindow(g_hMsgWnd);
-        g_hMsgWnd = NULL;
-    }
-
-    // RESURRECTION: Rebuild immediately.
-    HINSTANCE hInst = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
-    g_hMsgWnd = CreateWindowEx(
-        0, L"BetterAngleMsgWnd", NULL, 0,
-        0, 0, 0, 0, HWND_MESSAGE, NULL, hInst, NULL);
-
-    // RE-HOOK: Register raw input again
-    RegisterRawMouse(g_hMsgWnd);
+  case WM_USER + 42:
+    // v5.5.108 — Placeholder, no longer needed.
+    // Ghost-walk fixing logic moved to different architecture.
     return 0;
-  }
   case WM_CREATE:
     RefreshHotkeys(hWnd);
     return 0;
