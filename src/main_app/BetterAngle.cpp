@@ -62,17 +62,19 @@ void FocusMonitorThread() {
 
     // Detect Alt-Tab back into Fortnite with ultra-low latency (1ms polling)
     if (!lastFortniteFocused && currentFortniteFocused) {
-      // ALT-TAB FOCUS CHANGE: No BlockInput or Shock&Restore needed.
-      // Windows already restores key state correctly on focus change, and
-      // BlockInput freezes user input for 400ms (especially bad during Win+Tab).
-      // The g_mouseSuspendedUntil guard in MsgWndProc prevents angle calculation
-      // during the focus transition window. This eliminates the 400ms input freeze
-      // and the double-press requirement on every alt-tab transition.
-      g_mouseSuspendedUntil = GetTickCount64() + 100;
+      // ALT-TAB FOCUS CHANGE: BlockInput(400ms) to prevent keyboard + mouse
+      // movement while FOV transitions on focus return. The 400ms window gives
+      // the decimal crosshair time to stabilize before user input resumes.
+      std::thread([]() {
+        BlockInput(TRUE);
+        Sleep(400);
+        BlockInput(FALSE);
+      }).detach();
+
       g_lockTriggerReason = 3; // Alt-Tab Return
       g_lockCount++;
 
-      LOG_INFO("Alt-tab focus detected (100ms mouse suspension, no BlockInput)");
+      LOG_INFO("Alt-tab focus detected (400ms BlockInput for FOV stabilization)");
     }
     lastFortniteFocused = currentFortniteFocused;
     Sleep(0); // Max CPU performance for lightning fast focus detection
