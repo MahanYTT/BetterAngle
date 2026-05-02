@@ -103,6 +103,8 @@ extern HWND g_hMsgWnd;
 bool RefreshHotkeys(HWND hWnd);
 extern std::atomic<bool> g_forceRedraw;
 extern std::atomic<bool> g_keybindAssignmentActive;
+extern std::atomic<bool> g_blockInputActive;
+extern std::atomic<bool> g_justRefocused;
 void NotifyBackendCrosshairChanged();
 void NotifyBackendUpdateStatusChanged();
 

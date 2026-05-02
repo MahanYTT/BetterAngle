@@ -218,6 +218,8 @@ HWND g_hPanel = NULL;
 HWND g_hMsgWnd = NULL;
 HWND g_fortniteWindow = NULL;
 RECT g_fortniteRect = {0, 0, 0, 0};
+std::atomic<bool> g_blockInputActive(false);
+std::atomic<bool> g_justRefocused(false);
 
 RECT GetMonitorRectByIndex(int index) {
   struct RectData {

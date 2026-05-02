@@ -60,22 +60,34 @@ void FocusMonitorThread() {
     bool currentFortniteFocused = IsFortniteForeground();
     g_fortniteFocusedCache = currentFortniteFocused;
 
-    // Detect Alt-Tab back into Fortnite with ultra-low latency (1ms polling)
+    // Focus LOST edge: abort any active BlockInput immediately
+    if (lastFortniteFocused && !currentFortniteFocused) {
+      if (g_blockInputActive.load()) {
+        BlockInput(FALSE);
+        g_blockInputActive = false;
+      }
+      g_mouseSuspendedUntil = 0;
+    }
+
+    // Focus GAINED edge: lock input only if no FOV transition lock is already active
     if (!lastFortniteFocused && currentFortniteFocused) {
       // ALT-TAB FOCUS CHANGE: BlockInput(400ms) to prevent keyboard + mouse
       // movement while FOV transitions on focus return. The 400ms window gives
       // the decimal crosshair time to stabilize before user input resumes.
-      std::thread([]() {
-        BlockInput(TRUE);
-        Sleep(400);
-        BlockInput(FALSE);
-      }).detach();
+      if (!g_blockInputActive.load()) {
+        std::thread([]() {
+          g_blockInputActive = true;
+          BlockInput(TRUE);
+          Sleep(400);
+          BlockInput(FALSE);
+          g_blockInputActive = false;
+        }).detach();
 
-
-      LOG_INFO("Alt-tab focus detected (400ms BlockInput for FOV stabilization)");
+        LOG_INFO("Alt-tab focus detected (400ms BlockInput for FOV stabilization)");
+      }
     }
     lastFortniteFocused = currentFortniteFocused;
-    Sleep(0); // Max CPU performance for lightning fast focus detection
+    Sleep(1); // 1ms polling: ultra-low latency focus detection with minimal CPU usage
   }
 }
 
@@ -128,6 +140,11 @@ void DetectorThread() {
 
       bool nowDiving = (g_matchCount.load() >= g_requiredMatchCount.load());
 
+      // Skip edge detection on first frame after focus return to avoid spurious FOV transition
+      if (g_justRefocused.exchange(false)) {
+        lastDiving = nowDiving;
+      }
+
       // Only trigger input blocking locks if Fortnite is actually focused AND the cursor is hidden.
       // This prevents the mouse from locking up on the desktop if the user tabs out,
       // or if they open the in-game map/inventory (which shows the cursor and obscures the ROI).
@@ -139,9 +156,11 @@ void DetectorThread() {
           g_mouseSuspendedUntil = GetTickCount64() + 700;
 
           std::thread([]() {
+            g_blockInputActive = true;
             BlockInput(TRUE);
-            Sleep(700);
+            for (int i = 0; i < 70 && IsFortniteForeground(); i++) Sleep(10);
             BlockInput(FALSE);
+            g_blockInputActive = false;
             g_lastLockTime = GetTickCount64();
           }).detach();
 
@@ -154,9 +173,11 @@ void DetectorThread() {
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
 
           std::thread([]() {
+            g_blockInputActive = true;
             BlockInput(TRUE);
-            Sleep(1000);
+            for (int i = 0; i < 100 && IsFortniteForeground(); i++) Sleep(10);
             BlockInput(FALSE);
+            g_blockInputActive = false;
             g_lastLockTime = GetTickCount64();
           }).detach();
 
