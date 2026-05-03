@@ -56,12 +56,15 @@ static void FlushPendingInputMessages() {
 // detection)
 void FocusMonitorThread() {
   bool lastFortniteFocused = false;
+  ULONGLONG focusLostTime = 0;
+
   while (g_running) {
     bool currentFortniteFocused = IsFortniteForeground();
     g_fortniteFocusedCache = currentFortniteFocused;
 
     // Focus LOST edge: abort any active BlockInput immediately
     if (lastFortniteFocused && !currentFortniteFocused) {
+      focusLostTime = GetTickCount64();
       if (g_blockInputActive.load()) {
         BlockInput(FALSE);
         g_blockInputActive = false;
@@ -69,12 +72,12 @@ void FocusMonitorThread() {
       g_mouseSuspendedUntil = 0;
     }
 
-    // Focus GAINED edge: lock input only if no FOV transition lock is already active
+    // Focus GAINED edge: only lock if unfocused for >=500ms (real alt-tab).
+    // Shorter gaps are overlay/notification blips (Discord, GeForce, Xbox bar)
+    // — locking on those eats keys during normal gameplay.
     if (!lastFortniteFocused && currentFortniteFocused) {
-      // ALT-TAB FOCUS CHANGE: BlockInput(400ms) to prevent keyboard + mouse
-      // movement while FOV transitions on focus return. The 400ms window gives
-      // the decimal crosshair time to stabilize before user input resumes.
-      if (!g_blockInputActive.load()) {
+      ULONGLONG unfocusedMs = GetTickCount64() - focusLostTime;
+      if (unfocusedMs >= 500 && !g_blockInputActive.load()) {
         std::thread([]() {
           g_blockInputActive = true;
           BlockInput(TRUE);
@@ -87,7 +90,7 @@ void FocusMonitorThread() {
       }
     }
     lastFortniteFocused = currentFortniteFocused;
-    Sleep(1); // 1ms polling: ultra-low latency focus detection with minimal CPU usage
+    Sleep(1);
   }
 }
 
@@ -163,18 +166,18 @@ void DetectorThread() {
         if (nowDiving && !lastDiving &&
             (GetTickCount64() - g_lastLockTime > 500)) {
           g_lastLockTime = GetTickCount64();
-          g_mouseSuspendedUntil = GetTickCount64() + 700;
+          g_mouseSuspendedUntil = GetTickCount64() + 1000;
 
           std::thread([]() {
             g_blockInputActive = true;
             BlockInput(TRUE);
-            for (int i = 0; i < 70 && IsFortniteForeground(); i++) Sleep(10);
+            for (int i = 0; i < 100 && IsFortniteForeground(); i++) Sleep(10);
             BlockInput(FALSE);
             g_blockInputActive = false;
             g_lastLockTime = GetTickCount64();
           }).detach();
 
-          LOG_INFO("Transition: glide->dive (700ms BlockInput)");
+          LOG_INFO("Transition: glide->dive (1000ms BlockInput)");
         }
         // Edge: Diving -> Gliding (Nitro)
         else if (!nowDiving && lastDiving &&
