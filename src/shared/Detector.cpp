@@ -169,10 +169,6 @@ int FovDetector::Scan(const RoiConfig &cfg) {
     int tg = (int)GetGValue(cfg.target);
     int tb = (int)GetBValue(cfg.target);
 
-    // DXGI gives BGRA — B and R channels are swapped vs GDI's RGB layout.
-    // Swap tr and tb so the existing RGB math stays correct.
-    int tmp = tr; tr = tb; tb = tmp;
-
     int match = 0;
     for (int row = 0; row < cfg.h; row++) {
       const DWORD *rowPtr = reinterpret_cast<const DWORD *>(
