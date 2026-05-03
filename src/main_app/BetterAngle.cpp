@@ -102,6 +102,7 @@ void DetectorThread() {
   RECT cachedMonitorRect = {};
   int cachedScreenIdx = -1;
 
+  timeBeginPeriod(1);
   while (g_running) {
     if (!g_allProfiles.empty() && g_currentSelection == NONE) {
       Profile &p = g_allProfiles[g_selectedProfileIdx];
@@ -208,6 +209,7 @@ void DetectorThread() {
     }
     Sleep(1); // CPU Fix: Drops usage from 100% to ~1%
   }
+  timeEndPeriod(1);
 }
 
 // Screen Snapshot for Flicker-Free Selection (v4.9.15)
