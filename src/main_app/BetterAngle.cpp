@@ -127,10 +127,19 @@ void DetectorThread() {
             p.roi_x + mRect.left, p.roi_y + mRect.top, p.roi_w, p.roi_h,
             p.target_color,       p.tolerance};
         ULONGLONG startMs = GetTickCount64();
-        g_matchCount = g_detector.Scan(cfg);
+        int scanResult = g_detector.Scan(cfg);
         ULONGLONG endMs = GetTickCount64();
         ULONGLONG scanMs = endMs - startMs;
         g_detectionDelayMs = scanMs;
+
+        // -1 means no new frame was available (DXGI timeout) — skip this cycle
+        // entirely to avoid false edge detection from a stale matchCount of 0.
+        if (scanResult < 0) {
+          Sleep(1);
+          continue;
+        }
+
+        g_matchCount = scanResult;
 
         // Scanner CPU %: time spent scanning vs total loop period
         int cpuPct = (scanMs > 0) ? (int)((scanMs * 100) / (scanMs + 10)) : 0;
@@ -164,7 +173,7 @@ void DetectorThread() {
       // or if they open the in-game map/inventory (which shows the cursor and obscures the ROI).
       if (currentFortniteFocused && !g_isCursorVisible && GetTickCount64() >= g_mouseSuspendedUntil) {
         // Edge: Gliding -> Diving (Nitro)
-        if (nowDiving && !lastDiving &&
+        if (nowDiving && !lastDiving && !g_blockInputActive.load() &&
             (GetTickCount64() - g_lastLockTime > 500)) {
           g_lastLockTime = GetTickCount64();
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
@@ -180,7 +189,7 @@ void DetectorThread() {
           LOG_INFO("Transition: glide->dive (1000ms BlockInput)");
         }
         // Edge: Diving -> Gliding (Nitro)
-        else if (!nowDiving && lastDiving &&
+        else if (!nowDiving && lastDiving && !g_blockInputActive.load() &&
                  (GetTickCount64() - g_lastLockTime > 500)) {
           g_lastLockTime = GetTickCount64();
           g_mouseSuspendedUntil = GetTickCount64() + 1000;

@@ -202,7 +202,7 @@ int FovDetector::Scan(const RoiConfig &cfg) {
     IDXGIResource *res = nullptr;
     HRESULT hr = m_duplication->AcquireNextFrame(17, &fi, &res);
 
-    if (hr == DXGI_ERROR_WAIT_TIMEOUT) return 0;
+    if (hr == DXGI_ERROR_WAIT_TIMEOUT) return -1; // no new frame — caller must skip edge detection
 
     if (FAILED(hr)) {
       ReleaseDXGI();
