@@ -177,33 +177,33 @@ void DetectorThread() {
         if (nowDiving && !lastDiving && !g_blockInputActive.load() &&
             (GetTickCount64() - g_lastLockTime > 500)) {
           g_lastLockTime = GetTickCount64();
-          g_mouseSuspendedUntil = GetTickCount64() + 500;
+          g_mouseSuspendedUntil = GetTickCount64() + 300;
           std::thread([]() {
             g_blockInputActive = true;
             BlockInput(TRUE);
-            for (int i = 0; i < 50 && IsFortniteForeground(); i++) Sleep(10);
+            for (int i = 0; i < 30 && IsFortniteForeground(); i++) Sleep(10);
             BlockInput(FALSE);
             g_blockInputActive = false;
             g_lastLockTime = GetTickCount64();
           }).detach();
 
-          LOG_INFO("Transition: glide->dive (500ms BlockInput)");
+          LOG_INFO("Transition: glide->dive (300ms BlockInput)");
         }
         // Edge: Diving -> Gliding (Nitro)
         else if (!nowDiving && lastDiving && !g_blockInputActive.load() &&
                  (GetTickCount64() - g_lastLockTime > 500)) {
           g_lastLockTime = GetTickCount64();
-          g_mouseSuspendedUntil = GetTickCount64() + 500;
+          g_mouseSuspendedUntil = GetTickCount64() + 300;
           std::thread([]() {
             g_blockInputActive = true;
             BlockInput(TRUE);
-            for (int i = 0; i < 50 && IsFortniteForeground(); i++) Sleep(10);
+            for (int i = 0; i < 30 && IsFortniteForeground(); i++) Sleep(10);
             BlockInput(FALSE);
             g_blockInputActive = false;
             g_lastLockTime = GetTickCount64();
           }).detach();
 
-          LOG_INFO("Transition: dive->glide (500ms BlockInput)");
+          LOG_INFO("Transition: dive->glide (300ms BlockInput)");
         }
       }
 
