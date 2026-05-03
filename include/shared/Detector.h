@@ -18,22 +18,13 @@ public:
   int Scan(const RoiConfig &cfg);
 
 private:
-  // DXGI + D3D11 core
+  // DXGI path
   ID3D11Device           *m_d3dDevice   = nullptr;
   ID3D11DeviceContext    *m_d3dCtx      = nullptr;
   IDXGIOutputDuplication *m_duplication = nullptr;
-  bool m_dxgiOk = false;
-
-  // GPU compute shader resources
-  ID3D11ComputeShader       *m_computeShader = nullptr;
-  ID3D11Buffer              *m_cbParams      = nullptr; // constant buffer: r,g,b,tolSq
-  ID3D11Texture2D           *m_roiTex        = nullptr; // DEFAULT usage, CS input
-  ID3D11ShaderResourceView  *m_roiSRV        = nullptr;
-  ID3D11Buffer              *m_countBuf      = nullptr; // UAV output: 1 UINT match count
-  ID3D11UnorderedAccessView *m_countUAV      = nullptr;
-  ID3D11Buffer              *m_countReadback = nullptr; // STAGING, CPU reads result
-  int m_roiW = 0, m_roiH = 0;
-  bool m_computeOk = false;
+  ID3D11Texture2D        *m_stagingTex  = nullptr;
+  int  m_stagingW = 0, m_stagingH = 0;
+  bool m_dxgiOk   = false;
 
   // BitBlt fallback path
   HDC     m_hdcScreen = NULL;
@@ -45,8 +36,6 @@ private:
 
   bool InitDXGI();
   void ReleaseDXGI();
-  bool InitComputeShader();
-  void EnsureComputeResources(int w, int h);
   void EnsureScreenDC();
   void EnsureResources(int w, int h);
   int  ScanBitBlt(const RoiConfig &cfg);
