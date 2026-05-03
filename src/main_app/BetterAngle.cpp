@@ -167,11 +167,9 @@ void DetectorThread() {
             (GetTickCount64() - g_lastLockTime > 500)) {
           g_lastLockTime = GetTickCount64();
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
-          // Fire BlockInput immediately in this thread (zero scheduling delay),
-          // then spawn just for the timeout + release.
-          g_blockInputActive = true;
-          BlockInput(TRUE);
           std::thread([]() {
+            g_blockInputActive = true;
+            BlockInput(TRUE);
             for (int i = 0; i < 100 && IsFortniteForeground(); i++) Sleep(10);
             BlockInput(FALSE);
             g_blockInputActive = false;
@@ -185,11 +183,9 @@ void DetectorThread() {
                  (GetTickCount64() - g_lastLockTime > 500)) {
           g_lastLockTime = GetTickCount64();
           g_mouseSuspendedUntil = GetTickCount64() + 1000;
-          // Fire BlockInput immediately in this thread (zero scheduling delay),
-          // then spawn just for the timeout + release.
-          g_blockInputActive = true;
-          BlockInput(TRUE);
           std::thread([]() {
+            g_blockInputActive = true;
+            BlockInput(TRUE);
             for (int i = 0; i < 100 && IsFortniteForeground(); i++) Sleep(10);
             BlockInput(FALSE);
             g_blockInputActive = false;
