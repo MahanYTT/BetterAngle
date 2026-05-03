@@ -851,6 +851,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   LOG_INFO("Qt event loop exited with code=%d", exitCode);
 
   g_running = false;
+
+  // CRITICAL: Force-release any orphaned BlockInput lock from detached threads.
+  // Without this, the kernel holds the block for ~5 seconds after process exit.
+  BlockInput(FALSE);
+  g_blockInputActive = false;
+
   if (detThread.joinable())
     detThread.join();
   if (focusThread.joinable())
@@ -870,6 +876,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   RemoveSystrayIcon(g_hHUD);
   GdiplusShutdown(g_gdiplusToken);
   ShutdownEnhancedLogging();
+
+  // Balance the timeBeginPeriod(1) from startup to restore system timer resolution
+  timeEndPeriod(1);
 
   if (hMutex) {
     ReleaseMutex(hMutex);
