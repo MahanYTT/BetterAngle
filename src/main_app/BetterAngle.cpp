@@ -158,15 +158,6 @@ void DetectorThread() {
         lastDiving = nowDiving;
       }
 
-      // Pre-lock: as soon as the dive indicator starts appearing (>=25% of threshold),
-      // suspend angle updates immediately. This closes the gap between "user presses
-      // dive button" and "full threshold crossed" where mouse movements corrupt the angle.
-      if (currentFortniteFocused && !g_isCursorVisible && !lastDiving &&
-          g_matchCount.load() >= (g_requiredMatchCount.load() * 85) / 100 &&
-          GetTickCount64() >= g_mouseSuspendedUntil) {
-        g_mouseSuspendedUntil = GetTickCount64() + 50;
-      }
-
       // Only trigger input blocking locks if Fortnite is actually focused AND the cursor is hidden.
       // This prevents the mouse from locking up on the desktop if the user tabs out,
       // or if they open the in-game map/inventory (which shows the cursor and obscures the ROI).
