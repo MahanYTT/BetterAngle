@@ -134,6 +134,18 @@ int FovDetector::Scan(const RoiConfig &cfg) {
     res->QueryInterface(__uuidof(ID3D11Texture2D), (void **)&desktopTex);
     res->Release();
 
+    D3D11_TEXTURE2D_DESC desc;
+    desktopTex->GetDesc(&desc);
+
+    // If the monitor is HDR or using a non-standard 8-bit format, fallback to BitBlt
+    // which gracefully converts HDR down to an SDR bitmap we can read.
+    if (desc.Format != DXGI_FORMAT_B8G8R8A8_UNORM && 
+        desc.Format != DXGI_FORMAT_B8G8R8A8_UNORM_SRGB) {
+      desktopTex->Release();
+      m_duplication->ReleaseFrame();
+      return ScanBitBlt(cfg);
+    }
+
     // Recreate staging texture if ROI size changed
     if (!m_stagingTex || m_stagingW != cfg.w || m_stagingH != cfg.h) {
       if (m_stagingTex) { m_stagingTex->Release(); m_stagingTex = nullptr; }
