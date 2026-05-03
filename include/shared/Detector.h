@@ -36,6 +36,9 @@ private:
 
   bool InitDXGI();
   void ReleaseDXGI();
+public:
+  void ReinitDisplay(int monitorIndex);
+private:
   void EnsureScreenDC();
   void EnsureResources(int w, int h);
   int  ScanBitBlt(const RoiConfig &cfg);

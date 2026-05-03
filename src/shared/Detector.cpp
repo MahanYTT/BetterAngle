@@ -77,6 +77,41 @@ void FovDetector::ReleaseDXGI() {
   m_dxgiOk = false;
 }
 
+void FovDetector::ReinitDisplay(int monitorIndex) {
+  // Release only the duplication + staging tex; keep nothing (device recreated in InitDXGI)
+  if (m_stagingTex)  { m_stagingTex->Release();  m_stagingTex  = nullptr; }
+  if (m_duplication) { m_duplication->Release(); m_duplication = nullptr; }
+  m_dxgiOk = false;
+  m_stagingW = 0; m_stagingH = 0;
+
+  if (!m_d3dDevice) return;
+
+  IDXGIDevice *dxgiDevice = nullptr;
+  m_d3dDevice->QueryInterface(__uuidof(IDXGIDevice), (void **)&dxgiDevice);
+  if (!dxgiDevice) return;
+
+  IDXGIAdapter *adapter = nullptr;
+  dxgiDevice->GetAdapter(&adapter);
+  dxgiDevice->Release();
+  if (!adapter) return;
+
+  IDXGIOutput *output = nullptr;
+  // Try requested index; fall back to 0 if out of range
+  if (FAILED(adapter->EnumOutputs((UINT)monitorIndex, &output)) || !output)
+    adapter->EnumOutputs(0, &output);
+  adapter->Release();
+  if (!output) return;
+
+  IDXGIOutput1 *output1 = nullptr;
+  output->QueryInterface(__uuidof(IDXGIOutput1), (void **)&output1);
+  output->Release();
+  if (!output1) return;
+
+  HRESULT hr = output1->DuplicateOutput(m_d3dDevice, &m_duplication);
+  output1->Release();
+  m_dxgiOk = SUCCEEDED(hr);
+}
+
 // ---------- main scan ------------------------------------------------------
 
 int FovDetector::Scan(const RoiConfig &cfg) {

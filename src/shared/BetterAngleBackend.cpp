@@ -1,4 +1,5 @@
 #include "shared/BetterAngleBackend.h"
+#include "shared/Detector.h"
 #include "shared/Input.h"
 #include "shared/Logic.h"
 #include "shared/Profile.h"
@@ -20,6 +21,7 @@ extern std::vector<Profile> g_allProfiles;
 extern int g_selectedProfileIdx;
 extern AngleLogic g_logic;
 extern HWND g_hHUD;
+extern FovDetector g_detector;
 
 static double g_pendingSetupSensX = 0.05;
 static double g_pendingSetupSensY = 0.05;
@@ -174,8 +176,11 @@ int BetterAngleBackend::screenIndex() const {
 }
 
 void BetterAngleBackend::setScreenIndex(int v) {
-  if (v < 0)
-    v = 0;
+  // Clamp to actual monitor count so invalid indices don't silently fall back
+  int monitorCount = GetSystemMetrics(SM_CMONITORS);
+  if (v >= monitorCount) v = monitorCount - 1;
+  if (v < 0) v = 0;
+
   g_screenIndex = v;
   if (!g_allProfiles.empty()) {
     Profile &p = g_allProfiles[g_selectedProfileIdx];
@@ -184,7 +189,7 @@ void BetterAngleBackend::setScreenIndex(int v) {
   }
   SaveSettings();
 
-  // Move the HUD window to the new monitor (v5.5.76)
+  // Move the HUD window to the new monitor
   if (g_hHUD) {
     RECT mRect = GetMonitorRectByIndex(v);
     SetWindowPos(g_hHUD, HWND_TOPMOST, mRect.left, mRect.top,
@@ -192,6 +197,9 @@ void BetterAngleBackend::setScreenIndex(int v) {
                  SWP_NOACTIVATE | SWP_SHOWWINDOW);
     g_forceRedraw = true;
   }
+
+  // Reinit DXGI desktop duplication on the correct monitor
+  g_detector.ReinitDisplay(v);
 
   emit profileChanged();
 }

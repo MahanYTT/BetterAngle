@@ -2,6 +2,7 @@
 #include <atomic>
 #include <cmath>
 #include <dwmapi.h>
+#include <shobjidl.h>
 #include <fstream>
 #include <gdiplus.h>
 #include <iostream>
@@ -826,6 +827,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       screenW, screenH, NULL, NULL, hInstance, NULL);
 
   AddSystrayIcon(g_hHUD);
+
+  // Pin HUD to the current virtual desktop so it doesn't follow user to other desktops.
+  // Tray icon is global by default — no change needed there.
+  {
+    IVirtualDesktopManager *vdm = nullptr;
+    if (SUCCEEDED(CoCreateInstance(__uuidof(VirtualDesktopManager), nullptr,
+                                    CLSCTX_ALL, __uuidof(IVirtualDesktopManager),
+                                    (void **)&vdm)) && vdm) {
+      vdm->PinWindow(g_hHUD);
+      vdm->Release();
+    }
+  }
+
   LOG_INFO("HUD created: hwnd=0x%p", g_hHUD);
   LogWindowInfo(L"HUD handle", g_hHUD);
   ShowControlPanel(); // Force Dashboard to show on startup
