@@ -223,10 +223,12 @@ void DetectorThread() {
 
 // Screen Snapshot for Flicker-Free Selection (v4.9.15)
 void CaptureDesktop() {
-  int sw = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-  int sh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-  int sx = GetSystemMetrics(SM_XVIRTUALSCREEN);
-  int sy = GetSystemMetrics(SM_YVIRTUALSCREEN);
+  // Capture only the selected monitor (not the full virtual desktop)
+  RECT mRect = GetMonitorRectByIndex(g_screenIndex);
+  int sw = mRect.right - mRect.left;
+  int sh = mRect.bottom - mRect.top;
+  int sx = mRect.left;
+  int sy = mRect.top;
 
   HDC hdcScreen = GetDC(NULL);
   HDC hdcMem = CreateCompatibleDC(hdcScreen);
@@ -235,7 +237,7 @@ void CaptureDesktop() {
   g_screenSnapshot = CreateCompatibleBitmap(hdcScreen, sw, sh);
   HGDIOBJ hOld = SelectObject(hdcMem, g_screenSnapshot);
 
-  // Capture the entire virtual desktop
+  // Capture only the selected monitor's region
   BitBlt(hdcMem, 0, 0, sw, sh, hdcScreen, sx, sy, SRCCOPY);
 
   SelectObject(hdcMem, hOld);
@@ -374,13 +376,14 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         HDC hdcMem = CreateCompatibleDC(hdcScreen);
         HGDIOBJ hOld = SelectObject(hdcMem, g_screenSnapshot);
 
-        int sx = GetSystemMetrics(SM_XVIRTUALSCREEN);
-        int sy = GetSystemMetrics(SM_YVIRTUALSCREEN);
+        // Use selected monitor origin since CaptureDesktop now captures only that monitor
+        RECT mRect = GetMonitorRectByIndex(g_screenIndex);
+        int sx = mRect.left;
+        int sy = mRect.top;
 
         POINT cur;
         GetCursorPos(&cur);
-        // Adjust color sample coord by the same virtual screen offset used in
-        // CaptureDesktop
+        // Map screen-space cursor to monitor-local snapshot coordinates
         COLORREF pixel = GetPixel(hdcMem, cur.x - sx, cur.y - sy);
 
         g_pickedColor = pixel;
@@ -782,6 +785,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   g_targetColor = g_currentProfile.target_color;
 
   g_logic.LoadProfile(g_currentProfile.sensitivityX);
+
+  // CRITICAL FIX: Reinit DXGI on the profile's saved monitor, not hardcoded 0
+  g_detector.ReinitDisplay(g_screenIndex);
 
   // Hotkeys are registered exclusively in HUDWndProc WM_CREATE.
   // NULL-window registration would steal WM_HOTKEY messages before HUD can
