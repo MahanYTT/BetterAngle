@@ -162,7 +162,7 @@ void DetectorThread() {
       // suspend angle updates immediately. This closes the gap between "user presses
       // dive button" and "full threshold crossed" where mouse movements corrupt the angle.
       if (currentFortniteFocused && !g_isCursorVisible && !lastDiving &&
-          g_matchCount.load() >= g_requiredMatchCount.load() / 4 &&
+          g_matchCount.load() >= (g_requiredMatchCount.load() * 85) / 100 &&
           GetTickCount64() >= g_mouseSuspendedUntil) {
         g_mouseSuspendedUntil = GetTickCount64() + 50;
       }
