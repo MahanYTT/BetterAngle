@@ -124,8 +124,11 @@ void DetectorThread() {
         }
         RECT mRect = cachedMonitorRect;
         RoiConfig cfg = {
-            p.roi_x + mRect.left, p.roi_y + mRect.top, p.roi_w, p.roi_h,
-            p.target_color,       p.tolerance};
+            p.roi_x, p.roi_y, p.roi_w, p.roi_h,
+            p.target_color, p.tolerance};
+        // Store screen-space offset for BitBlt fallback
+        cfg.monitorOffsetX = mRect.left;
+        cfg.monitorOffsetY = mRect.top;
         ULONGLONG startMs = GetTickCount64();
         int scanResult = g_detector.Scan(cfg);
         ULONGLONG endMs = GetTickCount64();

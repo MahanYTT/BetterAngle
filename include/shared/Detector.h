@@ -9,6 +9,8 @@ struct RoiConfig {
   int x, y, w, h;
   COLORREF target;
   int tolerance;
+  int monitorOffsetX = 0; // Screen-space offset for BitBlt fallback
+  int monitorOffsetY = 0;
 };
 
 class FovDetector {

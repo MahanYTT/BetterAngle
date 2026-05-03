@@ -221,7 +221,9 @@ void FovDetector::EnsureResources(int w, int h) {
 
 int FovDetector::ScanBitBlt(const RoiConfig &cfg) {
   EnsureResources(cfg.w, cfg.h);
-  BitBlt(m_hdcMem, 0, 0, cfg.w, cfg.h, m_hdcScreen, cfg.x, cfg.y, SRCCOPY);
+  // BitBlt uses GetDC(NULL) which is the full virtual desktop — need screen-space coords
+  BitBlt(m_hdcMem, 0, 0, cfg.w, cfg.h, m_hdcScreen,
+         cfg.x + cfg.monitorOffsetX, cfg.y + cfg.monitorOffsetY, SRCCOPY);
 
   int tolSq = cfg.tolerance * cfg.tolerance;
   int tr = (int)GetRValue(cfg.target);
