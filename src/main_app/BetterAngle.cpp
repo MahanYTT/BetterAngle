@@ -55,8 +55,12 @@ static void FlushPendingInputMessages() {
 // High-frequency thread to detect Fortnite focus changes instantly (Alt-Tab
 // detection)
 void FocusMonitorThread() {
-  bool lastFortniteFocused = false;
-  ULONGLONG focusLostTime = 0;
+  // Seed initial state from reality. If Fortnite is already focused at
+  // startup, lastFortniteFocused must be true so the focus-GAINED edge
+  // does NOT fire on iteration 1 — that would call BlockInput(TRUE) and
+  // freeze the OS for 400ms (focusLostTime=0 trivially beats the 500ms guard).
+  bool lastFortniteFocused = IsFortniteForeground();
+  ULONGLONG focusLostTime = GetTickCount64();
 
   while (g_running) {
     bool currentFortniteFocused = IsFortniteForeground();
@@ -331,13 +335,17 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
     // Removed WM_HOTKEY logic. Now handled in WM_TIMER to support mouse buttons.
     return 0;
 
-  case WM_TRAYICON:
-    if (lParam == WM_RBUTTONUP) {
+  case WM_TRAYICON: {
+    // Under NOTIFYICON_VERSION_4 the mouse event is in LOWORD(lParam);
+    // raw lParam carries x/y coords so direct comparison always fails.
+    WORD evt = LOWORD(lParam);
+    if (evt == WM_RBUTTONUP || evt == WM_CONTEXTMENU) {
       ShowTrayContextMenu(hWnd);
-    } else if (lParam == WM_LBUTTONDBLCLK) {
+    } else if (evt == WM_LBUTTONDBLCLK) {
       ShowControlPanel();
     }
     return 0;
+  }
 
   case WM_COMMAND:
     if (LOWORD(wParam) == ID_TRAY_EXIT) {
