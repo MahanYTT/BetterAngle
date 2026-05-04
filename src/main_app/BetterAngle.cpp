@@ -39,6 +39,31 @@ void PerformanceMonitorThread();
 ULONG_PTR g_gdiplusToken;
 FovDetector g_detector;
 
+// Pre-spawned BlockInput worker. Sleeps on g_lockEvent; signaled by FOV-edge
+// detection. Skips the ~5-20ms cost of spawning a fresh thread per transition.
+// Auto-reset event coalesces back-to-back signals (the most recent duration wins,
+// which is fine — both glide↔dive durations are ballpark equivalent).
+void StartBlockInputWorker() {
+  std::thread([]() {
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+    while (g_running) {
+      DWORD wait = WaitForSingleObject(g_lockEvent, INFINITE);
+      if (wait != WAIT_OBJECT_0 || !g_running) continue;
+
+      int durationMs = g_lockDurationMs.exchange(0);
+      if (durationMs <= 0) continue;
+
+      g_blockInputActive = true;
+      BlockInput(TRUE);
+      int ticks = (durationMs + 9) / 10;
+      for (int i = 0; i < ticks && IsFortniteForeground(); i++) Sleep(10);
+      BlockInput(FALSE);
+      g_blockInputActive = false;
+      g_lastLockTime = GetTickCount64();
+    }
+  }).detach();
+}
+
 // Helper function to flush pending input messages before blocking
 static void FlushPendingInputMessages() {
   MSG msg;
@@ -82,18 +107,8 @@ void FocusMonitorThread() {
     if (!lastFortniteFocused && currentFortniteFocused) {
       ULONGLONG unfocusedMs = GetTickCount64() - focusLostTime;
       if (unfocusedMs >= 500 && !g_blockInputActive.load()) {
-        std::thread([]() {
-          // Elevate priority so unlock can't be starved under CPU load
-          SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-          g_blockInputActive = true;
-          BlockInput(TRUE);
-          // Poll focus every 10ms instead of blind sleep — exit early if user tabs out.
-          // Also prevents starvation under CPU load: breaks early if Fortnite loses focus.
-          for (int i = 0; i < 40 && IsFortniteForeground(); i++) Sleep(10);
-          BlockInput(FALSE);
-          g_blockInputActive = false;
-        }).detach();
-
+        g_lockDurationMs = 400;
+        SetEvent(g_lockEvent);
         LOG_INFO("Alt-tab focus detected (400ms BlockInput for FOV stabilization)");
       }
     }
@@ -188,16 +203,8 @@ void DetectorThread() {
             (GetTickCount64() - g_lastLockTime > 500)) {
           g_lastLockTime = GetTickCount64();
           g_mouseSuspendedUntil = GetTickCount64() + 200;
-          std::thread([]() {
-            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-            g_blockInputActive = true;
-            BlockInput(TRUE);
-            for (int i = 0; i < 20 && IsFortniteForeground(); i++) Sleep(10);
-            BlockInput(FALSE);
-            g_blockInputActive = false;
-            g_lastLockTime = GetTickCount64();
-          }).detach();
-
+          g_lockDurationMs = 200;
+          SetEvent(g_lockEvent);
           LOG_INFO("Transition: glide->dive (200ms BlockInput)");
         }
         // Edge: Diving -> Gliding (Nitro)
@@ -205,16 +212,8 @@ void DetectorThread() {
                  (GetTickCount64() - g_lastLockTime > 500)) {
           g_lastLockTime = GetTickCount64();
           g_mouseSuspendedUntil = GetTickCount64() + 250;
-          std::thread([]() {
-            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-            g_blockInputActive = true;
-            BlockInput(TRUE);
-            for (int i = 0; i < 25 && IsFortniteForeground(); i++) Sleep(10);
-            BlockInput(FALSE);
-            g_blockInputActive = false;
-            g_lastLockTime = GetTickCount64();
-          }).detach();
-
+          g_lockDurationMs = 250;
+          SetEvent(g_lockEvent);
           LOG_INFO("Transition: dive->glide (250ms BlockInput)");
         }
       }
@@ -853,6 +852,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   SetTimer(g_hHUD, 1, 10, NULL);    // 100fps (~10ms) Repaint Timer
   SetTimer(g_hHUD, 2, 30000, NULL); // 30s Auto-Save Timer
 
+  // Auto-reset event: pre-spawned worker waits on this for sub-millisecond lock signal
+  g_lockEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+  StartBlockInputWorker();
+
   std::thread detThread(DetectorThread);
   std::thread focusThread(FocusMonitorThread);
   std::thread perfThread(PerformanceMonitorThread);
@@ -867,6 +870,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   // Without this, the kernel holds the block for ~5 seconds after process exit.
   BlockInput(FALSE);
   g_blockInputActive = false;
+
+  // Wake the BlockInput worker so it observes g_running=false and exits its WaitForSingleObject.
+  if (g_lockEvent) SetEvent(g_lockEvent);
 
   if (detThread.joinable())
     detThread.join();

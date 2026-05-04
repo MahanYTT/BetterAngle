@@ -220,6 +220,8 @@ HWND g_fortniteWindow = NULL;
 RECT g_fortniteRect = {0, 0, 0, 0};
 std::atomic<bool> g_blockInputActive(false);
 std::atomic<bool> g_justRefocused(false);
+HANDLE g_lockEvent = NULL;
+std::atomic<int> g_lockDurationMs(0);
 
 RECT GetMonitorRectByIndex(int index) {
   struct RectData {
