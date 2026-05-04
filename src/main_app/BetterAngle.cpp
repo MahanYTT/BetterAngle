@@ -83,9 +83,13 @@ void FocusMonitorThread() {
       ULONGLONG unfocusedMs = GetTickCount64() - focusLostTime;
       if (unfocusedMs >= 500 && !g_blockInputActive.load()) {
         std::thread([]() {
+          // Elevate priority so unlock can't be starved under CPU load
+          SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
           g_blockInputActive = true;
           BlockInput(TRUE);
-          Sleep(400);
+          // Poll focus every 10ms instead of blind sleep — exit early if user tabs out.
+          // Also prevents starvation under CPU load: breaks early if Fortnite loses focus.
+          for (int i = 0; i < 40 && IsFortniteForeground(); i++) Sleep(10);
           BlockInput(FALSE);
           g_blockInputActive = false;
         }).detach();
@@ -185,6 +189,7 @@ void DetectorThread() {
           g_lastLockTime = GetTickCount64();
           g_mouseSuspendedUntil = GetTickCount64() + 200;
           std::thread([]() {
+            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
             g_blockInputActive = true;
             BlockInput(TRUE);
             for (int i = 0; i < 20 && IsFortniteForeground(); i++) Sleep(10);
@@ -201,6 +206,7 @@ void DetectorThread() {
           g_lastLockTime = GetTickCount64();
           g_mouseSuspendedUntil = GetTickCount64() + 250;
           std::thread([]() {
+            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
             g_blockInputActive = true;
             BlockInput(TRUE);
             for (int i = 0; i < 25 && IsFortniteForeground(); i++) Sleep(10);
