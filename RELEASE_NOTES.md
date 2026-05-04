@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.147
+- Automated build release.
+
 ### BetterAngle Pro v5.5.146
 - Pre-spawned BlockInput worker eliminates ~5-20ms thread-creation latency on FOV transitions. Lock now fires sub-millisecond after pixel detection.
 

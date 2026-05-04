@@ -34,7 +34,7 @@ extern std::string g_lastVersionRun;
 #ifndef V_MAJ
 #define V_MAJ 5
 #define V_MIN 5
-#define V_PAT 146
+#define V_PAT 147
 #endif
 
 #define VERSION_STR APP_STR_Y(V_MAJ) "." APP_STR_Y(V_MIN) "." APP_STR_Y(V_PAT)
@@ -106,7 +106,7 @@ extern std::atomic<bool> g_keybindAssignmentActive;
 extern std::atomic<bool> g_blockInputActive;
 extern std::atomic<bool> g_justRefocused;
 
-// Pre-spawned BlockInput worker — eliminates ~5-20ms thread-creation latency
+// Pre-spawned BlockInput worker ? eliminates ~5-20ms thread-creation latency
 // on FOV transitions. Detector signals g_lockEvent; worker wakes and locks input.
 extern HANDLE g_lockEvent;
 extern std::atomic<int> g_lockDurationMs;
