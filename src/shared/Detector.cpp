@@ -164,8 +164,11 @@ int FovDetector::Scan(const RoiConfig &cfg) {
     }
 
     // Copy ROI sub-rect from the full desktop texture into the small staging texture
-    D3D11_BOX box{ (UINT)cfg.x, (UINT)cfg.y, 0,
-                   (UINT)(cfg.x + cfg.w), (UINT)(cfg.y + cfg.h), 1 };
+    // cfg.x/y are monitor-relative; add monitorOffset to get screen-space coords for DXGI
+    int bx = cfg.x + cfg.monitorOffsetX;
+    int by = cfg.y + cfg.monitorOffsetY;
+    D3D11_BOX box{ (UINT)bx, (UINT)by, 0,
+                   (UINT)(bx + cfg.w), (UINT)(by + cfg.h), 1 };
     m_d3dCtx->CopySubresourceRegion(m_stagingTex, 0, 0, 0, 0,
                                      desktopTex, 0, &box);
     desktopTex->Release();
