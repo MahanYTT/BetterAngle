@@ -226,12 +226,10 @@ void DetectorThread() {
 
 // Screen Snapshot for Flicker-Free Selection (v4.9.15)
 void CaptureDesktop() {
-  // Capture only the selected monitor (not the full virtual desktop)
-  RECT mRect = GetMonitorRectByIndex(g_screenIndex);
-  int sw = mRect.right - mRect.left;
-  int sh = mRect.bottom - mRect.top;
-  int sx = mRect.left;
-  int sy = mRect.top;
+  int sw = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+  int sh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+  int sx = GetSystemMetrics(SM_XVIRTUALSCREEN);
+  int sy = GetSystemMetrics(SM_YVIRTUALSCREEN);
 
   HDC hdcScreen = GetDC(NULL);
   HDC hdcMem = CreateCompatibleDC(hdcScreen);
@@ -240,7 +238,6 @@ void CaptureDesktop() {
   g_screenSnapshot = CreateCompatibleBitmap(hdcScreen, sw, sh);
   HGDIOBJ hOld = SelectObject(hdcMem, g_screenSnapshot);
 
-  // Capture only the selected monitor's region
   BitBlt(hdcMem, 0, 0, sw, sh, hdcScreen, sx, sy, SRCCOPY);
 
   SelectObject(hdcMem, hOld);
@@ -379,14 +376,11 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         HDC hdcMem = CreateCompatibleDC(hdcScreen);
         HGDIOBJ hOld = SelectObject(hdcMem, g_screenSnapshot);
 
-        // Use selected monitor origin since CaptureDesktop now captures only that monitor
-        RECT mRect = GetMonitorRectByIndex(g_screenIndex);
-        int sx = mRect.left;
-        int sy = mRect.top;
+        int sx = GetSystemMetrics(SM_XVIRTUALSCREEN);
+        int sy = GetSystemMetrics(SM_YVIRTUALSCREEN);
 
         POINT cur;
         GetCursorPos(&cur);
-        // Map screen-space cursor to monitor-local snapshot coordinates
         COLORREF pixel = GetPixel(hdcMem, cur.x - sx, cur.y - sy);
 
         g_pickedColor = pixel;
