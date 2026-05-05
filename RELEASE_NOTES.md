@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.149
+- Fix: pressing the ROI hotkey no longer alt-tabs the user out of Fortnite. Removed the `SetForegroundWindow` focus-steal and added `WS_EX_NOACTIVATE` to the HUD overlay so it can catch mouse events for ROI/color drawing without taking focus from the game.
+
 ### BetterAngle Pro v5.5.148
 - Automated build release.
 

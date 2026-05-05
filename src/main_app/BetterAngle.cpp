@@ -503,7 +503,10 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
               long exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
               exStyle &= ~WS_EX_TRANSPARENT;
               SetWindowLong(hWnd, GWL_EXSTYLE, exStyle);
-              SetForegroundWindow(hWnd);
+              // Do NOT SetForegroundWindow(hWnd) — it alt-tabs the user out of
+              // Fortnite. With WS_EX_NOACTIVATE on the HUD + WS_EX_TRANSPARENT
+              // cleared, the topmost overlay catches mouse events without
+              // stealing focus.
             }
           } else {
             if (!g_allProfiles.empty() &&
@@ -836,8 +839,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   int screenX = mRect.left;
   int screenY = mRect.top;
 
+  // WS_EX_NOACTIVATE: prevents click-on-overlay from stealing focus from Fortnite
+  // during ROI/color selection. Without this, clicking the HUD activates it and
+  // minimizes the game (alt-tab effect).
   g_hHUD = CreateWindowEx(
-      WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW,
+      WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
       L"BetterAngleHUD", L"BetterAngle HUD", WS_POPUP, screenX, screenY,
       screenW, screenH, NULL, NULL, hInstance, NULL);
 
