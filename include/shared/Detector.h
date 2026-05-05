@@ -1,15 +1,13 @@
 #ifndef DETECTOR_H
 #define DETECTOR_H
 
-#include <d3d11.h>
-#include <dxgi1_2.h>
 #include <windows.h>
 
 struct RoiConfig {
   int x, y, w, h;
   COLORREF target;
   int tolerance;
-  int monitorOffsetX = 0; // Screen-space offset for BitBlt fallback
+  int monitorOffsetX = 0; // Screen-space offset; cfg.x/y are monitor-relative
   int monitorOffsetY = 0;
 };
 
@@ -19,16 +17,12 @@ public:
   ~FovDetector();
   int Scan(const RoiConfig &cfg);
 
-private:
-  // DXGI path
-  ID3D11Device           *m_d3dDevice   = nullptr;
-  ID3D11DeviceContext    *m_d3dCtx      = nullptr;
-  IDXGIOutputDuplication *m_duplication = nullptr;
-  ID3D11Texture2D        *m_stagingTex  = nullptr;
-  int  m_stagingW = 0, m_stagingH = 0;
-  bool m_dxgiOk   = false;
+  // Kept as a no-op for callers that previously triggered DXGI re-init on
+  // monitor switch. BitBlt path queries GetDC(NULL) which always reflects the
+  // current virtual desktop, so no per-monitor re-init is needed.
+  void ReinitDisplay(int monitorIndex);
 
-  // BitBlt fallback path
+private:
   HDC     m_hdcScreen = NULL;
   HDC     m_hdcMem    = NULL;
   HBITMAP m_hbm       = NULL;
@@ -36,11 +30,6 @@ private:
   int     m_curW = 0, m_curH = 0;
   void   *m_pixels    = nullptr;
 
-  bool InitDXGI();
-  void ReleaseDXGI();
-public:
-  void ReinitDisplay(int monitorIndex);
-private:
   void EnsureScreenDC();
   void EnsureResources(int w, int h);
   int  ScanBitBlt(const RoiConfig &cfg);

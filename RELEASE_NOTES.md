@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.151
+- Reverted the DXGI Desktop Duplication scanner back to GDI BitBlt. The color picker (CaptureDesktop) and the detector now sample from the same source again, so picked colors actually match what the scanner sees — fixes "no colour match" after picking a color. Loses some scan-speed performance but trades it for reliable detection.
+
 ### BetterAngle Pro v5.5.150
 - Automated build release.
 
