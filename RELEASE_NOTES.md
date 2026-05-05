@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.155
+- Restored DXGI Desktop Duplication scanner — ~3-5x faster than the BitBlt path. Coupled with a one-shot DXGI sample at colour-pick time so the saved `target_color` is the exact byte the scanner sees (eliminates the GDI/DXGI byte drift that previously caused "no colour match"). Multi-adapter HMONITOR matching ensures the duplication targets the correct monitor's output. ReinitDisplay now runs only on the detector thread (or before it starts), avoiding races with in-flight `Scan` / `SamplePixelDXGI`. Falls back to BitBlt automatically for HDR monitors or unreachable outputs.
+
 ### BetterAngle Pro v5.5.154
 - Automated build release.
 

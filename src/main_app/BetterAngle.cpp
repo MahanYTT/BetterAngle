@@ -145,6 +145,10 @@ void DetectorThread() {
         int curDisplayGen = g_displayChangeGen.load();
         if (g_screenIndex != cachedScreenIdx || curDisplayGen != cachedDisplayGen) {
           cachedMonitorRect = GetMonitorRectByIndex(g_screenIndex);
+          // Re-init DXGI duplication for the (possibly new) monitor. Done
+          // here on the detector thread to avoid races with the running scan
+          // and with SamplePixelDXGI calls from the colour picker.
+          g_detector.ReinitDisplay(g_screenIndex);
           cachedScreenIdx = g_screenIndex;
           cachedDisplayGen = curDisplayGen;
         }
@@ -397,14 +401,28 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
 
         POINT cur;
         GetCursorPos(&cur);
-        COLORREF pixel = GetPixel(hdcMem, cur.x - sx, cur.y - sy);
+        COLORREF bitBltPixel = GetPixel(hdcMem, cur.x - sx, cur.y - sy);
 
-        g_pickedColor = pixel;
-        g_targetColor = pixel;
         SelectObject(hdcMem, hOld);
         DeleteDC(hdcMem);
         ReleaseDC(NULL, hdcScreen);
-        LOG_TRACE("Color sampled successfully.");
+
+        // Try a one-shot DXGI sample at the same screen-space pixel. The
+        // scanner reads DXGI bytes — saving the DXGI-sampled value as
+        // target_color avoids the GDI/DXGI byte drift that otherwise
+        // prevents matches. Falls back to the BitBlt sample on failure.
+        RECT mRect = GetMonitorRectByIndex(g_screenIndex);
+        int monX = cur.x - mRect.left;
+        int monY = cur.y - mRect.top;
+        COLORREF dxgiPixel = 0;
+        bool gotDxgi = g_detector.SamplePixelDXGI(monX, monY, dxgiPixel);
+
+        COLORREF chosen = gotDxgi ? dxgiPixel : bitBltPixel;
+        g_pickedColor = chosen;
+        g_targetColor = chosen;
+        LOG_INFO("Color picked: source=%s rgb=(%d,%d,%d)",
+                 gotDxgi ? "DXGI" : "BitBlt-fallback",
+                 GetRValue(chosen), GetGValue(chosen), GetBValue(chosen));
       }
 
       // Finalize and Exit Selection
