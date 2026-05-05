@@ -1,3 +1,8 @@
+### BetterAngle Pro v5.5.153
+- Multi-monitor fixes:
+  - **Wrong screen captured during ROI/colour selection**: the snapshot is the full virtual desktop but the HUD was always blitting from snapshot (0,0) — secondary monitors saw the primary monitor's content (Discord/browser) instead of Fortnite. Now blits from the configured monitor's slice.
+  - **Hot-plugging a 2nd monitor broke detection**: `WM_DISPLAYCHANGE` now (a) bumps a generation counter so the detector invalidates its cached monitor rect, and (b) auto-tracks Fortnite's monitor via `MonitorFromWindow` so `g_screenIndex` follows the game even if Windows renumbers indices.
+
 ### BetterAngle Pro v5.5.152
 - Automated build release.
 

@@ -124,6 +124,7 @@ void DetectorThread() {
   float lastSensX = -1.0f;
   RECT cachedMonitorRect = {};
   int cachedScreenIdx = -1;
+  int cachedDisplayGen = -1;
 
   timeBeginPeriod(1);
   while (g_running) {
@@ -141,9 +142,11 @@ void DetectorThread() {
 
       // Only scan ROI when Fortnite is the foreground window
       if (currentFortniteFocused) {
-        if (g_screenIndex != cachedScreenIdx) {
+        int curDisplayGen = g_displayChangeGen.load();
+        if (g_screenIndex != cachedScreenIdx || curDisplayGen != cachedDisplayGen) {
           cachedMonitorRect = GetMonitorRectByIndex(g_screenIndex);
           cachedScreenIdx = g_screenIndex;
+          cachedDisplayGen = curDisplayGen;
         }
         RECT mRect = cachedMonitorRect;
         RoiConfig cfg = {
@@ -623,6 +626,28 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
   }
 
   case WM_DISPLAYCHANGE: {
+    // Bump generation so DetectorThread re-resolves its cached monitor rect.
+    g_displayChangeGen.fetch_add(1);
+
+    // Auto-track Fortnite's monitor: hot-plugging a 2nd monitor can renumber
+    // monitor indices (Windows enumerates by virtual-desktop position). If
+    // Fortnite is still on the original physical screen, find its new index
+    // and update g_screenIndex so the scanner reads the correct slice.
+    if (g_fortniteWindow && IsWindow(g_fortniteWindow)) {
+      HMONITOR hFnMon = MonitorFromWindow(g_fortniteWindow, MONITOR_DEFAULTTONEAREST);
+      struct FindData { HMONITOR target; int currentIndex; int foundIndex; };
+      FindData data = {hFnMon, 0, -1};
+      EnumDisplayMonitors(NULL, NULL,
+        [](HMONITOR h, HDC, LPRECT, LPARAM dwData) -> BOOL {
+          auto *d = reinterpret_cast<FindData *>(dwData);
+          if (h == d->target) { d->foundIndex = d->currentIndex; return FALSE; }
+          d->currentIndex++;
+          return TRUE;
+        },
+        reinterpret_cast<LPARAM>(&data));
+      if (data.foundIndex >= 0) g_screenIndex = data.foundIndex;
+    }
+
     RECT mRect = GetMonitorRectByIndex(g_screenIndex);
     int screenW = mRect.right - mRect.left;
     int screenH = mRect.bottom - mRect.top;

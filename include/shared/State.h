@@ -34,7 +34,7 @@ extern std::string g_lastVersionRun;
 #ifndef V_MAJ
 #define V_MAJ 5
 #define V_MIN 5
-#define V_PAT 152
+#define V_PAT 153
 #endif
 
 #define VERSION_STR APP_STR_Y(V_MAJ) "." APP_STR_Y(V_MIN) "." APP_STR_Y(V_PAT)
@@ -111,6 +111,11 @@ extern std::atomic<bool> g_justRefocused;
 extern HANDLE g_lockEvent;
 extern std::atomic<int> g_lockDurationMs;
 void StartBlockInputWorker();
+
+// Bumped on every WM_DISPLAYCHANGE so DetectorThread can invalidate its cached
+// monitor rect when virtual-desktop layout shifts (e.g. user hot-plugs a 2nd monitor).
+extern std::atomic<int> g_displayChangeGen;
+
 void NotifyBackendCrosshairChanged();
 void NotifyBackendUpdateStatusChanged();
 

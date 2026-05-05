@@ -161,7 +161,14 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
   if (g_screenSnapshot && g_currentSelection != NONE) {
     HDC hdcSnap = CreateCompatibleDC(hdcMem);
     HGDIOBJ hOldSnap = SelectObject(hdcSnap, g_screenSnapshot);
-    BitBlt(hdcMem, 0, 0, sw, sh, hdcSnap, 0, 0, SRCCOPY);
+    // The snapshot is the FULL virtual desktop. Blit the slice corresponding
+    // to the configured monitor — without this offset, secondary monitors
+    // would render the primary monitor's content (Discord/browser etc.).
+    RECT mRect = GetMonitorRectByIndex(g_screenIndex);
+    int virX = GetSystemMetrics(SM_XVIRTUALSCREEN);
+    int virY = GetSystemMetrics(SM_YVIRTUALSCREEN);
+    BitBlt(hdcMem, 0, 0, sw, sh, hdcSnap,
+           mRect.left - virX, mRect.top - virY, SRCCOPY);
     SelectObject(hdcSnap, hOldSnap);
     DeleteDC(hdcSnap);
 
