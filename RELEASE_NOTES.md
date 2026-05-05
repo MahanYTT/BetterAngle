@@ -1,3 +1,6 @@
+### BetterAngle Pro v5.5.157
+- Debug overlay: added 3 rows for capture-path diagnostics — `Capture Path` (DXGI / BitBlt), `Pick Source` (DXGI / BitBlt / —), `Picked RGB` (the exact bytes saved as `target_color`). Lets you verify DXGI is actually active and the picker stored the right byte without grepping the log file.
+
 ### BetterAngle Pro v5.5.156
 - Automated build release.
 

@@ -1,5 +1,7 @@
 #include "shared/Detector.h"
+#include "shared/State.h"
 #include <algorithm>
+#include <atomic>
 
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3d11.lib")
@@ -127,6 +129,7 @@ int FovDetector::Scan(const RoiConfig &cfg) {
   if (cfg.w <= 0 || cfg.h <= 0) return 0;
 
   if (m_dxgiOk) {
+    g_lastScanUsedDxgi = true;
     DXGI_OUTDUPL_FRAME_INFO fi{};
     IDXGIResource *res = nullptr;
     HRESULT hr = m_duplication->AcquireNextFrame(0, &fi, &res);
@@ -329,6 +332,7 @@ void FovDetector::EnsureResources(int w, int h) {
 }
 
 int FovDetector::ScanBitBlt(const RoiConfig &cfg) {
+  g_lastScanUsedDxgi = false;
   EnsureResources(cfg.w, cfg.h);
   // BitBlt source is GetDC(NULL) = full virtual desktop, so screen-space coords.
   BitBlt(m_hdcMem, 0, 0, cfg.w, cfg.h, m_hdcScreen,

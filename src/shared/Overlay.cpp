@@ -571,6 +571,24 @@ void DrawOverlay(HWND hwnd, double angle, bool showCrosshair) {
               g_scannerCpuPct.load() < 50);
 
       DrawRow(7, 1, L"Version:", L"v" + std::wstring(VERSION_WSTR), true);
+
+      // Capture-path diagnostics (added v5.5.157). Helps verify DXGI is
+      // actually active and the picker stored the right byte.
+      bool dxgiActive = g_lastScanUsedDxgi.load();
+      DrawRow(0, 1, L"Capture Path:",
+              dxgiActive ? L"DXGI" : L"BitBlt", dxgiActive);
+
+      int pickSrc = g_lastPickSource.load();
+      const wchar_t *pickStr = (pickSrc == 1) ? L"DXGI"
+                              : (pickSrc == 2) ? L"BitBlt"
+                                               : L"-";
+      DrawRow(1, 1, L"Pick Source:", pickStr, pickSrc == 1);
+
+      COLORREF pc = g_pickedColor;
+      std::wstring rgbStr = L"(" + std::to_wstring(GetRValue(pc)) + L"," +
+                            std::to_wstring(GetGValue(pc)) + L"," +
+                            std::to_wstring(GetBValue(pc)) + L")";
+      DrawRow(2, 1, L"Picked RGB:", rgbStr);
     }
   }
 

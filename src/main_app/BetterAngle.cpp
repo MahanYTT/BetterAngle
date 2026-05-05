@@ -420,6 +420,7 @@ LRESULT CALLBACK HUDWndProc(HWND hWnd, UINT message, WPARAM wParam,
         COLORREF chosen = gotDxgi ? dxgiPixel : bitBltPixel;
         g_pickedColor = chosen;
         g_targetColor = chosen;
+        g_lastPickSource = gotDxgi ? 1 : 2;
         LOG_INFO("Color picked: source=%s rgb=(%d,%d,%d)",
                  gotDxgi ? "DXGI" : "BitBlt-fallback",
                  GetRValue(chosen), GetGValue(chosen), GetBValue(chosen));
