@@ -4,6 +4,7 @@
 #include <dwmapi.h>
 #include <fstream>
 #include <gdiplus.h>
+#include <immintrin.h>
 #include <iostream>
 #include <shlobj.h>
 #include <string>
@@ -167,16 +168,20 @@ void DetectorThread() {
 
         // -1 means no new frame was available (DXGI timeout) — skip this cycle
         // entirely to avoid false edge detection from a stale matchCount of 0.
+        // Spin instead of Sleep(1) so we react to the next frame the instant
+        // it arrives (the prior 1ms nap was the dominant latency source).
         if (scanResult < 0) {
-          Sleep(1);
+          _mm_pause();
           continue;
         }
 
         g_matchCount = scanResult;
 
-        // Scanner CPU %: time spent scanning vs total loop period
-        int cpuPct = (scanMs > 0) ? (int)((scanMs * 100) / (scanMs + 10)) : 0;
-        g_scannerCpuPct = cpuPct;
+        // Scanner CPU %: with spin-wait the loop pegs one core when active.
+        // The old formula assumed a ~1ms cycle with Sleep(1) and read 0% in
+        // spin mode (scanMs is sub-ms / below GetTickCount64 resolution).
+        // Hard-coded binary metric: 100 when actively scanning, 0 otherwise.
+        g_scannerCpuPct = 100;
 
         // Peak match tracking (2s decay window)
         int currentMatch = g_matchCount.load();
@@ -235,7 +240,13 @@ void DetectorThread() {
       g_isDiving = nowDiving;
       g_logic.SetDivingState(nowDiving);
     }
-    Sleep(1); // CPU Fix: Drops usage from 100% to ~1%
+    // Spin (peg one core) only while actively scanning; otherwise idle politely.
+    // _mm_pause is a CPU hint that yields hyperthread cycles during a spin loop.
+    if (g_fortniteFocusedCache.load() && g_currentSelection == NONE) {
+      _mm_pause();
+    } else {
+      Sleep(10);
+    }
   }
   timeEndPeriod(1);
 }
